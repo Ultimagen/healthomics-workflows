@@ -42,7 +42,7 @@ $ aws omics create-workflow \
 --main r2r_efficient_dv.wdl \
 --definition-zip <s3_uri_for_zipped_file> \
 --parameter-template <s3_uri_for_parameter_template_file> \
---accelerators <if_using_GPU_enter_GPU>
+--accelerators GPU
  ~~~
 2. From the console:
     
