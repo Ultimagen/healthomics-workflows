@@ -13,8 +13,8 @@ iv. For more questions about this workflow, please contact healthomics.support@u
 ## To convert the Ultima Genomics DeepVarinat Ready2Run workflow to a private workflow in AWS HealthOmics, follow the steps below:
 i. Pre requisites: 
 1. Ultima Genomics DeepVariant uses several ECR containers:
-   - ultimagen_make_examples:latest
-   - ultimagen_call_variants:latest
+   - public.ecr.aws/u5v5i4d6/ultimagen_make_examples:latest
+   - public.ecr.aws/u5v5i4d6/ultimagen_call_variants:latest
    - omics-shared-amazonlinux:2023
    - omics-gitc:latest
    - omics-gatk:latest
