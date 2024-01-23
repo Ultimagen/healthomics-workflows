@@ -1,10 +1,10 @@
 {
-  "Ready2RunEfficientDV.base_file_name": "sample.chr9.10M",
+  "Ready2RunEfficientDV.base_file_name": "sample",
   "Ready2RunEfficientDV.cram_files": [
-    "sample.chr9.10M.cram"
+    "sample.chr1.5M.cram"
   ],
   "Ready2RunEfficientDV.cram_index_files": [
-    "sample.chr9.10M.cram.crai"
+    "sample.chr1.5M.cram.crai"
   ],
   "Ready2RunEfficientDV.make_gvcf": false
 }
