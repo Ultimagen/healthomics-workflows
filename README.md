@@ -13,6 +13,7 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 ## Deploying Private Workflow
 Once the workflow resources have been deployed into locally (see instructions per workflow), user can create private workflow on AWS HealthOmics
 1. Create a private workflow in HealthOmics by following one of the two options below:
+
 i. From the CLI:
  ~~~
 $ aws omics create-workflow \
