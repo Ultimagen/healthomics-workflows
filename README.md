@@ -4,7 +4,7 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 ## Introduction
 1. UltimaGenomics offers pipelines as Ready2Run workflows on AWS HealthOmics. Ready2Run workflows enable you to run these pipelines on AWS HealthOmics by simply bringing your data.
 
-2. Utimagenomics also shares community workflows through this repository to allow more flexibility and possibility to modify the workflow. The user can convert the Ready2Run workflow and community workflows to a private workflow on AWS HealthOmics infrastructure.
+2. Ultimagenomics also shares community workflows through this repository to allow more flexibility and possibility to modify the workflow. The user can convert the Ready2Run workflow and community workflows to a private workflow on AWS HealthOmics infrastructure.
 
 3. The cost to run the workflow will now be based on the compute and run storage used during the private workflow run instead of a fixed price.
 
