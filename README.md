@@ -30,6 +30,8 @@ ii. From the console:
     b. Click on **Create Workflow** on the Workflows list.
     
     c. Follow the instructions on the console to create your workflow.
+    Note: if top level has more than one wdl, you should define "Main workflow definition file path" - r2r_efficient_dv.wdl
+
 
 2. Run your workflow by following one of the two options below:
 i. From the CLI:
