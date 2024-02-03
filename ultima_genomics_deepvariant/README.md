@@ -5,7 +5,7 @@ i. Pre requisites:
    - ultimagenomics/make_examples:latest
    - ultimagenomics/call_variants:latest
    - amazonlinux:2023
-   - ous.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.4.6-1599252698
+   - us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.4.6-1599252698
    - broadinstitute/gatk:4.2.6.1
 2. Pull and push the Ultima Genomics DeepVariant public containers to your private ECR by following the steps here:
 
