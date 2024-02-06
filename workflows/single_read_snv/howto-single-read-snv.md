@@ -36,34 +36,66 @@ For a list of input separated by spaces, {sep=" " include_regions} is used.
 
 {ref_dict}: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
 
+or 
+
+{ref_fasta}: s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
+
+{ref_fasta_fai}: s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+
+{ref_dict}: s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+
 ### Interval list - region in which FeatureMap is generated
 {interval_list}: gs://concordanz/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
+
+or
+
+{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
 
 ### Model training bed and vcf files
 
 SNVs are collected and annotated in as either ground truth True Positives (TP) or False Positives (FP), and the SRSNV model is then trained to distinguish between the two. Genomic regions used for training data collection can be specified for TP and FP separately, allowing for some flexibility in application. By default both models are limited to the UG HCR and hmers of length 7 or more are discarded. Additionally, a curated subset of the PCAWG mutation database is excluded to allow an evalutation of the results over these regions, often used to demonstrate the error rate in a human WG sample [Cheng 2022]. Additionally, common population variants from the dbsnp and gnomAD databases are excluded from the FP training set, to avoid misidentified germline variants or contamination reads from skewing the ground truth data.
 
-Genomic region filtering can be modified by the user (e.g. by excluding a specific chromosome) or effectively disabled by removing the exclude regions and setting the include regions to span the entire genome, e.g. gs://concordanz/hg38/wgs_calling_regions.hg38.bed.
+Genomic region filtering can be modified by the user (e.g. by excluding a specific chromosome) or effectively disabled by removing the exclude regions and setting the include regions to span the entire genome, e.g. gs://concordanz/hg38/wgs_calling_regions.hg38.bed or s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38.bed.
 
 #### Regions used for TP training data
 
 {include_regions_tp}:
-- gs://concordanz/hg38/UG-High-Confidence-Regions/v1.4/ug_hcr.bed
+- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed
+
+or
+
+- s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed
 
 {exclude_regions_tp}:
 - gs://concordanz/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
 - gs://concordanz/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
 
+or
+
+- s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
+- s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
+
 #### Regions used for FP training data
 
 {include_regions_fp}:
-- gs://concordanz/hg38/UG-High-Confidence-Regions/v1.4/ug_hcr.bed
+- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed
+
+or
+
+- s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
 
 {exclude_regions_fp}:
 - gs://concordanz/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
 - gs://concordanz/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
 - gs://concordanz/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz
 - gs://concordanz/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz
+
+or
+
+- s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
+- s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
+- s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz
+- s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz
 
 ***Note 1 - for cfDNA samples from cancer patients, it's recommended to add the somatic mutation vcf (signature) to the fp exclude regions to avoid true cancer mutations present in the cfDNA being used as FP training examples***
 
@@ -82,12 +114,25 @@ The files below are provided for the user to run the pipeline in their local env
 {sorter_json_stats_file}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json
 {interval_list}: gs://ug-cromwell-tests/balanced_strand/wgs_calling_regions.hg38.chr20.interval_list
 
+or
+
+{input_cram_bam}: s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram
+{input_cram_bam_index}: s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
+{sorter_json_stats_file}: s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json
+{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38.chr20.interval_list
+
 ### Full test file
 {input_cram_bam}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.cram
 {input_cram_bam_index}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.cram.crai
 {sorter_json_stats_file}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json
 {interval_list}: gs://concordanz/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
 
+or
+
+{input_cram_bam}: s3://ultimagen-feb-2024-mrd/cfDNA_ppmSeq/Pa_46.333_LuNgs_08.Lb_744.cram
+{input_cram_bam_index}: s3://ultimagen-feb-2024-mrd/cfDNA_ppmSeq/Pa_46.333_LuNgs_08.Lb_744.cram.crai
+{sorter_json_stats_file}: s3://ultimagen-feb-2024-mrd/cfDNA_ppmSeq/Pa_46.333_LuNgs_08.Lb_744.json
+{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
 
 ## Running using separate command lines
 ### Installation
@@ -360,6 +405,7 @@ This code trains the ML model on the annotated FeatureMap, and produces a report
   - {params_file}: "{base_file_name}.params.json"
   - {X_test_file}: "{base_file_name}.X_test.parquet"
   - {y_test_file}: "{base_file_name}.y_test.parquet"
+  - {qual_test_file}: "{base_file_name}.qual_test.parquet"   
   - {X_train_file}: "{base_file_name}.X_train.parquet"
   - {y_train_file}: "{base_file_name}.y_train.parquet"    
   - {test_set_mrd_simulation_dataframe}: "{base_file_name}.test.df_mrd_simulation.parquet"
