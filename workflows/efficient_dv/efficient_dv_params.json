@@ -1,0 +1,146 @@
+{
+  "EfficientDV.base_file_name": {
+    "description": "Prefix of the output files names",
+    "optional": false
+  },
+  "EfficientDV.cram_files": {
+    "description": "List of Input CRAM files. Note: multiple files have not been fully tested",
+    "optional": false
+  },
+  "EfficientDV.cram_index_files": {
+    "description": "Input CRAMs indexes. Note: multiple files have not been fully tested",
+    "optional": false
+  },
+  "EfficientDV.background_cram_files": {
+    "description": "List of background CRAM files, for use in somatic calling. Note: multiple files have not been fully tested",
+    "optional": true
+  },
+  "EfficientDV.background_cram_index_files": {
+    "description": "List of background CRAM index files, for use in somatic calling. Note: multiple files have not been fully tested",
+    "optional": true
+  },
+  "EfficientDV.references": {
+    "description": "Reference genome / dict and fai files",
+    "optional": false
+  },
+  "EfficientDV.ref_dbsnp": {
+    "description": "DbSNP vcf for the annotation of known variants",
+    "optional": false
+  },
+  "EfficientDV.ref_dbsnp_index": {
+    "description": "DbSNP vcf index",
+    "optional": false
+  },
+  "EfficientDV.model_onnx": {
+    "description": "DeepVariant model",
+    "optional": false
+  },
+  "EfficientDV.model_serialized": {
+    "description": "Serialized model (built for specific platform)",
+    "optional": true
+  },
+  "EfficientDV.num_shards": {
+    "description": "Number of shards for parallelization",
+    "optional": true
+  },
+  "EfficientDV.min_fraction_snps": {
+    "description": "Min fraction of reads supporting a SNP required to generate a candidate variant",
+    "optional": true
+  },
+  "EfficientDV.min_fraction_hmer_indels": {
+    "description": "Min fraction of reads supporting an h-mer indel required to generate a candidate variant",
+    "optional": true
+  },
+  "EfficientDV.min_fraction_non_hmer_indels": {
+    "description": "Min fraction of reads supporting a non h-mer indel required to generate a candidate variant",
+    "optional": true
+  },
+  "EfficientDV.min_variant_quality_snps": {
+    "description": "QUAL threshold for SNPs to pass filtering",
+    "optional": true
+  },
+  "EfficientDV.min_variant_quality_hmer_indels": {
+    "description": "QUAL threshold for h-mer indels to pass filtering",
+    "optional": true
+  },
+  "EfficientDV.min_variant_quality_non_hmer_indels": {
+    "description": "QUAL threshold for non h-mer indels to pass filtering",
+    "optional": true
+  },
+  "EfficientDV.min_variant_quality_exome_hmer_indels": {
+    "description": "QUAL threshold for exomic h-mer indels to pass filtering",
+    "optional": true
+  },
+  "EfficientDV.show_bg_fields": {
+    "description": "Show the stats for background reads in the vcf (should be true for somatic caling)",
+    "optional": true
+  },
+  "EfficientDV.optimal_coverages": {
+    "description": "optimal_coverages",
+    "optional": true
+  },
+  "EfficientDV.make_gvcf": {
+    "description": "Should the workflow also produce a GVCF?",
+    "optional": false
+  },
+  "EfficientDV.ug_make_examples_extra_args": {
+    "description": "Extra arguments for the make_examples step",
+    "optional": true
+  },
+  "EfficientDV.p_error": {
+    "description": "p_error",
+    "optional": true
+  },
+  "EfficientDV.preemptible_tries": {
+    "description": "preemptible_tries",
+    "optional": true
+  },
+  "EfficientDV.cap_at_optimal_coverage": {
+    "description": "cap_at_optimal_coverage",
+    "optional": true
+  },
+  "EfficientDV.exome_intervals": {
+    "description": "A bed file with exome interval",
+    "optional": false
+  },
+  "EfficientDV.annotation_intervals": {
+    "description": "List of bed files for VCF annotation",
+    "optional": true
+  },
+  "EfficientDV.hmer_runs_bed": {
+    "description": "Annotation for h-mers",
+    "optional": true
+  },
+  "EfficientDV.filtering_blacklist_file": {
+    "description": "Positions that are blacklisted for variant calling",
+    "optional": true
+  },
+  "EfficientDV.sec_models": {
+    "description": "Model files for filtering systematic errors",
+    "optional": true
+  },
+  "EfficientDV.target_intervals": {
+    "description": "Genomic intervals in GATK/Picard interval_list format to perform variant calling on",
+    "optional": true
+  },
+  "EfficientDV.ug_make_examples_memory_override": {
+    "description": "Memory size for make_examples",
+    "optional": true
+  },
+  "EfficientDV.ug_make_examples_cpus_override": {
+    "description": "Number of cpus for make_examples",
+    "optional": true
+  },
+  "EfficientDV.call_variants_uncompr_buf_size_gb": {
+    "description": "Memory required to store uncompressed tfrecords in call_variants",
+    "optional": true
+  },
+  "EfficientDV.cloud_provider_override": {
+    "description": "Cloud provider: aws or gcp",
+    "optional": true
+  },
+  "EfficientDV.monitoring_script_input": {
+    "description": "monitoring_script_input",
+    "optional": true
+  }
+}

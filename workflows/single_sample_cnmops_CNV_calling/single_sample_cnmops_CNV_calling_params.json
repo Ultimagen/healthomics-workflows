@@ -1,0 +1,94 @@
+{
+  "SingleSampleCnmopsCNVCalling.input_bam_file": {
+    "description": "Input sample bam/cram file",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.input_bam_file_index": {
+    "description": "Input sample bai/crai index file",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.reference_genome": {
+    "description": "Genome fasta file associated with the CRAM file",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.reference_genome_index": {
+    "description": "Index of the fasta file associated with the CRAM file",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.mapq": {
+    "description": "Reads mapping-quality cutoff for reads count calculation",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.ref_seq_names": {
+    "description": "Chromosome names for which reads counts will be calculated",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.window_length": {
+    "description": "Window lenght for which reads counts will be calculated for",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.parallel": {
+    "description": "Number of cpus",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.base_file_name": {
+    "description": "Base file name. usually will be similar to sample name",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.min_width_value": {
+    "description": "Minimum of consecutive reads counts windows to consider for CNV calling. Default is 2",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.min_cnv_length": {
+    "description": "Minimum length for reporting CNV. Default is 10,000",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.intersection_cutoff": {
+    "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is  0.5",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.cnv_lcr_file": {
+    "description": "UG-CNV-LCR bed file",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.cohort_reads_count_matrix": {
+    "description": "Cohort reads count matrix file in RDS format",
+    "optional": false
+  },
+  "SingleSampleCnmopsCNVCalling.merged_cohort_ploidy_file": {
+    "description": "a list assigning gender to merged cohort's samples where 1-male 2-female. if not given, default is 2.",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.chrX_name": {
+    "description": "chrX name to be used within cn.mops Run. Default is: chrX",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.chrY_name": {
+    "description": "chrY name to be used within cn.mops Run. Default is: chrY",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.save_hdf_override": {
+    "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format. (additionally to RDS format)",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.save_csv_override": {
+    "description": "Whether to save cnmops output data-frames in csv format. (additionally to RDS format)",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.input_sample_reads_count": {
+    "description": "inputs sample's reads count matrix file in RDS format, previously calculated",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.bed_graph": {
+    "description": "previously calculated input bed_graph (from sorter)",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.genome_windows": {
+    "description": "binned genome to equal sized windows",
+    "optional": true
+  },
+  "SingleSampleCnmopsCNVCalling.monitoring_script_input": {
+    "description": "monitoring_script_input",
+    "optional": true
+  }
+}
