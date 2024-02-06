@@ -1,0 +1,106 @@
+{
+  "SingleReadSNV.input_cram_bam": {
+    "description": "input_cram_bam",
+    "optional": false
+  },
+  "SingleReadSNV.input_cram_bam_index": {
+    "description": "input_cram_bam_index",
+    "optional": false
+  },
+  "SingleReadSNV.sorter_json_stats_file": {
+    "description": "sorter_json_stats_file",
+    "optional": false
+  },
+  "SingleReadSNV.base_file_name": {
+    "description": "base_file_name",
+    "optional": false
+  },
+  "SingleReadSNV.somatic_mutations_list": {
+    "description": "somatic_mutations_list",
+    "optional": true
+  },
+  "SingleReadSNV.references": {
+    "description": "references",
+    "optional": false
+  },
+  "SingleReadSNV.wgs_calling_interval_list": {
+    "description": "wgs_calling_interval_list",
+    "optional": false
+  },
+  "SingleReadSNV.break_bands_at_multiples_of": {
+    "description": "break_bands_at_multiples_of",
+    "optional": false
+  },
+  "SingleReadSNV.featuremap_params": {
+    "description": "featuremap_params",
+    "optional": false
+  },
+  "SingleReadSNV.balanced_strand_adapter_version": {
+    "description": "balanced_strand_adapter_version",
+    "optional": true
+  },
+  "SingleReadSNV.motif_length_to_annotate": {
+    "description": "motif_length_to_annotate",
+    "optional": false
+  },
+  "SingleReadSNV.max_hmer_length": {
+    "description": "max_hmer_length",
+    "optional": false
+  },
+  "SingleReadSNV.train_set_size": {
+    "description": "train_set_size",
+    "optional": false
+  },
+  "SingleReadSNV.test_set_size": {
+    "description": "test_set_size",
+    "optional": false
+  },
+  "SingleReadSNV.tp_training_include_regions": {
+    "description": "tp_training_include_regions",
+    "optional": false
+  },
+  "SingleReadSNV.tp_training_exclude_regions": {
+    "description": "tp_training_exclude_regions",
+    "optional": true
+  },
+  "SingleReadSNV.fp_training_include_regions": {
+    "description": "fp_training_include_regions",
+    "optional": false
+  },
+  "SingleReadSNV.fp_training_exclude_regions": {
+    "description": "fp_training_exclude_regions",
+    "optional": true
+  },
+  "SingleReadSNV.numerical_features": {
+    "description": "numerical_features",
+    "optional": false
+  },
+  "SingleReadSNV.categorical_features": {
+    "description": "categorical_features",
+    "optional": false
+  },
+  "SingleReadSNV.balanced_sampling_info_fields": {
+    "description": "balanced_sampling_info_fields",
+    "optional": true
+  },
+  "SingleReadSNV.pre_filter": {
+    "description": "pre_filter",
+    "optional": true
+  },
+  "SingleReadSNV.random_seed": {
+    "description": "random_seed",
+    "optional": false
+  },
+  "SingleReadSNV.process_featuremap_memory_gb_override": {
+    "description": "process_featuremap_memory_gb_override",
+    "optional": true
+  },
+  "SingleReadSNV.preemptible_tries": {
+    "description": "preemptible_tries",
+    "optional": true
+  },
+  "SingleReadSNV.cloud_provider_override": {
+    "description": "cloud_provider_override",
+    "optional": true
+  }
+}

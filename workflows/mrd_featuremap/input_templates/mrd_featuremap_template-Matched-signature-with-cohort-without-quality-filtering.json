@@ -1,0 +1,39 @@
+{
+    "MRDFeatureMap.base_file_name": "<base_file_name>",
+    "MRDFeatureMap.cfdna_featuremap": "<cfdna_featuremap>.vcf",
+    "MRDFeatureMap.cfdna_featuremap_index": "<cfdna_featuremap>.vcf.tbi",
+    "MRDFeatureMap.cfdna_cram_bam": "<cfdna_cram_bam>.cram",
+    "MRDFeatureMap.cfdna_cram_bam_index": "<cfdna_cram_bam>.cram.crai",
+    "MRDFeatureMap.srsnv_test_X": "<srsnv_test_X>.parquet",
+    "MRDFeatureMap.srsnv_test_y": "<srsnv_test_y>.parquet",
+    "MRDFeatureMap.srsnv_qual_test": "<srsnv_qual_test>.parquet",
+    "MRDFeatureMap.bcftools_extra_args": "-f PASS --type snps -m2 -M2",
+    "MRDFeatureMap.include_regions": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+    ],
+    "MRDFeatureMap.exclude_regions": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+    ],
+    "MRDFeatureMap.mrd_analysis_params": {
+        "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
+        "read_filter_query": "qual>60"
+    },
+    "MRDFeatureMap.references": {
+        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "MRDFeatureMap.preemptible_tries": 1,
+    "MRDFeatureMap.snv_database": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz",
+    "MRDFeatureMap.n_synthetic_signatures": 5,
+    "MRDFeatureMap.mapping_quality_threshold": 60,
+    "MRDFeatureMap.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitoring.sh",
+    "MRDFeatureMap.external_matched_signatures": [
+        "<external_matched_signatures>"
+    ],
+    "MRDFeatureMap.external_control_signatures": [
+        "<external_control_signatures>"
+    ]
+}
