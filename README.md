@@ -16,14 +16,15 @@ i. Pre requisites:
 2. Pull and push the required public containers to your private ECR by following the steps here:
 
     a. Pull from docker hub or broad gcr into your local ecr
+   
     b. Grant AWS HealthOmics permission to access your private ECR by following the instructions [here](https://docs.aws.amazon.com/omics/latest/dev/permissions-resource.html#permissions-resource-ecr).
    
-3. Import your input files into a S3 bucket.
-4. Create an OmicsService role to access your resources by following the instructions [here](https://docs.aws.amazon.com/omics/latest/dev/setting-up-workflows.html).
+4. Import your input files into a S3 bucket.
+5. Create an OmicsService role to access your resources by following the instructions [here](https://docs.aws.amazon.com/omics/latest/dev/setting-up-workflows.html).
 
 ii. Download the workflow folder as a zipped file, this should include main wdl file on the top level folder, tasks folders and <workflow_name>_params.json . You can save this zipped file locally or in a S3 bucket. 
 
-iii. Download the parameter template for your desired use case from input_templates folder. You can save this file locally or in a S3 bucket.
+iii. Download locally the parameter template for your desired use case from input_templates folder. 
 
 iv. Modify and save the workflow scripts and parameter templates to meet your needs:
    - Update **tasks/globals.wdl** with the urls of you private ECR images.
@@ -49,7 +50,7 @@ ii. From the console:
     b. Click on **Create Workflow** on the Workflows list.
     
     c. Follow the instructions on the console to create your workflow.
-        Note: if top level has more than one wdl, you should define "Main workflow definition file path" - r2r_efficient_dv.wdl
+       - Define "Main workflow definition file path" as <workflow_name>.wdl file
 
 
 2. Run your workflow by following one of the two options below:
