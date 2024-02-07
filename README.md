@@ -36,11 +36,11 @@ Once the workflow resources have been deployed into locally (see instructions pe
 i. From the CLI:
  ~~~
 $ aws omics create-workflow \
---name <workflow_name> \
---main <main wdl file listed in the folder> \
---definition-zip <s3_uri_for_zipped_file> \
---parameter-template <s3_uri_for_parameter_template_file> \
---accelerators GPU
+    --name <workflow_name> \
+    --main <main_wdl_file> \  # in case there is more than one wdl file, the main one is the one named after the directory
+    --definition-zip fileb://<path_to_local_zip> \
+    --parameter-template file://<path_to_parameters_definition_json> \
+    --accelerators GPU
  ~~~
 ii. From the console:
     
@@ -56,12 +56,12 @@ ii. From the console:
 i. From the CLI:
  ~~~
 $ aws omics start-run \
---workflow-id <workflow_id> \
---role-arn <service_role_arn> \
- --output-uri <s3_uri_for_output_folder> \
- --parameters <s3_uri_or_local_parameters_file>
- --name <run_name> \
- --retention-mode REMOVE
+    --workflow-id <workflow_id> \
+    --role-arn <service_role_arn> \
+    --output-uri <s3_uri_for_output_folder> \
+    --parameters file://<path_to_local_parameters_file> \
+    --name <run_name> \
+    --retention-mode REMOVE
  ~~~
 ii. From the console:
    
