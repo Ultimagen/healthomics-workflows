@@ -64,6 +64,7 @@ ii. From the console:
 
 
 2. Run your workflow by following one of the two options below:
+   
 i. From the CLI:
  ~~~
 $ aws omics start-run \
@@ -74,7 +75,7 @@ $ aws omics start-run \
     --name <run_name> \
     --retention-mode REMOVE
  ~~~
-ii. From the console:
+ii. From the console (current omics versoin doesn't work well with wdl scoped parameters, cli is preferred):
    
    a. Click **Private Workflows** from the left pane.
 
