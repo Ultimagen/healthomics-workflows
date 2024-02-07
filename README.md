@@ -5,9 +5,19 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 
 1.	Ultima Genomics offers pipelines as Ready2Run workflows on AWS HealthOmics. Ready2Run workflows enable you to run these pipelines on AWS HealthOmics by simply bringing your data. For more flexibility such as the use of larger file sizes or changing the reference genome, you can convert Ready2Run workflows to private workflows by following the steps in this repository. Once the Ready2Run workflow is converted to a private workflow, the cost to run the workflow will now be based on the compute and run storage used during the private workflow.
 
-2.	Ultima Genomics also shares pipelines that has been modified to run as private workflows on AWS HealthOmics in this repository. You can follow the directions in this repository to create and run a private workflow on AWS HealthOmics. The instractions includes localizing resources, deploying workflow and creating a run.
+2.	Ultima Genomics also shares pipelines that has been modified to run as private workflows on AWS HealthOmics in this repository. You can follow the directions in this repository to create and run a private workflow on AWS HealthOmics.
+  
+3.	Each workflow folder contains the following:
+    - required wdl file\s
+    - HowTo documentation that details the workflow flow and how to run it externally of wdl
+    - documentation of the wdl inputs and outputs
+    - json that list the parameters for creating workflow
+    - folder with optional input templates with default parameters for the wdl
+    - folder with the different tasks the wdl is running
 
-3.	For more questions about these workflows, please contact healtomics.support@ultimagen.com.
+  	The instructions below include localizing resources, deploying workflow and creating a run.
+
+5.	For more questions about these workflows, please contact healtomics.support@ultimagen.com.
 
 ## To localize workflow resources to create a private workflow in AWS HealthOmics, follow the steps below:
 i. Pre requisites: 
