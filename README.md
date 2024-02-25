@@ -23,9 +23,15 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 i. Pre requisites: 
 1. Ultima Genomics workflows uses several ECR containers, they are listed under each workflow tasks\globals.wdl.
 
-2. Pull and push the required public containers to your private ECR by following the steps here:
+2. Pull and push the required public containers to your private ECR by following the steps:
 
     a. Pull from docker hub or broad gcr into your local ecr
+     ~~~
+     docker pull <hub_username>/<image_name>:<tag> #the docker as it appear on globals.wdl
+     docker tag <hub_username>/<image_name>:<tag> <your_aws_account_id>.dkr.ecr.<region>.amazonaws.com/<repository_name>:<tag>
+     aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <your_aws_account_id>.dkr.ecr.<region>.amazonaws.com
+     docker push <your_aws_account_id>.dkr.ecr.<region>.amazonaws.com/<repository_name>:<tag> #if repository doesn't exist, you will need to create it first
+     ~~~
    
     b. Grant AWS HealthOmics permission to access your private ECR by following the instructions [here](https://docs.aws.amazon.com/omics/latest/dev/permissions-resource.html#permissions-resource-ecr).
    
