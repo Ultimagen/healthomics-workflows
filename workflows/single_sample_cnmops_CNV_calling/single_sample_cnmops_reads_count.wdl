@@ -5,7 +5,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow SingleSampleCnmopsReadsCount{
 
     input{
-        String pipeline_version = "1.10.2.1" # !UnusedDeclaration
+        String pipeline_version = "1.11" # !UnusedDeclaration
 
         File input_bam_file
         File input_bam_file_index
@@ -47,7 +47,8 @@ workflow SingleSampleCnmopsReadsCount{
     Boolean no_address = select_first([no_address_override, true ])
     Boolean save_hdf = select_first([save_hdf_override , false])
 
-    call Globals.global
+    call Globals.Globals as Globals
+      GlobalVariables global = Globals.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 

@@ -5,11 +5,11 @@ The pipeline uses a given cohort's coverage profile for normalization.
 
 The pipeline can recieve one of the following options as input:
 
-&nbsp;&nbsp;1. input CRAM/BAM file.
+&nbsp;&nbsp;1. Input CRAM/BAM file. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_template.json
 
-&nbsp;&nbsp;2. rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort.
+&nbsp;&nbsp;2. A rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_skip_reads_count_template.json
 
-&nbsp;&nbsp;3. BedGraph holding the coverage per location.
+&nbsp;&nbsp;3. A BedGraph holding the coverage per location. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_input_bedGraph_template.json
 
 The pipeline calls CNVs for the given sample and filters them by length (>10,000b) and overlap with UG-CNV-LCR.
 
@@ -114,6 +114,16 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
         <i>String? </i> &mdash; 
          The name of the male sex chromosome in the genome. default is: chrY <br /> 
 </p>
+<p name="SingleSampleCnmopsCNVCalling.cap_coverage_override">
+        <b>SingleSampleCnmopsCNVCalling.cap_coverage_override</b><br />
+        <i>Boolean? </i> &mdash; 
+         whether to cap extremely high average coverage windows to 2*cohort's average coverage quantile 99.9% value <br /> 
+</p>
+<p name="SingleSampleCnmopsCNVCalling.enable_moderate_amplifications_override">
+        <b>SingleSampleCnmopsCNVCalling.enable_moderate_amplifications_override</b><br />
+        <i>Boolean? </i> &mdash; 
+         whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: False <br /> 
+</p>
 <p name="SingleSampleCnmopsCNVCalling.save_hdf_override">
         <b>SingleSampleCnmopsCNVCalling.save_hdf_override</b><br />
         <i>Boolean? </i> &mdash; 
@@ -140,12 +150,12 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
 </p>
 <p name="SingleSampleCnmopsCNVCalling.out_sample_cnvs_bed">
         <b>SingleSampleCnmopsCNVCalling.out_sample_cnvs_bed</b><br />
-        <i>File</i><br />
+        <i>Array[File]</i><br />
         Bed file with sample's called CNVs
 </p>
 <p name="SingleSampleCnmopsCNVCalling.out_sample_cnvs_filtered_bed">
         <b>SingleSampleCnmopsCNVCalling.out_sample_cnvs_filtered_bed</b><br />
-        <i>File</i><br />
+        <i>Array[File]</i><br />
         Bed file with CNVs filtered by length and overlap with low confidence regions
 </p>
 <p name="SingleSampleCnmopsCNVCalling.out_sample_reads_count_hdf5">

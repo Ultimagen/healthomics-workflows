@@ -3,9 +3,7 @@
     "SingleReadSNV.input_cram_bam_index": "<input_cram_bam>.cram.crai",
     "SingleReadSNV.sorter_json_stats_file": "<sorter_json_stats_file>",
     "SingleReadSNV.base_file_name": "<base_file_name>",
-    "SingleReadSNV.somatic_mutations_list": [
-        "<somatic mutations vcf/bed (signature) - include if exists, remove this line otherwise>"
-    ],
+    "SingleReadSNV.somatic_mutations_list": [],
     "SingleReadSNV.references": {
         "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
@@ -14,14 +12,14 @@
     "SingleReadSNV.wgs_calling_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
     "SingleReadSNV.break_bands_at_multiples_of": 100000,
     "SingleReadSNV.tp_training_include_regions": [
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed"
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
     ],
     "SingleReadSNV.tp_training_exclude_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
     ],
     "SingleReadSNV.fp_training_include_regions": [
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed"
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
     ],
     "SingleReadSNV.fp_training_exclude_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed",
@@ -32,6 +30,7 @@
     "SingleReadSNV.preemptible_tries": 1,
     "SingleReadSNV.random_seed": 0,
     "SingleReadSNV.cloud_provider_override": "aws",
+    "SingleReadSNV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
     "SingleReadSNV.motif_length_to_annotate": 3,
     "SingleReadSNV.max_hmer_length": 20,
     "SingleReadSNV.train_set_size": 3000000,

@@ -58,7 +58,8 @@ input {
   Int featuremap_disk_size = if dynamic_featuremap_disk_size > secure_disk_size_threshold then dynamic_featuremap_disk_size else secure_disk_size_threshold
   Int process_featuremap_memory_gb = select_first([process_featuremap_memory_gb_override, 6])
 
-  call Globals.global
+  call Globals.Globals as Globals
+  GlobalVariables global = Globals.global_dockers
 
   # Break the calling interval_list into sub-intervals
   # Perform variant calling on the sub-intervals, and then gather the results

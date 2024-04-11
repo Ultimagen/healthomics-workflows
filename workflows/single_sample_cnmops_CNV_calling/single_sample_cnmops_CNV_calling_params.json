@@ -90,5 +90,13 @@
   "SingleSampleCnmopsCNVCalling.monitoring_script_input": {
     "description": "monitoring_script_input",
     "optional": true
+  },
+  "enable_moderate_amplifications_override" :{
+    "description": "whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5). Default is: False",
+    "optional": true
+  },  
+  "cap_coverage_override": {
+    "description": "whether to cap extremely high average coverage windows to 2*cohort's average coverage quantile 99.9% value",
+    "optional": true
   }
 }

@@ -24,12 +24,12 @@ gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval
 ```
 3. A model checkpoint in ONNX format:
 ```
-gs://concordanz/deepvariant/model/germline/v1.2_rc2/model_dyn_1500_140923.onnx
+gs://concordanz/deepvariant/model/germline/v1.3/model.ckpt-890000.dyn_1500.onnx
 ```
 
 or 
 ```
-s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/v1.2_rc2/model_dyn_1500_140923.onnx
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/v1.3/model.ckpt-890000.dyn_1500.onnx
 ```
 
 ### Dockers and hardware requirements
@@ -38,11 +38,15 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:release_1.1_4e62bc3
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:edv_2.1.1_b0ca4ece
+or
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:edv_2.1.1_b0ca4ece
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:release_1.1_4e62bc3
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:edv_2.1.1_b0ca4ece
+or
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:edv_2.1.1_b0ca4ece
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 4 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
@@ -114,7 +118,7 @@ The program will output a sam file with the re-aligned reads unless the argument
 The call_variants step combines the tfrecords from all make_examples jobs. The arguments to the call_variants step are provided as an `.ini`-formatted file. A typical file will look like:
 ```
 [RT classification]
-onnxFileName = model/germline/v1.2_rc2/model_dyn_1500_140923.onnx
+onnxFileName = model/germline/v1.3/model.ckpt-890000.dyn_1500.onnx
 useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
 numInferTreadsPerGpu = 2
@@ -185,7 +189,7 @@ If `##INFO` is not present in the bed file, then a json file with the same name 
 }
 ```
 
-If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows that of [GATK's VariantFiltration](https://gatk.broadinstitute.org/hc/en-us/articles/360036350452-VariantFiltration). Below is an example of a filters_file that is typically used. Note that these filters use the EXOME attribute, which is an annotation that was added using a bed file.
+If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows [JEXL filtering expressions](https://gatk.broadinstitute.org/hc/en-us/articles/360035891011-JEXL-filtering-expressions). Below is an example of a filters_file that is typically used. Note that these filters use the EXOME attribute, which is an annotation that was added using a bed file.
 ```
 LowQualInExome
 QUAL < 16 and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and vc.hasAttribute('EXOME')
@@ -205,58 +209,15 @@ dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v
 ### Producing a GVCF file
 In case a GVCF is desired, then the commands should be modified in the following ways:
 
-1. Add the arguments `--gvcf` and `--p-error 0.005` to the make_examples step. The p-error is an estimation of the probability of *any* base-calling error in the reads, and is used in the calculation of the reference confidence model. When these areguments are added, make_examples will output extra files with the `gvcf.tfrecord.gz` suffix.
+1. Add the arguments `--gvcf` and `--p-error 0.005` to the make_examples step. The p-error is an estimation of the probability of *any* base-calling error in the reads, and is used in the calculation of the reference confidence model. When these arguments are added, make_examples will output extra files with the `gvcf.tfrecord.gz` suffix.
 2. When running post_process, add the argument `--gvcf_outfile output_prefix.g.vcf.gz` and provide the `gvcf.tfrecord.gz` files as input using the `--nonvariant_site_tfrecord_path` argument. The `gvcf.tfrecord.gz` files can be provided to `--nonvariant_site_tfrecord_path` either as a comma-separated list, or a text file that contains all the paths. In the latter case use the name of the ```--nonvariant_site_tfrecord_path @gvcf_records.txt```.
 
-### Running somatic variant calling
 
-Efficient DV can be used also to call somatic variants, in case two samples are provided - a tumor sample and a "normal" (background) sample. In this case the images that are produced are the concatenation of the tumor and background reads, and the model was trained to resolve these images.
-
-In order to run Efficient DV in somatic mode, you need to make a few chaned to the make_examples step:
-1. Add the background cram and index file
-2. Use two values for optimal_coverages
-3. Add `--somatic` argument
-4. The `min_fraction` arguments should be lower than in germline, in order to detect low-frequency variants.
-
-A typical command would be:
+## Debugging tfrecords using dvtools
+The make_examples code also has a handy utility called `dvtools` to view the data in the tfrecord files (without the images). It can accept a tfrecord.gz file, and output a vcf with the records. You can use it in the following way:
+```    
+docker run -v <path mapping> <docker name> \
+  dvtools --infile debug.tfrecord.gz \
+  --filetype dv --op vcf \
+  --outfile debug.dvtools.vcf
 ```
-tool --input "input_reads.cram;background_reads.cram" \
-  --cram-index "input_reads.cram.crai;background_reads.cram.crai" \
-  --output 020scattered \
-  --reference Homo_sapiens_assembly38.fasta \
-  --bed interval001.bed \
-  --min-base-quality 5 \
-  --min-mapq 5 \
-  --cgp-min-count-snps 2 \
-  --cgp-min-count-hmer-indels 2 \
-  --cgp-min-count-non-hmer-indels 2 \
-  --cgp-min-fraction-snps 0.03 \
-  --cgp-min-fraction-hmer-indels 0.03 \
-  --cgp-min-fraction-non-hmer-indels 0.03 \
-  --cgp-min-mapping-quality 5 \
-  --max-reads-per-region 1500 \
-  --assembly-min-base-quality 0 \
-  --gzip-output \
-  --no-realigned-sam \
-  --interval-nreads 10000 \
-  --somatic \
-  --optimal-coverages "100;40" \
-  --cap-at-optimal-coverage \
-  --cycle-examples-min 100000 \
-  --add-ins-size-channel \
-  --add-proxy-support-to-non-hmer-insertion \
-  --pragmatic
-  ```
-
-The model for the call_variants step should be different:
-```
-onnxFileName = gs://concordanz/deepvariant/model/somatic/wgs/model_dyn_1000_200_221_9_2950000.onnx
-```
-
-or 
-
-```
-onnxFileName = s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/model_dyn_1000_200_221_9_2950000.onnx
-```
-
-Finally, you need to add `--consider_bg_fields` to the post_processing, in order to save statistics of the background sample in the vcf.

@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.10.2.1" # !UnusedDeclaration
+        String pipeline_version = "1.11" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -111,7 +111,12 @@ workflow MRDFeatureMap {
           "no_address_override",
           "preemptible_tries",
           "dummy_input_for_call_caching",
-          "monitoring_script_input"
+          "monitoring_script_input",
+          "Globals.glob",
+          "Sentieon.Globals.glob",
+          "AnnotateVCF.Globals.glob",
+          "SingleSampleQC.Globals.glob",
+          "VariantCallingEvaluation.Globals.glob"
       ]}
   }    
 
@@ -301,7 +306,8 @@ workflow MRDFeatureMap {
 
   Int preemptibles = select_first([preemptible_tries, 1])
 
-  call Globals.global
+  call Globals.Globals as Globals
+  GlobalVariables global = Globals.global_dockers
 
   Boolean defined_external_matched_signatures = defined(external_matched_signatures)
   Boolean defined_external_control_signatures = defined(external_control_signatures)
@@ -369,7 +375,7 @@ workflow MRDFeatureMap {
         ref_dict = references.ref_dict,
         docker = global.ug_vc_docker,
         disk_size = 2 * (size(snv_database, "GB") + size(FilterDb.output_vcf, "GB")) + 10,
-        memory_gb = 10,
+        memory_gb = 8,
         cpus = 2,
         monitoring_script = monitoring_script #!FileCoercion
     }
@@ -390,7 +396,7 @@ workflow MRDFeatureMap {
       mapping_quality_threshold = mapping_quality_threshold,
       references = references,
       docker = global.ug_vc_docker,
-      memory_gb = 12,
+      memory_gb = 8,
       cpus = 2,
       preemptibles = preemptibles,
       monitoring_script = monitoring_script  #!FileCoercion
@@ -407,7 +413,7 @@ workflow MRDFeatureMap {
       db_signatures = GenerateControlSignaturesFromDatabase.db_signatures,
       docker = global.ug_vc_docker,
       disk_size = 2 * featuremap_size + 30,
-      memory_gb = 64,
+      memory_gb = 8,
       cpus = 2,
       monitoring_script = monitoring_script  #!FileCoercion
   }
@@ -427,7 +433,7 @@ workflow MRDFeatureMap {
       srsnv_qual_test = srsnv_qual_test,
       docker = global.ug_vc_docker,
       disk_size = 3 * featuremap_size + 30,
-      memory_gb = 32,
+      memory_gb = 16,
       cpus = 4,
       monitoring_script = monitoring_script  #!FileCoercion
   }

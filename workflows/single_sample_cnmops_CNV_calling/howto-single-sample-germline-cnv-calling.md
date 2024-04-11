@@ -13,8 +13,8 @@ Finally, the sample’s CNVs are extracted and filtered by length and low confid
 ## Requirements
 
 The workflow assume that you have coverage representation of the sample of interest in one of the following formats: 
-1. BAM/CRAM - an aligned, sorted, duplicate marked UG BAM/CRAM file. 
-2. BedGraph - Previously calculated input bedGraph holding the coverage per base (outputs with the sequencing data)
+1. BAM/CRAM - an aligned, sorted, duplicate marked UG BAM/CRAM file.
+2. BedGraph - Previously calculated input bedGraph holding the coverage per base (outputs with the sequencing data).
 3. GenomicRanges object - Inputs sample windowed coverage stored as GenomicRanges object in rds file (can be calculated using cn.mops::getReadCountsFromBAM R function).
 
 ### Files required for the analysis (download locally)

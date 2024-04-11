@@ -189,9 +189,11 @@ task RunCnmops {
         File? ploidy
         String? chrX_name
         String? chrY_name
+        Boolean cap_coverage
         Int min_width_value
         Boolean save_hdf
         Boolean save_csv
+        Boolean moderate_amplificiations
         String docker
         File monitoring_script
         Boolean no_address
@@ -217,14 +219,16 @@ task RunCnmops {
              --cohort_reads_count_file ~{merged_cohort_reads_count_matrix} \
              ~{"--ploidy " + ploidy} \
              ~{"--chrX_name " + chrX_name} \
-             ~{"--chrY_name " + chrY_name}
+             ~{"--chrY_name " + chrY_name} \
+             ~{true="--cap_coverage" false="" cap_coverage}
 
         Rscript --vanilla /VariantCalling/ugvc/cnv/cnv_calling_using_cnmops.R \
             -cohort_rc cohort_reads_count.norm.rds \
             -minWidth ~{min_width_value} \
             -p ~{parallel} \
             ~{true="--save_hdf" false='' save_hdf} \
-            ~{true="--save_csv" false='' save_csv}
+            ~{true="--save_csv" false='' save_csv} \
+            ~{true="--moderate_amplificiations" false='' moderate_amplificiations}
 
         touch cohort.cnmops_outputs.hdf5
     >>>
@@ -238,7 +242,7 @@ task RunCnmops {
     }
     output {
         File cohort_reads_count_norm = "cohort_reads_count.norm.rds"
-        File cohort_cnvs = "cohort.cnmops.rds"
+        File cohort_cnvs_int_rds = "cohort.cnmops.resCNMOPS_Int.rds"
         File cohort_cnvs_csv = "cohort.cnmops.cnvs.csv"
         File cohort_cnmops_output_hdf5 = "cohort.cnmops_outputs.hdf5"
         File cohort_estimated_gender = ".estimate_gender"
@@ -250,7 +254,7 @@ task RunCnmops {
 task FilterSampleCnvs {
     input {
         File cohort_cnvs_csv
-        String sample_name
+        Array[String] sample_names
         Int min_cnv_length
         Float intersection_cutoff
         File cnv_lcr_file
@@ -271,18 +275,21 @@ task FilterSampleCnvs {
         source ~/.bashrc
         conda activate genomics.py3
 
-        #get sample CNVs
-        if grep -q "~{sample_name}" ~{cohort_cnvs_csv};
-            then grep "~{sample_name}" ~{cohort_cnvs_csv} > ~{sample_name}.cnvs.csv ;
-            awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' ~{sample_name}.cnvs.csv > ~{sample_name}.cnvs.bed;
+        #get samples CNVs
+        for sample_name in ~{sep=" " sample_names}
+        do 
+            if grep -q "$sample_name" ~{cohort_cnvs_csv};
+                then grep "$sample_name" ~{cohort_cnvs_csv} > $sample_name.cnvs.csv ;
+                awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' $sample_name.cnvs.csv > $sample_name.cnvs.bed;
 
-            python /VariantCalling/ugvc filter_sample_cnvs \
-                --input_bed_file ~{sample_name}.cnvs.bed \
-                --intersection_cutoff ~{intersection_cutoff} \
-                --cnv_lcr_file ~{cnv_lcr_file} \
-                --min_cnv_length ~{min_cnv_length};
-        else echo "~{sample_name} not found in ~{cohort_cnvs_csv}";
-        fi
+                python /VariantCalling/ugvc filter_sample_cnvs \
+                    --input_bed_file $sample_name.cnvs.bed \
+                    --intersection_cutoff ~{intersection_cutoff} \
+                    --cnv_lcr_file ~{cnv_lcr_file} \
+                    --min_cnv_length ~{min_cnv_length};
+            else echo "$sample_name not found in ~{cohort_cnvs_csv}";
+            fi
+        done
     >>>
     runtime {
         preemptible: preemptible_tries
@@ -293,9 +300,10 @@ task FilterSampleCnvs {
         cpu: 4
     }
     output {
-        File sample_cnvs_csv = "~{sample_name}.cnvs.csv"
-        File sample_cnvs_bed = "~{sample_name}.cnvs.annotate.bed"
-        File sample_cnvs_filtered_bed = "~{sample_name}.cnvs.filter.bed"
+        Array[File] csvs = glob("*.csv")
+        Array[File] sample_cnvs_csv = glob(".cnvs.csv")
+        Array[File] sample_cnvs_bed = glob("*.cnvs.annotate.bed")
+        Array[File] sample_cnvs_filtered_bed = glob("*.cnvs.filter.bed")
         File monitoring_log = "monitoring.log"
     }
 }

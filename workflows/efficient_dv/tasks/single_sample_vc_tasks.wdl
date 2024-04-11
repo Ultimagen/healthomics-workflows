@@ -257,7 +257,8 @@ task TrainModel {
             ~{"--exome_weight_annotation " + exome_weight_annotation} \
             --annotate_intervals ~{sep=" --annotate_intervals " annotation_intervals} \
             --evaluate_concordance_contig ~{special_chromosome} \
-            --output_file_prefix ~{input_vcf_name}.model
+            --output_file_prefix ~{input_vcf_name}.model \
+            --vcf_type single_sample_old_vc
     >>>
   runtime {
     preemptible: preemptible_tries

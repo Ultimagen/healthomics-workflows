@@ -56,19 +56,33 @@ Either when using the WDL or running as standalone, the following inputs are nee
   b. include_regions - region/s to which the analysis will be limited, multiple regions would be intersected. Default:
     
     [
-      "gs://concordanz/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+      "gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
+    ]
+    or 
+    [
+      "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
     ]
 
   c. exclude_regions - regions that will be excluded from the analysis, supporting bed and vcf formats. Default:
-    1. GNOMAD: common population variants
-    2. db_snp: common population variants
+
+    1. [GNOMAD](https://gnomad.broadinstitute.org/): common population variants.
+
+    2. [db_snp](https://www.ncbi.nlm.nih.gov/snp/): common population variants.
+
     3. MRD_blacklist: loci with high error rate in an internal HapMap project in UG
+
     Optionaly, one can add a list of germline variants of the corresponding sample, to exclude from MRD analysis.
     
     [
       "gs://concordanz/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
       "gs://concordanz/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
       "gs://concordanz/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed.gz"
+    ]
+    or
+    [
+      "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+      "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+      "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed.gz"
     ]
 
   d. references - Reference genome. Default:
@@ -97,6 +111,8 @@ Either when using the WDL or running as standalone, the following inputs are nee
   d. snv_database - a large database of WG somatic cancer mutations from which variants for synthetic control signatures (also called database controls) will be drawn. Default is the PCAWG database (Nature 2020). Default:
   
     "gs://concordanz/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
+    or
+    "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
 
   e. n_synthetic_signatures - number of synthetic signatures to generate from the database. Default: 5
   
@@ -352,9 +368,9 @@ jupyter nbconvert ~{basename}.mrd_data_analysis.ipynb --output ~{basename}.mrd_d
 
 ## Summary of the relevant files
 - **WDLs:**
-  - terra_pipeline/wdls/mrd_featuremap.wdl
-  - terra_pipeline/wdls/single_read_snv.wdl
-  - terra_pipeline/wdls/dv_inference.wdl
+  - mrd_featuremap.wdl
+  - single_read_snv.wdl
+  - dv_inference.wdl
 
 ## test files
 ```
@@ -369,4 +385,17 @@ jupyter nbconvert ~{basename}.mrd_data_analysis.ipynb --output ~{basename}.mrd_d
 {srsnv_test_y}:gs://ug-cromwell-tests/mrd/test_data/Pa_46.y_test.parquet
 {srsnv_qual_test}:gs://ug-cromwell-tests/mrd/test_data/Pa_46.qual_test.parquet
 {snv_database}:gs://concordanz/hg38/pcawg/pancan_pcawg_2020.chr20.vcf.gz
+
+or
+
+{cfdna_featuremap}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.with_ml_qual.chr20.vcf.gz
+{cfdna_featuremap_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.with_ml_qual.chr20.vcf.gz.tbi
+{cfdna_cram_bam}:s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram
+{cfdna_cram_bam_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
+{external_matched_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_FreshFrozen.ann.chr20.vcf.gz"]
+{external_control_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_67_FFPE.ann.chr20.vcf.gz"]
+{srsnv_test_X}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.X_test.parquet
+{srsnv_test_y}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.y_test.parquet
+{srsnv_qual_test}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.qual_test.parquet
+{snv_database}:s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.chr20.vcf.gz
 ```

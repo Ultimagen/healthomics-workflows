@@ -237,7 +237,7 @@ task UGCallVariants{
     Int num_cpus
     Int num_threads
     File monitoring_script
-    Int disk_size = ceil(size(examples, 'GB') + 10)
+    Int disk_size = ceil(1.05*size(examples, 'GB') + 10)
     Int? call_variants_extra_mem
   }
   Int num_examples = length(examples)
@@ -340,6 +340,8 @@ task UGPostProcessing{
       bash ~{monitoring_script} | tee monitoring.log >&2 &
       set -eo pipefail
 
+      cp ~{write_lines(called_records)} called_records.txt
+
       printf "%b\n" "LowQualInExome" \
         "QUAL < ~{min_variant_quality_exome_hmer_indels} and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and vc.hasAttribute('EXOME')" \
         "LowQual" \
@@ -358,7 +360,7 @@ task UGPostProcessing{
       fi
 
       ug_postproc \
-        --infile ~{sep="," called_records} \
+        --infile @called_records.txt \
         --ref ~{ref} \
         --outfile ~{output_prefix}.vcf.gz \
         ~{gvcf_args} \

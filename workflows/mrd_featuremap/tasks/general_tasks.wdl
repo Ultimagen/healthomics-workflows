@@ -648,6 +648,7 @@ task MergeCramFiles {
             String sample_name
             Array[File] crams
             References references
+            File? cache_tarball
             String docker
             Boolean no_address
             Int? cpus
@@ -659,7 +660,10 @@ task MergeCramFiles {
             bash ~{monitoring_script} | tee monitoring.log >&2 &
             source ~/.bashrc
             conda activate genomics.py3
-            samtools merge -@ ~{cpus_to_use} --reference ~{references.ref_fasta} - ~{sep=" " crams} | \
+
+            ~{"tar -zxf "+cache_tarball}
+
+            REF_CACHE=cache/%2s/%2s/ REF_PATH='.' samtools merge -@ ~{cpus_to_use} --reference ~{references.ref_fasta} - ~{sep=" " crams} | \
                 samtools reheader - --command 'sed "s/SM:[^\t]*/SM:~{sample_name}/g"' | \
                 samtools view -h - -@ ~{cpus_to_use} -C --reference ~{references.ref_fasta} -o ~{output_cram_name} --output-fmt-option embed_ref
             samtools index ~{output_cram_name}
@@ -671,7 +675,7 @@ task MergeCramFiles {
     }
     runtime {
             memory: "8GB"
-            disks: "local-disk " + (ceil(size(crams, "GB")) *2 + 10) + " HDD"
+            disks: "local-disk " + (ceil(size(cache_tarball, "GB") + size(crams, "GB")) * 3 + 10) + " HDD"
             docker: docker
             noAddress: no_address
             cpu: "~{cpus_to_use}"

@@ -97,6 +97,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Int </i> &mdash; 
          Minimal non-h-mer indel quality in order to be labeled as PASS <br /> 
 </p>
+<p name="EfficientDV.hard_qual_filter">
+        <b>EfficientDV.hard_qual_filter</b><br />
+        <i>Int </i> &mdash; 
+         Any variant with QUAL < hard_qual_filter will be discarded from the VCF file <br /> 
+</p>
+<p name="EfficientDV.allele_frequency_ratio">
+        <b>EfficientDV.allele_frequency_ratio</b><br />
+        <i>Float? </i> &mdash; 
+         Minimal ratio between the allele frequency in tumor and normal, for vcf filtering <br /> 
+</p>
 <p name="EfficientDV.show_bg_fields">
         <b>EfficientDV.show_bg_fields</b><br />
         <i>Boolean </i> &mdash; 
@@ -142,6 +152,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.vcf_index</b><br />
         <i>File</i><br />
         vcf index
+</p>
+<p name="EfficientDV.vcf_no_ref_calls">
+        <b>EfficientDV.vcf_no_ref_calls</b><br />
+        <i>File</i><br />
+        Called variants without reference calls
+</p>
+<p name="EfficientDV.vcf_no_ref_calls_index">
+        <b>EfficientDV.vcf_no_ref_calls_index</b><br />
+        <i>File</i><br />
+        vcf without references calls index
 </p>
 <p name="EfficientDV.output_gvcf">
         <b>EfficientDV.output_gvcf</b><br />

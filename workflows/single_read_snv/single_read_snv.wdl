@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.10.2.1" # !UnusedDeclaration
+  String pipeline_version = "1.11" # !UnusedDeclaration
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -71,6 +71,8 @@ input {
   Int? preemptible_tries
   Boolean? no_address_override
   String? cloud_provider_override
+  # Used for running on other clouds (aws)
+  File? monitoring_script_input
 
   # winval validations
   #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
@@ -94,6 +96,7 @@ meta {
             "cloud_provider_override",
             "no_address_override",
             "preemptible_tries",
+            "monitoring_script_input",
             "process_featuremap_memory_gb_override",
             "FeatureMap.pipeline_version",
             "CreateHomSnvFeatureMap.disk_size",
@@ -106,7 +109,9 @@ meta {
             "TrainSnvQualityRecalibrationModel.disk_size",
             "InferenceSnvQualityRecalibrationModel.cpus",
             "InferenceSnvQualityRecalibrationModel.memory_gb",
-            "InferenceSnvQualityRecalibrationModel.disk_size"
+            "InferenceSnvQualityRecalibrationModel.disk_size",
+            "FeatureMap.Globals.glob",
+            "Globals.glob"
         ]}
     }    
 
@@ -350,18 +355,21 @@ meta {
         
     }
 
+
   Int preemptibles = select_first([preemptible_tries, 1])
   String base_file_name_sub = sub(base_file_name, "#", "")
   Boolean no_address = select_first([no_address_override, true ])
 
-  call Globals.global
+  call Globals.Globals as Globals
+    GlobalVariables global = Globals.global_dockers
+  File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
   call UGGeneralTasks.ExtractSampleNameFlowOrder as ExtractSampleNameFlowOrder{
     input:
       input_bam = input_cram_bam,
       references = references,
       preemptible_tries = preemptibles,
-      monitoring_script = global.monitoring_script,
+      monitoring_script = monitoring_script,
       docker = global.broad_gatk_docker,
       no_address = no_address,
       cloud_provider_override = cloud_provider_override
@@ -372,7 +380,7 @@ meta {
       sorter_json_stats_file = sorter_json_stats_file,
       docker = global.ug_vc_docker,
       preemptible_tries = preemptibles,
-      monitoring_script = global.monitoring_script,  #!FileCoercion
+      monitoring_script = monitoring_script,  #!FileCoercion
   }
   Int mean_coverage = GetMeanCoverageFromSorterStats.mean_coverage
   Int featuremap_shard_number = ceil(mean_coverage / 1.4)   # overrides featuremap_params.scatter_count
@@ -407,7 +415,7 @@ meta {
       cpus =                    1,
       docker =                  global.ug_vc_docker,
       preemptibles =            preemptibles,
-      monitoring_script =       global.monitoring_script,  #!FileCoercion
+      monitoring_script =       monitoring_script,  #!FileCoercion
   }
 
   call UGMrdTasks.BedIntersectAndExclude as CreateTpTrainingRegionsBed {
@@ -417,7 +425,7 @@ meta {
           output_basename = "TP",
           memory_gb = 8,
           docker = global.ug_vc_docker,
-          monitoring_script = global.monitoring_script,  #!FileCoercion
+          monitoring_script = monitoring_script,  #!FileCoercion
           preemptibles = preemptibles
   }
 
@@ -430,7 +438,7 @@ meta {
           memory_gb = 16,
           cpus = 4,
           docker = global.ug_vc_docker,
-          monitoring_script = global.monitoring_script,  #!FileCoercion
+          monitoring_script = monitoring_script,  #!FileCoercion
           preemptibles = preemptibles
   }
 
@@ -454,7 +462,7 @@ meta {
       balanced_strand_adapter_version = balanced_strand_adapter_version,
       references                      = references,
       flow_order                      = ExtractSampleNameFlowOrder.flow_order,
-      monitoring_script               = global.monitoring_script,  #!FileCoercion
+      monitoring_script               = monitoring_script,  #!FileCoercion
       docker                          = global.ug_vc_docker,
       preemptible_tries               = preemptibles,
     }
@@ -469,7 +477,7 @@ meta {
       featuremap_index		                    = FeatureMap.featuremap_index,
       X_train_file                            = TrainSnvQualityRecalibrationModel.X_train_file,
       test_set_mrd_simulation_dataframe_file  = TrainSnvQualityRecalibrationModel.test_set_mrd_simulation_dataframe,
-      monitoring_script                       = global.monitoring_script,  #!FileCoercion
+      monitoring_script                       = monitoring_script,  #!FileCoercion
       docker                                  = global.ug_vc_docker,
       preemptible_tries                       = preemptibles,
   }

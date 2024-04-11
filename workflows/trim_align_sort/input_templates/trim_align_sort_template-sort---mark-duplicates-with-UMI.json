@@ -1,0 +1,35 @@
+{
+    "TrimAlignSort.input_cram_bam_list": [
+        "<input_bam_or_cram_1>.cram",
+        "<input_bam_or_cram_2>.cram"
+    ],
+    "TrimAlignSort.base_file_name": "<base_file_name>",
+    "TrimAlignSort.ref_fastas_cram": [
+        "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
+        "s3://broad-references/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+    ],
+    "TrimAlignSort.references": {
+        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "TrimAlignSort.preemptible_tries": 1,
+    "TrimAlignSort.no_address": true,
+    "TrimAlignSort.cpu": 32,
+    "TrimAlignSort.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
+    "TrimAlignSort.steps": {
+        "trim": false,
+        "align": false,
+        "sort": true,
+        "fastqc": false
+    },
+    "TrimAlignSort.sorter_params": {
+        "mark_duplicates": true,
+        "umi_tag": "u5,u3",
+        "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+    }
+}

@@ -43,6 +43,10 @@
     "description": "Number of shards for parallelization",
     "optional": true
   },
+  "EfficientDV.scatter_intervals_break": {
+    "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+    "optional": true
+  },
   "EfficientDV.min_fraction_snps": {
     "description": "Min fraction of reads supporting a SNP required to generate a candidate variant",
     "optional": true
@@ -142,5 +146,18 @@
   "EfficientDV.monitoring_script_input": {
     "description": "monitoring_script_input",
     "optional": true
-  }
+  },
+  "EfficientDV.prioritize_alt_supporting_reads": {
+    "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+    "optional": true
+  },
+  "EfficientDV.max_reads_per_partition": {
+    "description": "Maximal number of reads that are stored in memory when analyzing an active region",
+    "optional": true
+  },
+  "EfficientDV.allele_frequency_ratio": {
+    "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
+    "optional": true
+}
+
 }

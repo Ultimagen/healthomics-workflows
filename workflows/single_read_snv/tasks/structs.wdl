@@ -116,12 +116,12 @@ struct SimpleReadTrimmingParameters {
 
 struct TrimmerParameters {
   File? formats_description         # optional formtas.json file. If not provided, the default trimmer formats will be used (https://github.com/Ultimagen/trimmer/blob/master/formats/formats.json)
-  String? local_formats_description # path to description file stored in the docker, default is /trimmer/formats/formats.json, can be changed to /trimmer/dev-formats/DESC_FILE.json
+  String? local_formats_description # path to description file stored in the docker, default is /trimmer/formats/formats.json
   String untrimmed_reads_action     # either "" (do nothing), "filter" (mark in sam flag) or "discard"
   String? format                    # format name to be used, as defined in the formats.json file
   String? extra_args
   Array[File]? pattern_files        # If the formats description uses pattern files (specified with file: or enc: prefix in format file), they must be provided also here. 
-                                 # Note that built-in pattern files from the Trimmer repo do not need to be provided here.
+                                    # Note that built-in pattern files from the Trimmer repo do not need to be provided here.
   File? cram_reference              # Use this in case the reference is not embedded in the input cram (or if you want to read the cram with a different reference)
   Int? memory_gb                    # Ovverride the default memory (in GB) used by trimmer
   String? output_demux_format       # If provided, trimmer will perform demultiplexing and the output file name will be in this format. E.g. "output-2%"

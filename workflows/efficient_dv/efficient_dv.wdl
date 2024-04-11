@@ -18,6 +18,8 @@ version 1.0
 # Runs efficientDV variant calling pipeline for Ultima Genomics data.
 #
 # CHANGELOG
+# 1.11.0 Bug fixes in somatic efficient DV, added post-processing tasks
+# 1.10.3 Externalized hard cutoff on the quality
 # 1.9.0 Initial release
 
 import "tasks/structs.wdl" as Structs
@@ -25,11 +27,12 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 import "tasks/efficient_dv_tasks.wdl" as UGDVTasks
 import "tasks/globals.wdl" as Globals
 import "tasks/single_sample_vc_tasks.wdl" as VCTasks
+import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.10.2.1" # !UnusedDeclaration
+    String pipeline_version = "1.11" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -76,6 +79,8 @@ workflow EfficientDV {
     Int min_variant_quality_non_hmer_indels = 0
     Int min_variant_quality_snps = 0
     Int min_variant_quality_exome_hmer_indels = 20
+    Int hard_qual_filter = 1
+    Float? allele_frequency_ratio
     Boolean show_bg_fields = false  # Show fields from background sample (for somatic calling)
 
     # Systematic error correction args
@@ -130,6 +135,7 @@ workflow EfficientDV {
    #@wv len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
    #@wv len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai"}
    #@wv len(optimal_coverages) == 1 + (len(background_cram_files) > 0)
+   #@wv len(background_cram_files) > 0 -> defined(allele_frequency_ratio)
   }
   meta {
       description:"Performs variant calling on an input cram, using a re-write of (DeepVariant)[https://www.nature.com/articles/nbt.4235] which is adapted for Ultima Genomics data. There are three stages to the variant calling: (1) make_examples - Looks for “active regions” with potential candidates. Within these regions, it performs local assembly (haplotypes), re-aligns the reads, and defines candidate variant. Images of the reads in the vicinity of the candidates are saved as protos in a tfrecord format. (2) call_variants - Collects the images from make_examples and uses a deep learning model to infer the statistics of each variant (i.e. quality, genotype likelihoods etc.). (3) post_process - Uses the output of call_variants to generate a vcf and annotates it."
@@ -149,7 +155,13 @@ workflow EfficientDV {
               "FilterVCF.flow_order",
               "FilterVCF.annotation_intervals",
               "FilterVCF.is_mutect",
-              "FilterVCF.disk_size"
+              "FilterVCF.disk_size",
+              "MergeRealignedCrams.cache_tarball",
+              "Globals.glob",
+              "Sentieon.Globals.glob",
+              "AnnotateVCF.Globals.glob",
+              "SingleSampleQC.Globals.glob",
+              "VariantCallingEvaluation.Globals.glob"
           ]}
   }
 
@@ -320,6 +332,16 @@ workflow EfficientDV {
       type: "Int",
       category: "param_optional"
     }
+    allele_frequency_ratio: {
+        type: "Float",
+        help: "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
+        category: "param_optional"
+    }
+    hard_qual_filter: {
+        type: "Int",
+        help: "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        category: "param_optional"
+    }
     show_bg_fields: {
       help: "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
       type: "Boolean",
@@ -430,6 +452,16 @@ workflow EfficientDV {
       type: "File",
       category: "output"
     }
+    vcf_no_ref_calls: {
+      help: "Called variants without reference calls",
+      type: "File",
+      category: "output"
+    }
+    vcf_no_ref_calls_index: {
+      help: "vcf without references calls index",
+      type: "File",
+      category: "output"
+    }
     output_gvcf: {
       help: "Variant in each position (gvcf file)",
       type: "File?",
@@ -475,7 +507,8 @@ workflow EfficientDV {
   Float ug_make_examples_memory = select_first([ug_make_examples_memory_override, 4])
   Int ug_make_examples_cpus = select_first([ug_make_examples_cpus_override, 2])
 
-  call Globals.global
+  call Globals.Globals as Globals
+  GlobalVariables global = Globals.global_dockers
 
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
   if (!defined(target_intervals)){
@@ -612,7 +645,7 @@ workflow EfficientDV {
       min_variant_quality_hmer_indels = min_variant_quality_hmer_indels,
       min_variant_quality_non_hmer_indels = min_variant_quality_non_hmer_indels,
       min_variant_quality_snps = min_variant_quality_snps,
-      qual_filter = 1,
+      qual_filter = hard_qual_filter,
       show_bg_fields = show_bg_fields,
       docker = global.ug_make_examples_docker,
       output_prefix = output_prefix,
@@ -664,29 +697,62 @@ workflow EfficientDV {
         no_address = true
     }
   }
+
+  call PostProcesTasks.CalibrateBridgingSnvs as CalibrateBridgingSnvs {
+    input:
+        input_vcf         = select_first([FilterVCF.output_vcf_filtered, UGPostProcessing.vcf_file]),
+        input_vcf_index   = select_first([FilterVCF.output_vcf_filtered_index, UGPostProcessing.vcf_index]),
+        references = references,
+        final_vcf_base_name = base_file_name,
+        monitoring_script = monitoring_script,
+        ugvc_docker =  global.ug_vc_docker
+  }
+  if (length(background_cram_files) > 0) {
+    call PostProcesTasks.ApplyAlleleFrequencyRatioFilter as ApplyAlleleFrequencyRatioFilter {
+      input:
+          input_vcf = CalibrateBridgingSnvs.output_vcf,
+          af_ratio = select_first([allele_frequency_ratio]),
+          final_vcf_base_name = base_file_name,
+          monitoring_script = monitoring_script,
+          bcftools_docker =  global.bcftools_docker
+    } 
+  }
+
+   call PostProcesTasks.RemoveRefCalls as RemoveRefCalls {
+        input:
+            input_vcf = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, CalibrateBridgingSnvs.output_vcf]),
+            final_vcf_base_name = base_file_name,
+            monitoring_script = monitoring_script,
+            bcftools_docker =  global.bcftools_docker
+    }
   
-  if (make_gvcf){
+  if (make_gvcf) {
     File gvcf_maybe = UGPostProcessing.gvcf_file
     File gvcf_index_maybe = UGPostProcessing.gvcf_file_index
   }
 
-  if (output_realignment){
+  if (output_realignment) {
     File? realigned_cram_maybe = MergeRealignedCrams.output_cram
     File? realigned_cram_index_maybe = MergeRealignedCrams.output_cram_index
   }
 
-  output {
+
+
+  output 
+  {
     File nvidia_smi_log     = UGCallVariants.nvidia_smi_log
     # File output_model_serialized   = UGCallVariants.output_model_serialized # uncomment to output the serilized model
-    File vcf_file           = select_first([FilterVCF.output_vcf_filtered, UGPostProcessing.vcf_file])
-    File vcf_index          = select_first([FilterVCF.output_vcf_filtered_index, UGPostProcessing.vcf_index])
+    File vcf_file           = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, CalibrateBridgingSnvs.output_vcf])
+    File vcf_index          = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf_index, CalibrateBridgingSnvs.output_vcf_index])
+    File vcf_no_ref_calls   = RemoveRefCalls.output_vcf
+    File vcf_no_ref_calls_index = RemoveRefCalls.output_vcf_index
     File? output_gvcf       = gvcf_maybe
     File? output_gvcf_index = gvcf_index_maybe
-    File? realigned_cram = realigned_cram_maybe
+    File? realigned_cram    = realigned_cram_maybe
     File? realigned_cram_index = realigned_cram_index_maybe
-    String flow_order = flow_order_
-    File report_html  = UGPostProcessing.qc_report
-    File qc_h5 = UGPostProcessing.qc_h5
-    File qc_metrics_h5 = UGPostProcessing.qc_metrics_h5
+    String flow_order       = flow_order_
+    File report_html        = UGPostProcessing.qc_report
+    File qc_h5              = UGPostProcessing.qc_h5
+    File qc_metrics_h5      = UGPostProcessing.qc_metrics_h5
   }
 }

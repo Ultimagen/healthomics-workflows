@@ -22,6 +22,7 @@ version 1.0
 # 4. Filtering sample's CNV calls
 
 # CHANGELOG in reverse chronological order
+# 1.11.0 Added an option to call CNVs that are less than duplications (mosaic?)
 # 1.9.0 Support bedGraph input format as external pre-calculated sample's coverage.
 # 1.6.0 Normalization now genome-wide rather than per chromosome (allows correct calling of chrY, chrX)
 # 1.5.0 Faster
@@ -33,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.10.2.1" # !UnusedDeclaration
+        String pipeline_version = "1.11" # !UnusedDeclaration
 
         String base_file_name
 
@@ -55,11 +56,13 @@ workflow SingleSampleCnmopsCNVCalling {
         File? merged_cohort_ploidy_file
         String? chrX_name
         String? chrY_name
+        Boolean? cap_coverage_override
         Int min_width_value = 2
 
         Int min_cnv_length = 10000
         Float intersection_cutoff = 0.5
         File cnv_lcr_file
+        Boolean? enable_moderate_amplifications_override
 
         Boolean? save_hdf_override
         Boolean? save_csv_override
@@ -90,13 +93,16 @@ workflow SingleSampleCnmopsCNVCalling {
     }
 
     meta {
-        description: "Runs single sample germline CNV calling workflow based on \<a href=\"https://bioconductor.org/packages/release/bioc/html/cn.mops.html\"\>cn.mops</a>\n\nThe pipeline uses a given cohort's coverage profile for normalization.\n\nThe pipeline can recieve one of the following options as input:\n\n&nbsp;&nbsp;1. input CRAM/BAM file.\n\n&nbsp;&nbsp;2. rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort.\n\n&nbsp;&nbsp;3. BedGraph holding the coverage per location.\n\nThe pipeline calls CNVs for the given sample and filters them by length (>10,000b) and overlap with UG-CNV-LCR."
+        description: "Runs single sample germline CNV calling workflow based on \<a href=\"https://bioconductor.org/packages/release/bioc/html/cn.mops.html\"\>cn.mops</a>\n\nThe pipeline uses a given cohort's coverage profile for normalization.\n\nThe pipeline can recieve one of the following options as input:\n\n&nbsp;&nbsp;1. Input CRAM/BAM file. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_template.json\n\n&nbsp;&nbsp;2. A rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_skip_reads_count_template.json\n\n&nbsp;&nbsp;3. A BedGraph holding the coverage per location. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_input_bedGraph_template.json\n\nThe pipeline calls CNVs for the given sample and filters them by length (>10,000b) and overlap with UG-CNV-LCR."
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
                 "monitoring_script_input",
                 "SingleSampleReadsCount.monitoring_script_input",
-                "no_address_override"]}
+                "no_address_override",
+                "Globals.glob",
+                "SingleSampleReadsCount.Globals.glob"
+                ]}
     }
     parameter_meta {
         base_file_name: {
@@ -234,6 +240,18 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "File",
             category: "output_optional"
         }
+        enable_moderate_amplifications_override:
+        {
+            help: "whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: False",
+            type: "Boolean",
+            category: "param_optional"
+        }
+        cap_coverage_override:
+        {
+            help: "whether to cap extremely high average coverage windows to 2*cohort's average coverage quantile 99.9% value",
+            type: "Boolean",
+            category: "param_optional"
+        }
     }
 
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
@@ -242,8 +260,11 @@ workflow SingleSampleCnmopsCNVCalling {
     Boolean run_convert_bedGraph_to_Granges = defined(bed_graph)
     Boolean save_hdf = select_first([save_hdf_override , false])
     Boolean save_csv = select_first([save_csv_override , false])
+    Boolean enable_moderate_amplifications = select_first([enable_moderate_amplifications_override, false])
+    Boolean cap_coverage = select_first([cap_coverage_override, false])
 
-    call Globals.global
+    call Globals.Globals as Globals
+      GlobalVariables global = Globals.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
@@ -302,19 +323,22 @@ workflow SingleSampleCnmopsCNVCalling {
         ploidy = merged_cohort_ploidy_file,
         chrX_name = chrX_name,
         chrY_name = chrY_name,
+        cap_coverage = cap_coverage,
         docker = global.ug_vc_docker,
         save_hdf = save_hdf,
         save_csv = save_csv,
+        moderate_amplificiations = enable_moderate_amplifications,
         monitoring_script = monitoring_script,
         no_address = no_address,
         preemptible_tries = preemptible_tries,
         parallel = parallel
     }
 
+    Array[String] sample_names = [base_file_name]
     call CnvTasks.FilterSampleCnvs {
         input:
         cohort_cnvs_csv = RunCnmops.cohort_cnvs_csv,
-        sample_name = base_file_name,
+        sample_names = sample_names,
         min_cnv_length = min_cnv_length,
         intersection_cutoff = intersection_cutoff,
         cnv_lcr_file = cnv_lcr_file,
@@ -326,8 +350,8 @@ workflow SingleSampleCnmopsCNVCalling {
     output {
         File out_sample_reads_count = sample_reads_count_file
         File? out_sample_reads_count_hdf5 = SingleSampleReadsCount.out_reads_count_hdf5
-        File out_sample_cnvs_bed = FilterSampleCnvs.sample_cnvs_bed
-        File out_sample_cnvs_filtered_bed = FilterSampleCnvs.sample_cnvs_filtered_bed
+        Array[File] out_sample_cnvs_bed = FilterSampleCnvs.sample_cnvs_bed
+        Array[File] out_sample_cnvs_filtered_bed = FilterSampleCnvs.sample_cnvs_filtered_bed
     }
 }
 

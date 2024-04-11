@@ -60,11 +60,11 @@ Genomic region filtering can be modified by the user (e.g. by excluding a specif
 #### Regions used for TP training data
 
 {include_regions_tp}:
-- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed
+- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed
 
 or
 
-- s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed
+- s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed
 
 {exclude_regions_tp}:
 - gs://concordanz/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
@@ -78,7 +78,7 @@ or
 #### Regions used for FP training data
 
 {include_regions_fp}:
-- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1/ug_hcr.bed
+- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed
 
 or
 
@@ -292,7 +292,7 @@ After creating the FeatureMap file, additional annotations are added to the INFO
   --flow_order TGCA \
   --motif_length_to_annotate 3 \
   --max_hmer_length 20 \
-  --balanced_strand_adapter_version "LA_v5and6" 
+  --balanced_strand_adapter_version "ppmSeq_v1" 
 ```
 
 *Recommended hardware - 1 CPU, 4GB RAM*
@@ -394,7 +394,7 @@ This code trains the ML model on the annotated FeatureMap, and produces a report
 --pre_filter {pre_filter} \
 --random_seed 0 \
 --balanced_sampling_info_fields trinuc_context_with_alt is_forward \
---balanced_strand_adapter_version "LA_v5and6" \
+--balanced_strand_adapter_version "ppmSeq_v1" \
 ```
 *Recommended hardware - 1 CPU, 16GB RAM*
 

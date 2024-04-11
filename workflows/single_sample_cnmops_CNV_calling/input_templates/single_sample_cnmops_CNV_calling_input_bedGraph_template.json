@@ -39,5 +39,5 @@
     "SingleSampleCnmopsCNVCalling.intersection_cutoff": 0.5,
     "SingleSampleCnmopsCNVCalling.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
     "SingleSampleCnmopsCNVCalling.genome_windows": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed",
-    "SingleSampleCnmopsCNVCalling.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitoring.sh"
+    "SingleSampleCnmopsCNVCalling.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

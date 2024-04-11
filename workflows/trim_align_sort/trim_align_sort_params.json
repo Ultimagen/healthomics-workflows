@@ -1,0 +1,82 @@
+{
+  "TrimAlignSort.input_cram_bam_list": {
+    "description": "input_cram_bam_list",
+    "optional": false
+  },
+  "TrimAlignSort.ref_fastas_cram": {
+    "description": "All possible reference genomes for cram compression",
+    "optional": false
+  },
+  "TrimAlignSort.base_file_name": {
+    "description": "base_file_name",
+    "optional": false
+  },
+  "TrimAlignSort.references": {
+    "description": "references",
+    "optional": false
+  },
+  "TrimAlignSort.steps": {
+    "description": "steps",
+    "optional": false
+  },
+  "TrimAlignSort.sample_name": {
+    "description": "sample_name",
+    "optional": true
+  },
+  "TrimAlignSort.trimmer_parameters": {
+    "description": "trimmer_parameters",
+    "optional": true
+  },
+  "TrimAlignSort.aligner": {
+    "description": "aligner",
+    "optional": true
+  },
+  "TrimAlignSort.ua_parameters": {
+    "description": "ua_parameters",
+    "optional": true
+  },
+  "TrimAlignSort.ua_meth_parameters": {
+    "description": "ua_meth_parameters",
+    "optional": true
+  },
+  "TrimAlignSort.star_genome": {
+    "description": "star_genome",
+    "optional": true
+  },
+  "TrimAlignSort.star_genome_generate_params": {
+    "description": "star_genome_generate_params",
+    "optional": true
+  },
+  "TrimAlignSort.star_align_extra_args": {
+    "description": "star_align_extra_args",
+    "optional": true
+  },
+  "TrimAlignSort.star_align_gtf_override": {
+    "description": "star_align_gtf_override",
+    "optional": true
+  },
+  "TrimAlignSort.sorter_params": {
+    "description": "sorter_params",
+    "optional": true
+  },
+  "TrimAlignSort.fastqc_limits": {
+    "description": "fastqc_limits",
+    "optional": true
+  },
+  "TrimAlignSort.no_address": {
+    "description": "no_address",
+    "optional": true
+  },
+  "TrimAlignSort.cpu": {
+    "description": "cpu",
+    "optional": false
+  },
+  "TrimAlignSort.preemptible_tries": {
+    "description": "preemptible_tries",
+    "optional": true
+  },
+  "TrimAlignSort.monitoring_script_input": {
+    "description": "pass monitoring_script_input as input reduce the run time when running in aws Omics",
+    "optional": true
+  }
+}
