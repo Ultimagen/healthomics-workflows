@@ -38,10 +38,10 @@ workflow Globals {
         "perl_docker": "perl:5.38",
         "ref_cache_script": "s3://ultimagen-workflow-resources-us-east-1/scripts/seq_cache_populate.pl",
         "star_docker": "ultimagenomics/star:2.7.10a",
-        "ua_docker": "us-central1-docker.pkg.dev/ganymede-331016/ultimagen/alignment:1.0.1",
-        "trimmer_docker": "us-central1-docker.pkg.dev/ganymede-331016/ultimagen/trimmer:1.0.1",
+        "ua_docker": "ultimagenomics/alignment:1.0.1",
+        "trimmer_docker": "ultimagenomics/trimmer:1.0.1",
         "fastqc_docker": "quay.io/biocontainers/fastqc:0.11.9--0",
-        "sorter_docker": "us-central1-docker.pkg.dev/ganymede-331016/ultimagen/sorter:1.0.1",
+        "sorter_docker": "ultimagenomics/sorter:1.0.1",
 }
 }
 
