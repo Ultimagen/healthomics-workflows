@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.11" # !UnusedDeclaration
+        String pipeline_version = "1.11.1" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
@@ -62,9 +62,6 @@ workflow TrimAlignSort {
         # sorter parameters (for marking duplicates)
         SorterParams? sorter_params
 
-        # fastqc parameters        
-        File? fastqc_limits
-
         # general parameters
         Boolean no_address = true
         Int preemptible_tries = 1
@@ -78,7 +75,7 @@ workflow TrimAlignSort {
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv len(input_cram_bam_list) > 0
         #@wv suffix(input_cram_bam_list) <= {".bam", ".cram"}
-        #@wv 'trim' in steps or 'align' in steps or 'sort' in steps or 'fastqc' in steps -> (steps['trim'] or steps['align'] or steps['sort'] or steps['fastqc'])
+        #@wv 'trim' in steps or 'align' in steps or 'sort' in steps -> (steps['trim'] or steps['align'] or steps['sort'])
         #@wv defined(references) -> len(references) == 3
         #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa','.fna'}
         #@wv suffix(references['ref_dict']) == '.dict'
@@ -108,11 +105,201 @@ workflow TrimAlignSort {
         #@wv 'align' in steps and steps['align'] and aligner == "star" and defined(star_genome_generate_params) -> suffix(star_genome_generate_params['gtf_file']) == '.gtf'
 
         ## Sort checks
-        #@wv 'sort' in steps and steps['sort'] -> defined(sorter_params)
+        #@wv 'sort' in steps and steps['sort'] -> defined(sorter_params))
 
-        ## Fastqc checks - Fastqc cannot run alone
-        #@wv 'fastqc' in steps and steps['fastqc'] -> (steps['trim'] or steps['align'] or steps['sort'])
+    }
 
+    
+    meta {
+        description : "Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effective, and easier-to-maintain way, similiar to the way it is done on-tool. It can be used to run the entire pipeline or just a subset of the steps."
+        author: "Ultima Genomics"
+        WDL_AID: { exclude: [
+            "pipeline_version",
+            "no_address",
+            "preemptible_tries",
+            "dummy_input_for_call_caching",
+            "monitoring_script_input",
+            "Globals.glob",
+            "CreateReferenceCache.disk_size",
+            "Trimmer.disk_size",
+            "UAAlignment.Globals.glob",
+            "UAAlignment.BuildUaIndex.disk_size",
+            "UAAlignment.AlignWithUA.v_aware_vcf",
+            "UAAlignment.AlignWithUA.disk_size",
+            "UAAlignment.AlignWithUA.cpu",
+            "UAMethAlignment.UaMethIntensiveMode",
+            "UAMethAlignment.Globals.glob",
+            "UAMethAlignment.BuildUaMethIndex.disk_size",
+            "UAMethAlignment.AlignWithUAMeth.disk_size",
+            "StarAlignment.monitoring_script_input",
+            "StarAlignment.Globals.glob",
+            "StarAlignment.StarGenomeGenerate.disk_size",
+            "StarAlignment.StarAlign.disk_size",
+            "StarAlignment.StarAlignStats.disk_size",
+            "Sorter.mapq_override",
+            "ConvertSorterStatsToH5.disk_size",
+            "ConvertSorterStatsToH5.metric_mapping_file",
+            "CreateReport.notebook_file_in",
+            "CreateReport.top_metrics_file"
+        ]}
+    }  
+
+    parameter_meta {
+        input_cram_bam_list: {
+            help: "List of input cram or bam files to be processed.",
+            type: "String", 
+            category: "input_required"
+        }
+        ref_fastas_cram: {
+            help: "List of references for CreateReferenceCache task.",
+            type: "String", 
+            category: "input_required"
+        }
+        base_file_name: {
+            help: "Base name for the output files.",
+            type: "String", 
+            category: "input_required"
+        }
+        steps: {
+            help: "Steps to be executed in the pipeline.Options are: trim, align, sort",
+            type: "String", 
+            category: "input_required"
+        }
+        references: {
+            help: "References for merging inputs into one file, alignment, and sorting.",
+            type: "String", 
+            category: "input_required"
+        }
+        sample_name: {
+            help: "Sample name for the merged cram file.",
+            type: "String", 
+            category: "input_optional"
+        }
+        trimmer_parameters: {
+            help: "Parameters for the trimmer task. Mandatory if trim step is selected.",
+            type: "String", 
+            category: "input_optional"
+        }
+        aligner: {
+            help: "Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected.",
+            type: "String", 
+            category: "input_optional"
+        }
+        ua_parameters: {
+            help: "Parameters for the UA aligner. Mandatory if aligner is ua.",
+            type: "String", 
+            category: "input_optional"
+        }
+        ua_meth_parameters: {
+            help: "Parameters for the UA meth aligner. Mandatory if aligner is ua-meth.",
+            type: "String", 
+            category: "input_optional"
+        }
+        star_genome: {
+            help: "Star genome file. If aligner is star, supllay either star genome file or generate new genome index.",
+            type: "String", 
+            category: "input_optional"
+        }
+        star_genome_generate_params: {
+            help: "Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file.",
+            type: "String", 
+            category: "input_optional"
+        }
+        star_align_extra_args: {
+            help: "Extra arguments for the STAR aligner.",
+            type: "String", 
+            category: "input_optional"
+        }
+        star_align_gtf_override: {
+            help: "GTF file to be used for STAR aligner.",
+            type: "String", 
+            category: "input_optional"
+        }
+        sorter_params: {
+            help: "Parameters for the sorter task. Mandatory if sort step is selected.",
+            type: "String", 
+            category: "input_optional"
+        }
+        cpu: {
+            help: "Number of cpus to be used for the tasks.",
+            type: "Int", 
+            category: "input_required"
+        }
+        output_cram_bam: {
+            help: "Output file after the pipeline is executed.",
+            type: "File", 
+            category: "output"
+        }
+        output_cram_bam_index: {
+            help: "Index file for the output cram file.",
+            type: "File", 
+            category: "output"
+        }
+        aggregated_metrics_h5: {
+            help: "Aggregated metrics in h5 format.",
+            type: "File", 
+            category: "output"
+        }
+        aggregated_metrics_json: {
+            help: "Aggregated metrics in json format.",
+            type: "File", 
+            category: "output"
+        }
+        report_html: {
+            help: "Report in html format.",
+            type: "File", 
+            category: "output"
+        }
+        trimmer_stats: {
+            help: "Trimmer stats file.",
+            type: "File", 
+            category: "output"
+        }
+        trimmer_failure_codes_csv: {
+            help: "Trimmer failure codes in csv format.",
+            type: "File", 
+            category: "output"
+        }
+        trimmer_histogram: {
+            help: "Trimmer histogram files.",
+            type: "Array[File]", 
+            category: "output"
+        }
+        trimmer_histogram_extra: {
+            help: "Trimmer histogram extra files.",
+            type: "Array[File]", 
+            category: "output"
+        }
+        align_star_reads_per_gene_file: {
+            help: "STAR reads per gene file.",
+            type: "File", 
+            category: "output"
+        }
+        align_star_stats: {
+            help: "STAR stats file.",
+            type: "File", 
+            category: "output"
+        }
+        sort_stats_csv: {
+            help: "Sorter stats in csv format.",
+            type: "File", 
+            category: "output"
+        }
+        sort_stats_json: {
+            help: "Sorter stats in json format.",
+            type: "File", 
+            category: "output"
+        }
+        bedgraph_mapq0: {
+            help: "Bedgraph mapq0 file.",
+            type: "File", 
+            category: "output"
+        }
+        bedgraph_mapq1: {
+            help: "Bedgraph mapq1 file.",
+            type: "File", 
+            category: "output"
+        }
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
@@ -122,7 +309,6 @@ workflow TrimAlignSort {
     Boolean trim = select_first([steps.trim, false])
     Boolean align = select_first([steps.align, false])
     Boolean sort = select_first([steps.sort, false])
-    Boolean fastqc = select_first([steps.fastqc, false])
 
     call UGAlignment.CreateReferenceCache {
         input:
@@ -227,35 +413,7 @@ workflow TrimAlignSort {
                 preemptible_tries  = preemptible_tries,
                 cpu                = cpu
         }
-    }
 
-
-    if (fastqc) {
-        File input_for_fastqc = select_first([Sorter.sorted_cram, align_output, trimmer_output_ucram])
-        call SortTasks.Demux as ConvertToFastq{
-            input:
-                input_file          = input_for_fastqc,
-                base_file_name      = base_file_name,
-                output_format       = "fastq",
-                reference_fasta     = references.ref_fasta,
-                docker              = global.sorter_docker,
-                preemptible_tries   = preemptible_tries,
-                monitoring_script   = monitoring_script,  # !FileCoercion
-                cpu                 = cpu
-        }
-
-    RuntimeParams fastqc_runtime_params = {}
-        call QCTasks.FastQC {
-            input:
-                input_fastq             = [select_first([ConvertToFastq.output_fastq])],
-                limits                  = fastqc_limits,
-                fastqc_runtime_params   = fastqc_runtime_params,
-                docker                  = global.fastqc_docker,
-                monitoring_script       = monitoring_script #!FileCoercion
-        }
-    }
-
-    if (sort) {
         call UGGeneralTasks.ConvertSorterStatsToH5 as ConvertSorterStatsToH5 {
             input:
                 monitoring_script = monitoring_script,
@@ -263,8 +421,8 @@ workflow TrimAlignSort {
                 preemptible_tries = preemptible_tries,
                 docker            = global.ug_vc_docker,
                 no_address        = no_address,
-                input_csv_file    = select_first([Sorter.sorter_stats_csv]),
-                input_json_file   = select_first([Sorter.sorter_stats_json])
+                input_csv_file    = Sorter.sorter_stats_csv,
+                input_json_file   = Sorter.sorter_stats_json
         }
 
         call QCTasks.CreateReportSingleSampleQC as CreateReport {
@@ -306,8 +464,5 @@ workflow TrimAlignSort {
         File? sort_stats_json           = Sorter.sorter_stats_json
         File? bedgraph_mapq0            = Sorter.sorter_out_bedgraph_mapq0
         File? bedgraph_mapq1            = Sorter.sorter_out_bedgraph_mapq1
-
-        # fastqc outputs
-        Array[File]? fastqc_reports     = FastQC.reports_html
     }
 }

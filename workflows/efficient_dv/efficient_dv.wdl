@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.11" # !UnusedDeclaration
+    String pipeline_version = "1.11.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -168,168 +168,135 @@ workflow EfficientDV {
   parameter_meta {
     base_file_name: {
       help: "Prefix for name of all output files",
-      type: "String",
       category: "input_required"
     }
     cram_files: {
       help: "Input cram file. At the moment only a single file is supported.",
-      type: "Array[File]",
       category: "input_required"
     }
     cram_index_files: {
       help: "Input cram index file. At the moment only a single file is supported.",
-      type: "Array[File]",
       category: "input_required"
     }
     background_cram_files: {
       help: "Background (normal sample) cram files for somatic calling",
-      type: "Array[File]?",
       category: "input_optional"
     }
     background_cram_index_files: {
       help: "Background (normal sample) cram index files for somatic calling",
-      type: "Array[File]?",
       category: "input_optional"
     }
 
     references: {
       help: "Reference files: fasta, dict and fai, recommended value set in the template",
-      type: "References",
       category: "ref_required"
     }
     make_gvcf: {
       help: "Whether to generate a gvcf. Default: False",
-      type: "Boolean",
       category: "param_required"
     }
     num_shards: {
       help: "Maximal number of intervals the genome is broken into when parallelizing the make_examples step",
-      type: "Int",
       category: "param_advanced"
     }
     scatter_intervals_break: {
       help: "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     target_intervals: {
       help: "Limit calling to these regions. If not provided then entire genome is used.",
-      type: "File?",
       category: "param_optional"
     }
     min_fraction_snps: {
       help: "Minimal fraction of reads, that support a snp, required to  generate a candidate variant",
-      type: "Float",
-      category: "param_advanced"
+      category: "param_optional"
     }
     min_fraction_hmer_indels: {
       help: "Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant",
-      type: "Float",
-      category: "param_advanced"
+      category: "param_optional"
     }
     min_fraction_non_hmer_indels: {
       help: "Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant",
-      type: "Float",
-      category: "param_advanced"
+      category: "param_optional"
     }
     min_read_count_snps: {
       help: "Minimal number of reads, that support a snp, required to  generate a candidate variant",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     min_read_count_hmer_indels: {
       help: "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     min_read_count_non_hmer_indels: {
       help: "Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     min_base_quality: {
       help: "Minimal base quality for candidate generation",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     pileup_min_mapping_quality: {
       help: "Minimal mapping quality to be included in image (the input to the CNN)",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     candidate_min_mapping_quality: {
       help: "Minimal mapping quality for candidate generation",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     max_reads_per_partition: {
       help: "Maximal number of reads that are stored in memory when analyzing an active region",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     dbg_min_base_quality: {
       help: "Minimal base quality for local assembly of haplotypes",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     prioritize_alt_supporting_reads: {
       help: "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
-      type: "Boolean",
-      category: "param_advanced"
+      category: "param_optional"
     }
     p_error: {
       help: "Basecalling error for reference confidence model in gvcf",
-      type: "Float",
-      category: "param_advanced"
+      category: "param_optional"
     }
     optimal_coverages: {
       help: "Each sample is downsampled to the \"optimal coverage\" (dictated by the coverage of the training set). Downsampling method is determined by cap_at_optimal_coverage.",
-      type: "Array[Int]",
       category: "param_advanced"
     }
     cap_at_optimal_coverage: {
       help: "Defines downsampling behavior. When false, then the reads are downsampled such that the average coverage equals \"optimal coverage\". When true, each position is downsampled to \"optimal coverage\".",
-      type: "Boolean",
       category: "param_advanced"
     }
     output_realignment: {
       help: "Output haplotypes and re-aligned reads to a bam file. Default: false.",
-      type: "Boolean",
       category: "param_optional"
     }
     ug_make_examples_extra_args: {
       help: "Additional arguments for make-examples tool",
-      type: "String?",
-      category: "param_advanced"
+      category: "param_optional"
     }
     model_onnx: {
-      help: "Machine-learning model for calling variants (onnx format)",
-      type: "File",
+      help: "TensorRT model for calling variants (onnx format)",
       category: "ref_required"
     }
     model_serialized: {
-      help: "Machine-learning model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
-      type: "File?",
+      help: "TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
       category: "ref_optional"
     }
     min_variant_quality_snps: {
       help: "Minimal snp variant quality in order to be labeled as PASS",
-      type: "Int",
       category: "param_optional"
     }
     min_variant_quality_hmer_indels: {
       help: "Minimal h-mer indel quality in order to be labeled as PASS",
-      type: "Int",
       category: "param_optional"
     }
     min_variant_quality_non_hmer_indels: {
       help: "Minimal non-h-mer indel quality in order to be labeled as PASS",
-      type: "Int",
       category: "param_optional"
     }
     min_variant_quality_exome_hmer_indels: {
       help: "Minimal non-h-mer indel quality in order to be labeled as PASS",
-      type: "Int",
       category: "param_optional"
     }
     allele_frequency_ratio: {
@@ -338,118 +305,95 @@ workflow EfficientDV {
         category: "param_optional"
     }
     hard_qual_filter: {
-        type: "Int",
         help: "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
         category: "param_optional"
     }
     show_bg_fields: {
       help: "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
-      type: "Boolean",
       category: "param_optional"
     }
     annotate_systematic_errors: {
       help: "Should systematic errors be annotated from a database of common systematic errors",
-      type: "Boolean",
-      category: "param_advanced"
+      category: "param_optional"
     }
     filtering_blacklist_file: {
       help: "Database of known positions with systematic errors",
-      type: "File?",
       category: "param_advanced"
     }
     sec_models: {
       help: "Models to annotate systematic errors",
-      type: "Array[File]?",
       category: "param_advanced"
     }
     hmer_runs_bed: {
       help: "Bed file annotating all homopolymer runs longer than 7 in the reference genome. Used to annotate potentially difficult to sequence regions",
-      type: "File?",
       category: "param_optional"
     }
     input_flow_order: {
       help: "Flow order. If not provided, it will be extracted from the CRAM header",
-      type: "String?",
       category: "param_optional"
     }
     exome_intervals: {
       help: "A bed file with exome intervals",
-      type: "File",
       category: "ref_required"
     }
     annotation_intervals: {
       help: "List of bed files for VCF annotation",
-      type: "Array[File]?",
       category: "ref_optional"
     }
     ref_dbsnp: {
       help: "DbSNP vcf for the annotation of known variants",
-      type: "File",
       category: "ref_required"
     }
     ref_dbsnp_index: {
       help: "DbSNP vcf index",
-      type: "File",
       category: "ref_required"
     }
     ug_make_examples_memory_override: {
       help: "Memory override for make_examples step",
-      type: "Float?",
       category: "param_advanced"
     }
     ug_make_examples_cpus_override: {
       help: "CPU number override for make_examples step",
-      type: "Int?",
       category: "param_advanced"
     }
     preemptible_tries: {
       help: "Number of preemptible tries",
-      type: "Int",
       category: "param_advanced"
     }
     call_variants_uncompr_buf_size_gb: {
       help: "Memory buffer allocated for each uncompression thread in calll_variants",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     ug_call_variants_extra_mem: {
       help: "Extra memory for call_variants",
-      type: "Int?",
       category: "param_advanced"
     }
     call_variants_gpu_type: {
       help: "GPU type for call variants",
-      type: "String",
-      category: "param_advanced"
+      category: "param_optional"
     }
     call_variants_gpus: {
       help: "Number of GPUs for call_variants",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     call_variants_cpus: {
       help: "Number of CPUs for call_variants",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     call_variants_threads: {
       help: "Number of decompression threads for call_variants",
-      type: "Int",
-      category: "param_advanced"
+      category: "param_optional"
     }
     nvidia_smi_log: {
       help: "Nvidia System Management (nvidia-smi) log",
-      type: "File",
       category: "output"
     }
     vcf_file: {
       help: "Called variants in vcf format",
-      type: "File",
       category: "output"
     }
     vcf_index: {
       help: "vcf index",
-      type: "File",
       category: "output"
     }
     vcf_no_ref_calls: {
@@ -464,42 +408,34 @@ workflow EfficientDV {
     }
     output_gvcf: {
       help: "Variant in each position (gvcf file)",
-      type: "File?",
       category: "output"
     }
     output_gvcf_index: {
       help: "gvcf index",
-      type: "File?",
       category: "output"
     }
     realigned_cram: {
       help: "Realigned reads cram from make_examples",
-      type: "File?",
       category: "output"
     }
     realigned_cram_index: {
       help: "Realigned CRAM index",
-      type: "File?",
       category: "output"
     }
     flow_order: {
       help: "Flow order",
-      type: "String",
       category: "output"
     }
     report_html: {
       help: "QC report html",
-      type: "File",
       category: "output"
     }
     qc_h5: {
       help: "QC stats in h5 file format",
-      type: "File",
       category: "output"
     }
     qc_metrics_h5: {
       help: "QC stats in specific format for UGDV workflow",
-      type: "File",
       category: "output"
     }
   }

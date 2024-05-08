@@ -1,0 +1,82 @@
+{
+    "TrimAlignSort.aligner": {
+        "description": "Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected.",
+        "optional": true
+    },
+    "TrimAlignSort.base_file_name": {
+        "description": "Base name for the output files.",
+        "optional": false
+    },
+    "TrimAlignSort.cpu": {
+        "description": "Number of cpus to be used for the tasks.",
+        "optional": false
+    },
+    "TrimAlignSort.dummy_input_for_call_caching": {
+        "description": "dummy_input_for_call_caching",
+        "optional": true
+    },
+    "TrimAlignSort.input_cram_bam_list": {
+        "description": "List of input cram or bam files to be processed.",
+        "optional": false
+    },
+    "TrimAlignSort.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "TrimAlignSort.no_address": {
+        "description": "no_address",
+        "optional": true
+    },
+    "TrimAlignSort.preemptible_tries": {
+        "description": "preemptible_tries",
+        "optional": true
+    },
+    "TrimAlignSort.ref_fastas_cram": {
+        "description": "List of references for CreateReferenceCache task.",
+        "optional": false
+    },
+    "TrimAlignSort.references": {
+        "description": "References for merging inputs into one file, alignment, and sorting.",
+        "optional": false
+    },
+    "TrimAlignSort.sample_name": {
+        "description": "Sample name for the merged cram file.",
+        "optional": true
+    },
+    "TrimAlignSort.sorter_params": {
+        "description": "Parameters for the sorter task. Mandatory if sort step is selected.",
+        "optional": true
+    },
+    "TrimAlignSort.star_align_extra_args": {
+        "description": "Extra arguments for the STAR aligner.",
+        "optional": true
+    },
+    "TrimAlignSort.star_align_gtf_override": {
+        "description": "GTF file to be used for STAR aligner.",
+        "optional": true
+    },
+    "TrimAlignSort.star_genome": {
+        "description": "Star genome file. If aligner is star, supllay either star genome file or generate new genome index.",
+        "optional": true
+    },
+    "TrimAlignSort.star_genome_generate_params": {
+        "description": "Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file.",
+        "optional": true
+    },
+    "TrimAlignSort.steps": {
+        "description": "Steps to be executed in the pipeline.Options are: trim, align, sort",
+        "optional": false
+    },
+    "TrimAlignSort.trimmer_parameters": {
+        "description": "Parameters for the trimmer task. Mandatory if trim step is selected.",
+        "optional": true
+    },
+    "TrimAlignSort.ua_meth_parameters": {
+        "description": "Parameters for the UA meth aligner. Mandatory if aligner is ua-meth.",
+        "optional": true
+    },
+    "TrimAlignSort.ua_parameters": {
+        "description": "Parameters for the UA aligner. Mandatory if aligner is ua.",
+        "optional": true
+    }
+}

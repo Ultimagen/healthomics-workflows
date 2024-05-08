@@ -654,8 +654,8 @@ task MergeCramFiles {
             Int? cpus
             Int preemptible_tries
     }
-        String output_cram_name = "~{output_base_name}.cram"
-        Int cpus_to_use = select_first([cpus, ceil(size(crams, "GB") / 10)])
+    String output_cram_name = "~{output_base_name}.cram"
+    Int cpus_to_use = select_first([cpus, ceil(size(crams, "GB") / 10)])
     command <<<
             bash ~{monitoring_script} | tee monitoring.log >&2 &
             source ~/.bashrc

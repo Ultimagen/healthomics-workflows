@@ -1,0 +1,114 @@
+{
+    "SingleReadSNV.balanced_sampling_info_fields": {
+        "description": "Fields to use for balanced sampling of TP examples to remove the prior distribution of the homozygous SNVs, the pipeline will attempt for the distribution over these arguments to be uniform. The recommended value is set in the template",
+        "optional": true
+    },
+    "SingleReadSNV.balanced_strand_adapter_version": {
+        "description": "ppmSeq adapter version, for ppmSeq data the recommended value is set in the template",
+        "optional": true
+    },
+    "SingleReadSNV.base_file_name": {
+        "description": "Base file name for output files. The output files will be named [base_file_name].with_ml_qual.vcf.gz",
+        "optional": false
+    },
+    "SingleReadSNV.break_bands_at_multiples_of": {
+        "description": "Break wgs_calling_interval_list bands at multiples of this number, recommended value set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.categorical_features": {
+        "description": "Categorical features to use in the ML model, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "SingleReadSNV.featuremap_params": {
+        "description": "FeatureMap parameters, recommended value set in the template. Int scatter_count: number of scatter tasks to use. Int min_mapq, Int snv_identical_bases, Int snv_identical_bases_after, Int min_score, Int limit_score, String extra_args",
+        "optional": false
+    },
+    "SingleReadSNV.fp_training_exclude_regions": {
+        "description": "Genomic regions to exclude from the training set FP examples, the recommended value is set in the template",
+        "optional": true
+    },
+    "SingleReadSNV.fp_training_include_regions": {
+        "description": "Genomic regions to include in the training set FP examples, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.input_cram_bam": {
+        "description": "Input CRAM or BAM file",
+        "optional": false
+    },
+    "SingleReadSNV.input_cram_bam_index": {
+        "description": "Input CRAM or BAM index file",
+        "optional": false
+    },
+    "SingleReadSNV.max_hmer_length": {
+        "description": "Maximum length of the homopolymer to annotate in the FeatureMap, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "SingleReadSNV.motif_length_to_annotate": {
+        "description": "Length of the motif (-+N bp) to annotate in the FeatureMap, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "SingleReadSNV.numerical_features": {
+        "description": "Numerical features to use in the ML model, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.pre_filter": {
+        "description": "SNV filter to apply to the FeatureMap before model, any SNV not passing the pre_filter is assigned QUAL=0, the recommended value is set in the template",
+        "optional": true
+    },
+    "SingleReadSNV.preemptible_tries": {
+        "description": "preemptible_tries",
+        "optional": true
+    },
+    "SingleReadSNV.process_featuremap_memory_gb_override": {
+        "description": "process_featuremap_memory_gb_override",
+        "optional": true
+    },
+    "SingleReadSNV.random_seed": {
+        "description": "Random seed to use for the ML model, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.references": {
+        "description": "Reference files: fasta, dict and fai, recommended value set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.somatic_mutations_list": {
+        "description": "Somatic mutations to be excluded from FP training set, will be appended to the fp_training_exclude_regions optional",
+        "optional": true
+    },
+    "SingleReadSNV.sorter_json_stats_file": {
+        "description": "Sorter json stats file provided by the Ultima Genomics pipeline (same base name as the input cram/bam file with a json extension)",
+        "optional": false
+    },
+    "SingleReadSNV.test_set_size": {
+        "description": "Number of SNVs to use for the ML model test set, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.tp_training_exclude_regions": {
+        "description": "Genomic regions to exclude from the training set TP examples, the recommended value is set in the template",
+        "optional": true
+    },
+    "SingleReadSNV.tp_training_include_regions": {
+        "description": "Genomic regions to include in the training set TP examples, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.train_set_size": {
+        "description": "Number of SNVs to use for the ML model training set, the recommended value is set in the template",
+        "optional": false
+    },
+    "SingleReadSNV.wgs_calling_interval_list": {
+        "description": "interval list defining the region to perform variant calling on, recommended value set in the template",
+        "optional": false
+    }
+}

@@ -234,7 +234,6 @@ struct TrimAlignSortSteps {
   Boolean? trim
   Boolean? align
   Boolean? sort
-  Boolean? fastqc
 }
 
 struct SorterParams {

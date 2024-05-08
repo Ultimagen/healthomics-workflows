@@ -36,7 +36,7 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.model_onnx">
         <b>EfficientDV.model_onnx</b><br />
         <i>File </i> &mdash; 
-         Machine-learning model for calling variants (onnx format) <br /> 
+         TensorRT model for calling variants (onnx format) <br /> 
 </p>
 <p name="EfficientDV.exome_intervals">
         <b>EfficientDV.exome_intervals</b><br />
@@ -67,15 +67,90 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 </p>
 
 ### Optional parameters
+<p name="EfficientDV.scatter_intervals_break">
+        <b>EfficientDV.scatter_intervals_break</b><br />
+        <i>Int </i> &mdash; 
+         The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals. <br /> 
+</p>
 <p name="EfficientDV.target_intervals">
         <b>EfficientDV.target_intervals</b><br />
         <i>File? </i> &mdash; 
          Limit calling to these regions. If not provided then entire genome is used. <br /> 
 </p>
+<p name="EfficientDV.min_fraction_hmer_indels">
+        <b>EfficientDV.min_fraction_hmer_indels</b><br />
+        <i>Float </i> &mdash; 
+         Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant <br /> 
+</p>
+<p name="EfficientDV.min_fraction_non_hmer_indels">
+        <b>EfficientDV.min_fraction_non_hmer_indels</b><br />
+        <i>Float </i> &mdash; 
+         Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant <br /> 
+</p>
+<p name="EfficientDV.min_fraction_snps">
+        <b>EfficientDV.min_fraction_snps</b><br />
+        <i>Float </i> &mdash; 
+         Minimal fraction of reads, that support a snp, required to  generate a candidate variant <br /> 
+</p>
+<p name="EfficientDV.min_read_count_snps">
+        <b>EfficientDV.min_read_count_snps</b><br />
+        <i>Int </i> &mdash; 
+         Minimal number of reads, that support a snp, required to  generate a candidate variant <br /> 
+</p>
+<p name="EfficientDV.min_read_count_hmer_indels">
+        <b>EfficientDV.min_read_count_hmer_indels</b><br />
+        <i>Int </i> &mdash; 
+         Minimal number of reads, that support an h-mer indel, required to generate a candidate variant <br /> 
+</p>
+<p name="EfficientDV.min_read_count_non_hmer_indels">
+        <b>EfficientDV.min_read_count_non_hmer_indels</b><br />
+        <i>Int </i> &mdash; 
+         Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant <br /> 
+</p>
+<p name="EfficientDV.min_base_quality">
+        <b>EfficientDV.min_base_quality</b><br />
+        <i>Int </i> &mdash; 
+         Minimal base quality for candidate generation <br /> 
+</p>
+<p name="EfficientDV.pileup_min_mapping_quality">
+        <b>EfficientDV.pileup_min_mapping_quality</b><br />
+        <i>Int </i> &mdash; 
+         Minimal mapping quality to be included in image (the input to the CNN) <br /> 
+</p>
+<p name="EfficientDV.candidate_min_mapping_quality">
+        <b>EfficientDV.candidate_min_mapping_quality</b><br />
+        <i>Int </i> &mdash; 
+         Minimal mapping quality for candidate generation <br /> 
+</p>
+<p name="EfficientDV.max_reads_per_partition">
+        <b>EfficientDV.max_reads_per_partition</b><br />
+        <i>Int </i> &mdash; 
+         Maximal number of reads that are stored in memory when analyzing an active region <br /> 
+</p>
+<p name="EfficientDV.dbg_min_base_quality">
+        <b>EfficientDV.dbg_min_base_quality</b><br />
+        <i>Int </i> &mdash; 
+         Minimal base quality for local assembly of haplotypes <br /> 
+</p>
+<p name="EfficientDV.prioritize_alt_supporting_reads">
+        <b>EfficientDV.prioritize_alt_supporting_reads</b><br />
+        <i>Boolean </i> &mdash; 
+         Generate an image with all available alt-supporting reads, and only then add non-supporting reads <br /> 
+</p>
+<p name="EfficientDV.p_error">
+        <b>EfficientDV.p_error</b><br />
+        <i>Float </i> &mdash; 
+         Basecalling error for reference confidence model in gvcf <br /> 
+</p>
 <p name="EfficientDV.output_realignment">
         <b>EfficientDV.output_realignment</b><br />
         <i>Boolean </i> &mdash; 
          Output haplotypes and re-aligned reads to a bam file. Default: false. <br /> 
+</p>
+<p name="EfficientDV.ug_make_examples_extra_args">
+        <b>EfficientDV.ug_make_examples_extra_args</b><br />
+        <i>String </i> &mdash; 
+         Additional arguments for make-examples tool <br /> 
 </p>
 <p name="EfficientDV.min_variant_quality_hmer_indels">
         <b>EfficientDV.min_variant_quality_hmer_indels</b><br />
@@ -112,6 +187,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Boolean </i> &mdash; 
          Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling) <br /> 
 </p>
+<p name="EfficientDV.annotate_systematic_errors">
+        <b>EfficientDV.annotate_systematic_errors</b><br />
+        <i>Boolean </i> &mdash; 
+         Should systematic errors be annotated from a database of common systematic errors <br /> 
+</p>
 <p name="EfficientDV.hmer_runs_bed">
         <b>EfficientDV.hmer_runs_bed</b><br />
         <i>File? </i> &mdash; 
@@ -122,12 +202,37 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>String? </i> &mdash; 
          Flow order. If not provided, it will be extracted from the CRAM header <br /> 
 </p>
+<p name="EfficientDV.call_variants_gpu_type">
+        <b>EfficientDV.call_variants_gpu_type</b><br />
+        <i>String </i> &mdash; 
+         GPU type for call variants <br /> 
+</p>
+<p name="EfficientDV.call_variants_gpus">
+        <b>EfficientDV.call_variants_gpus</b><br />
+        <i>Int </i> &mdash; 
+         Number of GPUs for call_variants <br /> 
+</p>
+<p name="EfficientDV.call_variants_cpus">
+        <b>EfficientDV.call_variants_cpus</b><br />
+        <i>Int </i> &mdash; 
+         Number of CPUs for call_variants <br /> 
+</p>
+<p name="EfficientDV.call_variants_threads">
+        <b>EfficientDV.call_variants_threads</b><br />
+        <i>Int </i> &mdash; 
+         Number of decompression threads for call_variants <br /> 
+</p>
+<p name="EfficientDV.call_variants_uncompr_buf_size_gb">
+        <b>EfficientDV.call_variants_uncompr_buf_size_gb</b><br />
+        <i>Int </i> &mdash; 
+         Memory buffer allocated for each uncompression thread in calll_variants <br /> 
+</p>
 
 ### Optional reference files
 <p name="EfficientDV.model_serialized">
         <b>EfficientDV.model_serialized</b><br />
         <i>File? </i> &mdash; 
-         Machine-learning model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br /> 
+         TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br /> 
 </p>
 <p name="EfficientDV.annotation_intervals">
         <b>EfficientDV.annotation_intervals</b><br />

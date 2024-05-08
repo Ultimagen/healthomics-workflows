@@ -1,0 +1,146 @@
+{
+    "MRDFeatureMap.FilterControlSignatures.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterControlSignatures.cpus": {
+        "description": "Number of cpus to use for this task. Default is 1.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterControlSignatures.disk_size": {
+        "description": "Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterControlSignatures.memory_gb": {
+        "description": "Amount of memory to use for this task, in GB. Default is 4 (GB).",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterDb.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterDb.bcftools_extra_args": {
+        "description": "Extra arguments to pass to bcftools view. For example, use '-f PASS' to only include variants with a PASS filter.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterDb.cpus": {
+        "description": "Number of cpus to use for this task. Default is 1.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterDb.disk_size": {
+        "description": "Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterDb.memory_gb": {
+        "description": "Amount of memory to use for this task, in GB. Default is 4 (GB).",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterMatched.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterMatched.cpus": {
+        "description": "Number of cpus to use for this task. Default is 1.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterMatched.disk_size": {
+        "description": "Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes.",
+        "optional": true
+    },
+    "MRDFeatureMap.FilterMatched.memory_gb": {
+        "description": "Amount of memory to use for this task, in GB. Default is 4 (GB).",
+        "optional": true
+    },
+    "MRDFeatureMap.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": false
+    },
+    "MRDFeatureMap.bcftools_extra_args": {
+        "description": "Extra argument given after the 'bcftools view' command that filters the matched and control signatures. E.g. '-f PASS' to filter only PASS variants.",
+        "optional": true
+    },
+    "MRDFeatureMap.cfdna_cram_bam": {
+        "description": "CRAM or BAM file of cfDNA sample, must be equal to the input used for the SingleReadSNV pipeline that generated cfdna_featuremap",
+        "optional": false
+    },
+    "MRDFeatureMap.cfdna_cram_bam_index": {
+        "description": "Respective index",
+        "optional": false
+    },
+    "MRDFeatureMap.cfdna_featuremap": {
+        "description": "FeatureMap file generated from the cfDNA CRAM file by the SingleReadSNV pipeline",
+        "optional": false
+    },
+    "MRDFeatureMap.cfdna_featuremap_index": {
+        "description": "Respective index",
+        "optional": false
+    },
+    "MRDFeatureMap.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "MRDFeatureMap.dummy_input_for_call_caching": {
+        "description": "dummy_input_for_call_caching",
+        "optional": true
+    },
+    "MRDFeatureMap.exclude_regions": {
+        "description": "Genomic regions to exclude from the analysis, bed and vcf[.gz] files are accepted",
+        "optional": true
+    },
+    "MRDFeatureMap.external_control_signatures": {
+        "description": "Optional signatures from other individuals to be used as controls in the MRD analysis",
+        "optional": true
+    },
+    "MRDFeatureMap.external_matched_signatures": {
+        "description": "Optional signatures matched to the patient from whom the cfDNA sample was taken, to be used as matched signatures in the MRD analysis, leave blank if running a healthy control donor",
+        "optional": true
+    },
+    "MRDFeatureMap.include_regions": {
+        "description": "Genomic regions to include in the analysis, bed files are accepted",
+        "optional": false
+    },
+    "MRDFeatureMap.mapping_quality_threshold": {
+        "description": "Mapping quality threshold for reads to be included in the coverage analysis, corresponding to the value used to filter the srsnv output",
+        "optional": false
+    },
+    "MRDFeatureMap.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "MRDFeatureMap.mrd_analysis_params": {
+        "description": "Parameters for the MRD analysis",
+        "optional": false
+    },
+    "MRDFeatureMap.n_synthetic_signatures": {
+        "description": "Number of synthetic signatures to generate from the somatic mutation database. Set to 0 to disable generation of control signatures from the database.",
+        "optional": true
+    },
+    "MRDFeatureMap.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "MRDFeatureMap.preemptible_tries": {
+        "description": "preemptible_tries",
+        "optional": true
+    },
+    "MRDFeatureMap.references": {
+        "description": "Reference files: fasta, dict and fai, recommended value set in the template",
+        "optional": false
+    },
+    "MRDFeatureMap.snv_database": {
+        "description": "Somatic mutation database to use for generating control signatures",
+        "optional": true
+    },
+    "MRDFeatureMap.srsnv_qual_test": {
+        "description": "Parquet file of test set SNVQ values generated by the SingleReadSNV pipeline",
+        "optional": false
+    },
+    "MRDFeatureMap.srsnv_test_X": {
+        "description": "Parquet file of test set X matrix (SNV features) generated by the SingleReadSNV pipeline",
+        "optional": false
+    },
+    "MRDFeatureMap.srsnv_test_y": {
+        "description": "Parquet file of test set y vector (true/false values) generated by the SingleReadSNV pipeline",
+        "optional": false
+    }
+}

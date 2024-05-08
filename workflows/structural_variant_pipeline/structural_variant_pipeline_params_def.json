@@ -1,0 +1,134 @@
+{
+    "SVPipeline.base_file_name": {
+        "description": "Base file name for the output files (to be used as the prefix)",
+        "optional": false
+    },
+    "SVPipeline.blacklist_bed": {
+        "description": "Gridss blacklist file",
+        "optional": true
+    },
+    "SVPipeline.cloud_provider_override": {
+        "description": "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
+        "optional": true
+    },
+    "SVPipeline.config_file_string": {
+        "description": "Gridss config file content",
+        "optional": false
+    },
+    "SVPipeline.dummy_input_for_call_caching": {
+        "description": "dummy_input_for_call_caching",
+        "optional": true
+    },
+    "SVPipeline.exclude_filters": {
+        "description": "gripss paramter: Exclude filters from the output vcf, separated by ;",
+        "optional": true
+    },
+    "SVPipeline.gridss_metrics_interval": {
+        "description": "Interval for collecting gridss metrics",
+        "optional": true
+    },
+    "SVPipeline.input_germline_crams": {
+        "description": "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
+        "optional": true
+    },
+    "SVPipeline.input_germline_crams_indexes": {
+        "description": "Input CRAM index for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
+        "optional": true
+    },
+    "SVPipeline.input_tumor_crams": {
+        "description": "Input CRAM file for the tumor (in case of matched T/N calling)",
+        "optional": true
+    },
+    "SVPipeline.input_tumor_crams_indexes": {
+        "description": "Input CRAM index for the tumor (in case of matched T/N calling)",
+        "optional": true
+    },
+    "SVPipeline.is_somatic": {
+        "description": "run in somatic mode or in germline mode",
+        "optional": false
+    },
+    "SVPipeline.known_hotspot_file": {
+        "description": "gripss paramter: Known locations that are hot spot for SVs (see https://github.com/hartwigmedical/hmftools/tree/master/linx), filtered less stringently",
+        "optional": true
+    },
+    "SVPipeline.max_num_haps": {
+        "description": "Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report",
+        "optional": true
+    },
+    "SVPipeline.min_base": {
+        "description": "Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template",
+        "optional": false
+    },
+    "SVPipeline.min_indel_sc_size_to_include": {
+        "description": "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly.",
+        "optional": true
+    },
+    "SVPipeline.min_mapq": {
+        "description": "Assembly parameter: Minimum mapping quality. Default value in template",
+        "optional": false
+    },
+    "SVPipeline.min_normal_coverage": {
+        "description": "gripss paramter: Minimum coverage in the normal sample to determine somatic status. Default value:8",
+        "optional": true
+    },
+    "SVPipeline.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "SVPipeline.no_address": {
+        "description": "no_address",
+        "optional": true
+    },
+    "SVPipeline.num_shards": {
+        "description": "Relevant for scatter tasks, which are CreateAssembly and gridss.AnnotateVariants",
+        "optional": false
+    },
+    "SVPipeline.pon_sgl_file": {
+        "description": "gripss paramter: Panel of normals for single end breakend (partially resolved) calls. Note that the default value is in template",
+        "optional": true
+    },
+    "SVPipeline.pon_sv_file": {
+        "description": "gripss paramter: panel of normals for breakpoint (fully resolved) calls. Note that the default value is in template",
+        "optional": true
+    },
+    "SVPipeline.preemptible_tries_override": {
+        "description": "preemptible_tries_override",
+        "optional": true
+    },
+    "SVPipeline.prefilter_query": {
+        "description": "Expression (in bcftools view format) to filter the variants before annotation",
+        "optional": true
+    },
+    "SVPipeline.realign_mapq": {
+        "description": "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
+        "optional": false
+    },
+    "SVPipeline.reference_name": {
+        "description": "Can be 38 or 19",
+        "optional": false
+    },
+    "SVPipeline.references": {
+        "description": "Reference files: fasta, dict and fai, recommended value set in the template",
+        "optional": false
+    },
+    "SVPipeline.repeat_mask_file": {
+        "description": "gripss paramter: Repeat mask file. Note that the default value is in template",
+        "optional": true
+    },
+    "SVPipeline.run_ua": {
+        "description": "Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not",
+        "optional": false
+    },
+    "SVPipeline.scatter_intervals_break": {
+        "description": "Maximal resolution for scattering intervals",
+        "optional": false
+    },
+    "SVPipeline.ua_references": {
+        "description": "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
+        "optional": false
+    },
+    "SVPipeline.wgs_calling_interval_list": {
+        "description": "interval list defining the region to perform variant calling on, recommended value set in the template",
+        "optional": false
+    }
+}

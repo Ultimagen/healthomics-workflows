@@ -1,0 +1,230 @@
+{
+    "EfficientDV.allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
+        "optional": true
+    },
+    "EfficientDV.annotate_systematic_errors": {
+        "description": "Should systematic errors be annotated from a database of common systematic errors",
+        "optional": true
+    },
+    "EfficientDV.annotation_intervals": {
+        "description": "List of bed files for VCF annotation",
+        "optional": true
+    },
+    "EfficientDV.background_cram_files": {
+        "description": "Background (normal sample) cram files for somatic calling",
+        "optional": true
+    },
+    "EfficientDV.background_cram_index_files": {
+        "description": "Background (normal sample) cram index files for somatic calling",
+        "optional": true
+    },
+    "EfficientDV.base_file_name": {
+        "description": "Prefix for name of all output files",
+        "optional": false
+    },
+    "EfficientDV.call_variants_cpus": {
+        "description": "Number of CPUs for call_variants",
+        "optional": true
+    },
+    "EfficientDV.call_variants_gpu_type": {
+        "description": "GPU type for call variants",
+        "optional": true
+    },
+    "EfficientDV.call_variants_gpus": {
+        "description": "Number of GPUs for call_variants",
+        "optional": true
+    },
+    "EfficientDV.call_variants_threads": {
+        "description": "Number of decompression threads for call_variants",
+        "optional": true
+    },
+    "EfficientDV.call_variants_uncompr_buf_size_gb": {
+        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "optional": true
+    },
+    "EfficientDV.candidate_min_mapping_quality": {
+        "description": "Minimal mapping quality for candidate generation",
+        "optional": true
+    },
+    "EfficientDV.cap_at_optimal_coverage": {
+        "description": "Defines downsampling behavior. When false, then the reads are downsampled such that the average coverage equals \"optimal coverage\". When true, each position is downsampled to \"optimal coverage\".",
+        "optional": false
+    },
+    "EfficientDV.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "EfficientDV.cram_files": {
+        "description": "Input cram file. At the moment only a single file is supported.",
+        "optional": false
+    },
+    "EfficientDV.cram_index_files": {
+        "description": "Input cram index file. At the moment only a single file is supported.",
+        "optional": false
+    },
+    "EfficientDV.dbg_min_base_quality": {
+        "description": "Minimal base quality for local assembly of haplotypes",
+        "optional": true
+    },
+    "EfficientDV.dummy_input_for_call_caching": {
+        "description": "dummy_input_for_call_caching",
+        "optional": true
+    },
+    "EfficientDV.exome_intervals": {
+        "description": "A bed file with exome intervals",
+        "optional": false
+    },
+    "EfficientDV.filtering_blacklist_file": {
+        "description": "Database of known positions with systematic errors",
+        "optional": true
+    },
+    "EfficientDV.hard_qual_filter": {
+        "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        "optional": true
+    },
+    "EfficientDV.hmer_runs_bed": {
+        "description": "Bed file annotating all homopolymer runs longer than 7 in the reference genome. Used to annotate potentially difficult to sequence regions",
+        "optional": true
+    },
+    "EfficientDV.input_flow_order": {
+        "description": "Flow order. If not provided, it will be extracted from the CRAM header",
+        "optional": true
+    },
+    "EfficientDV.make_gvcf": {
+        "description": "Whether to generate a gvcf. Default: False",
+        "optional": false
+    },
+    "EfficientDV.max_reads_per_partition": {
+        "description": "Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": true
+    },
+    "EfficientDV.min_base_quality": {
+        "description": "Minimal base quality for candidate generation",
+        "optional": true
+    },
+    "EfficientDV.min_fraction_hmer_indels": {
+        "description": "Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "EfficientDV.min_fraction_non_hmer_indels": {
+        "description": "Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "EfficientDV.min_fraction_snps": {
+        "description": "Minimal fraction of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "EfficientDV.min_read_count_hmer_indels": {
+        "description": "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "EfficientDV.min_read_count_non_hmer_indels": {
+        "description": "Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "EfficientDV.min_read_count_snps": {
+        "description": "Minimal number of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "EfficientDV.min_variant_quality_exome_hmer_indels": {
+        "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "EfficientDV.min_variant_quality_hmer_indels": {
+        "description": "Minimal h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "EfficientDV.min_variant_quality_non_hmer_indels": {
+        "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "EfficientDV.min_variant_quality_snps": {
+        "description": "Minimal snp variant quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "EfficientDV.model_onnx": {
+        "description": "TensorRT model for calling variants (onnx format)",
+        "optional": false
+    },
+    "EfficientDV.model_serialized": {
+        "description": "TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+        "optional": true
+    },
+    "EfficientDV.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "EfficientDV.num_shards": {
+        "description": "Maximal number of intervals the genome is broken into when parallelizing the make_examples step",
+        "optional": false
+    },
+    "EfficientDV.optimal_coverages": {
+        "description": "Each sample is downsampled to the \"optimal coverage\" (dictated by the coverage of the training set). Downsampling method is determined by cap_at_optimal_coverage.",
+        "optional": false
+    },
+    "EfficientDV.output_realignment": {
+        "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
+        "optional": true
+    },
+    "EfficientDV.p_error": {
+        "description": "Basecalling error for reference confidence model in gvcf",
+        "optional": true
+    },
+    "EfficientDV.pileup_min_mapping_quality": {
+        "description": "Minimal mapping quality to be included in image (the input to the CNN)",
+        "optional": true
+    },
+    "EfficientDV.preemptible_tries": {
+        "description": "Number of preemptible tries",
+        "optional": false
+    },
+    "EfficientDV.prioritize_alt_supporting_reads": {
+        "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "EfficientDV.ref_dbsnp": {
+        "description": "DbSNP vcf for the annotation of known variants",
+        "optional": false
+    },
+    "EfficientDV.ref_dbsnp_index": {
+        "description": "DbSNP vcf index",
+        "optional": false
+    },
+    "EfficientDV.references": {
+        "description": "Reference files: fasta, dict and fai, recommended value set in the template",
+        "optional": false
+    },
+    "EfficientDV.scatter_intervals_break": {
+        "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "EfficientDV.sec_models": {
+        "description": "Models to annotate systematic errors",
+        "optional": true
+    },
+    "EfficientDV.show_bg_fields": {
+        "description": "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
+        "optional": true
+    },
+    "EfficientDV.target_intervals": {
+        "description": "Limit calling to these regions. If not provided then entire genome is used.",
+        "optional": true
+    },
+    "EfficientDV.ug_call_variants_extra_mem": {
+        "description": "Extra memory for call_variants",
+        "optional": true
+    },
+    "EfficientDV.ug_make_examples_cpus_override": {
+        "description": "CPU number override for make_examples step",
+        "optional": true
+    },
+    "EfficientDV.ug_make_examples_extra_args": {
+        "description": "Additional arguments for make-examples tool",
+        "optional": true
+    },
+    "EfficientDV.ug_make_examples_memory_override": {
+        "description": "Memory override for make_examples step",
+        "optional": true
+    }
+}
