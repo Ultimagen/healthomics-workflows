@@ -12,12 +12,12 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.cram_files">
         <b>EfficientDV.cram_files</b><br />
         <i>Array[File] </i> &mdash; 
-         Input cram file. At the moment only a single file is supported. <br /> 
+         Input cram files. Multiple files are merged. <br /> 
 </p>
 <p name="EfficientDV.cram_index_files">
         <b>EfficientDV.cram_index_files</b><br />
         <i>Array[File] </i> &mdash; 
-         Input cram index file. At the moment only a single file is supported. <br /> 
+         Input cram index files. <br /> 
 </p>
 
 ### Required parameters

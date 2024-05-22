@@ -6,16 +6,16 @@
     "TrimAlignSort.base_file_name": "<base_file_name>",
     "TrimAlignSort.ref_fastas_cram": [
         "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "s3://genomics-pipeline-concordanz-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
         "s3://broad-references/hg19/v0/Homo_sapiens_assembly19.fasta",
-        "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/hg19.ucsc.fa",
-        "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
-        "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
     ],
     "TrimAlignSort.references": {
-        "ref_fasta": "s3://genomics-pipeline-concordanz-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta",
-        "ref_fasta_index": "s3://genomics-pipeline-concordanz-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta.fai",
-        "ref_dict": "s3://genomics-pipeline-concordanz-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.dict"
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.dict"
     },
     "TrimAlignSort.preemptible_tries": 1,
     "TrimAlignSort.no_address": true,
@@ -26,16 +26,16 @@
         "sort": true
     },
     "TrimAlignSort.trimmer_parameters": {
-        "formats_description": "s3://genomics-pipeline-concordanz-us-east-1/trimmer_formats/1.1/formats.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/1.1/formats.json",
         "untrimmed_reads_action": "filter",
         "format": "trim ILMN adapters"
     },
     "TrimAlignSort.aligner": "star",
-    "TrimAlignSort.star_genome": "s3://genomics-pipeline-concordanz-us-east-1/hg38/rna-seq/STAR_hg38_3_2.7.10a.zip",
+    "TrimAlignSort.star_genome": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/STAR_hg38_3_2.7.10a.zip",
     "TrimAlignSort.star_align_extra_args": "--outSAMunmapped Within --chimOutType WithinBAM SoftClip --clip3pNbases 0 --outFilterMatchNminOverLread 0.66 --outFilterScoreMinOverLread 0.66 --scoreDelOpen -2 --scoreDelBase -2 --scoreInsOpen -2 --scoreInsBase -2 --alignEndsType Local --outSAMmapqUnique 60",
     "TrimAlignSort.sorter_params": {
         "mark_duplicates": true,
         "demux_extra_args": "--cram-ignore-md5"
     },
-    "TrimAlignSort.monitoring_script_input": "s3://gen-pipe-shared-337532070941-us-east-1/monitor_1.0.sh"
+    "TrimAlignSort.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

@@ -109,6 +109,8 @@ tool \
   --add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic
 ```
 
+The input cram files and the corresponding index files are provided to `--input` and `--cram-index`, respectively. Multiple cram files can be provided as a comma separated list.
+
 The `--output` argument is the prefix for the output files (including tfrecords).
 
 The program will output a sam file with the re-aligned reads unless the argument `--no-realigned-sam` is provided. Note that these files are very large, so provide a large disk space if you want to save the re-aligned reads.

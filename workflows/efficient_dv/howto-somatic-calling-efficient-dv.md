@@ -111,6 +111,8 @@ tool --input "input_reads.cram;background_reads.cram" \
   --pragmatic
 ```
 
+The input cram files and the corresponding index files are provided to `--input` and `--cram-index`, respectively. The tumor and background crams are separated by a semicolon (note that the semicolon requires to quote the argument, in order for linux to interpret it correctly). Multiple cram files can be provided, separated by commas.
+
 The `--output` argument is the prefix for the output files (including tfrecords).
 
 The arguments `optimal-coverages` and `cap-at-optimal-coverage` determine how reads are downsampled for the image (the image contains 95 reads from each sample). The same values are used in the training of the model and the inference. Hence, their values are tightly linked to which model is used.

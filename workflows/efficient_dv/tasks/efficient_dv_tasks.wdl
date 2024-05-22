@@ -32,7 +32,6 @@ task UGMakeExamples{
     Boolean prioritize_alt_supporting_reads    
     Array[Int] optimal_coverages
     Boolean cap_at_optimal_coverage
-    Int interval_nreads = 10000
     Boolean output_realignment = false
     String? ug_make_examples_extra_args
 
@@ -177,7 +176,6 @@ task UGMakeExamples{
       --assembly-min-base-quality ~{assembly_min_base_quality} \
       --gzip-output \
       ~{true="--no-realigned-sam" false="" !output_realignment} \
-      --interval-nreads ~{interval_nreads} \
       ~{true="--somatic" false="" defined_background} \
       ~{gvcf_string} \
       --optimal-coverages "~{sep=";" optimal_coverages}" \
@@ -383,11 +381,44 @@ task UGPostProcessing{
       touch ~{output_prefix}.g.vcf.gz
       touch ~{output_prefix}.g.vcf.gz.tbi
 
-      bcftools view -f PASS -O z ~{output_prefix}.vcf.gz -o ~{output_prefix}.pass.vcf.gz
+  >>>
+  runtime {
+    memory: "8 GB"
+    cpu: "1"
+    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+  }
+  output {
+    File monitoring_log = "monitoring.log"
+    File vcf_file  = '~{output_prefix}.vcf.gz'
+    File vcf_index = '~{output_prefix}.vcf.gz.tbi'
+    File gvcf_file = '~{output_prefix}.g.vcf.gz'
+    File gvcf_file_index = '~{output_prefix}.g.vcf.gz.tbi'
+  }
+}
+
+
+task QCReport{
+  input{
+    File input_vcf
+    File input_vcf_index
+    String output_prefix
+    File ref
+    String docker
+    File monitoring_script
+
+    Int disk_size = ceil(2 * size(input_vcf, "GB") +
+                         size(ref, "GB") + 4)
+  }
+
+  command <<<
+      bash ~{monitoring_script} | tee monitoring.log >&2 &
+      set -eo pipefail
+
+      bcftools view -f PASS -O z ~{input_vcf} -o ~{output_prefix}.pass.vcf.gz
       bcftools index -t ~{output_prefix}.pass.vcf.gz
 
       # Run QC reprort
-      echo 'Running QC report...'
       python /opt/deepvariant/qc_report/run_no_gt_report.py \
         --input_file ~{output_prefix}.pass.vcf.gz \
         --reference ~{ref} \
@@ -403,10 +434,6 @@ task UGPostProcessing{
   }
   output {
     File monitoring_log = "monitoring.log"
-    File vcf_file  = '~{output_prefix}.vcf.gz'
-    File vcf_index = '~{output_prefix}.vcf.gz.tbi'
-    File gvcf_file = '~{output_prefix}.g.vcf.gz'
-    File gvcf_file_index = '~{output_prefix}.g.vcf.gz.tbi'
     File qc_h5     = '~{output_prefix}.h5'
     File qc_report = '~{output_prefix}_report.html'
     File qc_metrics_h5 = '~{output_prefix}_metrics.h5'

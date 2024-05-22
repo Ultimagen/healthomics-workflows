@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.11.1" # !UnusedDeclaration
+    String pipeline_version = "1.11.2" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -161,7 +161,8 @@ workflow EfficientDV {
               "Sentieon.Globals.glob",
               "AnnotateVCF.Globals.glob",
               "SingleSampleQC.Globals.glob",
-              "VariantCallingEvaluation.Globals.glob"
+              "VariantCallingEvaluation.Globals.glob",
+              "QCReport.disk_size"
           ]}
   }
 
@@ -171,11 +172,11 @@ workflow EfficientDV {
       category: "input_required"
     }
     cram_files: {
-      help: "Input cram file. At the moment only a single file is supported.",
+      help: "Input cram files. Multiple files are merged.",
       category: "input_required"
     }
     cram_index_files: {
-      help: "Input cram index file. At the moment only a single file is supported.",
+      help: "Input cram index files.",
       category: "input_required"
     }
     background_cram_files: {
@@ -654,13 +655,23 @@ workflow EfficientDV {
     } 
   }
 
-   call PostProcesTasks.RemoveRefCalls as RemoveRefCalls {
-        input:
-            input_vcf = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, CalibrateBridgingSnvs.output_vcf]),
-            final_vcf_base_name = base_file_name,
-            monitoring_script = monitoring_script,
-            bcftools_docker =  global.bcftools_docker
-    }
+  call PostProcesTasks.RemoveRefCalls as RemoveRefCalls {
+       input:
+          input_vcf = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, CalibrateBridgingSnvs.output_vcf]),
+          final_vcf_base_name = base_file_name,
+          monitoring_script = monitoring_script,
+          bcftools_docker =  global.bcftools_docker
+  }
+
+  call UGDVTasks.QCReport {
+    input:
+      input_vcf = RemoveRefCalls.output_vcf,
+      input_vcf_index = RemoveRefCalls.output_vcf_index,
+      output_prefix = output_prefix,
+      ref = references.ref_fasta,
+      docker = global.ug_make_examples_docker,
+      monitoring_script = monitoring_script
+  }
   
   if (make_gvcf) {
     File gvcf_maybe = UGPostProcessing.gvcf_file
@@ -687,8 +698,8 @@ workflow EfficientDV {
     File? realigned_cram    = realigned_cram_maybe
     File? realigned_cram_index = realigned_cram_index_maybe
     String flow_order       = flow_order_
-    File report_html        = UGPostProcessing.qc_report
-    File qc_h5              = UGPostProcessing.qc_h5
-    File qc_metrics_h5      = UGPostProcessing.qc_metrics_h5
+    File report_html        = QCReport.qc_report
+    File qc_h5              = QCReport.qc_h5
+    File qc_metrics_h5      = QCReport.qc_metrics_h5
   }
 }

@@ -56,11 +56,11 @@
         "optional": true
     },
     "EfficientDV.cram_files": {
-        "description": "Input cram file. At the moment only a single file is supported.",
+        "description": "Input cram files. Multiple files are merged.",
         "optional": false
     },
     "EfficientDV.cram_index_files": {
-        "description": "Input cram index file. At the moment only a single file is supported.",
+        "description": "Input cram index files.",
         "optional": false
     },
     "EfficientDV.dbg_min_base_quality": {

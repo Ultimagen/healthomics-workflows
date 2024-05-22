@@ -32,11 +32,11 @@
     "SingleSampleCnmopsCNVCalling.mapq": 1,
     "SingleSampleCnmopsCNVCalling.window_length": 1000,
     "SingleSampleCnmopsCNVCalling.parallel": 4,
-    "SingleSampleCnmopsCNVCalling.cohort_reads_count_matrix": "s3://genomics-pipeline-concordanz-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds",
-    "SingleSampleCnmopsCNVCalling.merged_cohort_ploidy_file": "s3://genomics-pipeline-concordanz-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
+    "SingleSampleCnmopsCNVCalling.cohort_reads_count_matrix": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds",
+    "SingleSampleCnmopsCNVCalling.merged_cohort_ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
     "SingleSampleCnmopsCNVCalling.min_width_value": 2,
     "SingleSampleCnmopsCNVCalling.min_cnv_length": 10000,
     "SingleSampleCnmopsCNVCalling.intersection_cutoff": 0.5,
-    "SingleSampleCnmopsCNVCalling.cnv_lcr_file": "s3://genomics-pipeline-concordanz-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
-    "SingleSampleCnmopsCNVCalling.monitoring_script_input": "s3://gen-pipe-shared-337532070941-us-east-1/monitor_1.0.sh"
+    "SingleSampleCnmopsCNVCalling.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+    "SingleSampleCnmopsCNVCalling.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }
