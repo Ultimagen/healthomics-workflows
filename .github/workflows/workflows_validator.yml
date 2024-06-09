@@ -1,0 +1,14 @@
+name: Healthomics Workflows Validator
+
+on:
+  push:
+    paths:
+      - workflows/*/input_templates/*.json
+  workflow_dispatch:
+
+jobs:
+  start-run:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: |
+            echo "THIS ACTION STILL DOES NOTHING"
