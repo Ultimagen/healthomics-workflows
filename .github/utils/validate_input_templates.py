@@ -26,6 +26,7 @@ def validate_json_files(json_files):
     all_paths_valid = True
 
     for json_file in json_files:
+        logging.info(f"validate json file: {json_file}")
         with open(json_file, 'r') as file:
             data = json.load(file)
             for key, value in data.items():
