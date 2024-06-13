@@ -10,6 +10,10 @@
 
 ## Usage
 
+### Python environment
+
+Use your favorite python env to install the needed packages listed in: `requirements.txt`
+
 ### Command Line Arguments
 
 The script accepts the following command line arguments:
