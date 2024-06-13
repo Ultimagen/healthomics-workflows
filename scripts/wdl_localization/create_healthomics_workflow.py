@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format=log_format)
 GLOBALS_WDL = "tasks/globals.wdl"
 
 
-def localize_workflow(wf_root, aws_region, aws_bucket, aws_profile=None, input_template=None):
+def localize_workflow(wf_root, aws_region, s3_bucket, aws_profile=None, input_template=None):
     logging.info(f"Starting localize workflow: {args.workflow}")
 
     globals_wdl_file = f"{wf_root}/{GLOBALS_WDL}"
@@ -27,7 +27,7 @@ def localize_workflow(wf_root, aws_region, aws_bucket, aws_profile=None, input_t
 
     for input_file in files_to_localize_s3:
         logging.info(f"localizing {input_file}")
-        localize_s3_files(input_file, aws_bucket)
+        localize_s3_files(input_file, s3_bucket)
     logging.info(f"workflow: {args.workflow} localization completed")
 
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         description="create AWS healthomics workflow")
     parser.add_argument("workflow", help="workflow to create (folder under workflows)")
     parser.add_argument("aws_region", help="AWS region")
-    parser.add_argument("aws_bucket", help="bucket name to copy resources files to")
+    parser.add_argument("s3_bucket", help="bucket name to copy resources files to")
     parser.add_argument("--omics_workflow_name",
                         help="how to name the generated omics workflow, if empty will use 'workflow' arg",
                         required=False)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     workflow_root = f'{Path(__file__).resolve().parent.parent.parent}/workflows/{args.workflow}'
-    localize_workflow(workflow_root, args.aws_region, args.aws_bucket, args.aws_profile,
+    localize_workflow(workflow_root, args.aws_region, args.s3_bucket, args.aws_profile,
                       args.input_template)
 
     omics_workflow_name = args.omics_workflow_name or args.workflow
