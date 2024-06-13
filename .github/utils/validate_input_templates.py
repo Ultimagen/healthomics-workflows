@@ -16,6 +16,7 @@ def is_s3_path(value):
 
 def s3_path_exists(s3_client, s3_path):
     try:
+        logging.info(f"querying file: {s3_path}")
         bucket, key = s3_path.replace("s3://", "").split("/", 1)
         s3_client.head_object(Bucket=bucket, Key=key)
         return True
