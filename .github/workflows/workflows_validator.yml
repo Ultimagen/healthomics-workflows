@@ -6,9 +6,18 @@ on:
       - workflows/*/input_templates/*.json
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
-  start-run:
-    runs-on: ubuntu-20.04
+  validate-input-templates:
+    runs-on: ubuntu-latest
     steps:
-      - run: |
-            echo "THIS ACTION STILL DOES NOTHING"
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: pip install boto3
+
+    - name: validate input templates
+      run: python .github/utils/validate_input_templates.py
