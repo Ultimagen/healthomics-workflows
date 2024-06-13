@@ -49,7 +49,7 @@ def update_s3_paths(data, s3_client, dest_bucket):
     elif isinstance(data, list):
         for i in range(len(data)):
             data[i] = update_s3_paths(data[i], s3_client, dest_bucket)
-    elif isinstance(data, str) and data.startswith('s3://'):
+    elif isinstance(data, str) and data.startswith('s3://') and '<' not in data:
         src_bucket, src_key = re.match(r's3://([^/]+)/(.+)', data).groups()
         return copy_s3_file(s3_client, src_bucket, src_key, dest_bucket)
     return data

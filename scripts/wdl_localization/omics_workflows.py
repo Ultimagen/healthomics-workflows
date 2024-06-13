@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import time
 import glob
@@ -20,6 +21,18 @@ OMICS_WF_ACTIVE = "ACTIVE"
 OMICS_WF_DONE_STATUSES = [OMICS_WF_ACTIVE, "DELETED", "FAILED"]
 OMICS_PRIVATE_TYPE = "PRIVATE"
 TASKS_SUBDIR = "tasks/"
+
+
+def extract_pipeline_version(wdl_file_path):
+    with open(wdl_file_path, 'r') as file:
+        wdl_content = file.read()
+        # Regex pattern to match the pipeline_version line
+        pattern = re.compile(r'String\s+pipeline_version\s*=\s*"([^"]+)"')
+
+        match = pattern.search(wdl_content)
+        if match:
+            return match.group(1)
+    return None
 
 
 def safe_copy(source: Path, target: Path, dryrun: bool = False):
@@ -46,8 +59,9 @@ def zip_workflow_files(workflow_name, workflow_root):
     return zip_path
 
 
-def create_omics_workflow(aws_region, omics_workflow_name, workflow_version, workflow_root, workflow_name):
+def create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workflow_name):
     main_wdl = f"{workflow_name}.wdl"
+    workflow_version = extract_pipeline_version(f"{workflow_root}/{main_wdl}")
     logging.info(f"Create omics workflow for {workflow_name}, version {workflow_version}, main wdl: {main_wdl}")
     params_def_file = Path(f"{workflow_root}/{workflow_name}_{PARAMS_DEF_SUFFIX}")
 

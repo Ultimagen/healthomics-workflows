@@ -1,6 +1,7 @@
 import argparse
 import logging
 import glob
+from pathlib import Path
 from localize_dockers import localize_wdl_docker_images
 from localize_s3 import localize_s3_files
 from omics_workflows import create_omics_workflow
@@ -11,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format=log_format)
 GLOBALS_WDL = "tasks/globals.wdl"
 
 
-def localize_workflow(workflow, wf_root, aws_region, aws_bucket, aws_profile=None, input_template=None):
+def localize_workflow(wf_root, aws_region, aws_bucket, aws_profile=None, input_template=None):
     logging.info(f"Starting localize workflow: {args.workflow}")
 
     globals_wdl_file = f"{wf_root}/{GLOBALS_WDL}"
@@ -21,7 +22,7 @@ def localize_workflow(workflow, wf_root, aws_region, aws_bucket, aws_profile=Non
     if input_template:
         files_to_localize_s3 = [input_template]
     else:
-        files_to_localize_s3 = glob.glob(f'../../workflows/{workflow}/input_templates/*.json')
+        files_to_localize_s3 = glob.glob(f'{wf_root}/input_templates/*.json')
     files_to_localize_s3.append(globals_wdl_file)
 
     for input_file in files_to_localize_s3:
@@ -30,8 +31,8 @@ def localize_workflow(workflow, wf_root, aws_region, aws_bucket, aws_profile=Non
     logging.info(f"workflow: {args.workflow} localization completed")
 
 
-def create_workflow(aws_region, omics_wf_name, wf_version, wf_root, workflow_name):
-    create_omics_workflow(aws_region, omics_wf_name, wf_version, wf_root, workflow_name)
+def create_workflow(aws_region, omics_wf_name, wf_root, workflow_name):
+    create_omics_workflow(aws_region, omics_wf_name, wf_root, workflow_name)
 
 
 if __name__ == "__main__":
@@ -49,10 +50,9 @@ if __name__ == "__main__":
     parser.add_argument("--aws_profile", help="AWS CLI profile", required=False)
     args = parser.parse_args()
 
-    workflow_root = f'../../workflows/{args.workflow}/'
-    localize_workflow(args.workflow, workflow_root, args.aws_region, args.aws_bucket, args.aws_profile,
+    workflow_root = f'{Path(__file__).resolve().parent.parent.parent}/workflows/{args.workflow}'
+    localize_workflow(workflow_root, args.aws_region, args.aws_bucket, args.aws_profile,
                       args.input_template)
 
     omics_workflow_name = args.omics_workflow_name or args.workflow
-    workflow_version = "1.11.4_avigail"  # todo now: extract from wdl
-    create_workflow(args.aws_region, omics_workflow_name, workflow_version, workflow_root, args.workflow)
+    create_workflow(args.aws_region, omics_workflow_name, workflow_root, args.workflow)
