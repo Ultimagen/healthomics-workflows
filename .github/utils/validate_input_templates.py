@@ -3,6 +3,8 @@ import json
 
 import boto3
 import logging
+from botocore import UNSIGNED
+from botocore.config import Config
 
 log_format = "[%(levelname)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
@@ -46,7 +48,7 @@ def validate_json_data(s3_client, data):
 
 
 def validate_json_files(json_files):
-    s3_client = boto3.client('s3')
+    s3_client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
     all_paths_valid = True
 
     for json_file in json_files:
