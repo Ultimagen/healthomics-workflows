@@ -44,12 +44,6 @@ def validate_json_data(s3_client, data):
                 if not s3_path_exists(s3_client, item):
                     logging.error(f"S3 path does not exist: {item}")
                     all_paths_valid = False
-    else:
-        for key, value in data.items():
-            if is_s3_path(value):
-                if not s3_path_exists(s3_client, value):
-                    logging.error(f"S3 path does not exist: {value}")
-                    all_paths_valid = False
     return all_paths_valid
 
 
