@@ -21,7 +21,7 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 
 ## Deploying Private Workflow
 ### To localize workflow resources and create a private workflow in AWS HealthOmics you can:
-- [use this script](scripts/healthomics_wf/create_healthomics_workflow.py) that localize the needed resources and create a private workflow on AWS HealthOmics. After running it your workflow is ready to run, See: "Running Private Workflow" section.
+- [use this script](scripts/healthomics_wf/create_healthomics_workflow.py) that localize the needed resources and create a private workflow on AWS HealthOmics. After running it your workflow [is ready to run](#running-private-workflow).
 - Alternatively, follow the steps below to do it manually:
 #### To localize workflow resources to create a private workflow in AWS HealthOmics, follow the steps below:
 i. Pre requisites: 
