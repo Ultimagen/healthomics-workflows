@@ -55,7 +55,7 @@ To successfully run this script, you need the following AWS permissions:
 `s3:ListBucket`
 `s3:GetObject`
 `s3:PutObject`
-## HealthOmics Permissions
+### HealthOmics Permissions
 `omics:CreateWorkflow`
 `omics:GetWorkflow`
 `omics:ListWorkflows`

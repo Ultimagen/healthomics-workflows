@@ -19,7 +19,11 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 
 5.	For more questions about these workflows, please contact healtomics.support@ultimagen.com.
 
-## To localize workflow resources to create a private workflow in AWS HealthOmics, follow the steps below:
+## Deploying Private Workflow
+### To localize workflow resources and create a private workflow in AWS HealthOmics you can:
+- [use this script](scripts/healthomics_wf/create_healthomics_workflow.py) that localize the needed resources and create a private workflow on AWS HealthOmics. After running it your workflow is ready to run, See: "Running Private Workflow" section.
+- Alternatively, follow the steps below to do it manually:
+#### To localize workflow resources to create a private workflow in AWS HealthOmics, follow the steps below:
 i. Pre requisites: 
 1. Ultima Genomics workflows uses several ECR containers, they are listed under each workflow tasks\globals.wdl.
 
@@ -46,9 +50,8 @@ iv. Modify and save the workflow scripts and parameter templates to meet your ne
    - Update **tasks/globals.wdl** with the urls of you private ECR images.
    - Update the template's parameter values with their local s3 paths. Current links are to public buckets and transfer cost might incur by using them
 
-## Deploying Private Workflow
 Once the workflow resources have been deployed into locally (see instructions per workflow), user can create private workflow on AWS HealthOmics
-1. Create a private workflow in HealthOmics by following one of the two options below:
+#### Create a private workflow in HealthOmics by following one of the two options below:
 
 i. From the CLI:
  ~~~
@@ -68,8 +71,9 @@ ii. From the console:
     c. Follow the instructions on the console to create your workflow.
        - Define "Main workflow definition file path" as <workflow_name>.wdl file
 
+## Running Private Workflow
 
-2. Run your workflow by following one of the two options below:
+#### Run your workflow by following one of the two options below:
    
 i. From the CLI:
  ~~~
