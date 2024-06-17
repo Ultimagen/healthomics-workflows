@@ -44,7 +44,7 @@ def safe_copy(source: Path, target: Path, dryrun: bool = False):
 
 
 def zip_workflow_files(workflow_name, workflow_root):
-    with TemporaryDirectory(delete=False) as tmpdir:
+    with TemporaryDirectory() as tmpdir:
         logging.info(f"Make zip from wdl files in {workflow_root}")
         wdl_files = glob.glob(f"{workflow_root}/**/*.wdl", recursive=True)
         for wdl in wdl_files:
@@ -54,9 +54,9 @@ def zip_workflow_files(workflow_name, workflow_root):
             subdir.mkdir(parents=True, exist_ok=True)
             copy2(wdl, subdir)
 
-    zip_file = path.join(tmpdir, workflow_name)
-    zip_path = Path(make_archive(zip_file, "zip", zip_file))
-    return zip_path
+        zip_file = path.join(tmpdir, workflow_name)
+        zip_path = Path(make_archive(zip_file, "zip", zip_file))
+        return zip_path
 
 
 def create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workflow_name):
