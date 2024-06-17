@@ -43,20 +43,19 @@ def safe_copy(source: Path, target: Path, dryrun: bool = False):
             shutil.copy(source.absolute(), target.absolute())
 
 
-def zip_workflow_files(workflow_name, workflow_root):
-    with TemporaryDirectory() as tmpdir:
-        logging.info(f"Make zip from wdl files in {workflow_root}")
-        wdl_files = glob.glob(f"{workflow_root}/**/*.wdl", recursive=True)
-        for wdl in wdl_files:
-            subdir = Path(f'{tmpdir}/{workflow_name}/') if TASKS_SUBDIR not in wdl else Path(
-                f'{tmpdir}/{workflow_name}/{TASKS_SUBDIR}')
-            logging.debug(f"Copy {wdl} to {subdir}")
-            subdir.mkdir(parents=True, exist_ok=True)
-            copy2(wdl, subdir)
+def zip_workflow_files(workflow_name, workflow_root, tmpdir):
+    logging.info(f"Make zip from wdl files in {workflow_root}")
+    wdl_files = glob.glob(f"{workflow_root}/**/*.wdl", recursive=True)
+    for wdl in wdl_files:
+        subdir = Path(f'{tmpdir}/{workflow_name}/') if TASKS_SUBDIR not in wdl else Path(
+            f'{tmpdir}/{workflow_name}/{TASKS_SUBDIR}')
+        logging.debug(f"Copy {wdl} to {subdir}")
+        subdir.mkdir(parents=True, exist_ok=True)
+        copy2(wdl, subdir)
 
-        zip_file = path.join(tmpdir, workflow_name)
-        zip_path = Path(make_archive(zip_file, "zip", zip_file))
-        return zip_path
+    zip_file = path.join(tmpdir, workflow_name)
+    zip_path = Path(make_archive(zip_file, "zip", zip_file))
+    return zip_path
 
 
 def create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workflow_name):
@@ -67,35 +66,36 @@ def create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workfl
 
     with params_def_file.open(encoding="UTF-8") as source:
         wdl_params = json.load(source)
-    zip_path = zip_workflow_files(workflow_name, workflow_root)
-    logging.debug(f"Read zip as bytes stream")
-    with open(zip_path, "rb") as f:
-        zip_bytes = f.read()
+    with TemporaryDirectory() as tmpdir:    
+        zip_path = zip_workflow_files(workflow_name, workflow_root, tmpdir)
+        logging.debug(f"Read zip as bytes stream")
+        with open(zip_path, "rb") as f:
+            zip_bytes = f.read()
 
-    omics_client = boto3.client("omics", aws_region)
-    try:
-        response = omics_client.create_workflow(
-            name=omics_workflow_name,
-            engine="WDL",
-            definitionZip=zip_bytes,
-            main=main_wdl,
-            parameterTemplate=wdl_params,
-            tags={
-                PIPELINE_VERSION_TAG: workflow_version
-            }
-        )
-        logging.debug(response)
-        workflow_id = response["id"]
-        wf_status = response["status"]
-        while wf_status not in OMICS_WF_DONE_STATUSES:
-            time.sleep(5)
-            response = omics_client.get_workflow(id=workflow_id)
-            wf_status = response["status"]
-        if wf_status != OMICS_WF_ACTIVE:
-            logging.error(f"{omics_workflow_name} omics workflow creation failed with msg: {response['statusMessage']}")
-            exit(1)
-        logging.info(f"{omics_workflow_name} omics workflow created successfully. workflowId: {workflow_id}")
-
-    except ClientError as e:
-        logging.error(e)
-        exit(1)
+            omics_client = boto3.client("omics", aws_region)
+            try:
+                response = omics_client.create_workflow(
+                    name=omics_workflow_name,
+                    engine="WDL",
+                    definitionZip=zip_bytes,
+                    main=main_wdl,
+                    parameterTemplate=wdl_params,
+                    tags={
+                        PIPELINE_VERSION_TAG: workflow_version
+                    }
+                )
+                logging.debug(response)
+                workflow_id = response["id"]
+                wf_status = response["status"]
+                while wf_status not in OMICS_WF_DONE_STATUSES:
+                    time.sleep(5)
+                    response = omics_client.get_workflow(id=workflow_id)
+                    wf_status = response["status"]
+                if wf_status != OMICS_WF_ACTIVE:
+                    logging.error(f"{omics_workflow_name} omics workflow creation failed with msg: {response['statusMessage']}")
+                    exit(1)
+                logging.info(f"{omics_workflow_name} omics workflow created successfully. workflowId: {workflow_id}")
+        
+            except ClientError as e:
+                logging.error(e)
+                exit(1)
