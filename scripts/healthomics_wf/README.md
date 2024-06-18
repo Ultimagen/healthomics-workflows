@@ -10,9 +10,9 @@
 
 ## Usage
 
-### Python environment
-
-Use your favorite python env to install the needed packages listed in: `requirements.txt`
+### Prerequisites
+- `Python 3.8`
+-  Use your favorite python env to install the needed packages listed in: `requirements.txt`
 
 ### Command Line Arguments
 
@@ -20,7 +20,7 @@ The script accepts the following command line arguments:
 
 - `workflow`: Workflow to create (folder under workflows).
 - `aws_region`: AWS region for ECR images.
-- `s3_bucket`: Bucket name to copy resources files to.
+- `s3_bucket`: Bucket name to copy resources files to. This bucket must be accessed by the service role that will be used to run the workflow
 - `--omics_workflow_name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
 - `--input_template`: Input template JSON file name to localize (optional). If empty, it will localize all input templates.
 - `--aws_profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.
