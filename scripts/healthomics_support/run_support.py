@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 import tarfile
 
 import boto3
@@ -12,7 +12,7 @@ log_format = "[%(levelname)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
 
 PIPELINE_VERSION_TAG = "pipeline_version"
-
+UTC = timezone.utc
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -179,16 +179,16 @@ if __name__ == "__main__":
     parser.add_argument('--task-id', type=str,
                         help="HealthOmics workflow task-id to analyze. Leave empty to get the logs for all tasks",
                         default=None)
-    parser.add_argument('--failed', dest='failed', action='store_true',
-                        help="Set to true to get logs for failed tasks only")
-    parser.add_argument('--no-failed', dest='failed', action='store_false')
+    parser.add_argument('--failed', dest='failed', action='store_true')
+    parser.add_argument('--no-failed', dest='failed', action='store_false',
+                        help="Download logs for all run's tasks (by default only failed tasks' log will be downloaded)")
     parser.set_defaults(failed=True)
     parser.add_argument('--output', type=str, help="Output dir to save out files", default=None)
     parser.add_argument('--output-prefix', type=str, help="File name prefix for the output files", required=False,
                         default='')
-    parser.add_argument('--tar', dest='tar', action='store_true',
-                        help="Set to true to tar all generated files")
-    parser.add_argument('--no-tar', dest='tar', action='store_false')
+    parser.add_argument('--tar', dest='tar', action='store_true')
+    parser.add_argument('--no-tar', dest='tar', action='store_false',
+                        help="Don't tar all generated files")
     parser.set_defaults(tar=True)
     args = parser.parse_args()
 
