@@ -40,7 +40,9 @@ if __name__ == "__main__":
         description="create AWS healthomics workflow")
     parser.add_argument("workflow", help="workflow to create (folder under workflows)")
     parser.add_argument("aws_region", help="AWS region")
-    parser.add_argument("s3_bucket", help="bucket name to copy resources files to")
+    parser.add_argument("s3_bucket",
+                        help="bucket name to copy resources files to. This bucket must be accessed by the service "
+                             "role that will be used to run the workflow.")
     parser.add_argument("--omics_workflow_name",
                         help="how to name the generated omics workflow, if empty will use 'workflow' arg",
                         required=False)
