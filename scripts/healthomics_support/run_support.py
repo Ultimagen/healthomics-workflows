@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.INFO, format=log_format)
 PIPELINE_VERSION_TAG = "pipeline_version"
 UTC = timezone.utc
 
+
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -175,7 +176,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Extract information and logs from AWS HealthOmics run to ease failures debugging")
     parser.add_argument("run_id", help="AWS HealthOmics run id")
-    parser.add_argument("--aws_region", help="AWS Region (default 'us-east-1')", required=False)
+    parser.add_argument("--aws_region", help="AWS Region (default 'us-east-1')", required=False, default='us-east-1')
     parser.add_argument('--task-id', type=str,
                         help="HealthOmics workflow task-id to analyze. Leave empty to get the logs for all tasks",
                         default=None)
