@@ -3,7 +3,7 @@
 ## Overview
 
 `run_support.py` is a Python script that extract information and logs from AWS HealthOmics run to ease failures
-debugging
+debugging and gathered them in a tar file.
 
 ## Usage
 
