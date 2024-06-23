@@ -21,8 +21,9 @@ The script accepts the following command line arguments:
 - `workflow`: Workflow to create (folder under workflows).
 - `aws_region`: AWS region for ECR images.
 - `s3_bucket`: Bucket name to copy resources files to. This bucket must be accessed by the service role that will be used to run the workflow.
-- `--omics_workflow_name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
+#### Optional Arguments
 - `--input_template`: Input template JSON file name to localize (optional). If empty, it will localize all input templates.
+- `--omics_workflow_name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
 - `--aws_profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.
 
 ### Example Command
@@ -32,9 +33,8 @@ python create_healthomics_workflow.py \
   single_rad_snv \
   us-east-1 \
   my-s3-bucket \
-  [--omics_workflow_name single_rad_snv_wf \]
-  [--input_template single_read_snv_template-ppmSeq.json \]
-  [--aws_profile my-profile]
+  --input_template single_read_snv_template-ppmSeq.json \
+  --omics_workflow_name single_rad_snv_wf
 ```
 
 ## AWS Permissions
