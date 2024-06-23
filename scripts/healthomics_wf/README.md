@@ -11,7 +11,7 @@
 ## Usage
 
 ### Prerequisites
-- `Python 3.8`
+- `Python 3.8+`
 -  Use your favorite python env to install the needed packages listed in: `requirements.txt`
 
 ### Command Line Arguments
