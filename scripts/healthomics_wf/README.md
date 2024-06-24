@@ -1,8 +1,8 @@
 # Create HealthOmics Workflow
 
 ## Overview
-
-`create_healthomics_workflow.py` is a Python script that performs the following tasks:
+The purpose of `create_healthomics_workflow.py` script is to generate AWS HealthOmics private workflows in a custom AWS account from a workflow under [this folder](../../workflows).
+The script performs the following tasks:
 
 1. Parses a given WDL to extract Docker image references and copies them from their source registries to a specified destination Amazon Elastic Container Registry (ECR).
 2. Parses a JSON template file/s to extract S3 file references and copies them from their source locations to a specified destination S3 bucket.
