@@ -37,12 +37,10 @@ input {
   File wgs_calling_interval_list
   Int break_bands_at_multiples_of
   FeatureMapParams featuremap_params
-  Int? featuremap_shard_number
+  Int scatter_count
 
   String flow_order
-  String? balanced_strand_adapter_version
-  Int motif_length_to_annotate
-  Int max_hmer_length
+  String? ppmSeq_adapter_version
 
   String base_file_name
   Int? preemptible_tries
@@ -66,7 +64,7 @@ input {
   call UGGeneralTasks.ScatterIntervalList {
     input:
       interval_list = wgs_calling_interval_list,
-      scatter_count = select_first([featuremap_shard_number, featuremap_params.scatter_count]),
+      scatter_count = scatter_count,
       break_bands_at_multiples_of = break_bands_at_multiples_of,
       docker = global.gitc_docker,
       gitc_path = global.gitc_jar_path,
@@ -89,7 +87,7 @@ input {
         output_basename = base_file_name,
         interval_list = ScatterIntervalList.out[index],
         memory_gb = create_featuremap_memory_gb,
-        disk_size = ceil(featuremap_disk_size / ScatterIntervalList.interval_count) + ceil(size(references.ref_fasta, "GB")) + 2,
+        disk_size = ceil(2 * featuremap_disk_size / ScatterIntervalList.interval_count) + ceil(size(references.ref_fasta, "GB")) + 2,
         docker = global.ug_gatk_picard_docker,
         gitc_path = global.gitc_jar_path,
         preemptibles = preemptibles,
@@ -105,11 +103,10 @@ input {
         featuremap = FeatureMapCreate.featuremap,
         featuremap_index = FeatureMapCreate.featuremap_index,
         references = references,
+        featuremap_params = featuremap_params,
         flow_order = flow_order,
         output_basename = base_file_name,
-        balanced_strand_adapter_version =  balanced_strand_adapter_version,
-        motif_length_to_annotate = motif_length_to_annotate,
-        max_hmer_length = max_hmer_length,
+        ppmSeq_adapter_version = ppmSeq_adapter_version,
         docker = global.ug_vc_docker,
         memory_gb = process_featuremap_memory_gb,
         cpus = process_featuremap_cpus,
@@ -128,7 +125,7 @@ input {
       featuremap_parts = FeatureMapProcess.annotated_featuremap,
       featuremap_parts_indices = FeatureMapProcess.annotated_featuremap_index,
       output_basename = base_file_name,
-      tag = "featuremap",
+      tag = "featuremap_no_qual",
       disk_size = merge_featuremap_disk_size_gb,
       memory_gb = merge_featuremap_memory_gb,
       cpus = merge_featuremap_cpus,
@@ -141,7 +138,7 @@ input {
     input:
       featuremap_parts = FeatureMapProcess.featuremap_single_substitutions,
       featuremap_parts_indices = FeatureMapProcess.featuremap_single_substitutions_index,
-      tag = "featuremap.single_substitutions",
+      tag = "featuremap_no_qual.single_substitutions",
       output_basename = base_file_name,
       disk_size = merge_featuremap_disk_size_gb,
       memory_gb = merge_featuremap_memory_gb,
@@ -191,14 +188,26 @@ task FeatureMapCreate {
     echo "***************************** Running FeatureMap *****************************"
     start_task=$(date +%s)
     java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms~{memory_gb-2}g -jar ~{gitc_path}GATK_ultima.jar  \
-      FlowFeatureMapper -I ~{input_cram_bam} -O ~{output_basename}.vcf.gz -R ~{references.ref_fasta}  \
-      --intervals ~{interval_list} \
+      FlowFeatureMapper \
+      -I "~{input_cram_bam}" \
+      -O tmp.vcf.gz \
+      -R "~{references.ref_fasta}"  \
+      --intervals "~{interval_list}" \
       --snv-identical-bases ~{featuremap_params.snv_identical_bases} \
       --snv-identical-bases-after ~{featuremap_params.snv_identical_bases_after} \
       --min-score ~{featuremap_params.min_score} \
       --limit-score ~{featuremap_params.limit_score} \
       --read-filter MappingQualityReadFilter --minimum-mapping-quality ~{featuremap_params.min_mapq} \
-      ~{featuremap_params.extra_args}
+      ~{featuremap_params.extra_args} 
+
+    echo "***************************** Filtering on region *****************************"
+    java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms~{memory_gb-2}g -jar ~{gitc_path}GATK_ultima.jar  \
+      VariantFiltration \
+      -V tmp.vcf.gz \
+      -O "~{output_basename}.vcf.gz" \
+      -R "~{references.ref_fasta}"  \
+      --intervals "~{interval_list}"
+    echo "***************************** Done *****************************"
 
     end=$(date +%s)
     mins_elapsed=$(( ($end - $start_task) / 60))
@@ -237,12 +246,11 @@ task FeatureMapProcess {
   input  {
     File featuremap
     File featuremap_index
+    FeatureMapParams featuremap_params
     References references
     String flow_order
     String output_basename
-    String? balanced_strand_adapter_version
-    Int motif_length_to_annotate
-    Int max_hmer_length
+    String? ppmSeq_adapter_version
     String docker
     Int memory_gb
     Int cpus
@@ -268,10 +276,10 @@ task FeatureMapProcess {
       -i ~{featuremap} \
       -o ~{annotated_featuremap_vcf} \
       --ref_fasta ~{references.ref_fasta} \
-      ~{true="--balanced_strand_adapter_version " false="" defined(balanced_strand_adapter_version)}~{default="" balanced_strand_adapter_version} \
+      ~{true="--balanced_strand_adapter_version " false="" defined(ppmSeq_adapter_version)}~{default="" ppmSeq_adapter_version} \
       --flow_order ~{flow_order} \
-      --motif_length_to_annotate ~{motif_length_to_annotate} \
-      --max_hmer_length ~{max_hmer_length}
+      --motif_length_to_annotate ~{featuremap_params.motif_length_to_annotate} \
+      --max_hmer_length ~{featuremap_params.max_hmer_length}
 
     end=$(date +%s)
     mins_elapsed=$(( ($end - $start_task) / 60))

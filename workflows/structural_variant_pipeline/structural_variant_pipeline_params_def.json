@@ -27,6 +27,10 @@
         "description": "Interval for collecting gridss metrics",
         "optional": true
     },
+    "SVPipeline.homopolymer_length": {
+        "description": "Realignment parameter: do realignment on homopolymeres longer than this value",
+        "optional": false
+    },
     "SVPipeline.input_germline_crams": {
         "description": "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
         "optional": true
@@ -122,6 +126,10 @@
     "SVPipeline.scatter_intervals_break": {
         "description": "Maximal resolution for scattering intervals",
         "optional": false
+    },
+    "SVPipeline.symbolic_vcf_format": {
+        "description": "Whether to convert the output vcf to the region format or not, default True",
+        "optional": true
     },
     "SVPipeline.ua_references": {
         "description": "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",

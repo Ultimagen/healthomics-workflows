@@ -34,6 +34,5 @@
         50
     ],
     "EfficientDV.min_variant_quality_exome_hmer_indels": 7,
-    "EfficientDV.cloud_provider_override": "aws",
-    "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    "EfficientDV.cloud_provider_override": "aws"
 }

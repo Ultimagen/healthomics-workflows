@@ -123,11 +123,7 @@ Either when using the WDL or running as standalone, the following inputs are nee
 
   b. cfdna_featuremap_index
 
-  c. srsnv_test_X - X_test_file
-
-  d. srsnv_test_y - y_test_file
-
-  e. srsnv_qual_test - qual_test_file
+  c. featuremap_df_file
     
 4. Analysis filters
 
@@ -346,9 +342,7 @@ papermill /VariantCalling/ugvc/reports/mrd_automatic_data_analysis.ipynb ~{basen
   -p signatures_file_parquet "~{basename}.signatures.parquet" \
   -p signature_filter_query "~{mrd_analysis_params.signature_filter_query}" \
   -p read_filter_query "~{mrd_analysis_params.read_filter_query}" \
-  -p X_test_file "~{srsnv_test_X}" \
-  -p y_test_file "~{srsnv_test_y}" \
-  -p qual_test_file "~{srsnv_qual_test}" \
+  -p featuremap_df_file "~{featuremap_df_file}" \
   -p output_dir "$PWD" \
   -p basename "~{basename}" \
   -k python3
@@ -381,9 +375,7 @@ jupyter nbconvert ~{basename}.mrd_data_analysis.ipynb --output ~{basename}.mrd_d
 {cfdna_cram_bam_index}:gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
 {external_matched_signatures}: ["gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_46_FreshFrozen.ann.chr20.vcf.gz"]
 {external_control_signatures}: ["gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_67_FFPE.ann.chr20.vcf.gz"]
-{srsnv_test_X}:gs://ug-cromwell-tests/mrd/test_data/Pa_46.X_test.parquet
-{srsnv_test_y}:gs://ug-cromwell-tests/mrd/test_data/Pa_46.y_test.parquet
-{srsnv_qual_test}:gs://ug-cromwell-tests/mrd/test_data/Pa_46.qual_test.parquet
+{featuremap_df_file}:gs://ug-cromwell-tests/mrd/test_data/Pa_46_333_LuNgs_08.featuremap_df.parquet
 {snv_database}:gs://concordanz/hg38/pcawg/pancan_pcawg_2020.chr20.vcf.gz
 
 or
@@ -394,8 +386,6 @@ or
 {cfdna_cram_bam_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
 {external_matched_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_FreshFrozen.ann.chr20.vcf.gz"]
 {external_control_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_67_FFPE.ann.chr20.vcf.gz"]
-{srsnv_test_X}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.X_test.parquet
-{srsnv_test_y}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.y_test.parquet
-{srsnv_qual_test}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.qual_test.parquet
+{featuremap_df_file}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_333_LuNgs_08.featuremap_df.parquet
 {snv_database}:s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.chr20.vcf.gz
 ```

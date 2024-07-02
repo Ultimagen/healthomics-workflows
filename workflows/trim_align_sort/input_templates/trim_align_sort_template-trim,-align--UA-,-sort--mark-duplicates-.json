@@ -40,6 +40,5 @@
     "TrimAlignSort.sorter_params": {
         "mark_duplicates": true,
         "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
-    },
-    "TrimAlignSort.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    }
 }

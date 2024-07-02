@@ -1,6 +1,8 @@
 {
     "SingleSampleCnmopsCNVCalling.base_file_name": "<sample_name>",
-    "SingleSampleCnmopsCNVCalling.bed_graph": "s3://<sample>.bedGraph",
+    "SingleSampleCnmopsCNVCalling.bed_graph": [
+        "s3://<sample>.bedGraph"
+    ],
     "SingleSampleCnmopsCNVCalling.reference_genome": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
     "SingleSampleCnmopsCNVCalling.reference_genome_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
     "SingleSampleCnmopsCNVCalling.ref_seq_names": [
@@ -38,6 +40,5 @@
     "SingleSampleCnmopsCNVCalling.min_cnv_length": 10000,
     "SingleSampleCnmopsCNVCalling.intersection_cutoff": 0.5,
     "SingleSampleCnmopsCNVCalling.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
-    "SingleSampleCnmopsCNVCalling.genome_windows": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed",
-    "SingleSampleCnmopsCNVCalling.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    "SingleSampleCnmopsCNVCalling.genome_windows": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed"
 }

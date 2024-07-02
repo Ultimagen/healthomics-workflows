@@ -1,0 +1,158 @@
+{
+    "SomaticCNVCallingControlFREEC.BedGraphOutput": {
+        "description": "Whether to add BedGraphOutput to controlFREEC outputs, recommended value set in the template",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.SNPfile": {
+        "description": "Vcf file holding locations of the common variants to calculate pileup statistics on",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.SNPfile_index": {
+        "description": "Vcf.tbi index file for SNPfile",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.base_file_name": {
+        "description": "Base file name used for some output files",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.chrLenFile_override": {
+        "description": "Chromosome lengths file focusing controlFREEC regions. file is expected to be tab-delimited where the first column indicates the chromosome name and the second column indicates the chromosome length. By default, the reference.fai file will be used.",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.cnv_lcr_file": {
+        "description": "UG-CNV-LCR bed file",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.collect_coverage_region": {
+        "description": "Genomic region to limit the CNV calling to",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.contaminationAdjustment": {
+        "description": "Whether to run controlFREEC with contaminationAdjustment option, recommended value set in the template",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.contaminationFraction": {
+        "description": "a priori known value of tumor sample contamination by normal cells. Default: contamination=0",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.degree": {
+        "description": "Degree of polynomial for GC normalization. Default is 3",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.dummy_input_for_call_caching": {
+        "description": "dummy_input_for_call_caching",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.gemMappabilityFile": {
+        "description": "Gem file holding mappablity biased regions. ",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.genome_windows": {
+        "description": "Bed file of the genome binned to equal sized windows",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.inputFormat": {
+        "description": "controlFREEC input format, recommended value set in the template",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": {
+        "description": "Input normal BAM/CRAM files",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": {
+        "description": "Input normal BAI/CRAI index files",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": {
+        "description": "Input tumor BAM/CRAM files",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": {
+        "description": "Input tumor BAI/CRAI index files",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.intersection_cutoff": {
+        "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is  0.5",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.interval_list": {
+        "description": "Interval list defining the regions to gather allele frequencies on, recommended value set in the template",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.mapq_override": {
+        "description": "Reads mapping-quality cutoff for coverage calculation. Default is 1",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.maxThreads_override": {
+        "description": "maximal threads for controlFREEC. Default is 8",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.min_cnv_length": {
+        "description": "Minimum length for reported CNVs. Default is 10,000",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.normal_coverage_cpn": {
+        "description": "Pre-calculated binned coverage for the normal sample in the format needed for controlFREEC (cpn)",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.normal_mpileup_override": {
+        "description": "Pre-calculated mpileup for normal sample",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph": {
+        "description": "Pre-calculated bedGraph files containing per-base coverage for the normal sample",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.num_shards": {
+        "description": "Shards for scatter-interval-list",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.ploidy": {
+        "description": "Average sample ploidy (if known)",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.preemptible_tries_override": {
+        "description": "Number of preemptible tries",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.references": {
+        "description": "Struct of reference objects holding reference fasta with corresponding fai and dict files",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.scatter_intervals_break": {
+        "description": "Breaks for scatter interval list, see template for the default",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.sex": {
+        "description": "Sample's sex value, should be 'XX' or 'XY'",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.tumor_coverage_cpn": {
+        "description": "Pre-calculated binned coverage for the tumor sample in the format needed for controlFREEC (cpn)",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.tumor_mpileup_override": {
+        "description": "Pre-calculated mpileup for tumor sample",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.tumor_sorter_zipped_bed_graph": {
+        "description": "Pre-calculated bedGraph files containing per-base coverage for the tumor sample",
+        "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.window": {
+        "description": "The size of the window over which the coverage is aggregated",
+        "optional": false
+    }
+}

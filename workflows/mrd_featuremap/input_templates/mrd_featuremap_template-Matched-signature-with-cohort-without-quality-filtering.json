@@ -4,9 +4,7 @@
     "MRDFeatureMap.cfdna_featuremap_index": "<cfdna_featuremap>.vcf.tbi",
     "MRDFeatureMap.cfdna_cram_bam": "<cfdna_cram_bam>.cram",
     "MRDFeatureMap.cfdna_cram_bam_index": "<cfdna_cram_bam>.cram.crai",
-    "MRDFeatureMap.srsnv_test_X": "<srsnv_test_X>.parquet",
-    "MRDFeatureMap.srsnv_test_y": "<srsnv_test_y>.parquet",
-    "MRDFeatureMap.srsnv_qual_test": "<srsnv_qual_test>.parquet",
+    "MRDFeatureMap.featuremap_df_file": "<featuremap_df_file>.parquet",
     "MRDFeatureMap.bcftools_extra_args": "-f PASS --type snps -m2 -M2",
     "MRDFeatureMap.include_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
@@ -34,6 +32,5 @@
     ],
     "MRDFeatureMap.external_control_signatures": [
         "<external_control_signatures>"
-    ],
-    "MRDFeatureMap.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    ]
 }

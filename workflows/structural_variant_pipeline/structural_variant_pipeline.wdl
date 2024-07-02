@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.11.4" # !UnusedDeclaration
+        String pipeline_version = "1.12.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -56,6 +56,7 @@ workflow SVPipeline {
         Int? max_num_haps
         Int realign_mapq
         String? min_indel_sc_size_to_include
+        Int homopolymer_length
         String config_file_string
         File? blacklist_bed
         Boolean is_somatic
@@ -71,6 +72,7 @@ workflow SVPipeline {
         File? known_hotspot_file
         Int? min_normal_coverage
         String? exclude_filters
+        Boolean symbolic_vcf_format
 
         Int num_shards
         Boolean no_address = true
@@ -134,183 +136,204 @@ workflow SVPipeline {
             ]}
     }
     parameter_meta {
-    base_file_name: {
-      help: "Base file name for the output files (to be used as the prefix)",
-      type: "string",
-      category: "required"
-    }
-    input_germline_crams: {
-      type: "File",
-      help: "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
-      category: "optional"
-    }
-    input_germline_crams_indexes: {
-      type: "File",
-      help: "Input CRAM index for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
-      category: "optional"
-    }
-    input_tumor_crams: {
-      type: "File",
-      help: "Input CRAM file for the tumor (in case of matched T/N calling)",
-      category: "optional"
-    }
-    input_tumor_crams_indexes: {
-      type: "File",
-      help: "Input CRAM index for the tumor (in case of matched T/N calling)",
-      category: "optional"
-    }
-    references: {
-      type: "References",
-      help: "Reference files: fasta, dict and fai, recommended value set in the template",
-      category: "required"
-    }
-    ua_references: {
-      type: "UaReferences",
-      help: "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
-      category: "required"
-    }
-    wgs_calling_interval_list: {
-      type: "File",
-      help: "interval list defining the region to perform variant calling on, recommended value set in the template",
-      category: "required"
-    }
-    min_base: {
-        type: "Int",
-        help: "Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template",
-        category:"required"
-    }
-    min_mapq: {
-        type: "Int",
-        help: "Assembly parameter: Minimum mapping quality. Default value in template",
-        category:"required"
-    }
-    min_indel_sc_size_to_include: {
-        type: "String",
-        help: "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly.",
-        category:"optional"
-    }
-    max_num_haps: {
-        type: "Int",
-        help: "Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report",
-        category:"required"
-    }
-    realign_mapq: {
-        type: "Int",
-        help: "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
-        category:"required"
-    }
-    prefilter_query: {
-        type: "String",
-        help: "Expression (in bcftools view format) to filter the variants before annotation",
-        category:"optional"
-    }
-    gridss_metrics_interval: {
-        type: "String",
-        help: "Interval for collecting gridss metrics",
-        category:"optional"
-    }
-    config_file_string: {
-        type: "String",
-        help: "Gridss config file content",
-        category:"advanced"
-    }
-    blacklist_bed: {
+        base_file_name: {
+        help: "Base file name for the output files (to be used as the prefix)",
+        type: "string",
+        category: "required"
+        }
+        input_germline_crams: {
         type: "File",
-        help: "Gridss blacklist file",
-        category:"optional"
-    }
-    is_somatic: {
-        type: "Boolean",
-        help: "run in somatic mode or in germline mode",
-        category:"required"
-    }
-    
-    reference_name: {
-        type: "Boolean",
-        help: "Can be 38 or 19",
-        category:"required"
-    }
-    run_ua: {
-        type: "Boolean",
-        help: "Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not",
-        category:"required"
-    }
-    pon_sgl_file: {
+        help: "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
+        category: "optional"
+        }
+        input_germline_crams_indexes: {
         type: "File",
-        help: "gripss paramter: Panel of normals for single end breakend (partially resolved) calls. Note that the default value is in template",
-        category:"optional"
-    }
-    pon_sv_file: {
+        help: "Input CRAM index for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
+        category: "optional"
+        }
+        input_tumor_crams: {
         type: "File",
-        help: "gripss paramter: panel of normals for breakpoint (fully resolved) calls. Note that the default value is in template",
-        category:"optional"
-    }
-    repeat_mask_file: {
+        help: "Input CRAM file for the tumor (in case of matched T/N calling)",
+        category: "optional"
+        }
+        input_tumor_crams_indexes: {
         type: "File",
-        help: "gripss paramter: Repeat mask file. Note that the default value is in template",
-        category:"optional"
-    }
-    known_hotspot_file: {
+        help: "Input CRAM index for the tumor (in case of matched T/N calling)",
+        category: "optional"
+        }
+        references: {
+        type: "References",
+        help: "Reference files: fasta, dict and fai, recommended value set in the template",
+        category: "required"
+        }
+        ua_references: {
+        type: "UaReferences",
+        help: "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
+        category: "required"
+        }
+        wgs_calling_interval_list: {
         type: "File",
-        help: "gripss paramter: Known locations that are hot spot for SVs (see https://github.com/hartwigmedical/hmftools/tree/master/linx), filtered less stringently",
-        category:"optional"
-    }
-    min_normal_coverage: {
-        type: "Int",
-        help: "gripss paramter: Minimum coverage in the normal sample to determine somatic status. Default value:8",
-        category:"optional"
-    }
-    exclude_filters: {
+        help: "interval list defining the region to perform variant calling on, recommended value set in the template",
+        category: "required"
+        }
+        min_base: {
+            type: "Int",
+            help: "Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template",
+            category:"required"
+        }
+        min_mapq: {
+            type: "Int",
+            help: "Assembly parameter: Minimum mapping quality. Default value in template",
+            category:"required"
+        }
+        min_indel_sc_size_to_include: {
             type: "String",
-            help: "gripss paramter: Exclude filters from the output vcf, separated by ;",
-            category: "optional"
-    }
-    cloud_provider_override: {
-      type: "String",
-      help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
-      category: "optional"
-    }
-    num_shards: {
+            help: "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly.",
+            category:"optional"
+        }
+        max_num_haps: {
+            type: "Int",
+            help: "Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report",
+            category:"required"
+        }
+        realign_mapq: {
+            type: "Int",
+            help: "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
+            category:"required"
+        }
+        homopolymer_length: {
+            type: "Int",
+            help: "Realignment parameter: do realignment on homopolymeres longer than this value",
+            category:"required"
+        }
+        prefilter_query: {
+            type: "String",
+            help: "Expression (in bcftools view format) to filter the variants before annotation",
+            category:"optional"
+        }
+        gridss_metrics_interval: {
+            type: "String",
+            help: "Interval for collecting gridss metrics",
+            category:"optional"
+        }
+        config_file_string: {
+            type: "String",
+            help: "Gridss config file content",
+            category:"advanced"
+        }
+        blacklist_bed: {
+            type: "File",
+            help: "Gridss blacklist file",
+            category:"optional"
+        }
+        is_somatic: {
+            type: "Boolean",
+            help: "run in somatic mode or in germline mode",
+            category:"required"
+        }
+        
+        reference_name: {
+            type: "Boolean",
+            help: "Can be 38 or 19",
+            category:"required"
+        }
+        run_ua: {
+            type: "Boolean",
+            help: "Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not",
+            category:"required"
+        }
+        pon_sgl_file: {
+            type: "File",
+            help: "gripss paramter: Panel of normals for single end breakend (partially resolved) calls. Note that the default value is in template",
+            category:"optional"
+        }
+        pon_sv_file: {
+            type: "File",
+            help: "gripss paramter: panel of normals for breakpoint (fully resolved) calls. Note that the default value is in template",
+            category:"optional"
+        }
+        repeat_mask_file: {
+            type: "File",
+            help: "gripss paramter: Repeat mask file. Note that the default value is in template",
+            category:"optional"
+        }
+        known_hotspot_file: {
+            type: "File",
+            help: "gripss paramter: Known locations that are hot spot for SVs (see https://github.com/hartwigmedical/hmftools/tree/master/linx), filtered less stringently",
+            category:"optional"
+        }
+        min_normal_coverage: {
+            type: "Int",
+            help: "gripss paramter: Minimum coverage in the normal sample to determine somatic status. Default value:8",
+            category:"optional"
+        }
+        exclude_filters: {
+                type: "String",
+                help: "gripss paramter: Exclude filters from the output vcf, separated by ;",
+                category: "optional"
+        }
+        symbolic_vcf_format: {
+            type: "Boolean",
+            help: "Whether to convert the output vcf to the region format or not, default True",
+            category:"optional"
+        }
+
+        cloud_provider_override: {
+        type: "String",
+        help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
+        category: "optional"
+        }
+        num_shards: {
+            type: "Int",
+            help: "Relevant for scatter tasks, which are CreateAssembly and gridss.AnnotateVariants",
+            category:"required"
+        }
+        scatter_intervals_break: {
         type: "Int",
-        help: "Relevant for scatter tasks, which are CreateAssembly and gridss.AnnotateVariants",
-        category:"required"
+        help: "Maximal resolution for scattering intervals",
+        category: "advanced"
+        }
+        output_vcf: {
+            type: "File",
+            help: "Final VCF file",
+            category: "output"
+        }
+        output_vcf_index: {
+            type: "File",
+            help: "Final VCF index file",
+            category: "output"
+        }
+        assembly: {
+            type: "File",
+            help: "Assembly output before UA realingment",
+            category: "output"
+        }
+        assembly_index: {
+            type: "File",
+            help: "Assembly output index before UA realingment",
+            category: "output"
+        }
+        realigned_assembly: {
+            type: "File",
+            help: "Assembly output after UA realingment",
+            category: "output"
+        }
+        realigned_assembly_index: {
+            type: "File",
+            help: "Assembly output index after UA realingment",
+            category: "output"
+        }
+        converted_vcf: {
+            type: "File",
+            help: "Final VCF file in the region (non-breakend) format",
+            category: "output"
+        }
+        converted_vcf_index: {
+            type: "File",
+            help: "Final VCF index file in the region (non-breakend) format",
+            category: "output"
+        }
     }
-    scatter_intervals_break: {
-      type: "Int",
-      help: "Maximal resolution for scattering intervals",
-      category: "advanced"
-    }
-    output_vcf: {
-        type: "File",
-        help: "Final VCF file",
-        category: "output"
-    }
-    output_vcf_index: {
-        type: "File",
-        help: "Final VCF index file",
-        category: "output"
-    }
-    assembly: {
-        type: "File",
-        help: "Assembly output before UA realingment",
-        category: "output"
-    }
-    assembly_index: {
-        type: "File",
-        help: "Assembly output index before UA realingment",
-        category: "output"
-    }
-    realigned_assembly: {
-        type: "File",
-        help: "Assembly output after UA realingment",
-        category: "output"
-    }
-    realigned_assembly_index: {
-        type: "File",
-        help: "Assembly output index after UA realingment",
-        category: "output"
-    }
-  }
     Int preemptibles = select_first([preemptible_tries_override, 1])
 
     call Globals.Globals as Globals
@@ -418,9 +441,23 @@ workflow SVPipeline {
                 monitoring_script = monitoring_script,
                 no_address = no_address
         }
+
+        call LongHomopolymersAlignmnet {
+            input:
+                input_bam = RevertLowMAPQUASecondaryAlignment.realigned_assembly,
+                input_bam_index = RevertLowMAPQUASecondaryAlignment.realigned_assembly_index,
+                output_bam_basename = base_file_name +"_assembly_ua_realigned_long_homopolymers_aligned",
+                references = references,
+                homopolymer_length = homopolymer_length,
+                gridss_docker = global.gridss_docker,
+                monitoring_script = monitoring_script,
+                preemptible_tries = preemptibles,
+                no_address = no_address
+
+        }
     }
-    File assembly_file = select_first([RevertLowMAPQUASecondaryAlignment.realigned_assembly, MergeBams.output_bam])
-    File assembly_file_index = select_first([RevertLowMAPQUASecondaryAlignment.realigned_assembly_index, MergeBams.output_bam_index])
+    File assembly_file = select_first([LongHomopolymersAlignmnet.realigned_assembly, MergeBams.output_bam])
+    File assembly_file_index = select_first([LongHomopolymersAlignmnet.realigned_assembly_index, MergeBams.output_bam_index])
 
     call IdentifyVariants {
         input:
@@ -599,13 +636,29 @@ workflow SVPipeline {
         }
 
     }
+
+    if(symbolic_vcf_format) {
+        call ConvertVcfFormat {
+            input:
+                input_vcf = select_first([GermlineLinkVariants.linked_vcf, SomaticGripss.gripss_vcf]),
+                input_vcf_index = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index]),
+                output_vcf_prefix = base_file_name,
+                gridss_docker = global.gridss_docker,
+                reference_name = reference_name,
+                preemptible_tries = preemptibles,
+                monitoring_script = monitoring_script,
+                no_address = no_address
+        }
+    }
     output {
         File output_vcf = select_first([GermlineLinkVariants.linked_vcf, SomaticGripss.gripss_vcf])
         File output_vcf_index = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index])
         File assembly = MergeBams.output_bam
         File assembly_index = MergeBams.output_bam_index
-        File? realigned_assembly = RevertLowMAPQUASecondaryAlignment.realigned_assembly
-        File? realigned_assembly_index = RevertLowMAPQUASecondaryAlignment.realigned_assembly_index
+        File? realigned_assembly = LongHomopolymersAlignmnet.realigned_assembly
+        File? realigned_assembly_index = LongHomopolymersAlignmnet.realigned_assembly_index
+        File? converted_vcf = ConvertVcfFormat.output_vcf
+        File? converted_vcf_index = ConvertVcfFormat.output_vcf_index
     }
 }
 
@@ -798,6 +851,46 @@ task RevertLowMAPQUASecondaryAlignment {
         File realigned_assembly = "~{outptut_prefix}.bam"
         File realigned_assembly_index = "~{outptut_prefix}.bam.bai"
     }
+}
+
+task LongHomopolymersAlignmnet {
+        input {
+            File input_bam
+            File input_bam_index
+            String output_bam_basename
+            String gridss_docker
+            References references
+            Int homopolymer_length
+            File monitoring_script
+            Int preemptible_tries
+            Boolean no_address
+        }
+        Int disk_size = ceil(4*size(input_bam,"GB") + size(references.ref_fasta,"GB")) + 10
+        command <<<
+            set -o pipefail
+            set -e
+            bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+            python3 /opt/gridss/align_long_homopolymers.py \
+                --input ~{input_bam} \
+                --output ~{output_bam_basename}.bam \
+                --reference ~{references.ref_fasta} \
+                --homopolymer_length ~{homopolymer_length}
+
+        >>>
+        runtime {
+            memory: "8 GB"
+            cpu: 10
+            disks: "local-disk " + disk_size + " HDD"
+            docker: gridss_docker
+            preemptible: preemptible_tries
+            noAddress: no_address
+        }
+        output {
+            File monitoring_log = "monitoring.log"
+            File realigned_assembly = "~{output_bam_basename}.bam"
+            File realigned_assembly_index = "~{output_bam_basename}.bam.bai"
+        }
 }
 
 task IdentifyVariants {
@@ -1182,7 +1275,7 @@ task GermlineLinkVariants {
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        Rscript /opt/gridss/link_breakpoints \
+        Rscript /opt/gridss/link_breakpoints.R \
             --input ~{input_vcf} \
             --fulloutput ~{output_vcf_prefix}_linked.vcf \
             --ref BSgenome.Hsapiens.UCSC.hg~{reference_name} \
@@ -1262,6 +1355,45 @@ task SomaticGripss {
         File monitoring_log = "monitoring.log"
         File gripss_vcf = "~{output_vcf_prefix}.gripss.vcf.gz"
         File gripss_vcf_index = "~{output_vcf_prefix}.gripss.vcf.gz.tbi"
+    }
+}
+
+task ConvertVcfFormat {
+    input {
+        File input_vcf
+        File input_vcf_index
+        String output_vcf_prefix
+        String reference_name
+        String gridss_docker
+        File monitoring_script
+        Int preemptible_tries
+        Boolean no_address
+    }
+    Int disk_size = ceil(2*size(input_vcf,"GB")) + 10
+    command <<<
+        set -o pipefail
+        set -e
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        Rscript /opt/gridss/convert_vcf_format.R \
+            --input_vcf ~{input_vcf} \
+            --output_vcf ~{output_vcf_prefix}.vcf \
+            --reference BSgenome.Hsapiens.UCSC.hg~{reference_name} \
+            --n_jobs 8
+
+    >>>
+    runtime {
+        memory: "64 GB"
+        cpu: 8
+        disks: "local-disk " + disk_size + " HDD"
+        docker: gridss_docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }
+    output {
+        File monitoring_log = "monitoring.log"
+        File output_vcf = "~{output_vcf_prefix}.vcf.bgz"
+        File output_vcf_index = "~{output_vcf_prefix}.vcf.bgz.tbi"
     }
 }
 

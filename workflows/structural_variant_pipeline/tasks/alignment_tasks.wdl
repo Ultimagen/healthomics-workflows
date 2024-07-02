@@ -1120,3 +1120,33 @@ task StarAlignStats {
         File monitoring_log = "monitoring.log"
     }
 }
+
+task SortBam {
+    input {
+    File input_bam 
+    Int disk_size = ceil(3*size(input_bam, "GB"))
+    String gitc_path
+    String docker
+    File monitoring_script
+    }
+    String base_file_name = basename(input_bam, ".bam")
+    command <<<
+        set -eo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        java -Xmx64G -jar ~{gitc_path}picard.jar SortSam \
+            I=~{input_bam} \
+            O=~{base_file_name}.sorted.bam \
+            SORT_ORDER=queryname
+    >>>
+    runtime {
+        cpu: "1"
+        memory: "8 GB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+    }
+
+    output {
+        File sorted_bam = "~{base_file_name}.sorted.bam"
+        File monitoring_log = "monitoring.log"
+    }
+}

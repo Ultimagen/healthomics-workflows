@@ -52,6 +52,11 @@ The steps of the pipeline are as following:
         <i>Int </i> &mdash; 
          Realignment parameter: Below this value we skip realignment on the supplementary alignment <br /> 
 </p>
+<p name="SVPipeline.homopolymer_length">
+        <b>SVPipeline.homopolymer_length</b><br />
+        <i>Int </i> &mdash; 
+         Realignment parameter: do realignment on homopolymeres longer than this value <br /> 
+</p>
 <p name="SVPipeline.is_somatic">
         <b>SVPipeline.is_somatic</b><br />
         <i>Boolean </i> &mdash; 
@@ -146,6 +151,11 @@ The steps of the pipeline are as following:
         <i>String? &mdash; Default: None</i><br />
         gripss paramter: Exclude filters from the output vcf, separated by ;
 </p>
+<p name="SVPipeline.symbolic_vcf_format">
+        <b>SVPipeline.symbolic_vcf_format</b><br />
+        <i>Boolean &mdash; Default: None</i><br />
+        Whether to convert the output vcf to the region format or not, default True
+</p>
 <p name="SVPipeline.cloud_provider_override">
         <b>SVPipeline.cloud_provider_override</b><br />
         <i>String? &mdash; Default: None</i><br />
@@ -199,6 +209,16 @@ The steps of the pipeline are as following:
         <b>SVPipeline.realigned_assembly_index</b><br />
         <i>File?</i><br />
         Assembly output index after UA realingment
+</p>
+<p name="SVPipeline.converted_vcf">
+        <b>SVPipeline.converted_vcf</b><br />
+        <i>File?</i><br />
+        Final VCF file in the region (non-breakend) format
+</p>
+<p name="SVPipeline.converted_vcf_index">
+        <b>SVPipeline.converted_vcf_index</b><br />
+        <i>File?</i><br />
+        Final VCF index file in the region (non-breakend) format
 </p>
 
 <hr />

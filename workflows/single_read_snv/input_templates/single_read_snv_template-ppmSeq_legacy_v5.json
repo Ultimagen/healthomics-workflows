@@ -11,15 +11,12 @@
     },
     "SingleReadSNV.wgs_calling_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
     "SingleReadSNV.break_bands_at_multiples_of": 100000,
-    "SingleReadSNV.tp_training_include_regions": [
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
+    "SingleReadSNV.training_include_regions": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr_autosomal.bed"
     ],
     "SingleReadSNV.tp_training_exclude_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
-    ],
-    "SingleReadSNV.fp_training_include_regions": [
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
     ],
     "SingleReadSNV.fp_training_exclude_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed",
@@ -27,52 +24,109 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz"
     ],
+    "SingleReadSNV.min_coverage_to_train_model": 8.0,
     "SingleReadSNV.preemptible_tries": 1,
-    "SingleReadSNV.random_seed": 0,
-    "SingleReadSNV.balanced_strand_adapter_version": "LA_v5and6",
-    "SingleReadSNV.motif_length_to_annotate": 3,
-    "SingleReadSNV.max_hmer_length": 20,
-    "SingleReadSNV.train_set_size": 3000000,
-    "SingleReadSNV.test_set_size": 300000,
-    "SingleReadSNV.numerical_features": [
-        "X_SCORE",
-        "X_EDIST",
-        "X_LENGTH",
-        "X_INDEX",
-        "X_FC1",
-        "rq",
-        "max_softclip_length",
-        "hmer_context_ref",
-        "hmer_context_alt"
-    ],
-    "SingleReadSNV.categorical_features": [
-        "strand_ratio_category_start",
-        "strand_ratio_category_end",
-        "is_cycle_skip",
-        "is_forward",
-        "ref",
-        "alt",
-        "next_1",
-        "next_2",
-        "next_3",
-        "prev_1",
-        "prev_2",
-        "prev_3"
-    ],
-    "SingleReadSNV.balanced_sampling_info_fields": [
-        "trinuc_context_with_alt",
-        "is_forward"
-    ],
-    "SingleReadSNV.pre_filter": "(X_SCORE>4) && (X_EDIST<10)",
+    "SingleReadSNV.categorical_features": {
+        "strand_ratio_category_start": [
+            "MIXED",
+            "MINUS",
+            "PLUS",
+            "END_UNREACHED",
+            "UNDETERMINED"
+        ],
+        "strand_ratio_category_end": [
+            "MIXED",
+            "MINUS",
+            "PLUS",
+            "END_UNREACHED",
+            "UNDETERMINED"
+        ],
+        "ref": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ],
+        "alt": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ],
+        "next_1": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ],
+        "next_2": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ],
+        "next_3": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ],
+        "prev_1": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ],
+        "prev_2": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ],
+        "prev_3": [
+            "A",
+            "C",
+            "G",
+            "T"
+        ]
+    },
+    "SingleReadSNV.ppmSeq_adapter_version": "LA_v5and6",
+    "SingleReadSNV.single_read_snv_params": {
+        "numerical_features": [
+            "X_SCORE",
+            "X_EDIST",
+            "X_LENGTH",
+            "X_INDEX",
+            "X_FC1",
+            "rq",
+            "max_softclip_length",
+            "hmer_context_ref",
+            "hmer_context_alt"
+        ],
+        "boolean_features": [
+            "is_cycle_skip",
+            "is_forward"
+        ],
+        "balanced_sampling_info_fields": [
+            "trinuc_context_with_alt",
+            "is_forward"
+        ],
+        "pre_filter": "(X_SCORE>4) && (X_EDIST<10)",
+        "random_seed": 0,
+        "num_CV_folds": 5,
+        "split_folds_by": "chrom",
+        "train_set_size": 3000000,
+        "test_set_size": 0
+    },
     "SingleReadSNV.featuremap_params": {
-        "scatter_count": 50,
         "extra_args": "--include-dup-reads --flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --surrounding-median-quality-size 20 --copy-attr tm --copy-attr a3 --copy-attr rq --copy-attr as --copy-attr ts --copy-attr ae --copy-attr te --copy-attr s3 --copy-attr s2",
         "min_mapq": 60,
         "snv_identical_bases": 5,
         "snv_identical_bases_after": 5,
         "min_score": 0,
-        "limit_score": 10
+        "limit_score": 10,
+        "motif_length_to_annotate": 3,
+        "max_hmer_length": 20
     },
-    "SingleReadSNV.cloud_provider_override": "aws",
-    "SingleReadSNV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    "SingleReadSNV.cloud_provider_override": "aws"
 }

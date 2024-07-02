@@ -91,6 +91,14 @@
         "description": "Flow order. If not provided, it will be extracted from the CRAM header",
         "optional": true
     },
+    "EfficientDV.intervals_string": {
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
+        "optional": true
+    },
+    "EfficientDV.log_make_examples_progress": {
+        "description": "Cause make_examples to output detailed progress information (for debugging)",
+        "optional": true
+    },
     "EfficientDV.make_gvcf": {
         "description": "Whether to generate a gvcf. Default: False",
         "optional": false
@@ -208,7 +216,7 @@
         "optional": true
     },
     "EfficientDV.target_intervals": {
-        "description": "Limit calling to these regions. If not provided then entire genome is used.",
+        "description": "Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used.",
         "optional": true
     },
     "EfficientDV.ug_call_variants_extra_mem": {

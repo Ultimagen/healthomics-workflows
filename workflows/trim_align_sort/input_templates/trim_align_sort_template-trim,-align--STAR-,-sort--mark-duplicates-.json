@@ -36,6 +36,5 @@
     "TrimAlignSort.sorter_params": {
         "mark_duplicates": true,
         "demux_extra_args": "--cram-ignore-md5"
-    },
-    "TrimAlignSort.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    }
 }

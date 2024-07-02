@@ -41,31 +41,26 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.11.4" # !UnusedDeclaration
+  String pipeline_version = "1.12.0" # !UnusedDeclaration
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
   Int break_bands_at_multiples_of
 
+  String? ppmSeq_adapter_version
   FeatureMapParams featuremap_params
+  SingleReadSNVParams single_read_snv_params
+  Map[String, Array[String]] categorical_features
+  Int? featuremap_scatter_count_override
 
-  # featuremap annotation parameters
-  String? balanced_strand_adapter_version
-  Int motif_length_to_annotate
-  Int max_hmer_length
-  # snv quality recalibration params
-  Int train_set_size
-  Int test_set_size
-  Array[File] tp_training_include_regions
+  # snv quality model include/exclude regions
+  Array[File] training_include_regions
   Array[File]? tp_training_exclude_regions
-  Array[File] fp_training_include_regions
   Array[File]? fp_training_exclude_regions
 
-  Array[String] numerical_features
-  Array[String] categorical_features
-  Array[String]? balanced_sampling_info_fields
-  String? pre_filter
-  Int random_seed
+  Float min_coverage_to_train_model
+
+  File? pre_trained_model_file
 
   Int? process_featuremap_memory_gb_override
   Int? preemptible_tries
@@ -85,12 +80,18 @@ input {
   #@wv suffix(references['ref_dict']) == '.dict'
   #@wv suffix(references['ref_fasta_index']) == '.fai'
   #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
-  #@wv defined(balanced_strand_adapter_version) -> balanced_strand_adapter_version in ['LA_v5', 'LA_v6', 'LA_v5and6', 'LA_v7']
-  #@wv motif_length_to_annotate <= 4 and motif_length_to_annotate >= 1
+  #@wv featuremap_params['motif_length_to_annotate'] <= 4 and featuremap_params['motif_length_to_annotate'] >= 1
+  #@wv defined(ppmSeq_adapter_version) -> ppmSeq_adapter_version in ['LA_v5', 'LA_v6', 'LA_v5and6', 'LA_v7', 'LA_v7_amp_dumbbell']
+  #@wv single_read_snv_params['num_CV_folds'] >= 1
+  #@wv single_read_snv_params['split_folds_by'] in ['random', 'chromosome', 'chrom']
+
+  # pre-trained model parameters
+  #@wv defined(pre_trained_model_file) -> suffix(pre_trained_model_file) == ".joblib"
+  
 }
 
 meta {
-    description : "Single Read SNV Quality Recalibration workflow (single_read_snv wdl) is a software tool that assigns accurate quality scores to all SNV candidates. The output is a FeatureMap VCF file with the recalibrated SNV quality scores."
+    description : "Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns accurate quality scores to all SNV candidates. The output is a FeatureMap VCF file with the recalibrated SNV quality scores. The input cram file coverage must be over some minimal coverage for a new model to be trained and quality scores to be generated, otherwise a pre-trained model can be provided, or a FeatureMap with no scores is generated."
     author: "Ultima Genomics"
     WDL_AID: { exclude: [
         "pipeline_version",
@@ -99,6 +100,7 @@ meta {
         "preemptible_tries",
         "monitoring_script_input",
         "process_featuremap_memory_gb_override",
+        "featuremap_scatter_count_override",
         "FeatureMap.pipeline_version",
         "CreateHomSnvFeatureMap.disk_size",
         "CreateTpTrainingRegionsBed.disk_size",
@@ -157,39 +159,29 @@ parameter_meta {
         help: "Break wgs_calling_interval_list bands at multiples of this number, recommended value set in the template",
         category: "param_required"
     }
+    ppmSeq_adapter_version: {
+        type: "String",
+        help: "ppmSeq adapter version of the respective CRAM file, recommended value set in the template",
+        category: "param_required"
+    }
     featuremap_params: {
         type: "FeatureMapParams",
-        help: "FeatureMap parameters, recommended value set in the template. Int scatter_count: number of scatter tasks to use. Int min_mapq, Int snv_identical_bases, Int snv_identical_bases_after, Int min_score, Int limit_score, String extra_args",
+        help: "FeatureMap parameters, recommended value set in the template.",
         category: "param_required"
     }
-    balanced_strand_adapter_version: {
-        type: "String",
-        help: "ppmSeq adapter version, for ppmSeq data the recommended value is set in the template",
+    single_read_snv_params: {
+        type: "SingleReadSNVParams",
+        help: "SingleReadSNV parameters, recommended value set in the template.",
         category: "param_required"
     }
-    motif_length_to_annotate: {
-        type: "Int",
-        help: "Length of the motif (-+N bp) to annotate in the FeatureMap, the recommended value is set in the template",
+    categorical_features: {
+        type: "Map[String, Array[String]]",
+        help: "Categorical features in SingleReadSNV model, list of feature names with allowed values per feature. Separate from single_read_snv_params due to technical reasons. The recommended value is set in the template.",
         category: "param_required"
     }
-    max_hmer_length: {
-        type: "Int",
-        help: "Maximum length of the homopolymer to annotate in the FeatureMap, the recommended value is set in the template",
-        category: "param_required"
-    }
-    train_set_size: {
-        type: "Int",
-        help: "Number of SNVs to use for the ML model training set, the recommended value is set in the template",
-        category: "param_required"
-    }
-    test_set_size: {
-        type: "Int",
-        help: "Number of SNVs to use for the ML model test set, the recommended value is set in the template",
-        category: "param_required"
-    }
-    tp_training_include_regions: {
+    training_include_regions: {
         type: "Array[File]",
-        help: "Genomic regions to include in the training set TP examples, the recommended value is set in the template",
+        help: "Genomic regions to include in the training set, the recommended value is set in the template",
         category: "param_required"
     }
     tp_training_exclude_regions: {
@@ -197,40 +189,20 @@ parameter_meta {
         help: "Genomic regions to exclude from the training set TP examples, the recommended value is set in the template",
         category: "optional"
     }
-    fp_training_include_regions: {
-        type: "Array[File]",
-        help: "Genomic regions to include in the training set FP examples, the recommended value is set in the template",
-        category: "param_required"
-    }
     fp_training_exclude_regions: {
         type: "Array[File]",
         help: "Genomic regions to exclude from the training set FP examples, the recommended value is set in the template",
         category: "optional"
     }
-    numerical_features: {
-        type: "Array[String]",
-        help: "Numerical features to use in the ML model, the recommended value is set in the template",
+    min_coverage_to_train_model: {
+        type: "Float",
+        help: "Minimum coverage to train the ML model, needed as label assignment (true/false SNV) is unreliable at low coverages, the recommended value is set in the template",
         category: "param_required"
     }
-    categorical_features: {
-        type: "Array[String]",
-        help: "Categorical features to use in the ML model, the recommended value is set in the template",
-        category: "param_required"
-    }
-    balanced_sampling_info_fields: {
-        type: "Array[String]",
-        help: "Fields to use for balanced sampling of TP examples to remove the prior distribution of the homozygous SNVs, the pipeline will attempt for the distribution over these arguments to be uniform. The recommended value is set in the template",
+    pre_trained_model_file: {
+        type: "File",
+        help: "Pre-trained ML model file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
         category: "optional"
-    }
-    pre_filter: {
-        type: "String",
-        help: "SNV filter to apply to the FeatureMap before model, any SNV not passing the pre_filter is assigned QUAL=0, the recommended value is set in the template",
-        category: "optional"
-    }
-    random_seed: {
-        type: "Int",
-        help: "Random seed to use for the ML model, the recommended value is set in the template",
-        category: "advanced"
     }
     no_address_override: {
         type: "Boolean",
@@ -252,105 +224,95 @@ parameter_meta {
         help: "FeatureMap VCF index file",
         category: "output"
     }
+    snv_qualities_assigned: {
+        type: "Boolean",
+        help: "Indicates whether SNV qualities were assigned (coverage was sufficient to train the model, over min_coverage_to_train_model), otherwise a FeatureMap with no quality scores is generated",
+        category: "output"
+    }
+    used_self_trained_model: {
+        type: "Boolean",
+        help: "Indicates whether a self-trained model was used for inference, otherwise a pre-trained model was used (if snv_qualities_assigned) or no model was used",
+        category: "output"
+    }
     report_html: {
         type: "File",
         help: "SRSNV QC report html file",
-        category: "output"
+        category: "output_optional"
     }
     model_file: {
         type: "File",
         help: "ML model file, saved with joblib",
-        category: "output"
-    }
-    X_test_file: {
-        type: "File",
-        help: "ML model test set features DataFrame, parquet format",
-        category: "output"
-    }
-    y_test_file: {
-        type: "File",
-        help: "ML model test set labels DataFrame, parquet format",
-        category: "output"
-    }
-    qual_test_file: {
-        type: "File",
-        help: "ML model test set qual (SNVQ) DataFrame, parquet format",
-        category: "output"
-    }
-    X_train_file: {
-        type: "File",
-        help: "ML model training set features DataFrame, parquet format",
-        category: "output"
-    }
-    y_train_file: {
-        type: "File",
-        help: "ML model training set labels DataFrame, parquet format",
-        category: "output"
+        category: "output_optional"
     }
     params_file: {
         type: "File",
         help: "ML model parameters json file",
-        category: "output"
+        category: "output_optional"
+    }
+    featuremap_df_file: {
+        type: "File",
+        help: "FeatureMap DataFrame with X matrix (features), y (labels) and qual, in parquet format",
+        category: "output_optional"
     }
     test_set_mrd_simulation_dataframe: {
         type: "File",
         help: "ML model test set MRD simulation DataFrame, parquet format",
-        category: "output"
+        category: "output_optional"
     }
     train_set_mrd_simulation_dataframe: {
         type: "File",
         help: "ML model training set MRD simulation DataFrame, parquet format",
-        category: "output"
+        category: "output_optional"
     }
     test_set_statistics_h5: {
         type: "File",
         help: "ML model test set statistics h5 file",
-        category: "output"
+        category: "output_optional"
     }
     train_set_statistics_h5: {
         type: "File",
         help: "ML model training set statistics h5 file",
-        category: "output"
+        category: "output_optional"
     }
     train_set_statistics_json: {
         type: "File",
         help: "ML model training set statistics json file",
-        category: "output"
+        category: "output_optional"
     }
     aggregated_metrics_json: {
         type: "File",
         help: "ML model aggregated metrics json file",
-        category: "output"
+        category: "output_optional"
     }
     tp_training_regions_bed: {
         type: "File",
         help: "ML model training set TP regions bed file",
-        category: "output"
+        category: "output_optional"
     }
     fp_training_regions_bed: {
         type: "File",
         help: "ML model training set FP regions bed file",
-        category: "output"
+        category: "output_optional"
     }
     train_report_file_notebook: {
         type: "File",
         help: "ML model training set report notebook file",
-        category: "output"
+        category: "output_optional"
     }
     train_report_file_html: {
         type: "File",
         help: "ML model training set report html file",
-        category: "output"
+        category: "output_optional"
     }
     test_report_file_notebook: {
         type: "File",
         help: "ML model test set report notebook file",
-        category: "output"
+        category: "output_optional"
     }
     flow_order: {
         type: "String",
         help: "Flow order for the sample",
-        category: "output"
+        category: "output_optional"
     }
 
         
@@ -362,8 +324,10 @@ parameter_meta {
   Boolean no_address = select_first([no_address_override, true ])
 
   call Globals.Globals as Globals
-    GlobalVariables global = Globals.global_dockers
+  GlobalVariables global = Globals.global_dockers
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+
+  Boolean use_pre_trained_model = defined(pre_trained_model_file)
 
   call UGGeneralTasks.ExtractSampleNameFlowOrder as ExtractSampleNameFlowOrder{
     input:
@@ -384,7 +348,12 @@ parameter_meta {
       monitoring_script = monitoring_script,  #!FileCoercion
   }
   Int mean_coverage = GetMeanCoverageFromSorterStats.mean_coverage
-  Int featuremap_shard_number = ceil(mean_coverage / 1.4)   # overrides featuremap_params.scatter_count
+  Int featuremap_shard_number_calc = select_first([featuremap_scatter_count_override, ceil(mean_coverage / 1.4)])
+  # patch because there is no "max" function...
+  if (featuremap_shard_number_calc<2) {
+    Int featuremap_shard_number_min = 2
+  }
+  Int featuremap_shard_number = select_first([featuremap_shard_number_min, featuremap_shard_number_calc])
 
   call FeaturemapSubWF.FeatureMap {
     input:
@@ -394,54 +363,56 @@ parameter_meta {
       wgs_calling_interval_list = wgs_calling_interval_list,
       break_bands_at_multiples_of = break_bands_at_multiples_of,
       featuremap_params = featuremap_params,
-      featuremap_shard_number = featuremap_shard_number,
+      scatter_count = featuremap_shard_number,
       flow_order = ExtractSampleNameFlowOrder.flow_order,
-      balanced_strand_adapter_version = balanced_strand_adapter_version,
-      motif_length_to_annotate = motif_length_to_annotate,
-      max_hmer_length = max_hmer_length,
+      ppmSeq_adapter_version = ppmSeq_adapter_version,
       base_file_name = base_file_name_sub,
       preemptible_tries = preemptibles,
       process_featuremap_memory_gb_override = process_featuremap_memory_gb_override,
   }
 
-  call UGMrdTasks.CreateHomSnvFeatureMap as CreateHomSnvFeatureMap {
-    input:
-      featuremap =              FeatureMap.featuremap,
-      featuremap_index =        FeatureMap.featuremap_index,
-      sorter_json_stats_file =  sorter_json_stats_file,
-      base_file_name =          base_file_name_sub,
-      min_af =                  0.7,
-      min_coverage =            20,
-      memory_gb =               2,
-      cpus =                    1,
-      docker =                  global.ug_vc_docker,
-      preemptibles =            preemptibles,
-      monitoring_script =       monitoring_script,  #!FileCoercion
-  }
+  Boolean sufficient_coverage_to_train_model = (mean_coverage >= min_coverage_to_train_model)
+  Boolean snv_qualities_can_be_assigned = (sufficient_coverage_to_train_model) || (use_pre_trained_model)
 
-  call UGMrdTasks.BedIntersectAndExclude as CreateTpTrainingRegionsBed {
-      input:
-          include_regions = tp_training_include_regions,
-          exclude_regions = tp_training_exclude_regions,
-          output_basename = "TP",
-          memory_gb = 8,
-          docker = global.ug_vc_docker,
-          monitoring_script = monitoring_script,  #!FileCoercion
-          preemptibles = preemptibles
-  }
+  if ((sufficient_coverage_to_train_model) && (!use_pre_trained_model)) {
+    call UGMrdTasks.CreateHomSnvFeatureMap as CreateHomSnvFeatureMap {
+        input:
+        featuremap =              FeatureMap.featuremap,
+        featuremap_index =        FeatureMap.featuremap_index,
+        sorter_json_stats_file =  sorter_json_stats_file,
+        base_file_name =          base_file_name_sub,
+        min_af =                  0.7,
+        min_coverage =            20,
+        memory_gb =               2,
+        cpus =                    1,
+        docker =                  global.ug_vc_docker,
+        preemptibles =            preemptibles,
+        monitoring_script =       monitoring_script,  #!FileCoercion
+    }
+
+    call UGMrdTasks.BedIntersectAndExclude as CreateTpTrainingRegionsBed {
+        input:
+            include_regions = training_include_regions,
+            exclude_regions = tp_training_exclude_regions,
+            output_basename = "TP",
+            memory_gb = 8,
+            docker = global.ug_vc_docker,
+            monitoring_script = monitoring_script,  #!FileCoercion
+            preemptibles = preemptibles
+    }
 
 
-  call UGMrdTasks.BedIntersectAndExclude as CreateFpTrainingRegionsBed {
-      input:
-          include_regions = fp_training_include_regions,
-          exclude_regions = flatten([select_first([fp_training_exclude_regions, []]), select_first([somatic_mutations_list, []])]),
-          output_basename = "FP",
-          memory_gb = 16,
-          cpus = 4,
-          docker = global.ug_vc_docker,
-          monitoring_script = monitoring_script,  #!FileCoercion
-          preemptibles = preemptibles
-  }
+    call UGMrdTasks.BedIntersectAndExclude as CreateFpTrainingRegionsBed {
+        input:
+            include_regions = training_include_regions,
+            exclude_regions = flatten([select_first([fp_training_exclude_regions, []]), select_first([somatic_mutations_list, []])]),
+            output_basename = "FP",
+            memory_gb = 16,
+            cpus = 4,
+            docker = global.ug_vc_docker,
+            monitoring_script = monitoring_script,  #!FileCoercion
+            preemptibles = preemptibles
+    }
 
   call UGMrdTasks.TrainSnvQualityRecalibrationModel as TrainSnvQualityRecalibrationModel {
     input:
@@ -451,16 +422,10 @@ parameter_meta {
       singleton_snv_featuremap        = FeatureMap.featuremap_single_substitutions,
       singleton_snv_featuremap_index  = FeatureMap.featuremap_single_substitutions_index,
       sorter_json_stats_file          = sorter_json_stats_file,
-      train_set_size                  = train_set_size,
-      test_set_size                   = test_set_size,
+      single_read_snv_params          = single_read_snv_params,
+      categorical_features            = categorical_features,
       hom_snv_regions_bed             = CreateTpTrainingRegionsBed.merged_bed,
       single_substitution_regions_bed = CreateFpTrainingRegionsBed.merged_bed,
-      numerical_features              = numerical_features,
-      categorical_features            = categorical_features,
-      balanced_sampling_info_fields   = balanced_sampling_info_fields,
-      pre_filter                      = pre_filter,
-      random_seed                     = random_seed,
-      balanced_strand_adapter_version = balanced_strand_adapter_version,
       references                      = references,
       flow_order                      = ExtractSampleNameFlowOrder.flow_order,
       monitoring_script               = monitoring_script,  #!FileCoercion
@@ -468,48 +433,44 @@ parameter_meta {
       preemptible_tries               = preemptibles,
     }
 
+  }
+  if (snv_qualities_can_be_assigned) {
+    File srsnv_model_file = select_first([pre_trained_model_file, TrainSnvQualityRecalibrationModel.model_file])
 
-  call UGMrdTasks.InferenceSnvQualityRecalibrationModel as InferenceSnvQualityRecalibrationModel {
-    input:
-      output_file                             = base_file_name_sub + ".with_ml_qual.vcf.gz",
-      model_file                              = TrainSnvQualityRecalibrationModel.model_file,
-      params_file                             = TrainSnvQualityRecalibrationModel.params_file,
-      featuremap                              = FeatureMap.featuremap,
-      featuremap_index		                    = FeatureMap.featuremap_index,
-      X_train_file                            = TrainSnvQualityRecalibrationModel.X_train_file,
-      test_set_mrd_simulation_dataframe_file  = TrainSnvQualityRecalibrationModel.test_set_mrd_simulation_dataframe,
-      monitoring_script                       = monitoring_script,  #!FileCoercion
-      docker                                  = global.ug_vc_docker,
-      preemptible_tries                       = preemptibles,
+    call UGMrdTasks.InferenceSnvQualityRecalibrationModel as InferenceSnvQualityRecalibrationModel {
+        input:
+        output_file                             = base_file_name_sub + ".featuremap_with_qual.vcf.gz",
+        model_file                              = srsnv_model_file,
+        featuremap                              = FeatureMap.featuremap,
+        featuremap_index		                = FeatureMap.featuremap_index,
+        monitoring_script                       = monitoring_script,  #!FileCoercion
+        docker                                  = global.ug_vc_docker,
+        preemptible_tries                       = preemptibles,
+    }
   }
 
   output {
-    File featuremap = InferenceSnvQualityRecalibrationModel.featuremap_with_ml_qual
-    File featuremap_index = InferenceSnvQualityRecalibrationModel.featuremap_with_ml_qual_index
-    File report_html = TrainSnvQualityRecalibrationModel.test_report_file_html
+    File featuremap = select_first([InferenceSnvQualityRecalibrationModel.featuremap_with_qual, FeatureMap.featuremap])
+    File featuremap_index = select_first([InferenceSnvQualityRecalibrationModel.featuremap_with_qual_index, FeatureMap.featuremap_index])
+    Boolean snv_qualities_assigned = snv_qualities_can_be_assigned
+    Boolean used_self_trained_model = snv_qualities_can_be_assigned && (!use_pre_trained_model)
+    File? report_html = TrainSnvQualityRecalibrationModel.test_report_file_html
+    File? featuremap_df_file = TrainSnvQualityRecalibrationModel.featuremap_df_file
+    File? model_file = TrainSnvQualityRecalibrationModel.model_file  
+    File? params_file = TrainSnvQualityRecalibrationModel.params_file
+    File? test_set_mrd_simulation_dataframe = TrainSnvQualityRecalibrationModel.test_set_mrd_simulation_dataframe
+    File? train_set_mrd_simulation_dataframe = TrainSnvQualityRecalibrationModel.train_set_mrd_simulation_dataframe
+    File? test_set_statistics_h5 = TrainSnvQualityRecalibrationModel.test_set_statistics_h5
+    File? train_set_statistics_h5 = TrainSnvQualityRecalibrationModel.train_set_statistics_h5
+    File? train_set_statistics_json = TrainSnvQualityRecalibrationModel.train_set_statistics_json
+    File? aggregated_metrics_json = TrainSnvQualityRecalibrationModel.test_set_statistics_json
 
-    File model_file = TrainSnvQualityRecalibrationModel.model_file  
-    #TODO save all the dataframes and statistics in one h5 file  
-    File X_test_file = TrainSnvQualityRecalibrationModel.X_test_file
-    File y_test_file = TrainSnvQualityRecalibrationModel.y_test_file
-    File qual_test_file = TrainSnvQualityRecalibrationModel.qual_test_file
-    File X_train_file = TrainSnvQualityRecalibrationModel.X_train_file
-    File y_train_file = TrainSnvQualityRecalibrationModel.y_train_file
-    File params_file = TrainSnvQualityRecalibrationModel.params_file
-    File test_set_mrd_simulation_dataframe = TrainSnvQualityRecalibrationModel.test_set_mrd_simulation_dataframe
-    File train_set_mrd_simulation_dataframe = TrainSnvQualityRecalibrationModel.train_set_mrd_simulation_dataframe
-    File test_set_statistics_h5 = TrainSnvQualityRecalibrationModel.test_set_statistics_h5
-    File train_set_statistics_h5 = TrainSnvQualityRecalibrationModel.train_set_statistics_h5
-    File train_set_statistics_json = TrainSnvQualityRecalibrationModel.train_set_statistics_json
-    File aggregated_metrics_json = TrainSnvQualityRecalibrationModel.test_set_statistics_json
+    File? tp_training_regions_bed = CreateTpTrainingRegionsBed.merged_bed
+    File? fp_training_regions_bed =  CreateFpTrainingRegionsBed.merged_bed
 
-    File tp_training_regions_bed = CreateTpTrainingRegionsBed.merged_bed
-    File fp_training_regions_bed =  CreateFpTrainingRegionsBed.merged_bed
-
-    File train_report_file_notebook= TrainSnvQualityRecalibrationModel.train_report_file_notebook
-    File train_report_file_html = TrainSnvQualityRecalibrationModel.train_report_file_html
-    File test_report_file_notebook =  TrainSnvQualityRecalibrationModel.test_report_file_notebook
-    String flow_order = ExtractSampleNameFlowOrder.flow_order
+    File? train_report_file_notebook= TrainSnvQualityRecalibrationModel.train_report_file_notebook
+    File? train_report_file_html = TrainSnvQualityRecalibrationModel.train_report_file_html
+    File? test_report_file_notebook =  TrainSnvQualityRecalibrationModel.test_report_file_notebook
    }
 }
 

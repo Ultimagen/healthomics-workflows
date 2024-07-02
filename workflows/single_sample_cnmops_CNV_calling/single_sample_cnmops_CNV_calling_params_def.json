@@ -4,7 +4,7 @@
         "optional": false
     },
     "SingleSampleCnmopsCNVCalling.bed_graph": {
-        "description": "Previously calculated input bedGraph holding the coverage per base (outputs with the sequencing data).  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
+        "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
         "optional": true
     },
     "SingleSampleCnmopsCNVCalling.cap_coverage_override": {

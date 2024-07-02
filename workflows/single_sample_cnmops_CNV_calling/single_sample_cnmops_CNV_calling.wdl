@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.11.4" # !UnusedDeclaration
+        String pipeline_version = "1.12.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -49,7 +49,7 @@ workflow SingleSampleCnmopsCNVCalling {
 
         #extenal reads count
         File? input_sample_reads_count
-        File? bed_graph
+        Array[File]? bed_graph
         File? genome_windows
 
         File cohort_reads_count_matrix
@@ -93,7 +93,7 @@ workflow SingleSampleCnmopsCNVCalling {
     }
 
     meta {
-        description: "Runs single sample germline CNV calling workflow based on \<a href=\"https://bioconductor.org/packages/release/bioc/html/cn.mops.html\"\>cn.mops</a>\n\nThe pipeline uses a given cohort's coverage profile for normalization.\n\nThe pipeline can recieve one of the following options as input:\n\n&nbsp;&nbsp;1. Input CRAM/BAM file. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_template.json\n\n&nbsp;&nbsp;2. A rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_skip_reads_count_template.json\n\n&nbsp;&nbsp;3. A BedGraph holding the coverage per location. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_input_bedGraph_template.json\n\nThe pipeline calls CNVs for the given sample and filters them by length (>10,000b) and overlap with UG-CNV-LCR."
+        description: "Runs single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)\n\nThe pipeline uses a given cohort's coverage profile for normalization.\n\nThe pipeline can recieve one of the following options as input:\n\n&nbsp;&nbsp;1. Input CRAM/BAM file. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_template.json\n\n&nbsp;&nbsp;2. A rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_skip_reads_count_template.json\n\n&nbsp;&nbsp;3. A BedGraph holding the coverage per location. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_input_bedGraph_template.json\n\nThe pipeline calls CNVs for the given sample and filters them by length (>10,000b) and overlap with UG-CNV-LCR.\n\n<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>"
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
@@ -156,7 +156,7 @@ workflow SingleSampleCnmopsCNVCalling {
             category: "input_optional"
         }
         bed_graph: {
-            help: "Previously calculated input bedGraph holding the coverage per base (outputs with the sequencing data).  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
+            help: "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
             type: "File",
             category: "input_optional"
         }
@@ -225,6 +225,16 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "File",
             category: "output"
         }
+        out_sample_cnvs_vcf:{
+            help: "VCF file with sample's called CNVs",
+            type: "File",
+            category: "output"
+        }
+        out_sample_cnvs_vcf_index:{
+            help: "Index file for the VCF file with sample's called CNVs",
+            type: "File",
+            category: "output"
+        }
         out_sample_cnvs_filtered_bed:{
             help: "Bed file with CNVs filtered by length and overlap with low confidence regions",
             type: "File",
@@ -237,6 +247,11 @@ workflow SingleSampleCnmopsCNVCalling {
         }
         out_sample_reads_count_hdf5:{
             help: "GenomicRanges object of the sample's reads count in hdf5 file format",
+            type: "File",
+            category: "output_optional"
+        }
+        out_sample_merged_bedGraph:{
+            help: "Merged bedGraph file of the sample's coverage",
             type: "File",
             category: "output_optional"
         }
@@ -288,7 +303,7 @@ workflow SingleSampleCnmopsCNVCalling {
     }
     if(run_convert_bedGraph_to_Granges)
     {
-        File input_bed_graph = select_first([bed_graph])
+        Array[File] input_bed_graph = select_first([bed_graph])
         File input_genome_windows = select_first([genome_windows])
         call CnvTasks.ConvertBedGraphToGranges as ConvertBedGraphToGranges{
         input:
@@ -342,6 +357,7 @@ workflow SingleSampleCnmopsCNVCalling {
         min_cnv_length = min_cnv_length,
         intersection_cutoff = intersection_cutoff,
         cnv_lcr_file = cnv_lcr_file,
+        ref_genome_file = reference_genome_index,
         docker = global.ug_vc_docker,
         monitoring_script = monitoring_script,
         no_address = no_address,
@@ -349,8 +365,11 @@ workflow SingleSampleCnmopsCNVCalling {
     }
     output {
         File out_sample_reads_count = sample_reads_count_file
+        File? out_sample_merged_bedGraph = ConvertBedGraphToGranges.merged_bedGraph
         File? out_sample_reads_count_hdf5 = SingleSampleReadsCount.out_reads_count_hdf5
         Array[File] out_sample_cnvs_bed = FilterSampleCnvs.sample_cnvs_bed
+        Array[File] out_sample_cnvs_vcf = FilterSampleCnvs.sample_cnvs_vcf
+        Array[File] out_sample_cnvs_vcf_index = FilterSampleCnvs.sample_cnvs_vcf_index
         Array[File] out_sample_cnvs_filtered_bed = FilterSampleCnvs.sample_cnvs_filtered_bed
     }
 }

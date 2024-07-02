@@ -11,9 +11,7 @@ task MrdDataAnalysis {
     File coverage_csv
     MrdAnalysisParams mrd_analysis_params
     String basename
-    File srsnv_test_X
-    File srsnv_test_y
-    File srsnv_qual_test
+    File featuremap_df_file
     String docker
     Float disk_size
     Int memory_gb
@@ -43,9 +41,7 @@ task MrdDataAnalysis {
       -p signatures_file_parquet "~{basename}.signatures.parquet" \
       -p signature_filter_query "~{mrd_analysis_params.signature_filter_query}" \
       -p read_filter_query "~{mrd_analysis_params.read_filter_query}" \
-      -p X_test_file "~{srsnv_test_X}" \
-      -p y_test_file "~{srsnv_test_y}" \
-      -p qual_test_file "~{srsnv_qual_test}" \
+      -p featuremap_df_file "~{featuremap_df_file}" \
       -p output_dir "$PWD" \
       -p basename "~{basename}" \
       -k python3
@@ -270,16 +266,10 @@ task TrainSnvQualityRecalibrationModel {
     File hom_snv_featuremap_index
     File singleton_snv_featuremap
     File singleton_snv_featuremap_index
-    Int train_set_size
-    Int test_set_size
+    SingleReadSNVParams single_read_snv_params
+    Map[String, Array[String]] categorical_features
     File hom_snv_regions_bed
     File single_substitution_regions_bed
-    Array[String] numerical_features
-    Array[String] categorical_features
-    Array[String]? balanced_sampling_info_fields
-    String? pre_filter
-    Int random_seed
-    String? balanced_strand_adapter_version
     References references
     String flow_order
     File monitoring_script
@@ -289,34 +279,47 @@ task TrainSnvQualityRecalibrationModel {
     Float memory_gb = 16
     Float disk_size = ceil(size(hom_snv_featuremap, "GB") + size(singleton_snv_featuremap, "GB")+ size(references.ref_fasta, "GB") + 30)
   }
+  Boolean random_split = single_read_snv_params.split_folds_by=="random"
   command <<<
     set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     source ~/.bashrc
     conda activate genomics.py3
 
-    echo "***************************** Running Train Snv Quality Recalibration Model *****************************"
     start_task=$(date +%s)
+    echo "***************************** Create parameters json file *****************************"
+    
 
+    # Create a json file with parameters for the model
+    python <<CODE
+    import json
+    
+    with open("~{write_json(single_read_snv_params)}", "r") as f1, open("~{write_json(categorical_features)}", "r") as f2, open("single_read_snv_params.json", "w") as f3: 
+      data1 = json.load(f1)
+      data2 = json.load(f2)
+      if isinstance(data2, list):  # this is how write_json works in Cromwell - "[{'left': 'ref', 'right': ['A', 'C', 'G', 'T']}, ...]"
+        data1["categorical_features"] = {entry["left"]: entry["right"] for entry in data2}
+      else:  # this is how write_json works in Omics - "{'ref': ['A', 'C', 'G', 'T'], ...}"
+        data1["categorical_features"] = data2
+      json.dump(data1, f3, indent=4)
+    CODE
+    echo "DEBUG - single_read_snv_params.json file:"
+    cat single_read_snv_params.json
+
+    echo "***************************** Running Train Snv Quality Recalibration Model *****************************"
     python /VariantCalling/ugvc srsnv_training \
     --hom_snv_featuremap ~{hom_snv_featuremap} \
     --single_substitution_featuremap ~{singleton_snv_featuremap} \
+    --dataset_params_json_path single_read_snv_params.json \
     --flow_order "~{flow_order}" \
-    --reference_fasta ~{references.ref_fasta}  \
-    --cram_stats_file ~{sorter_json_stats_file} \
-    --train_set_size ~{train_set_size} \
-    --test_set_size ~{test_set_size} \
-    ~{true="--balanced_sampling_info_fields " false="" defined(balanced_sampling_info_fields)}~{sep=" " balanced_sampling_info_fields} \
-    ~{true="--balanced_strand_adapter_version " false="" defined(balanced_strand_adapter_version)}~{balanced_strand_adapter_version} \
-    --hom_snv_regions ~{hom_snv_regions_bed} \
-    --single_sub_regions ~{single_substitution_regions_bed} \
-    --numerical_features ~{sep=" " numerical_features} \
-    --categorical_features ~{sep=" " categorical_features} \
-    ~{true="--pre_filter " false="" defined(pre_filter)}"~{pre_filter}" \
-    --random_seed ~{random_seed} \
-    --output "$PWD" --basename ~{basename}
-    #TODO add LoD filters as an optional input (--lod_filters lod_filters.json)
-
+    --reference_fasta "~{references.ref_fasta}" \
+    --reference_dict "~{references.ref_dict}" \
+    --cram_stats_file "~{sorter_json_stats_file}" \
+    --hom_snv_regions "~{hom_snv_regions_bed}" \
+    --single_sub_regions "~{single_substitution_regions_bed}" \
+    --output "$PWD" \
+    --basename "~{basename}"
+    
     end=$(date +%s)
     mins_elapsed=$(( (end - start_task) / 60 ))
     secs_elapsed=$(( (end - start_task) % 60 ))
@@ -336,11 +339,7 @@ task TrainSnvQualityRecalibrationModel {
   output{
     File monitoring_log = "monitoring.log"
     File model_file = "~{basename}.model.joblib"
-    File X_test_file = "~{basename}.X_test.parquet"
-    File y_test_file = "~{basename}.y_test.parquet"
-    File qual_test_file = "~{basename}.qual_test.parquet"    
-    File X_train_file = "~{basename}.X_train.parquet"
-    File y_train_file = "~{basename}.y_train.parquet"
+    File featuremap_df_file = "~{basename}.featuremap_df.parquet"
     File params_file = "~{basename}.params.json"
     File test_set_mrd_simulation_dataframe = "~{basename}.test.df_mrd_simulation.parquet"
     File train_set_mrd_simulation_dataframe = "~{basename}.train.df_mrd_simulation.parquet"
@@ -352,7 +351,6 @@ task TrainSnvQualityRecalibrationModel {
     File train_report_file_html = "~{basename}.train_report.html"
     File test_report_file_notebook = "~{basename}.test_report.ipynb"
     File test_report_file_html = "~{basename}.test_report.html"
-    Array[File] training_report_plot_png = glob("~{basename}*.png")
   }
 }
 
@@ -360,13 +358,9 @@ task TrainSnvQualityRecalibrationModel {
 task InferenceSnvQualityRecalibrationModel {
   input {
     File model_file
-    File params_file
     File featuremap
     File featuremap_index
-    File X_train_file
-    File test_set_mrd_simulation_dataframe_file
     String output_file
-
     File monitoring_script
     String docker
     Int preemptible_tries
@@ -386,11 +380,8 @@ task InferenceSnvQualityRecalibrationModel {
 
     python /VariantCalling/ugvc srsnv_inference \
     --featuremap_path "~{featuremap}" \
-    --params_path "~{params_file}" \
-    --model_path "~{model_file}" \
-    --X_train_path "~{X_train_file}" \
+    --model_joblib_path "~{model_file}" \
     --output_path "~{output_file}" \
-    --test_set_mrd_simulation_dataframe_file "~{test_set_mrd_simulation_dataframe_file}" \
     --process_number ~{cpus}
 
     end=$(date +%s)
@@ -410,8 +401,8 @@ task InferenceSnvQualityRecalibrationModel {
   }
   output {
     File monitoring_log = "monitoring.log"
-    File featuremap_with_ml_qual = "~{output_file}"
-    File featuremap_with_ml_qual_index = "~{output_file}.tbi"
+    File featuremap_with_qual = "~{output_file}"
+    File featuremap_with_qual_index = "~{output_file}.tbi"
   }
 }
 

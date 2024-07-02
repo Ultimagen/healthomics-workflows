@@ -31,9 +31,10 @@ task Sorter {
     Int preemptible_tries_final = if (size(input_file, "GB") < 250) then preemptible_tries else 0
 
     String demux_output_path = "demux_output/"
-    String timestamp = "" # use this to override sorter output timestemp
-    String run_id_override = "output" # use this to override sorter output runid (used only for the output folder structure)
-    String sorter_output_path = "~{run_id_override}-~{timestamp}"
+    String timestamp = "000" # use this to override sorter output timestemp
+    String run_id_override = "101" # use this to override sorter output runid (used only for the output folder structure)
+    String sorter_out_dir = "sorter_output"
+    String sorter_output_path = "~{sorter_out_dir}/~{run_id_override}-~{timestamp}"
     String demux_align_flag = if defined(sorter_params.demux_align) then "--align=~{sorter_params.demux_align}" else "--align=true"
     Int mapq = select_first([mapq_override,0])
 
@@ -56,6 +57,7 @@ task Sorter {
         else
             echo "WARNING: No coverage intervals file given, respective statistics will not be calculated"
         fi
+        mkdir -p ~{sorter_out_dir}
 
         samtools view -h ~{input_file} -@ ~{cpu} ~{"-q " + mapq} -T ~{reference_fasta}|\
         demux \
@@ -66,7 +68,8 @@ task Sorter {
             --progress \
             --reference ~{reference_fasta} \
             --mark-duplicates=~{sorter_params.mark_duplicates} \
-            --basename=~{base_file_name} \
+            --output-group=~{base_file_name} \
+            --output-path={runID}-{outputGroup}/{runID}-{outputGroup} \
             ~{"--umi=" + sorter_params.umi_tag} \
             ~{demux_align_flag} \
             $coverage_intervals_flag \
@@ -75,14 +78,22 @@ task Sorter {
         sorter \
             --runid=~{run_id_override} \
             --input-dir=~{demux_output_path} \
-            --output-dir=. \
+            --output-dir=~{sorter_out_dir} \
             --nthreads ~{cpu} \
             --progress \
             --timestamp=~{timestamp} \
             ~{default="" sorter_params.sort_extra_args}
 
+        ls -R ~{sorter_output_path}/
         q_table.py ~{sorter_output_path}/
 
+        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.cram ~{base_file_name}.cram
+        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.cram.crai ~{base_file_name}.cram.crai
+        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.csv ~{base_file_name}.csv
+        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.json ~{base_file_name}.json
+        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}_0.bedGraph.gz ~{base_file_name}_0.bedGraph.gz
+        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}_1.bedGraph.gz ~{base_file_name}_1.bedGraph.gz
+        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}_0.bedGraph.gz.extents.tsv ~{base_file_name}_0.bedGraph.gz.extents.tsv
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"
@@ -95,14 +106,13 @@ task Sorter {
     }
     output {
         File monitoring_log = "monitoring.log"
-        File sorter_log = "sorter.log"
-        File sorted_cram = "~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{base_file_name}.cram" 
-        File sorted_cram_index = "~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{base_file_name}.cram.crai" 
-        File sorter_stats_csv = "~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{base_file_name}.csv" 
-        File sorter_stats_json = "~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{base_file_name}.json"
-        File sorter_out_bedgraph_mapq0 = "~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{base_file_name}_0.bedGraph.gz"
-        File sorter_out_bedgraph_mapq1 = "~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{base_file_name}_1.bedGraph.gz"
-        File sorter_out_bedgraph_extents = "~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{base_file_name}_0.bedGraph.gz.extents.tsv"
+        File sorted_cram = "~{base_file_name}.cram"
+        File sorted_cram_index = "~{base_file_name}.cram.crai"
+        File sorter_stats_csv = "~{base_file_name}.csv"
+        File sorter_stats_json = "~{base_file_name}.json"
+        File sorter_out_bedgraph_mapq0 = "~{base_file_name}_0.bedGraph.gz"
+        File sorter_out_bedgraph_mapq1 = "~{base_file_name}_1.bedGraph.gz"
+        File sorter_out_bedgraph_extents = "~{base_file_name}_0.bedGraph.gz.extents.tsv"
     }
 }
 
@@ -145,7 +155,8 @@ task Demux {
         demux \
             --input=- \
             --output-dir=~{output_dir_override} \
-            --basename=~{base_file_name} \
+            --output-group=~{base_file_name} \
+            --output-path={runID}-{outputGroup}/{runID}-{outputGroup} \
             --runid= \
             --nthreads=~{cpu} \
             --progress \
@@ -153,6 +164,8 @@ task Demux {
             ~{"--output-format=" + output_format} \
             ~{true="--align=false" false="" is_output_fastq} \
             ~{default="" demux_extra_args}
+
+        ls -R ~{output_dir_override}
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"

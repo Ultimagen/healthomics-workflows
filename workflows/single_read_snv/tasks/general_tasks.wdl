@@ -293,6 +293,42 @@ task IntervalListOfGenome {
   }
 }
 
+
+task IntervalListFromString {
+  input  {
+    String intervals_string
+    File ref_fai
+    File ref_dict
+    String docker
+    Int disk_size
+    Int preemptible_tries
+    Boolean no_address
+    File monitoring_script
+  }
+  command <<<
+    set -e
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    echo "~{intervals_string}" | tr ':-' '\t\t' | sed 's/;/\n/g' | awk '{print $0 "\t+\t. intersection ACGTmer.1"}' > interval.tsv
+    cat ~{ref_dict} interval.tsv > intervals.interval_list
+  >>>
+  runtime {
+    preemptible: preemptible_tries
+    cpu: "1"
+    memory: "1 GB"
+    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+    continueOnReturnCode: true
+    maxRetries: 1
+    noAddress: no_address
+  }
+  output{
+    File monitoring_log = "monitoring.log"
+    File interval_list = "intervals.interval_list"
+  }
+}
+
+
 task IntervalListTotalLength {
   input {
     File interval_list

@@ -38,18 +38,18 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:edv_2.1.1_b0ca4ece
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:2.2.1
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:edv_2.1.1_b0ca4ece
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:2.2.1
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:edv_2.1.1_b0ca4ece
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:edv_2.2.0_173435b8
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:edv_2.1.1_b0ca4ece
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:edv_2.2.0_173435b8
 ```
 
-The make_examples and post_process steps are run on a single CPU. make_examples requires up to 4 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
+The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
 
 call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
 
@@ -104,7 +104,6 @@ tool \
   --assembly-min-base-quality 0 \
   --gzip-output \
   --no-realigned-sam \
-  --interval-nreads 10000 \
   --optimal-coverages "50" --cap-at-optimal-coverage \
   --add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic
 ```
@@ -213,6 +212,28 @@ In case a GVCF is desired, then the commands should be modified in the following
 
 1. Add the arguments `--gvcf` and `--p-error 0.005` to the make_examples step. The p-error is an estimation of the probability of *any* base-calling error in the reads, and is used in the calculation of the reference confidence model. When these arguments are added, make_examples will output extra files with the `gvcf.tfrecord.gz` suffix.
 2. When running post_process, add the argument `--gvcf_outfile output_prefix.g.vcf.gz` and provide the `gvcf.tfrecord.gz` files as input using the `--nonvariant_site_tfrecord_path` argument. The `gvcf.tfrecord.gz` files can be provided to `--nonvariant_site_tfrecord_path` either as a comma-separated list, or a text file that contains all the paths. In the latter case use the name of the ```--nonvariant_site_tfrecord_path @gvcf_records.txt```.
+
+### Additional filtering steps recommended
+
+We recommend to apply another step on the vcf output in order to correct a specific issue where SNVs within long homopolymers are sometimes called with a low confidence. It is difficult for the model to discern between SNV and deletion of a base alleles. We proivde a script that corrects the confidence and removes filters of such variants. This filter is implemented in a [python script](https://github.com/Ultimagen/VariantCalling/blob/master/ugvc/pipelines/vcfbed/calibrate_bridging_snvs.py). 
+To apply this script use this docker: 
+```
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ugvc:0.21
+```
+or
+```
+337532070941.dkr.ecr.us-east-1.amazonaws.com/ugvc:0.21
+```
+
+Typical command:
+
+```
+conda activate genomics.py3
+python /VariantCalling/ugvc calibrate_bridging_snvs \
+    --vcf input.vcf.gz \
+    --reference Homo_sapiens_assembly38.fasta \
+    --output output.vcf.gz
+```
 
 
 ## Debugging tfrecords using dvtools

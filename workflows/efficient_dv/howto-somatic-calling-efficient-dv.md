@@ -37,18 +37,18 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:edv_2.1.1_b0ca4ece
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:2.2.1
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:edv_2.1.1_b0ca4ece
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:2.2.1
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:edv_2.1.1_b0ca4ece
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:edv_2.2.0_173435b8
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:edv_2.1.1_b0ca4ece
+337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:edv_2.2.0_173435b8
 ```
 
-The make_examples and post_process steps are run on a single CPU. make_examples requires up to 4 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
+The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
 
 call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
 
@@ -102,7 +102,6 @@ tool --input "input_reads.cram;background_reads.cram" \
   --assembly-min-base-quality 0 \
   --gzip-output \
   --no-realigned-sam \
-  --interval-nreads 10000 \
   --optimal-coverages "100;40" \
   --cap-at-optimal-coverage \
   --cycle-examples-min 100000 \

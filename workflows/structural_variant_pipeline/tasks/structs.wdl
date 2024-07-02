@@ -133,13 +133,26 @@ struct ReferenceDbSnp {
 }
 
 struct FeatureMapParams {
-  Int scatter_count
   Int min_mapq
   Int snv_identical_bases
   Int snv_identical_bases_after
   Int min_score
   Int limit_score
   String extra_args
+  Int max_hmer_length
+  Int motif_length_to_annotate
+}
+
+struct SingleReadSNVParams {
+    Array[String] numerical_features
+    Array[String] boolean_features
+    Array[String] balanced_sampling_info_fields
+    Int train_set_size
+    Int test_set_size
+    String pre_filter
+    Int random_seed
+    Int num_CV_folds
+    String split_folds_by
 }
 
 struct MrdAnalysisParams {

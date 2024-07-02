@@ -1,0 +1,222 @@
+{
+    "SegDupAnalysis.DV.allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.annotate_systematic_errors": {
+        "description": "Should systematic errors be annotated from a database of common systematic errors",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.annotation_intervals": {
+        "description": "List of bed files for VCF annotation",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.background_cram_files": {
+        "description": "Background (normal sample) cram files for somatic calling",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.background_cram_index_files": {
+        "description": "Background (normal sample) cram index files for somatic calling",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.call_variants_cpus": {
+        "description": "Number of CPUs for call_variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.call_variants_gpu_type": {
+        "description": "GPU type for call variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.call_variants_gpus": {
+        "description": "Number of GPUs for call_variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.call_variants_threads": {
+        "description": "Number of decompression threads for call_variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.call_variants_uncompr_buf_size_gb": {
+        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.candidate_min_mapping_quality": {
+        "description": "Minimal mapping quality for candidate generation",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.dbg_min_base_quality": {
+        "description": "Minimal base quality for local assembly of haplotypes",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.filtering_blacklist_file": {
+        "description": "Database of known positions with systematic errors",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.hard_qual_filter": {
+        "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.hmer_runs_bed": {
+        "description": "Bed file annotating all homopolymer runs longer than 7 in the reference genome. Used to annotate potentially difficult to sequence regions",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.input_flow_order": {
+        "description": "Flow order. If not provided, it will be extracted from the CRAM header",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.intervals_string": {
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.log_make_examples_progress": {
+        "description": "Cause make_examples to output detailed progress information (for debugging)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.max_reads_per_partition": {
+        "description": "Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.min_base_quality": {
+        "description": "Minimal base quality for candidate generation",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.min_read_count_hmer_indels": {
+        "description": "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.min_read_count_non_hmer_indels": {
+        "description": "Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.min_read_count_snps": {
+        "description": "Minimal number of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.min_variant_quality_hmer_indels": {
+        "description": "Minimal h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.min_variant_quality_non_hmer_indels": {
+        "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.min_variant_quality_snps": {
+        "description": "Minimal snp variant quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.output_realignment": {
+        "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.p_error": {
+        "description": "Basecalling error for reference confidence model in gvcf",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.pileup_min_mapping_quality": {
+        "description": "Minimal mapping quality to be included in image (the input to the CNN)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.prioritize_alt_supporting_reads": {
+        "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.scatter_intervals_break": {
+        "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.sec_models": {
+        "description": "Models to annotate systematic errors",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.show_bg_fields": {
+        "description": "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.target_intervals": {
+        "description": "Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used.",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ug_call_variants_extra_mem": {
+        "description": "Extra memory for call_variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ug_make_examples_cpus_override": {
+        "description": "CPU number override for make_examples step",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ug_make_examples_extra_args": {
+        "description": "Additional arguments for make-examples tool",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ug_make_examples_memory_override": {
+        "description": "Memory override for make_examples step",
+        "optional": true
+    },
+    "SegDupAnalysis.background_bed": {
+        "description": "Background regions (non-segmental duplicated) for CNV calling, see template and `parascopy`",
+        "optional": false
+    },
+    "SegDupAnalysis.base_file_name": {
+        "description": "Prefix of the output files",
+        "optional": false
+    },
+    "SegDupAnalysis.cloud_provider_override": {
+        "description": "Cloud provider override (for running on other clouds): gcp or aws",
+        "optional": true
+    },
+    "SegDupAnalysis.cn_model": {
+        "description": "CNV model file from parascopy, see template",
+        "optional": false
+    },
+    "SegDupAnalysis.dbsnp": {
+        "description": "dbSNP reference file (for annotation)",
+        "optional": false
+    },
+    "SegDupAnalysis.dbsnp_index": {
+        "description": "dbSNP reference index file (for annotation)",
+        "optional": false
+    },
+    "SegDupAnalysis.exome_intervals": {
+        "description": "Exome intervals for variant calling (required for deepVariant, otherwise not important)",
+        "optional": false
+    },
+    "SegDupAnalysis.homology_table": {
+        "description": "Segmental duplication table (see parascopy), see template",
+        "optional": false
+    },
+    "SegDupAnalysis.homology_table_index": {
+        "description": "Segmental duplication table index (see parascopy), see template",
+        "optional": false
+    },
+    "SegDupAnalysis.input_crai_bai": {
+        "description": "Input CRAM/BAM index file",
+        "optional": false
+    },
+    "SegDupAnalysis.input_cram_bam": {
+        "description": "Input CRAM/BAM file",
+        "optional": false
+    },
+    "SegDupAnalysis.model_onnx": {
+        "description": "DeepVariant model for variant calling on segmental duplications, see template",
+        "optional": false
+    },
+    "SegDupAnalysis.model_serialized": {
+        "description": "Serialized model for variant calling",
+        "optional": true
+    },
+    "SegDupAnalysis.n_threads": {
+        "description": "Number of threads to use",
+        "optional": false
+    },
+    "SegDupAnalysis.preemptible_tries": {
+        "description": "Number of preemptible tries",
+        "optional": true
+    },
+    "SegDupAnalysis.references": {
+        "description": "Reference genome files",
+        "optional": false
+    },
+    "SegDupAnalysis.segdup_regions": {
+        "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template",
+        "optional": false
+    }
+}

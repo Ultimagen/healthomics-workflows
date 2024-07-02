@@ -17,6 +17,7 @@
     "SVPipeline.min_mapq": 5,
     "SVPipeline.max_num_haps": 10,
     "SVPipeline.realign_mapq": 60,
+    "SVPipeline.homopolymer_length": 10,
     "SVPipeline.num_shards": 200,
     "SVPipeline.ua_references": {
         "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/Homo_sapiens_assembly38.fasta.uai",
@@ -38,6 +39,6 @@
     "SVPipeline.repeat_mask_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/repeat_mask_data.38.fa.gz",
     "SVPipeline.config_file_string": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5",
     "SVPipeline.exclude_filters": "SHORT_SR_NORMAL",
-    "SVPipeline.cloud_provider_override": "aws",
-    "SVPipeline.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    "SVPipeline.symbolic_vcf_format": true,
+    "SVPipeline.cloud_provider_override": "aws"
 }

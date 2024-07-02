@@ -1,5 +1,5 @@
 # SingleReadSNV
-Single Read SNV Quality Recalibration workflow (single_read_snv wdl) is a software tool that assigns accurate quality scores to all SNV candidates. The output is a FeatureMap VCF file with the recalibrated SNV quality scores.
+Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns accurate quality scores to all SNV candidates. The output is a FeatureMap VCF file with the recalibrated SNV quality scores. The input cram file coverage must be over some minimal coverage for a new model to be trained and quality scores to be generated, otherwise a pre-trained model can be provided, or a FeatureMap with no scores is generated.
 
 ## Inputs
 
@@ -36,55 +36,35 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) is a softwa
         <i>Int </i> &mdash; 
          Break wgs_calling_interval_list bands at multiples of this number, recommended value set in the template <br /> 
 </p>
+<p name="SingleReadSNV.ppmSeq_adapter_version">
+        <b>SingleReadSNV.ppmSeq_adapter_version</b><br />
+        <i>String? </i> &mdash; 
+         ppmSeq adapter version of the respective CRAM file, recommended value set in the template <br /> 
+</p>
 <p name="SingleReadSNV.featuremap_params">
         <b>SingleReadSNV.featuremap_params</b><br />
         <i>FeatureMapParams </i> &mdash; 
-         FeatureMap parameters, recommended value set in the template. Int scatter_count: number of scatter tasks to use. Int min_mapq, Int snv_identical_bases, Int snv_identical_bases_after, Int min_score, Int limit_score, String extra_args <br /> 
+         FeatureMap parameters, recommended value set in the template. <br /> 
 </p>
-<p name="SingleReadSNV.balanced_strand_adapter_version">
-        <b>SingleReadSNV.balanced_strand_adapter_version</b><br />
-        <i>String? </i> &mdash; 
-         ppmSeq adapter version, for ppmSeq data the recommended value is set in the template <br /> 
-</p>
-<p name="SingleReadSNV.motif_length_to_annotate">
-        <b>SingleReadSNV.motif_length_to_annotate</b><br />
-        <i>Int </i> &mdash; 
-         Length of the motif (-+N bp) to annotate in the FeatureMap, the recommended value is set in the template <br /> 
-</p>
-<p name="SingleReadSNV.max_hmer_length">
-        <b>SingleReadSNV.max_hmer_length</b><br />
-        <i>Int </i> &mdash; 
-         Maximum length of the homopolymer to annotate in the FeatureMap, the recommended value is set in the template <br /> 
-</p>
-<p name="SingleReadSNV.train_set_size">
-        <b>SingleReadSNV.train_set_size</b><br />
-        <i>Int </i> &mdash; 
-         Number of SNVs to use for the ML model training set, the recommended value is set in the template <br /> 
-</p>
-<p name="SingleReadSNV.test_set_size">
-        <b>SingleReadSNV.test_set_size</b><br />
-        <i>Int </i> &mdash; 
-         Number of SNVs to use for the ML model test set, the recommended value is set in the template <br /> 
-</p>
-<p name="SingleReadSNV.tp_training_include_regions">
-        <b>SingleReadSNV.tp_training_include_regions</b><br />
-        <i>Array[File] </i> &mdash; 
-         Genomic regions to include in the training set TP examples, the recommended value is set in the template <br /> 
-</p>
-<p name="SingleReadSNV.fp_training_include_regions">
-        <b>SingleReadSNV.fp_training_include_regions</b><br />
-        <i>Array[File] </i> &mdash; 
-         Genomic regions to include in the training set FP examples, the recommended value is set in the template <br /> 
-</p>
-<p name="SingleReadSNV.numerical_features">
-        <b>SingleReadSNV.numerical_features</b><br />
-        <i>Array[String] </i> &mdash; 
-         Numerical features to use in the ML model, the recommended value is set in the template <br /> 
+<p name="SingleReadSNV.single_read_snv_params">
+        <b>SingleReadSNV.single_read_snv_params</b><br />
+        <i>SingleReadSNVParams </i> &mdash; 
+         SingleReadSNV parameters, recommended value set in the template. <br /> 
 </p>
 <p name="SingleReadSNV.categorical_features">
         <b>SingleReadSNV.categorical_features</b><br />
-        <i>Array[String] </i> &mdash; 
-         Categorical features to use in the ML model, the recommended value is set in the template <br /> 
+        <i>Map[String,Array[String]] </i> &mdash; 
+         Categorical features in SingleReadSNV model, list of feature names with allowed values per feature. Separate from single_read_snv_params due to technical reasons. The recommended value is set in the template. <br /> 
+</p>
+<p name="SingleReadSNV.training_include_regions">
+        <b>SingleReadSNV.training_include_regions</b><br />
+        <i>Array[File] </i> &mdash; 
+         Genomic regions to include in the training set, the recommended value is set in the template <br /> 
+</p>
+<p name="SingleReadSNV.min_coverage_to_train_model">
+        <b>SingleReadSNV.min_coverage_to_train_model</b><br />
+        <i>Float </i> &mdash; 
+         Minimum coverage to train the ML model, needed as label assignment (true/false SNV) is unreliable at low coverages, the recommended value is set in the template <br /> 
 </p>
 
 ### Required references
@@ -112,28 +92,13 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) is a softwa
         <i>Array[File]? &mdash; Default: None</i><br />
         Genomic regions to exclude from the training set FP examples, the recommended value is set in the template
 </p>
-<p name="SingleReadSNV.balanced_sampling_info_fields">
-        <b>SingleReadSNV.balanced_sampling_info_fields</b><br />
-        <i>Array[String]? &mdash; Default: None</i><br />
-        Fields to use for balanced sampling of TP examples to remove the prior distribution of the homozygous SNVs, the pipeline will attempt for the distribution over these arguments to be uniform. The recommended value is set in the template
-</p>
-<p name="SingleReadSNV.pre_filter">
-        <b>SingleReadSNV.pre_filter</b><br />
-        <i>String? &mdash; Default: None</i><br />
-        SNV filter to apply to the FeatureMap before model, any SNV not passing the pre_filter is assigned QUAL=0, the recommended value is set in the template
+<p name="SingleReadSNV.pre_trained_model_file">
+        <b>SingleReadSNV.pre_trained_model_file</b><br />
+        <i>File? &mdash; Default: None</i><br />
+        Pre-trained ML model file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
 </p>
 </details>
 
-
-### Advanced inputs
-<details>
-<summary> Show/Hide </summary>
-<p name="SingleReadSNV.random_seed">
-        <b>SingleReadSNV.random_seed</b><br />
-        <i>Int &mdash; Default: None</i><br />
-         Random seed to use for the ML model, the recommended value is set in the template 
-</p>
-</details>
 
 ## Outputs
 <p name="SingleReadSNV.featuremap">
@@ -146,105 +111,90 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) is a softwa
         <i>File</i><br />
         FeatureMap VCF index file
 </p>
+<p name="SingleReadSNV.snv_qualities_assigned">
+        <b>SingleReadSNV.snv_qualities_assigned</b><br />
+        <i>Boolean</i><br />
+        Indicates whether SNV qualities were assigned (coverage was sufficient to train the model, over min_coverage_to_train_model), otherwise a FeatureMap with no quality scores is generated
+</p>
+<p name="SingleReadSNV.used_self_trained_model">
+        <b>SingleReadSNV.used_self_trained_model</b><br />
+        <i>Boolean</i><br />
+        Indicates whether a self-trained model was used for inference, otherwise a pre-trained model was used (if snv_qualities_assigned) or no model was used
+</p>
 <p name="SingleReadSNV.report_html">
         <b>SingleReadSNV.report_html</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         SRSNV QC report html file
+</p>
+<p name="SingleReadSNV.featuremap_df_file">
+        <b>SingleReadSNV.featuremap_df_file</b><br />
+        <i>File?</i><br />
+        FeatureMap DataFrame with X matrix (features), y (labels) and qual, in parquet format
 </p>
 <p name="SingleReadSNV.model_file">
         <b>SingleReadSNV.model_file</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model file, saved with joblib
-</p>
-<p name="SingleReadSNV.X_test_file">
-        <b>SingleReadSNV.X_test_file</b><br />
-        <i>File</i><br />
-        ML model test set features DataFrame, parquet format
-</p>
-<p name="SingleReadSNV.y_test_file">
-        <b>SingleReadSNV.y_test_file</b><br />
-        <i>File</i><br />
-        ML model test set labels DataFrame, parquet format
-</p>
-<p name="SingleReadSNV.qual_test_file">
-        <b>SingleReadSNV.qual_test_file</b><br />
-        <i>File</i><br />
-        ML model test set qual (SNVQ) DataFrame, parquet format
-</p>
-<p name="SingleReadSNV.X_train_file">
-        <b>SingleReadSNV.X_train_file</b><br />
-        <i>File</i><br />
-        ML model training set features DataFrame, parquet format
-</p>
-<p name="SingleReadSNV.y_train_file">
-        <b>SingleReadSNV.y_train_file</b><br />
-        <i>File</i><br />
-        ML model training set labels DataFrame, parquet format
 </p>
 <p name="SingleReadSNV.params_file">
         <b>SingleReadSNV.params_file</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model parameters json file
 </p>
 <p name="SingleReadSNV.test_set_mrd_simulation_dataframe">
         <b>SingleReadSNV.test_set_mrd_simulation_dataframe</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model test set MRD simulation DataFrame, parquet format
 </p>
 <p name="SingleReadSNV.train_set_mrd_simulation_dataframe">
         <b>SingleReadSNV.train_set_mrd_simulation_dataframe</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model training set MRD simulation DataFrame, parquet format
 </p>
 <p name="SingleReadSNV.test_set_statistics_h5">
         <b>SingleReadSNV.test_set_statistics_h5</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model test set statistics h5 file
 </p>
 <p name="SingleReadSNV.train_set_statistics_h5">
         <b>SingleReadSNV.train_set_statistics_h5</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model training set statistics h5 file
 </p>
 <p name="SingleReadSNV.train_set_statistics_json">
         <b>SingleReadSNV.train_set_statistics_json</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model training set statistics json file
 </p>
 <p name="SingleReadSNV.aggregated_metrics_json">
         <b>SingleReadSNV.aggregated_metrics_json</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model aggregated metrics json file
 </p>
 <p name="SingleReadSNV.tp_training_regions_bed">
         <b>SingleReadSNV.tp_training_regions_bed</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model training set TP regions bed file
 </p>
 <p name="SingleReadSNV.fp_training_regions_bed">
         <b>SingleReadSNV.fp_training_regions_bed</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model training set FP regions bed file
 </p>
 <p name="SingleReadSNV.train_report_file_notebook">
         <b>SingleReadSNV.train_report_file_notebook</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model training set report notebook file
 </p>
 <p name="SingleReadSNV.train_report_file_html">
         <b>SingleReadSNV.train_report_file_html</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model training set report html file
 </p>
 <p name="SingleReadSNV.test_report_file_notebook">
         <b>SingleReadSNV.test_report_file_notebook</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         ML model test set report notebook file
-</p>
-<p name="SingleReadSNV.flow_order">
-        <b>SingleReadSNV.flow_order</b><br />
-        <i>String</i><br />
-        Flow order for the sample
 </p>
 
 <hr />

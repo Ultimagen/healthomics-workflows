@@ -64,7 +64,7 @@ task CnmopsGetReadCountsFromBam{
 task ConvertBedGraphToGranges {
     input{
         String sample_name
-        File input_bed_graph
+        Array[File] input_bed_graph
         File genome_windows
         File genome_file
         String docker
@@ -73,16 +73,37 @@ task ConvertBedGraphToGranges {
         Int preemptible_tries
     }
     Int disk_size = ceil(2*size(input_bed_graph,"GB") + size(genome_windows,"GB"))
-    String input_bedGraph_basename = basename(input_bed_graph, ".bedGraph")
+    String input_bedGraph_basename = basename(input_bed_graph[0], ".bedGraph")
+    Boolean multiple_bedgraph_files = length(input_bed_graph) > 1
+
     command <<<
         bash ~{monitoring_script} > monitoring.log &
         source ~/.bashrc
         set -eo pipefail
         conda activate genomics.py3
 
-        bedtools map -g ~{genome_file} -a ~{genome_windows} -b ~{input_bed_graph} -c 4 -o mean |\
-        awk '{if($4=="."){print $1"\t"$2"\t"$3"\t"0}else{print $1"\t"$2"\t"$3"\t"$4}}' \
-        > ~{input_bedGraph_basename}.win.bedGraph
+        for bedgraph in ~{sep=" " input_bed_graph}; 
+        do 
+            file_basename=$(basename $bedgraph)
+            if [[ $bedgraph =~ \.gz$ ]]; 
+            then 
+                gzip -d -c $bedgraph > $file_basename.bedgraph; 
+            else
+                cp $bedgraph $file_basename.bedgraph;
+            fi
+            bedtools map -g ~{genome_file} -a ~{genome_windows} -b $file_basename.bedgraph -c 4 -o mean | \
+            awk '{if($4=="."){print $1"\t"$2"\t"$3"\t"0}else{print $1"\t"$2"\t"$3"\t"$4}}' \
+            > $file_basename.bedgraph.mean;
+        done
+        
+        if ~{multiple_bedgraph_files}
+        then    
+            bedtools unionbedg -i *.bedgraph.mean | \
+            awk -v OFS="\t" -F "\t" 'NR>0{sum=0; for(i=4; i<=NF; i++) sum += $i; NF++; $NF=sum } 1' | \
+            awk '{print $1"\t"$2"\t"$3"\t"$NF}' > ~{input_bedGraph_basename}.win.bedGraph
+        else
+            cp $file_basename.bedgraph.mean ~{input_bedGraph_basename}.win.bedGraph
+        fi            
 
         conda run -n cn.mops \
         Rscript --vanilla /VariantCalling/ugvc/cnv/convert_bedGraph_to_Granges.R \
@@ -98,6 +119,7 @@ task ConvertBedGraphToGranges {
         cpu: 2
     }
     output {
+        File merged_bedGraph="~{input_bedGraph_basename}.win.bedGraph"
         File out_RC_Granges="~{sample_name}.ReadCounts.rds"
         File monitoring_log = "monitoring.log"
     }
@@ -234,11 +256,11 @@ task RunCnmops {
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: parallel * 16 + " GiB"
+        memory: "32 GiB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
         noAddress: no_address
-        cpu: parallel * 2
+        cpu: parallel
     }
     output {
         File cohort_reads_count_norm = "cohort_reads_count.norm.rds"
@@ -258,6 +280,7 @@ task FilterSampleCnvs {
         Int min_cnv_length
         Float intersection_cutoff
         File cnv_lcr_file
+        File ref_genome_file
         String docker
         File monitoring_script
         Boolean no_address
@@ -265,8 +288,9 @@ task FilterSampleCnvs {
     }
 
     Float cohort_cnvs_csv_file_size = size(cohort_cnvs_csv, "GB")
+    Float ref_genome_file_size = size(ref_genome_file, "GB")
     Float additional_disk = 25
-    Int disk_size = ceil(cohort_cnvs_csv_file_size + additional_disk)
+    Int disk_size = ceil(cohort_cnvs_csv_file_size + ref_genome_file_size + additional_disk)
 
     command <<<
         set -eo pipefail
@@ -287,9 +311,16 @@ task FilterSampleCnvs {
                     --intersection_cutoff ~{intersection_cutoff} \
                     --cnv_lcr_file ~{cnv_lcr_file} \
                     --min_cnv_length ~{min_cnv_length};
+                
+                python /VariantCalling/ugvc convert_cnv_results_to_vcf \
+                    --cnv_annotated_bed_file $sample_name.cnvs.annotate.bed \
+                    --fasta_index_file ~{ref_genome_file} \
+                    --sample_name $sample_name
+                
             else echo "$sample_name not found in ~{cohort_cnvs_csv}";
             fi
         done
+
     >>>
     runtime {
         preemptible: preemptible_tries
@@ -303,6 +334,8 @@ task FilterSampleCnvs {
         Array[File] csvs = glob("*.csv")
         Array[File] sample_cnvs_csv = glob(".cnvs.csv")
         Array[File] sample_cnvs_bed = glob("*.cnvs.annotate.bed")
+        Array[File] sample_cnvs_vcf = glob("*.cnv.vcf.gz")
+        Array[File] sample_cnvs_vcf_index = glob("*.cnv.vcf.gz.tbi")
         Array[File] sample_cnvs_filtered_bed = glob("*.cnvs.filter.bed")
         File monitoring_log = "monitoring.log"
     }

@@ -17,6 +17,5 @@
             "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/single_cell/10x-737K-fixed-rna-profiling.csv"
         ],
         "memory_gb": 128
-    },
-    "SingleCell.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    }
 }

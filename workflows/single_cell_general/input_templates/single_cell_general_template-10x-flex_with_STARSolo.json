@@ -45,6 +45,5 @@
         "barcode_whitelist": "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/single_cell/10x-737K-fixed-rna-profiling.txt",
         "cell_filter": "EmptyDrops_CR",
         "extra_args": "--outSAMunmapped Within --chimOutType WithinBAM SoftClip --clip3pNbases 0,26 --outFilterMatchNminOverLread 0.66 --outFilterScoreMinOverLread 0.66 --scoreDelOpen -2 --scoreDelBase -2 --scoreInsOpen -2 --scoreInsBase -2 --alignEndsType Local"
-    },
-    "SingleCell.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    }
 }

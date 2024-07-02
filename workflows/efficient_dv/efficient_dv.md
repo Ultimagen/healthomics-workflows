@@ -75,7 +75,12 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.target_intervals">
         <b>EfficientDV.target_intervals</b><br />
         <i>File? </i> &mdash; 
-         Limit calling to these regions. If not provided then entire genome is used. <br /> 
+         Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used. <br /> 
+</p>
+<p name="EfficientDV.intervals_string">
+        <b>EfficientDV.intervals_string</b><br />
+        <i>String? </i> &mdash; 
+         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used. <br /> 
 </p>
 <p name="EfficientDV.min_fraction_hmer_indels">
         <b>EfficientDV.min_fraction_hmer_indels</b><br />
@@ -151,6 +156,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.ug_make_examples_extra_args</b><br />
         <i>String </i> &mdash; 
          Additional arguments for make-examples tool <br /> 
+</p>
+<p name="EfficientDV.log_make_examples_progress">
+        <b>EfficientDV.log_make_examples_progress</b><br />
+        <i>Boolean </i> &mdash; 
+         Cause make_examples to output detailed progress information (for debugging) <br /> 
 </p>
 <p name="EfficientDV.min_variant_quality_hmer_indels">
         <b>EfficientDV.min_variant_quality_hmer_indels</b><br />

@@ -1,5 +1,5 @@
 # SingleSampleCnmopsCNVCalling
-Runs single sample germline CNV calling workflow based on \<a href="https://bioconductor.org/packages/release/bioc/html/cn.mops.html"\>cn.mops</a>
+Runs single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)
 
 The pipeline uses a given cohort's coverage profile for normalization.
 
@@ -12,6 +12,8 @@ The pipeline can recieve one of the following options as input:
 &nbsp;&nbsp;3. A BedGraph holding the coverage per location. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_input_bedGraph_template.json
 
 The pipeline calls CNVs for the given sample and filters them by length (>10,000b) and overlap with UG-CNV-LCR.
+
+<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>
 
 ## Inputs
 
@@ -89,8 +91,8 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
 </p>
 <p name="SingleSampleCnmopsCNVCalling.bed_graph">
         <b>SingleSampleCnmopsCNVCalling.bed_graph</b><br />
-        <i>File? </i> &mdash; 
-         Previously calculated input bedGraph holding the coverage per base (outputs with the sequencing data).  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set <br /> 
+        <i>Array[File]? </i> &mdash; 
+         Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set <br /> 
 </p>
 <p name="SingleSampleCnmopsCNVCalling.genome_windows">
         <b>SingleSampleCnmopsCNVCalling.genome_windows</b><br />
@@ -153,10 +155,25 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
         <i>Array[File]</i><br />
         Bed file with sample's called CNVs
 </p>
+<p name="SingleSampleCnmopsCNVCalling.out_sample_cnvs_vcf">
+        <b>SingleSampleCnmopsCNVCalling.out_sample_cnvs_vcf</b><br />
+        <i>Array[File]</i><br />
+        VCF file with sample's called CNVs
+</p>
+<p name="SingleSampleCnmopsCNVCalling.out_sample_cnvs_vcf_index">
+        <b>SingleSampleCnmopsCNVCalling.out_sample_cnvs_vcf_index</b><br />
+        <i>Array[File]</i><br />
+        Index file for the VCF file with sample's called CNVs
+</p>
 <p name="SingleSampleCnmopsCNVCalling.out_sample_cnvs_filtered_bed">
         <b>SingleSampleCnmopsCNVCalling.out_sample_cnvs_filtered_bed</b><br />
         <i>Array[File]</i><br />
         Bed file with CNVs filtered by length and overlap with low confidence regions
+</p>
+<p name="SingleSampleCnmopsCNVCalling.out_sample_merged_bedGraph">
+        <b>SingleSampleCnmopsCNVCalling.out_sample_merged_bedGraph</b><br />
+        <i>File?</i><br />
+        Merged bedGraph file of the sample's coverage
 </p>
 <p name="SingleSampleCnmopsCNVCalling.out_sample_reads_count_hdf5">
         <b>SingleSampleCnmopsCNVCalling.out_sample_reads_count_hdf5</b><br />

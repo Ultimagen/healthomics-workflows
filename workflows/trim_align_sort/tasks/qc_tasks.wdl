@@ -124,7 +124,7 @@ task CollectDuplicateMetrics {
         String docker
         Boolean no_address
         Int preemptible_tries
-        Int disk_size = ceil(size(input_bam, "GB") + size(references.ref_fasta, "GB") + 20)
+        Int disk_size = ceil(size(input_bam, "GB") + size(references.ref_fasta, "GB") + 40)
         String gitc_path = "/usr/gitc"
     }
 
@@ -140,7 +140,7 @@ task CollectDuplicateMetrics {
     runtime {
         disks: "local-disk " + disk_size + " HDD"
         cpu: 1
-        memory: "4 GB"
+        memory: "8 GB"
         preemptible: preemptible_tries
         docker: docker
         noAddress: no_address
@@ -163,7 +163,7 @@ task CollectQualityYieldMetrics {
         Int preemptible_tries
         String docker
         Boolean no_address
-        Int disk_size = ceil(size(input_bam, "GB") + size(references.ref_fasta, "GB") + 20)
+        Int disk_size = ceil(size(input_bam, "GB") + size(references.ref_fasta, "GB") + 40)
         String gitc_path = "/usr/gitc"
     }
 
@@ -183,7 +183,7 @@ task CollectQualityYieldMetrics {
 
     runtime {
         disks: "local-disk " + disk_size + " HDD"
-        memory: "4 GB"
+        memory: "8 GB"
         preemptible: preemptible_tries
         docker: docker
         noAddress: no_address
@@ -211,10 +211,10 @@ task CollectWgsMetrics {
         Int disk_size_gb = if ceil((size(input_bam, "GB")) +
                                   size(references.ref_fasta, "GB") +
                                   size(references.ref_fasta_index, "GB") +
-                                  size(references.ref_dict, "GB") + 160) > 510 then ceil((size(input_bam, "GB")) +
+                                  size(references.ref_dict, "GB") + 40) > 510 then ceil((size(input_bam, "GB")) +
                                   size(references.ref_fasta, "GB") +
                                   size(references.ref_fasta_index, "GB") +
-                                  size(references.ref_dict, "GB") + 160) else 510
+                                  size(references.ref_dict, "GB") + 40) else 510
 
         String gitc_path = "/usr/gitc"
 
@@ -234,7 +234,7 @@ task CollectWgsMetrics {
             USE_FAST_ALGORITHM=false \
             COUNT_UNPAIRED=true \
             COVERAGE_CAP=12500 \
-            READ_LENGTH=~{default=250 read_length}
+            READ_LENGTH=~{default="250" ""+read_length}
     >>>
     runtime {
         preemptible: preemptible_tries
@@ -265,10 +265,10 @@ task CollectRawWgsMetrics {
         Int disk_size_gb = if ceil((size(input_bam, "GB")) +
                                   size(references.ref_fasta, "GB") +
                                   size(references.ref_fasta_index, "GB") +
-                                  size(references.ref_dict, "GB") + 160) > 510 then ceil((size(input_bam, "GB")) +
+                                  size(references.ref_dict, "GB") + 40) > 510 then ceil((size(input_bam, "GB")) +
                                   size(references.ref_fasta, "GB") +
                                   size(references.ref_fasta_index, "GB") +
-                                  size(references.ref_dict, "GB") + 160) else 510
+                                  size(references.ref_dict, "GB") + 40) else 510
 
         String gitc_path = "/usr/gitc"
 
@@ -323,10 +323,10 @@ task CollectAggregationMetrics {
         Int disk_size = if ceil((size(input_bam, "GB")) +
                                size(references.ref_fasta, "GB") +
                                size(references.ref_fasta_index, "GB") +
-                               size(references.ref_dict, "GB") + 160) > 510 then ceil((size(input_bam, "GB")) +
+                               size(references.ref_dict, "GB") + 20) > 510 then ceil((size(input_bam, "GB")) +
                                size(references.ref_fasta, "GB") +
                                size(references.ref_fasta_index, "GB") +
-                               size(references.ref_dict, "GB") + 160) else 510
+                               size(references.ref_dict, "GB") + 20) else 510
 
     }
     command <<<
@@ -531,6 +531,7 @@ task CheckPreValidation {
         Float max_duplication_in_reasonable_sample
         Float max_chimerism_in_reasonable_sample
         Int preemptible_tries = 3
+        String docker
     }
 
     command <<<
@@ -561,7 +562,7 @@ task CheckPreValidation {
 
     >>>
     runtime {
-        docker: "us.gcr.io/broad-dsp-gcr-public/base/python:3.9-debian"
+        docker: docker
         preemptible: preemptible_tries
         memory: "2 GiB"
     }
@@ -698,10 +699,10 @@ task CollectHsMetrics {
         Int disk_size = if ceil((size(input_bam, "GB")) +
                                size(references.ref_fasta, "GB") +
                                size(references.ref_fasta_index, "GB") +
-                               size(references.ref_dict, "GB") + 160) > 510 then ceil((size(input_bam, "GB")) +
+                               size(references.ref_dict, "GB") + 20) > 510 then ceil((size(input_bam, "GB")) +
                                size(references.ref_fasta, "GB") +
                                size(references.ref_fasta_index, "GB") +
-                               size(references.ref_dict, "GB") + 160) else 510
+                               size(references.ref_dict, "GB") + 20) else 510
 
     }
     command <<<
@@ -749,10 +750,10 @@ task TargetsBedcov {
         Int disk_size = if ceil((size(input_bam, "GB")) +
                                size(references.ref_fasta, "GB") +
                                size(references.ref_fasta_index, "GB") +
-                               size(references.ref_dict, "GB") + 160) > 510 then ceil((size(input_bam, "GB")) +
+                               size(references.ref_dict, "GB") + 20) > 510 then ceil((size(input_bam, "GB")) +
                                size(references.ref_fasta, "GB") +
                                size(references.ref_fasta_index, "GB") +
-                               size(references.ref_dict, "GB") + 160) else 510
+                               size(references.ref_dict, "GB") + 20) else 510
 
     }
     String target_intervals_basename = basename(target_interval_list, ".interval_list")
