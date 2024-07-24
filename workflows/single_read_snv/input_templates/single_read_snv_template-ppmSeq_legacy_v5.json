@@ -90,7 +90,7 @@
             "T"
         ]
     },
-    "SingleReadSNV.ppmSeq_adapter_version": "LA_v5and6",
+    "SingleReadSNV.ppmSeq_adapter_version": "legacy_v5",
     "SingleReadSNV.single_read_snv_params": {
         "numerical_features": [
             "X_SCORE",

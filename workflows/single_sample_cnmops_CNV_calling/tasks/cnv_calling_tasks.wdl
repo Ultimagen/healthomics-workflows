@@ -57,7 +57,9 @@ task CnmopsGetReadCountsFromBam{
     output {
         File out_reads_count="~{base_file_name}.ReadCounts.rds"
         File out_reads_count_hdf5="~{base_file_name}.ReadCounts.hdf5"
+        String out_sample_name = "~{out_bam_filtered}"
         File monitoring_log = "monitoring.log"
+        
     }
 }
 
@@ -281,6 +283,7 @@ task FilterSampleCnvs {
         Float intersection_cutoff
         File cnv_lcr_file
         File ref_genome_file
+        File germline_coverge_rds
         String docker
         File monitoring_script
         Boolean no_address
@@ -297,8 +300,19 @@ task FilterSampleCnvs {
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         source ~/.bashrc
-        conda activate genomics.py3
 
+        #write all samples coverage to bed files
+        conda activate cn.mops
+        Rscript --vanilla -e "args=commandArgs(trailingOnly=TRUE)
+            suppressPackageStartupMessages(library('GenomicRanges'))
+            gr <- readRDS(args[2])
+            sample_names <- colnames(mcols(gr))
+            for (sample in sample_names) {
+                    df_sample <- as.data.frame(gr[,sample])
+                    write.table(df_sample[,c('seqnames','start','end',make.names(sample))], paste(sample,'cov.bed',sep='.') , sep = '\t', col.names = FALSE, row.names = FALSE, quote = FALSE)
+            }" --args ~{germline_coverge_rds}
+
+        conda activate genomics.py3
         #get samples CNVs
         for sample_name in ~{sep=" " sample_names}
         do 
@@ -306,17 +320,31 @@ task FilterSampleCnvs {
                 then grep "$sample_name" ~{cohort_cnvs_csv} > $sample_name.cnvs.csv ;
                 awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' $sample_name.cnvs.csv > $sample_name.cnvs.bed;
 
+                #filter CNVs 
                 python /VariantCalling/ugvc filter_sample_cnvs \
                     --input_bed_file $sample_name.cnvs.bed \
                     --intersection_cutoff ~{intersection_cutoff} \
                     --cnv_lcr_file ~{cnv_lcr_file} \
                     --min_cnv_length ~{min_cnv_length};
                 
+                #convert bed file to vcf
                 python /VariantCalling/ugvc convert_cnv_results_to_vcf \
                     --cnv_annotated_bed_file $sample_name.cnvs.annotate.bed \
                     --fasta_index_file ~{ref_genome_file} \
                     --sample_name $sample_name
                 
+                #generate figure for each sample
+                cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
+                cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
+                
+                conda activate genomics.py3
+                python /VariantCalling/ugvc plot_cnv_results \
+                    --germline_coverage $sample_name.cov.bed \
+                    --duplication_cnv_calls $sample_name.cnvs.filter.DUP.bed \
+                    --deletion_cnv_calls $sample_name.cnvs.filter.DEL.bed \
+                    --sample_name $sample_name \
+                    --out_directory CNV_figures
+
             else echo "$sample_name not found in ~{cohort_cnvs_csv}";
             fi
         done
@@ -337,6 +365,9 @@ task FilterSampleCnvs {
         Array[File] sample_cnvs_vcf = glob("*.cnv.vcf.gz")
         Array[File] sample_cnvs_vcf_index = glob("*.cnv.vcf.gz.tbi")
         Array[File] sample_cnvs_filtered_bed = glob("*.cnvs.filter.bed")
+        Array[File] coverage_plot = glob("*/*.CNV.coverage.jpeg")
+        Array[File] dup_del_plot = glob("*/*.dup_del.calls.jpeg")
+        Array[File] copy_number_plot = glob("*/*.CNV.calls.jpeg")
         File monitoring_log = "monitoring.log"
     }
 }

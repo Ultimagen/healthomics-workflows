@@ -1,4 +1,12 @@
 {
+    "SVPipeline.annotate_variants_cpu_override": {
+        "description": "cpu override for annotate_variants task",
+        "optional": true
+    },
+    "SVPipeline.annotate_variants_memory_override": {
+        "description": "memory override for annotate_variants task",
+        "optional": true
+    },
     "SVPipeline.base_file_name": {
         "description": "Base file name for the output files (to be used as the prefix)",
         "optional": false
@@ -14,6 +22,10 @@
     "SVPipeline.config_file_string": {
         "description": "Gridss config file content",
         "optional": false
+    },
+    "SVPipeline.create_assembly_memory_override": {
+        "description": "memory override for create_assembly task",
+        "optional": true
     },
     "SVPipeline.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",

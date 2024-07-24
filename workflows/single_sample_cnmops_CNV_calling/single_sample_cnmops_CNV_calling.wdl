@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.12.0" # !UnusedDeclaration
+        String pipeline_version = "1.13.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -301,13 +301,16 @@ workflow SingleSampleCnmopsCNVCalling {
                 preemptible_tries_override = preemptible_tries_override
         }
     }
+
+    String sample_name = select_first([SingleSampleReadsCount.out_sample_name,base_file_name])
+
     if(run_convert_bedGraph_to_Granges)
     {
         Array[File] input_bed_graph = select_first([bed_graph])
         File input_genome_windows = select_first([genome_windows])
         call CnvTasks.ConvertBedGraphToGranges as ConvertBedGraphToGranges{
         input:
-            sample_name = base_file_name,
+            sample_name = sample_name,
             input_bed_graph = input_bed_graph,
             genome_windows = input_genome_windows,
             genome_file = reference_genome_index,
@@ -349,7 +352,7 @@ workflow SingleSampleCnmopsCNVCalling {
         parallel = parallel
     }
 
-    Array[String] sample_names = [base_file_name]
+    Array[String] sample_names = [sample_name]
     call CnvTasks.FilterSampleCnvs {
         input:
         cohort_cnvs_csv = RunCnmops.cohort_cnvs_csv,
@@ -358,6 +361,7 @@ workflow SingleSampleCnmopsCNVCalling {
         intersection_cutoff = intersection_cutoff,
         cnv_lcr_file = cnv_lcr_file,
         ref_genome_file = reference_genome_index,
+        germline_coverge_rds = sample_reads_count_file,
         docker = global.ug_vc_docker,
         monitoring_script = monitoring_script,
         no_address = no_address,

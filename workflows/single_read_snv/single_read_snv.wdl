@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.12.0" # !UnusedDeclaration
+  String pipeline_version = "1.13.0" # !UnusedDeclaration
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -81,7 +81,7 @@ input {
   #@wv suffix(references['ref_fasta_index']) == '.fai'
   #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
   #@wv featuremap_params['motif_length_to_annotate'] <= 4 and featuremap_params['motif_length_to_annotate'] >= 1
-  #@wv defined(ppmSeq_adapter_version) -> ppmSeq_adapter_version in ['LA_v5', 'LA_v6', 'LA_v5and6', 'LA_v7', 'LA_v7_amp_dumbbell']
+  #@wv defined(ppmSeq_adapter_version) -> ppmSeq_adapter_version in ["v1", "legacy_v5", "legacy_v5_start", "legacy_v5_end", "dmbl"]
   #@wv single_read_snv_params['num_CV_folds'] >= 1
   #@wv single_read_snv_params['split_folds_by'] in ['random', 'chromosome', 'chrom']
 
@@ -314,9 +314,7 @@ parameter_meta {
         help: "Flow order for the sample",
         category: "output_optional"
     }
-
-        
-    }
+}
 
 
   Int preemptibles = select_first([preemptible_tries, 1])

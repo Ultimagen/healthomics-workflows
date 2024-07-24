@@ -276,7 +276,7 @@ task FeatureMapProcess {
       -i ~{featuremap} \
       -o ~{annotated_featuremap_vcf} \
       --ref_fasta ~{references.ref_fasta} \
-      ~{true="--balanced_strand_adapter_version " false="" defined(ppmSeq_adapter_version)}~{default="" ppmSeq_adapter_version} \
+      ~{true="--ppmSeq_adapter_version " false="" defined(ppmSeq_adapter_version)}~{default="" ppmSeq_adapter_version} \
       --flow_order ~{flow_order} \
       --motif_length_to_annotate ~{featuremap_params.motif_length_to_annotate} \
       --max_hmer_length ~{featuremap_params.max_hmer_length}

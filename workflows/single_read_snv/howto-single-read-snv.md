@@ -156,38 +156,6 @@ or
 ***Note 3 - some files appear in two lists***
 
 
-## Test data files
-
-The files below are provided for the user to run the pipeline in their local environment to ensure it is working properly. A ppmSeq sample is provided for this purpose.
-
-### Small test file - chr20 only
-{input_cram_bam}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram
-{input_cram_bam_index}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
-{sorter_json_stats_file}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json
-{interval_list}: gs://ug-cromwell-tests/balanced_strand/wgs_calling_regions.hg38.chr20.interval_list
-
-or
-
-{input_cram_bam}: s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram
-{input_cram_bam_index}: s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
-{sorter_json_stats_file}: s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json
-{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38.chr20.interval_list
-
-Note that when using chr20 only test data, ML model training should be done either by train/test split, or by using k-fold Cross-Validation with random splitting into folds (see section [Details of ML model Cross-Validation scheme](#Details-of-ML-model-Cross-Validation-scheme) below for more details).
-
-### Full test file
-{input_cram_bam}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.cram
-{input_cram_bam_index}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.cram.crai
-{sorter_json_stats_file}: gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json
-{interval_list}: gs://concordanz/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
-
-or
-
-{input_cram_bam}: s3://ultimagen-feb-2024-mrd/cfDNA_ppmSeq/Pa_46.333_LuNgs_08.Lb_744.cram
-{input_cram_bam_index}: s3://ultimagen-feb-2024-mrd/cfDNA_ppmSeq/Pa_46.333_LuNgs_08.Lb_744.cram.crai
-{sorter_json_stats_file}: s3://ultimagen-feb-2024-mrd/cfDNA_ppmSeq/Pa_46.333_LuNgs_08.Lb_744.json
-{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
-
 ## Running using separate command lines
 ### Installation
 
@@ -422,12 +390,12 @@ After creating the FeatureMap file, additional annotations are added to the INFO
   --flow_order TGCA \
   --motif_length_to_annotate 3 \
   --max_hmer_length 20 \
-  --balanced_strand_adapter_version "ppmSeq_v1" 
+  --ppmSeq_adapter_version "ppmSeq" 
 ```
 
 *Recommended hardware - 1 CPU, 4GB RAM*
 
-***Note - the "balanced_strand_adapter_version" is required for ppmSeq data, remove it when running on different data.***
+***Note - the "ppmSeq_adapter_version" is required for ppmSeq data, remove it when running on different data.***
 
 ##### Output files:
   {annotated_featuremap}: FeatureMap vcf.gz file with additional annotations and a respective .tbi index file
@@ -520,7 +488,7 @@ This code trains the ML model on the annotated FeatureMap, and produces a report
 --hom_snv_regions {training_regions_tp} \
 --single_sub_regions {training_regions_fp} \
 --dataset_params_json_path {single_read_snv_params} \
---balanced_strand_adapter_version "ppmSeq_v2"  # for ppmSeq_legacy_v5, use "ppmSeq_v1", for non-ppmSeq data remove this line.
+--ppmSeq_adapter_version "ppmSeq"  # or ppmSeq_legacy_v5, for non-ppmSeq data remove this line.
 ```
 *Recommended hardware - 1 CPU, 16GB RAM*
 

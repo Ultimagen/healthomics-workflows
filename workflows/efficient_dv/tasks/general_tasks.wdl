@@ -104,6 +104,27 @@ task ExtractSampleNameFlowOrder{
     }
 }
 
+# only works with simple maps (two columns)
+task MakeStringMap {
+    input {
+        Array[String] keys
+        Array[String] values
+        String docker
+    }
+
+    String results_path = "results.tsv"
+    command <<<
+        cat ~{write_tsv(transpose([keys,values]))} > ~{results_path}
+    >>>
+    runtime {
+        docker: docker
+    }
+    output {
+        Map[String, String] map = read_map(results_path)
+    }
+}
+
+
 # Aggregate picard metrics and coverage and variant calling reports into one h5 and convert h5 to json
 task AggregateMetricsAndConvertToJson {
     input {
@@ -930,3 +951,72 @@ task GetMeanCoverageFromSorterStats {
         File monitoring_log = "monitoring.log"
     }
   }
+
+task CopyFiles {
+    input {
+        Array[File] input_files
+        String docker
+    }
+    command <<<
+    >>>
+    runtime {
+        docker: docker
+        preemptible: 1
+        memory: "2 GB"
+        cpu: "1"
+        disks: "local-disk " +ceil(2*size(input_files,"GB") + 1) + " HDD"
+        noAddress: true
+    }
+    output {
+        Array[File] output_files = input_files
+    }
+}
+# creates a bed file from a VCF file and expands if needed
+task VcfToIntervalListAndBed {
+    input {
+        File monitoring_script
+        File input_vcf
+        Int bedtools_expand
+        File reference_dict
+        File reference_index
+        String base_file_name
+        String docker
+        Int disk_size = ceil(2*size(input_vcf, "GB")) + 20
+        Int preemptible_tries
+        Boolean no_address
+    }
+    command <<< 
+        set -eo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        source /opt/conda/etc/profile.d/conda.sh
+        conda activate genomics.py3
+
+        picard VcfToIntervalList \
+            I=~{input_vcf} \
+            O=step1.interval_list 
+
+        picard IntervalListToBed \
+            I=step1.interval_list \
+            O=step2.bed
+        awk 'BEGIN {FS=OFS="\t"} {print $1, $2}' ~{reference_index} > genome_file.txt
+        bedtools slop -i step2.bed -g genome_file.txt -b ~{bedtools_expand} | bedtools merge -i - > ~{base_file_name}.bed
+        picard BedToIntervalList \
+            I=~{base_file_name}.bed \
+            O=~{base_file_name}.interval_list \
+            SD=~{reference_dict}
+    >>>
+
+    runtime {
+        memory: "2 GB"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }
+
+    output {
+        File interval_list = "~{base_file_name}.interval_list"
+        File bed = "~{base_file_name}.bed"
+        File monitoring_log = "monitoring.log"
+    }
+}

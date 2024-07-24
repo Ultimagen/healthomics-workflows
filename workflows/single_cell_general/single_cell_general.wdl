@@ -78,7 +78,7 @@ workflow SingleCell {
 
         String? fastqc_adapter
         File? fastqc_limits
-        String pipeline_version = "1.12.0" # !UnusedDeclaration
+        String pipeline_version = "1.13.0" # !UnusedDeclaration
         String? downstream_analysis
         # STAR and STAR solo parameters
         StarSoloParams? star_solo_params
@@ -311,7 +311,7 @@ workflow SingleCell {
         call TrimmingTasks.Trimmer {
             input:
                 input_cram_bam      = input_file,
-                trimmer_parameters  = select_first([trimmer_parameters]),
+                parameters  = select_first([trimmer_parameters]),
                 base_file_name      = base_file_name,
                 docker              = global.trimmer_docker,
                 preemptible_tries   = preemptible_tries,

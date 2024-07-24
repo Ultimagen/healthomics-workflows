@@ -74,6 +74,7 @@ workflow SingleSampleCnmopsReadsCount{
     }
     output {
        File out_reads_count = CnmopsGetReadCountsFromBam.out_reads_count
+       String out_sample_name = CnmopsGetReadCountsFromBam.out_sample_name
        File? out_reads_count_hdf5 = out_reads_count_hdf5_maybe
     }
 }

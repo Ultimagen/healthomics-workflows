@@ -453,6 +453,7 @@ task CollectIntervalCoverageStats {
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         set -eo pipefail
+        set -x
 
         # shellcheck source=/dev/null
         source ~/.bashrc

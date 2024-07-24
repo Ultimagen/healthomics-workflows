@@ -117,14 +117,17 @@ struct SimpleReadTrimmingParameters {
 struct TrimmerParameters {
   File? formats_description         # optional formtas.json file. If not provided, the default trimmer formats will be used (https://github.com/Ultimagen/trimmer/blob/master/formats/formats.json)
   String? local_formats_description # path to description file stored in the docker, default is /trimmer/formats/formats.json
-  String untrimmed_reads_action     # either "" (do nothing), "filter" (mark in sam flag) or "discard"
+  String? untrimmed_reads_action     # either "" (do nothing), "filter" (mark in sam flag) or "discard"
   String? format                    # format name to be used, as defined in the formats.json file
   String? extra_args
-  Array[File]? pattern_files        # If the formats description uses pattern files (specified with file: or enc: prefix in format file), they must be provided also here. 
+  Array[File]? pattern_files        # If the formats description uses pattern files (specified with file: or enc: prefix in format file), they must be provided also here.
                                     # Note that built-in pattern files from the Trimmer repo do not need to be provided here.
   File? cram_reference              # Use this in case the reference is not embedded in the input cram (or if you want to read the cram with a different reference)
   Int? memory_gb                    # Ovverride the default memory (in GB) used by trimmer
   String? output_demux_format       # If provided, trimmer will perform demultiplexing and the output file name will be in this format. E.g. "output-2%"
+  String? filename_prefix_sep # default is set to "_", but this can be changed to "-" as in the case of ancient DNA trimmed output
+  String? output_failed_file_name_suffix # Setting the name for the failed reads file. Default is "failed.cram", if this parameter is given will be <base_file_name>_<output_failed_file_name_suffix>
+  Boolean? remove_small_files # Allows to remove trimmed files below 1Gb in size
 }
 
 struct ReferenceDbSnp {
@@ -184,19 +187,19 @@ struct StarSoloParams {
 }
 
 struct StarSoloOutputs {
-  File? genome_zip_output          
-  File output_bam                 
-  File gene_features_stats        
-  File gene_summary_csv           
-  File gene_umi_per_cell_sorted   
-  File gene_filtered_features     
-  File gene_filtered_barcodes     
-  File gene_filtered_matrix       
-  File star_log_file              
-  File star_log_params_file       
-  File barcode_file               
-  File star_stats                 
-  File gathered_star_stats_csv    
+  File? genome_zip_output
+  File output_bam
+  File gene_features_stats
+  File gene_summary_csv
+  File gene_umi_per_cell_sorted
+  File gene_filtered_features
+  File gene_filtered_barcodes
+  File gene_filtered_matrix
+  File star_log_file
+  File star_log_params_file
+  File barcode_file
+  File star_stats
+  File gathered_star_stats_csv
 }
 
 struct RuntimeParams {
@@ -254,7 +257,9 @@ struct SorterParams {
   String? umi_tag           # multiple tags should be separated by comma e.g. "u5,u3"
   Boolean? demux_align      # demux arg to mentioned if the data aligned. The default is true.
   String? demux_extra_args
+  String? demux_output_group
+  String? demux_output_path
   String? sort_extra_args
   Int? memory_gb            # Ovverride the default memory (in GB) used by sorter
-  File? coverage_intervals  # tar.gz file with the coverage intervals tsv pointing to the relevant coverage intervals files
+  File? coverage_intervals  # tar.gz file with the coverage intervals tsv pointing to the relevant coverage intervals files  
 }

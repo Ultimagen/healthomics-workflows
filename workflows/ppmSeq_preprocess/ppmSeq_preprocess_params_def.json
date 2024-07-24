@@ -1,0 +1,86 @@
+{
+    "ppmSeqPreprocess.TrimAlignSort.star_align_extra_args": {
+        "description": "Extra arguments for the STAR aligner.",
+        "optional": true
+    },
+    "ppmSeqPreprocess.TrimAlignSort.star_align_gtf_override": {
+        "description": "GTF file to be used for STAR aligner.",
+        "optional": true
+    },
+    "ppmSeqPreprocess.TrimAlignSort.star_genome": {
+        "description": "Star genome file. If aligner is star, supllay either star genome file or generate new genome index.",
+        "optional": true
+    },
+    "ppmSeqPreprocess.TrimAlignSort.star_genome_generate_params": {
+        "description": "Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file.",
+        "optional": true
+    },
+    "ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters": {
+        "description": "Parameters for the UA meth aligner. Mandatory if aligner is ua-meth.",
+        "optional": true
+    },
+    "ppmSeqPreprocess.adapter_version": {
+        "description": "ppmSeq adapter version",
+        "optional": false
+    },
+    "ppmSeqPreprocess.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": false
+    },
+    "ppmSeqPreprocess.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "ppmSeqPreprocess.cpu": {
+        "description": "cpu",
+        "optional": true
+    },
+    "ppmSeqPreprocess.input_cram_bam_list": {
+        "description": "Input CRAM or BAM file list",
+        "optional": false
+    },
+    "ppmSeqPreprocess.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "ppmSeqPreprocess.no_address": {
+        "description": "no_address",
+        "optional": true
+    },
+    "ppmSeqPreprocess.ppmSeq_analysis_extra_args": {
+        "description": "Extra arguments for ppmSeq analysis",
+        "optional": true
+    },
+    "ppmSeqPreprocess.preemptible_tries": {
+        "description": "preemptible_tries",
+        "optional": true
+    },
+    "ppmSeqPreprocess.ref_fastas_cram": {
+        "description": "Reference fasta file for cache tarball",
+        "optional": false
+    },
+    "ppmSeqPreprocess.references": {
+        "description": "Reference files",
+        "optional": false
+    },
+    "ppmSeqPreprocess.sample_name": {
+        "description": "Sample name used when merging cram files, if not provided base_file_name is used",
+        "optional": true
+    },
+    "ppmSeqPreprocess.sorter_params": {
+        "description": "Sorter parameters",
+        "optional": false
+    },
+    "ppmSeqPreprocess.steps": {
+        "description": "steps",
+        "optional": true
+    },
+    "ppmSeqPreprocess.trimmer_parameters": {
+        "description": "Trimmer parameters",
+        "optional": false
+    },
+    "ppmSeqPreprocess.ua_parameters": {
+        "description": "UA alignment parameters",
+        "optional": false
+    }
+}

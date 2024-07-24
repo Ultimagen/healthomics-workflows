@@ -19,6 +19,12 @@ The pipeline outputs:
 
 &nbsp;&nbsp;- controlFREEC run-summary
 
+&nbsp;&nbsp;-coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples.
+
+&nbsp;&nbsp;-duplications and deletions figure - showing gains and losses along the genome.
+
+&nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.
+
 
 
 ## Inputs
@@ -225,6 +231,21 @@ The pipeline outputs:
         <b>SomaticCNVCallingControlFREEC.tumor_CNVs_filtered_bed_file</b><br />
         <i>File</i><br />
         Filtered called CNVs for tumor sample
+</p>
+<p name="SomaticCNVCallingControlFREEC.coverage_plot">
+        <b>SomaticCNVCallingControlFREEC.coverage_plot</b><br />
+        <i>File</i><br />
+        Coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples
+</p>
+<p name="SomaticCNVCallingControlFREEC.dup_del_plot">
+        <b>SomaticCNVCallingControlFREEC.dup_del_plot</b><br />
+        <i>File</i><br />
+        Duplications and deletions figure - showing gains and losses along the genome
+</p>
+<p name="SomaticCNVCallingControlFREEC.copy_number_plot">
+        <b>SomaticCNVCallingControlFREEC.copy_number_plot</b><br />
+        <i>File</i><br />
+        Copy-number figure  shows the copy number along the genome
 </p>
 
 <hr />

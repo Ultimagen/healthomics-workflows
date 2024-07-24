@@ -31,7 +31,7 @@ import "tasks/qc_tasks.wdl" as UGQCTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.12.0" # !UnusedDeclaration
+        String pipeline_version = "1.13.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -141,7 +141,7 @@ workflow SomaticCNVCallingControlFREEC{
     Int maxThreads = select_first([maxThreads_override,8])
 
     meta {
-        description: "Runs single sample somatic CNV calling workflow based on \<a href=\"https://boevalab.inf.ethz.ch/FREEC/\"\>ControlFREEC</a>.\n\nCNVs are called based on both coverage and allele frequencies in the tumor and the matched germline sample.\n\nThe pipeline will gather coverage and allele frequencies, run controlFREEC and filter called CNVs by length and low confidence regions.\n\ncoverage will be calculted based on the input cram/bam. Alternativley, it can recieve coverage input as one of:bedGraph, cpn formats.\n\nAllele frequencies will be calculated based on the input cram/bam and a given vcf file to specify locations. Alternativley, it can recieve precalculated frequencies as mpileup format.\n\nThe pipeline outputs: \n\n&nbsp;&nbsp;- calculated coverage for tumor and normal samples\n\n&nbsp;&nbsp;- calculated mpileup for tumor and normal samples\n\n&nbsp;&nbsp;- called CNVs + filtered called CNVs\n\n&nbsp;&nbsp;- controlFREEC run-summary\n\n"
+        description: "Runs single sample somatic CNV calling workflow based on \<a href=\"https://boevalab.inf.ethz.ch/FREEC/\"\>ControlFREEC</a>.\n\nCNVs are called based on both coverage and allele frequencies in the tumor and the matched germline sample.\n\nThe pipeline will gather coverage and allele frequencies, run controlFREEC and filter called CNVs by length and low confidence regions.\n\ncoverage will be calculted based on the input cram/bam. Alternativley, it can recieve coverage input as one of:bedGraph, cpn formats.\n\nAllele frequencies will be calculated based on the input cram/bam and a given vcf file to specify locations. Alternativley, it can recieve precalculated frequencies as mpileup format.\n\nThe pipeline outputs: \n\n&nbsp;&nbsp;- calculated coverage for tumor and normal samples\n\n&nbsp;&nbsp;- calculated mpileup for tumor and normal samples\n\n&nbsp;&nbsp;- called CNVs + filtered called CNVs\n\n&nbsp;&nbsp;- controlFREEC run-summary\n\n&nbsp;&nbsp;-coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples.\n\n&nbsp;&nbsp;-duplications and deletions figure - showing gains and losses along the genome.\n\n&nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.\n\n"
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
@@ -384,6 +384,21 @@ workflow SomaticCNVCallingControlFREEC{
             type: "File",
             category: "output"
         }
+        coverage_plot : {
+            help: "Coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples",
+            type: "File",
+            category: "output"
+        }
+        dup_del_plot : {
+            help: "Duplications and deletions figure - showing gains and losses along the genome",
+            type: "File",
+            category: "output"
+        }
+        copy_number_plot : {
+            help: "Copy-number figure  shows the copy number along the genome",
+            type: "File",
+            category: "output"
+        }
     }
 
     call Globals.Globals as Globals
@@ -603,6 +618,9 @@ workflow SomaticCNVCallingControlFREEC{
         min_cnv_length = min_cnv_length,
         intersection_cutoff = intersection_cutoff,
         cnv_lcr_file = cnv_lcr_file,
+        tumor_coverage_cpn=tumor_cpn,
+        normal_coverage_cpn=normal_cpn,
+        ploidy = runControlFREEC.ploidy_value,
         docker = global.ug_vc_docker,
         monitoring_script = monitoring_script,
         no_address = no_address,
@@ -619,6 +637,9 @@ workflow SomaticCNVCallingControlFREEC{
          File tumor_ratio_bedgraph = runControlFREEC.tumor_ratio_bedgraph
          File tumor_CNVs_annotated_bed_file = FilterControlFREECCnvs.sample_cnvs_bed
          File tumor_CNVs_filtered_bed_file =  FilterControlFREECCnvs.sample_cnvs_filtered_bed
+         File coverage_plot = FilterControlFREECCnvs.coverage_plot
+         File dup_del_plot = FilterControlFREECCnvs.dup_del_plot
+         File copy_number_plot = FilterControlFREECCnvs.copy_number_plot
     }
 }
 task CreateMpileup {
@@ -990,6 +1011,8 @@ task runControlFREEC{
 
         #run controlFREEC
         /freec -conf ~{sample_name}.config.txt
+        
+        cat ~{base_input_tumor}_info.txt | grep "Output_Ploidy" | cut -f2 > ploidy_value.txt
     >>>
     runtime {
         preemptible: preemptible_tries
@@ -1010,6 +1033,7 @@ task runControlFREEC{
         File normal_ratio =  "~{base_input_tumor}_normal_ratio.txt"
         File tumor_ratio_bedgraph =  "~{base_input_tumor}_ratio.BedGraph"
         File tumor_ratio = "~{base_input_tumor}_ratio.txt"
+        Int ploidy_value =  read_int("ploidy_value.txt")
         File monitoring_log = "monitoring.log"
     }
 }
@@ -1021,6 +1045,9 @@ task FilterControlFREECCnvs {
         Int min_cnv_length
         Float intersection_cutoff
         File cnv_lcr_file
+        File tumor_coverage_cpn
+        File normal_coverage_cpn
+        Int ploidy
         String docker
         File monitoring_script
         Boolean no_address
@@ -1048,6 +1075,19 @@ task FilterControlFREECCnvs {
                 --intersection_cutoff ~{intersection_cutoff} \
                 --cnv_lcr_file ~{cnv_lcr_file} \
                 --min_cnv_length ~{min_cnv_length}
+        
+        cat ~{normal_coverage_cpn} | awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' | sed 's/^/chr/' > normal_coverage.cpn.bed
+        cat ~{tumor_coverage_cpn} | awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' | sed 's/^/chr/' > tumor_coverage.cpn.bed
+        cat ~{sample_name}.cnvs.filter.bed | sed 's/CN//' | awk '$4>~{ploidy}' > ~{sample_name}.cnvs.filter.DUP.bed
+        cat ~{sample_name}.cnvs.filter.bed | sed 's/CN//' | awk '$4<~{ploidy}' > ~{sample_name}.cnvs.filter.DEL.bed
+
+        python /VariantCalling/ugvc plot_cnv_results \
+            --germline_coverage normal_coverage.cpn.bed \
+            --tumor_coverage tumor_coverage.cpn.bed \
+            --duplication_cnv_calls ~{sample_name}.cnvs.filter.DUP.bed \
+            --deletion_cnv_calls ~{sample_name}.cnvs.filter.DEL.bed \
+            --sample_name ~{sample_name} \
+            --out_directory CNV_figures
     >>>
     runtime {
         preemptible: preemptible_tries
@@ -1060,6 +1100,9 @@ task FilterControlFREECCnvs {
     output {
         File sample_cnvs_bed = "~{sample_name}.cnvs.annotate.bed"
         File sample_cnvs_filtered_bed = "~{sample_name}.cnvs.filter.bed"
+        File coverage_plot = "CNV_figures/~{sample_name}.CNV.coverage.jpeg"
+        File dup_del_plot = "CNV_figures/~{sample_name}.dup_del.calls.jpeg"
+        File copy_number_plot = "CNV_figures/~{sample_name}.CNV.calls.jpeg"
         File monitoring_log = "monitoring.log"
     }
 }

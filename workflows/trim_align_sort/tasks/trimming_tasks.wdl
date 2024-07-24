@@ -17,7 +17,7 @@ task Trimmer {
     input {
         File monitoring_script
         File input_cram_bam
-        TrimmerParameters trimmer_parameters
+        TrimmerParameters parameters
         String base_file_name
         String docker
         Int disk_size = ceil(3 * size(input_cram_bam, "GB") + 20)
@@ -25,25 +25,27 @@ task Trimmer {
         Int preemptible_tries
         Boolean no_address
     }
-    Int memory_gb = select_first([trimmer_parameters.memory_gb, 8])
+    Int memory_gb = select_first([parameters.memory_gb, 8])
 
-    String trimmer_mode = if trimmer_parameters.untrimmed_reads_action == "" then "" else "--~{trimmer_parameters.untrimmed_reads_action}"
-    String trimmer_format_flag = if defined(trimmer_parameters.format) then '--format="~{trimmer_parameters.format}"' else ""
-    String trimmer_extra_args = if defined(trimmer_parameters.extra_args) then " ~{trimmer_parameters.extra_args}" else ""
-    Array[File] pattern_files = select_first([trimmer_parameters.pattern_files, []])
-    String local_description_file = select_first([trimmer_parameters.local_formats_description, "/trimmer/formats/formats.json"])
+    String trimmer_mode = if defined(parameters.untrimmed_reads_action) then "--~{parameters.untrimmed_reads_action}" else ""
+    String trimmer_format_flag = if defined(parameters.format) then '--format="~{parameters.format}"' else ""
+    String trimmer_extra_args = if defined(parameters.extra_args) then " ~{parameters.extra_args}" else ""
+    Array[File] pattern_files = select_first([parameters.pattern_files, []])
+    String local_description_file = select_first([parameters.local_formats_description, "/trimmer/formats/formats.json"])
+    String trimmer_prefix_sep = if defined(parameters.filename_prefix_sep) then "~{parameters.filename_prefix_sep}" else "_"
 
-    String output_file_name_prefix = if defined(trimmer_parameters.output_demux_format) then "~{base_file_name}_~{trimmer_parameters.output_demux_format}" else base_file_name
+    String output_file_name_prefix = if defined(parameters.output_demux_format) then "~{base_file_name}~{trimmer_prefix_sep}~{parameters.output_demux_format}" else base_file_name
     String output_file_name_suffix = ".trimmed.ucram"
     String output_file_name = "~{output_file_name_prefix}~{output_file_name_suffix}"
+    String output_trimmed_failed_file_name = if defined(parameters.output_failed_file_name_suffix) then "~{base_file_name}~{trimmer_prefix_sep}~{parameters.output_failed_file_name_suffix}" else "fail.cram"
     String output_fc_file_name = "~{output_file_name_prefix}.failure_codes.csv"
     String failure_codes_args = if trimmer_mode == "--discard" then "--failure-code-file ~{output_fc_file_name}" else "--failure-code-tag fc --failure-code-file ~{output_fc_file_name}"  # --discard and error codes don't mix
 
-    
+
     command <<<
         set -eo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-
+        touch ~{output_trimmed_failed_file_name}
         python <<CODE
         # validating inputs
         if "~{trimmer_mode}" not in ("", "--filter", "--discard"):
@@ -57,13 +59,13 @@ task Trimmer {
         # copy external pattern files to the formats base path
         for pattern_file in ~{sep=" " pattern_files}; do
             cp "$pattern_file" "$formats_base_path"
-        done 
+        done
 
         # determine the description file - required because it can be either a File or a String
         # Determine whether to use the file content or the string
         trimmer_description_file=""
-        if [[ -f "~{trimmer_parameters.formats_description}" ]]; then
-            trimmer_description_file="~{trimmer_parameters.formats_description}"
+        if [[ -f "~{parameters.formats_description}" ]]; then
+            trimmer_description_file="~{parameters.formats_description}"
         else
             trimmer_description_file="~{local_description_file}"
         fi
@@ -71,7 +73,7 @@ task Trimmer {
         # update the command according to the input file type (bam/cram)
         filename="~{input_cram_bam}"
         extension="${filename##*.}"
-        
+
         if [ "$extension" = "cram" ]; then
             trimmer \
             --input=~{input_cram_bam} \
@@ -86,7 +88,8 @@ task Trimmer {
             --progress \
             --vector \
             --nthreads=~{cpus} \
-            ~{if defined(trimmer_parameters.cram_reference) then "--reference" else ""} ~{default="" trimmer_parameters.cram_reference} \
+            ~{if defined(parameters.output_failed_file_name_suffix) then "--failure-file=~{output_trimmed_failed_file_name}" else ""} \
+            ~{if defined(parameters.cram_reference) then "--reference" else ""} ~{default="" parameters.cram_reference} \
             --cram true \
             --output ~{output_file_name}
         else
@@ -103,11 +106,18 @@ task Trimmer {
             --progress \
             --vector \
             --nthreads=~{cpus} \
-            ~{if defined(trimmer_parameters.cram_reference) then "--reference" else ""} ~{default="" trimmer_parameters.cram_reference} \
+            ~{if defined(parameters.output_failed_file_name_suffix) then "--failure-file=~{output_trimmed_failed_file_name}" else ""} \
+            ~{if defined(parameters.cram_reference) then "--reference" else ""} ~{default="" parameters.cram_reference} \
             --cram true \
             --output ~{output_file_name}
         fi
 
+        # If remove_small_files is set to true then remove trimmed ucrams under 1Gb in file size
+        output_file_name_suffix=~{output_file_name_suffix} # weird line, but otherwise find does not work
+
+        if [ ~{parameters.remove_small_files} = true ]; then
+            find . -type f -size -1000M -name "*${output_file_name_suffix}" | xargs -I {} rm {}
+        fi
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"
@@ -123,6 +133,7 @@ task Trimmer {
         Array[File] trimmed_ucram_list = glob("*~{output_file_name_suffix}")
         File trimmer_stats = "trimmer_stats.csv"
         File trimmer_failure_codes_csv = "~{output_fc_file_name}"
+        File? output_trimmed_failed_file = "~{output_trimmed_failed_file_name}"
         File monitoring_log = "monitoring.log"
         Array[File?] histogram = glob("*histogram.csv")  # aim for this to be only one file (determined by the extra_args) to simplify downstream processing
         Array[File?] histogram_extra = glob("*histogram_extra.csv")  # aim for this to be only one file (determined by the extra_args) to simplify downstream processing

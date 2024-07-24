@@ -9,6 +9,8 @@ The steps of the pipeline are as following:
 -Run gridss.IdentifyVariants and gridss.AnnotateVariants
 -Run R script / GRIPSS for filtering and linkage the variants
 
+<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>
+
 ## Inputs
 
 ### Required inputs
@@ -171,6 +173,21 @@ The steps of the pipeline are as following:
         <b>SVPipeline.config_file_string</b><br />
         <i>String &mdash; Default: None</i><br />
          Gridss config file content 
+</p>
+<p name="SVPipeline.create_assembly_memory_override">
+        <b>SVPipeline.create_assembly_memory_override</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+         memory override for create_assembly task 
+</p>
+<p name="SVPipeline.annotate_variants_cpu_override">
+        <b>SVPipeline.annotate_variants_cpu_override</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+         cpu override for annotate_variants task 
+</p>
+<p name="SVPipeline.annotate_variants_memory_override">
+        <b>SVPipeline.annotate_variants_memory_override</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+         memory override for annotate_variants task 
 </p>
 <p name="SVPipeline.scatter_intervals_break">
         <b>SVPipeline.scatter_intervals_break</b><br />

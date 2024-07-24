@@ -31,8 +31,12 @@ task Sorter {
     Int preemptible_tries_final = if (size(input_file, "GB") < 250) then preemptible_tries else 0
 
     String demux_output_path = "demux_output/"
-    String timestamp = "000" # use this to override sorter output timestemp
-    String run_id_override = "101" # use this to override sorter output runid (used only for the output folder structure)
+    String output_path_demux = select_first([sorter_params.demux_output_path,"{runID}-{outputGroup}/{runID}-{outputGroup}"])
+    String output_group_demux = select_first([sorter_params.demux_output_group,base_file_name])
+
+    String timestamp = "" # use this to override sorter output timestemp
+    String run_id_override = "output" # use this to override sorter output runid (used only for the output folder structure)
+
     String sorter_out_dir = "sorter_output"
     String sorter_output_path = "~{sorter_out_dir}/~{run_id_override}-~{timestamp}"
     String demux_align_flag = if defined(sorter_params.demux_align) then "--align=~{sorter_params.demux_align}" else "--align=true"
@@ -63,13 +67,13 @@ task Sorter {
         demux \
             --input=- \
             --output-dir=~{demux_output_path} \
-            --runid=~{run_id_override} \
+            --runid=~{base_file_name} \
             --nthreads ~{cpu} \
             --progress \
             --reference ~{reference_fasta} \
             --mark-duplicates=~{sorter_params.mark_duplicates} \
-            --output-group=~{base_file_name} \
-            --output-path={runID}-{outputGroup}/{runID}-{outputGroup} \
+            --output-group=~{output_group_demux} \
+            --output-path=~{output_path_demux} \
             ~{"--umi=" + sorter_params.umi_tag} \
             ~{demux_align_flag} \
             $coverage_intervals_flag \
@@ -87,13 +91,6 @@ task Sorter {
         ls -R ~{sorter_output_path}/
         q_table.py ~{sorter_output_path}/
 
-        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.cram ~{base_file_name}.cram
-        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.cram.crai ~{base_file_name}.cram.crai
-        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.csv ~{base_file_name}.csv
-        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}.json ~{base_file_name}.json
-        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}_0.bedGraph.gz ~{base_file_name}_0.bedGraph.gz
-        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}_1.bedGraph.gz ~{base_file_name}_1.bedGraph.gz
-        mv ~{sorter_output_path}/~{run_id_override}-~{base_file_name}/~{run_id_override}-~{base_file_name}_0.bedGraph.gz.extents.tsv ~{base_file_name}_0.bedGraph.gz.extents.tsv
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"
@@ -106,13 +103,13 @@ task Sorter {
     }
     output {
         File monitoring_log = "monitoring.log"
-        File sorted_cram = "~{base_file_name}.cram"
-        File sorted_cram_index = "~{base_file_name}.cram.crai"
-        File sorter_stats_csv = "~{base_file_name}.csv"
-        File sorter_stats_json = "~{base_file_name}.json"
-        File sorter_out_bedgraph_mapq0 = "~{base_file_name}_0.bedGraph.gz"
-        File sorter_out_bedgraph_mapq1 = "~{base_file_name}_1.bedGraph.gz"
-        File sorter_out_bedgraph_extents = "~{base_file_name}_0.bedGraph.gz.extents.tsv"
+        File sorted_cram = glob("~{sorter_output_path}/~{base_file_name}*/~{base_file_name}*.cram")[0]
+        File sorted_cram_index = glob("~{sorter_output_path}/~{base_file_name}*/~{base_file_name}*.cram.crai")[0]
+        File sorter_stats_csv = glob("~{sorter_output_path}/~{base_file_name}*/~{base_file_name}*.csv")[0]
+        File sorter_stats_json = glob("~{sorter_output_path}/~{base_file_name}*/~{base_file_name}*.json")[0]
+        File sorter_out_bedgraph_mapq0 = glob("~{sorter_output_path}/~{base_file_name}*/~{base_file_name}*_0.bedGraph.gz")[0]
+        File sorter_out_bedgraph_mapq1 = glob("~{sorter_output_path}/~{base_file_name}*/~{base_file_name}*_1.bedGraph.gz")[0]
+        File sorter_out_bedgraph_extents = glob("~{sorter_output_path}/~{base_file_name}*/~{base_file_name}*_0.bedGraph.gz.extents.tsv")[0]
     }
 }
 

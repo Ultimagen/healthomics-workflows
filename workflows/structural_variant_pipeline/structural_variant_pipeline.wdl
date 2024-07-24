@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.12.0" # !UnusedDeclaration
+        String pipeline_version = "1.13.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -77,6 +77,9 @@ workflow SVPipeline {
         Int num_shards
         Boolean no_address = true
         Int? preemptible_tries_override
+        Int? create_assembly_memory_override
+        Int? annotate_variants_cpu_override
+        Int? annotate_variants_memory_override
         # Used for running on other clouds (aws)
         String? cloud_provider_override
         Int scatter_intervals_break # Maximal resolution for scattering intervals
@@ -91,6 +94,7 @@ workflow SVPipeline {
         #@wv realign_mapq >= 0
         #@wv scatter_intervals_break > 0
         #@wv reference_name in {"38","19"}
+
         # tumor + germline
         #@wv is_somatic -> defined(input_tumor_crams) and len(input_tumor_crams)>0
         #@wv is_somatic -> defined(input_tumor_crams_indexes) and len(input_tumor_crams_indexes)>0
@@ -102,7 +106,7 @@ workflow SVPipeline {
 
     }
     meta {
-        description : "Runs Structural variant pipeline\nThis pipeline supports germline and somatic modes\nThe input of that pipeline is cram files and the output is vcf file\nThe steps of the pipeline are as following:\n-Create an assembly file out of the cram files\n-Run UA alingnment on that\n-Fix the UA alignment which are secondarily mapped to decoy or with low mapq\n-Run gridss.IdentifyVariants and gridss.AnnotateVariants\n-Run R script / GRIPSS for filtering and linkage the variants"
+        description : "Runs Structural variant pipeline\nThis pipeline supports germline and somatic modes\nThe input of that pipeline is cram files and the output is vcf file\nThe steps of the pipeline are as following:\n-Create an assembly file out of the cram files\n-Run UA alingnment on that\n-Fix the UA alignment which are secondarily mapped to decoy or with low mapq\n-Run gridss.IdentifyVariants and gridss.AnnotateVariants\n-Run R script / GRIPSS for filtering and linkage the variants\n\n<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>"
         author: "Ultima Genomics"
         WDL_AID: { exclude: [
             "pipeline_version",
@@ -111,6 +115,7 @@ workflow SVPipeline {
             "dummy_input_for_call_caching",
             "monitoring_script_input",
             "CreateAssembly.no_address",
+            "CreateAssembly.memory_override",
             "MergeBams.disk_size",
             "AlignWithUA.disk_size",
             "AlignWithUA.cpu",
@@ -132,7 +137,9 @@ workflow SVPipeline {
             "AnnotateVariants.assembly_metrics",
             "AnnotateVariants.germline_metrics_folder",
             "AnnotateVariants.tumor_metrics_folder",
-            "AnnotateVariants.assembly_metrics_folder"
+            "AnnotateVariants.assembly_metrics_folder",
+            "AnnotateVariants.cpu_override",
+            "AnnotateVariants.memory_override"
             ]}
     }
     parameter_meta {
@@ -231,7 +238,7 @@ workflow SVPipeline {
             help: "run in somatic mode or in germline mode",
             category:"required"
         }
-        
+
         reference_name: {
             type: "Boolean",
             help: "Can be 38 or 19",
@@ -277,11 +284,10 @@ workflow SVPipeline {
             help: "Whether to convert the output vcf to the region format or not, default True",
             category:"optional"
         }
-
         cloud_provider_override: {
-        type: "String",
-        help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
-        category: "optional"
+            type: "String",
+            help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
+            category: "optional"
         }
         num_shards: {
             type: "Int",
@@ -289,9 +295,24 @@ workflow SVPipeline {
             category:"required"
         }
         scatter_intervals_break: {
-        type: "Int",
-        help: "Maximal resolution for scattering intervals",
-        category: "advanced"
+            type: "Int",
+            help: "Maximal resolution for scattering intervals",
+            category: "advanced"
+        }
+        create_assembly_memory_override: {
+            type: "Int",
+            help: "memory override for create_assembly task",
+            category: "advanced"
+        }
+        annotate_variants_memory_override: {
+            type: "Int",
+            help: "memory override for annotate_variants task",
+            category: "advanced"
+        }
+        annotate_variants_cpu_override: {
+            type: "Int",
+            help: "cpu override for annotate_variants task",
+            category: "advanced"
         }
         output_vcf: {
             type: "File",
@@ -400,7 +421,8 @@ workflow SVPipeline {
                 number_of_shards = ScatterIntervalList.interval_count,
                 cloud_provider_override = cloud_provider_override,
                 no_address = no_address,
-                preemptible_tries = preemptibles
+                preemptible_tries = preemptibles,
+                memory_override = create_assembly_memory_override
         }
     }
 
@@ -476,7 +498,7 @@ workflow SVPipeline {
 
     if (defined(prefilter_query)) {
         call PreFilterCandidates{
-            input: 
+            input:
                 input_vcf = IdentifyVariants.identify_vcf,
                 filter_string = select_first([prefilter_query]),
                 output_vcf_prefix = base_file_name,
@@ -489,7 +511,7 @@ workflow SVPipeline {
 
     if(is_aws)
     {
-            
+
             if (length(input_germline_crams)>0) {
                 call CollectGridssMetrics as germline_CollectGridssMetrics {
                     input:
@@ -528,7 +550,7 @@ workflow SVPipeline {
                 preemptible_tries = preemptibles,
                 no_address = no_address
             }
-            
+
             call AnnotateVariants as aws_AnnotateVariants {
             input:
                 input_vcf = select_first([PreFilterCandidates.filtered_vcf, IdentifyVariants.identify_vcf]),
@@ -555,7 +577,9 @@ workflow SVPipeline {
                 cloud_provider_override = cloud_provider_override,
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
-                no_address = no_address
+                no_address = no_address,
+                cpu_override = annotate_variants_cpu_override,
+                memory_override = annotate_variants_memory_override,
             }
     }
     if(!is_aws){
@@ -647,7 +671,8 @@ workflow SVPipeline {
                 reference_name = reference_name,
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
-                no_address = no_address
+                no_address = no_address,
+                cloud_provider_override = cloud_provider_override
         }
     }
     output {
@@ -682,18 +707,20 @@ task CreateAssembly {
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
+        Int? memory_override
     }
     Int disk_size = 3*ceil((if defined(input_germline_crams) then size(select_first([input_germline_crams]),"GB")/number_of_shards else 0) +
                     (if is_somatic then size(select_first([input_tumor_crams]), "GB")/number_of_shards else 0)  +
                        size(references.ref_fasta,"GB")) + 10
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
     Boolean defined_germline = if(defined(input_germline_crams)) then true else false
-    
+    Int mem = select_first([memory_override,4])
+
     command <<<
         set -o pipefail
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        
+
         # convert interval list to bed file
         gatk IntervalListToBed -I ~{interval} -O interval.bed
 
@@ -703,13 +730,13 @@ task CreateAssembly {
             tumor_index=~{sep=',' input_tumor_crams_indexes}
             germline=~{sep=',' input_germline_crams}
             germline_index=~{sep=',' input_germline_crams_indexes}
-            
+
             echo 'Input files are:'
                 echo $tumor
                 echo $tumor_index
                 echo $germline
                 echo $germline_index
-            
+
             if ~{is_somatic}
             then
                 input_string="~{true='$tumor;$germline' false='$tumor' defined_germline}"
@@ -737,8 +764,8 @@ task CreateAssembly {
             --prog \
             --interval-nreads 10000 \
             --sv
-        
-        else        
+
+        else
             if ~{defined(input_germline_crams)}
             then
                 gatk --java-options "-Xms2G" PrintReads \
@@ -776,7 +803,7 @@ task CreateAssembly {
             --interval-nreads 10000 \
             --sv
 
-        fi 
+        fi
 
         samtools view -bS ~{output_prefix}_hap_out.sam > ~{output_prefix}_hap_out.bam
         samtools sort ~{output_prefix}_hap_out.bam -o ~{output_prefix}_hap_out_sorted.bam
@@ -792,7 +819,7 @@ task CreateAssembly {
       }
     }
     runtime {
-        memory: "8 GB"
+        memory: mem + " GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: assembly_docker
@@ -839,7 +866,7 @@ task RevertLowMAPQUASecondaryAlignment {
         samtools index ~{outptut_prefix}.bam
     >>>
     runtime {
-        memory: "4 GB"
+        memory: "4 GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
@@ -879,8 +906,8 @@ task LongHomopolymersAlignmnet {
 
         >>>
         runtime {
-            memory: "8 GB"
-            cpu: 10
+            memory: "16 GiB"
+            cpu: 8
             disks: "local-disk " + disk_size + " HDD"
             docker: gridss_docker
             preemptible: preemptible_tries
@@ -910,6 +937,7 @@ task IdentifyVariants {
         Boolean no_address
     }
     Int disk_size = ceil((if defined(input_crams) then size(select_first([input_crams]), "GB") else 0) + 2*size(assembly,"GB") + size(references.ref_fasta,"GB")) + 20
+    Int mem = 16
     command <<<
         set -o pipefail
         set -e
@@ -928,21 +956,21 @@ task IdentifyVariants {
             file.write(output_text)
         CODE
 
-        java -Xmx10g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.IdentifyVariants \
+        java -Xmx~{mem-2}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.IdentifyVariants \
         SAMPLE_NAMES=~{sep=' SAMPLE_NAMES=' sample_names} \
         R=~{references.ref_fasta} \
         O=~{output_vcf_prefix}.vcf \
         ~{"BLACKLIST= " + blacklist_bed} \
         ASSEMBLY=~{assembly} \
         C=gridss.config
-        
+
         bcftools view ~{output_vcf_prefix}.vcf -Oz -o ~{output_vcf_prefix}.vcf.gz
         bcftools index -t ~{output_vcf_prefix}.vcf.gz
 
     >>>
     runtime {
-        memory: "32 GB"
-        cpu: 1
+        memory: mem + " GiB"
+        cpu: 2
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
         preemptible: preemptible_tries
@@ -955,7 +983,7 @@ task IdentifyVariants {
     }
 }
 
-task PreFilterCandidates { 
+task PreFilterCandidates {
     input {
         File input_vcf
         String filter_string
@@ -974,7 +1002,7 @@ task PreFilterCandidates {
         bcftools index -t ~{output_vcf_prefix}.vcf.gz
     >>>
     runtime{
-        memory: "4 GB"
+        memory: "4 GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
@@ -994,20 +1022,20 @@ task CollectGridssMetrics{
         File input_cram_index
         References references
         String? interval
-        
+
         String gridss_docker
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
     }
-    
+
     Int disk_size = ceil(size(input_cram,"GB") + size(input_cram_index,"GB") + size(references.ref_fasta,"GB")) + 20
     String output_file = input_cram + ".gridss.working/" + basename(input_cram)
     String output_folder = input_cram + ".gridss.working/"
-    Int mem = 16
-    Int java_mem = 14
-    Int cpu = 4
-    
+    Int mem = 8
+    Int java_mem = mem - 2
+    Int cpu = 2
+
     command{
 set -o pipefail
 set -e
@@ -1042,7 +1070,7 @@ VERBOSITY=INFO \
       }
     }
     runtime {
-        memory: mem + " GB"
+        memory: mem + " GiB"
         cpu: cpu
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
@@ -1084,6 +1112,8 @@ task AnnotateVariants {
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
+        Int? cpu_override
+        Int? memory_override
     }
     Int disk_size = 3*ceil(
             (if defined(input_germline_crams) then size(select_first([input_germline_crams]),"GB")/number_of_shards else 0) +
@@ -1091,17 +1121,16 @@ task AnnotateVariants {
             size(assembly,"GB")/number_of_shards + size(references.ref_fasta,"GB")) + 10
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
     Boolean defined_germline = if(defined(input_germline_crams)) then true else false
-    Int cpu = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then 16 else 1
-    Int mem = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then 100 else 32
-    Int aws_gridss_cpu = 14
-    
+    Int cpu = select_first([cpu_override, if(is_aws) then 8 else 1])
+    Int mem = select_first([memory_override, if(!is_aws) then 32 else if(!is_somatic) then 16 else 64])
     #variables for metrics files reordering
     Boolean defined_germline_metrics = if(defined(germline_metrics_folder)) then true else false
     Boolean defined_tumor_metrics = if(defined(tumor_metrics_folder)) then true else false
     Boolean defined_assembly_metrics = if(defined(assembly_metrics_folder)) then true else false
-            
+
     command <<<
         set -o pipefail
+        set -o xtrace
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         python3 <<CODE
@@ -1166,7 +1195,7 @@ task AnnotateVariants {
             echo $input_germline_crams_string
 
 
-            java -Xmx~{mem}g -Xms~{mem}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
+            java -Xmx~{mem-2}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
                 INPUT_VCF=~{input_vcf} \
                 R=~{references.ref_fasta} \
                 $input_tumor_crams_string \
@@ -1175,8 +1204,8 @@ task AnnotateVariants {
                 C=gridss.config \
                 ASSEMBLY=~{assembly} \
                 OUTPUT_VCF=~{output_vcf_prefix}.ann.vcf \
-                THREADS=~{aws_gridss_cpu}
-            
+                THREADS=~{cpu}
+
         else
             # convert interval list to bed file
             java -Xms4g -jar /opt/gatk/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar  \
@@ -1220,7 +1249,7 @@ task AnnotateVariants {
 
         samtools index assembly_partial.cram
 
-            java -Xmx~{mem}g -Xms~{mem}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
+            java -Xmx~{mem-2}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
             INPUT_VCF=$input_vcf \
             R=~{references.ref_fasta} \
             ~{if is_somatic then "I=input_tumor.cram" else ""} \
@@ -1244,7 +1273,7 @@ task AnnotateVariants {
       }
     }
     runtime {
-        memory: mem + " GB"
+        memory: mem + " GiB"
         cpu: cpu
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
@@ -1282,7 +1311,7 @@ task GermlineLinkVariants {
             --scriptdir /opt/gridss/
     >>>
     runtime {
-        memory: "64 GB"
+        memory: "8 GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
@@ -1324,6 +1353,8 @@ task SomaticGripss {
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
+        # todo add xmx and try reduce memory
+
         mkdir gripss_output
         java -jar /opt/wtsi-cgp/java/gripss.jar \
         -vcf ~{input_vcf} \
@@ -1344,7 +1375,7 @@ task SomaticGripss {
     >>>
 
     runtime {
-        memory: "64 GB"
+        memory: "64 GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: gripss_docker
@@ -1368,7 +1399,11 @@ task ConvertVcfFormat {
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
+        String? cloud_provider_override
     }
+    Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
+    Int cpu = if(is_aws) then 4 else 8
+    Int mem = if(is_aws) then 16 else 64
     Int disk_size = ceil(2*size(input_vcf,"GB")) + 10
     command <<<
         set -o pipefail
@@ -1379,12 +1414,12 @@ task ConvertVcfFormat {
             --input_vcf ~{input_vcf} \
             --output_vcf ~{output_vcf_prefix}.vcf \
             --reference BSgenome.Hsapiens.UCSC.hg~{reference_name} \
-            --n_jobs 8
+            --n_jobs ~{cpu}
 
     >>>
     runtime {
-        memory: "64 GB"
-        cpu: 8
+        memory: mem + " GiB"
+        cpu: cpu
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
         preemptible: preemptible_tries
@@ -1396,5 +1431,3 @@ task ConvertVcfFormat {
         File output_vcf_index = "~{output_vcf_prefix}.vcf.bgz.tbi"
     }
 }
-
-

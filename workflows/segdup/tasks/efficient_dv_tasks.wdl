@@ -176,7 +176,6 @@ task UGMakeExamples{
 
     # parallel processing: run the tool in different process, each on a different interval part
     pids=()
-    interval_parts=()
     for interval_part in $(ls interval_*.bed | sort); do
       part_number=$(echo "$interval_part" | grep -o -E '[0-9]+') #extract the part number from the file name
       tool \
@@ -204,20 +203,20 @@ task UGMakeExamples{
         ~{true="--cap-at-optimal-coverage " false="" cap_at_optimal_coverage} \
         ~{true="--prioritize-alt-supporting-reads " false="" prioritize_alt_supporting_reads} \
         --cycle-examples-min 100000 \
+        --prefix-logging-with "${part_number}>> " \
         ~{ug_make_examples_extra_args} \
         ~{true="--progress" false="" log_progress} \
          &
         
       # Save the PID of the process
       pids+=($!)
-      interval_parts+=("$interval_part")
     done
 
   # Wait for the process running the tool to finish (don't wait for the process running the monitor log)
   # if one process is failed, kill all the other processes and exit with error
   for pid in ${pids[*]}; do
     if ! wait "$pid"; then
-      echo "ERROR occurred on interval part ${interval_parts[$idx]}. Killing all other processes an exiting."
+      echo "ERROR occurred. View error using: *** for prefix in \"00>>\" \"01>>\"; do cat log | grep \"^\$prefix\" | tail; done; *** Killing all other processes and exiting."
       for other_pid in ${pids[*]}; do
         if [ "$other_pid" != "$pid" ]; then
           kill "$other_pid"
@@ -239,7 +238,7 @@ task UGMakeExamples{
     touch "~{output_prefix}_realign.cram"
     touch "~{output_prefix}_realign.cram.crai"
 
-    #touch "~{output_prefix}.gvcf.tfrecord.gz"
+  ls -lh *tfrecord*
 
   >>>
   runtime {

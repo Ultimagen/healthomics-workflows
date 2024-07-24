@@ -601,3 +601,51 @@ task ExtractCoverageOverVcfFiles {
       docker: docker
     }
 }
+
+task PileupFeatureMapInterval {
+  input {
+    File featuremap
+    File featuremap_index
+    String output_vcf_file_name
+    File interval_list
+    Int disk_size
+    Int memory_gb
+    Int cpus
+    Int preemptibles
+    Int? min_qual
+    String? sample_name
+    String? qual_agg_func
+    File monitoring_script
+    String docker
+  }
+
+  command <<<
+    set -eo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+    source ~/.bashrc
+    conda activate genomics.py3
+
+    echo "********** Pileups featuremap into a single locus per entry **********"
+    python /VariantCalling/ugvc pileup_featuremap \
+      --featuremap ~{featuremap} \
+      --interval_list ~{interval_list} \
+      --output_vcf "~{output_vcf_file_name}.vcf.gz" \
+      ~{true="--min_qual " false="" defined(min_qual)}~{min_qual} \
+      ~{true="--sample_name " false="" defined(sample_name)}~{sample_name} \
+      ~{true="--qual_agg_func " false="" defined(qual_agg_func)}~{qual_agg_func}\
+  >>>
+
+  runtime {
+    preemptible: "~{preemptibles}"
+    cpu: "~{cpus}"
+    memory: "~{memory_gb} GB"
+    disks: "local-disk " + ceil(disk_size) + " HDD"
+    docker: docker
+  }
+
+  output {
+    File monitoring_log = "monitoring.log"
+    File pileup_file = "~{output_vcf_file_name}.vcf.gz"
+    File pileup_file_index = "~{output_vcf_file_name}.vcf.gz.tbi"
+  }
+}
