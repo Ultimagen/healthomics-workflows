@@ -44,7 +44,7 @@
         "optional": false
     },
     "SVPipeline.input_germline_crams": {
-        "description": "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
+        "description": "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only, default []",
         "optional": true
     },
     "SVPipeline.input_germline_crams_indexes": {

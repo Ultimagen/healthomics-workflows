@@ -78,7 +78,7 @@ workflow SingleCell {
 
         String? fastqc_adapter
         File? fastqc_limits
-        String pipeline_version = "1.13.1" # !UnusedDeclaration
+        String pipeline_version = "1.13.2" # !UnusedDeclaration
         String? downstream_analysis
         # STAR and STAR solo parameters
         StarSoloParams? star_solo_params

@@ -177,7 +177,7 @@ task FeatureMapCreate {
       localization_optional: true
     }
   }
-
+  String interval_list_basename = basename(interval_list, ".interval_list")
   command <<<
     set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -204,7 +204,7 @@ task FeatureMapCreate {
     java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms~{memory_gb-2}g -jar ~{gitc_path}GATK_ultima.jar  \
       VariantFiltration \
       -V tmp.vcf.gz \
-      -O "~{output_basename}.vcf.gz" \
+      -O "~{output_basename}.~{interval_list_basename}.vcf.gz" \
       -R "~{references.ref_fasta}"  \
       --intervals "~{interval_list}"
     echo "***************************** Done *****************************"
@@ -237,8 +237,8 @@ task FeatureMapCreate {
   }
   output{
     File monitoring_log = "monitoring.log"
-    File featuremap = "~{output_basename}.vcf.gz"
-    File featuremap_index = "~{output_basename}.vcf.gz.tbi"
+    File featuremap = "~{output_basename}.~{interval_list_basename}.vcf.gz"
+    File featuremap_index = "~{output_basename}.~{interval_list_basename}.vcf.gz.tbi"
   }
 }
 
@@ -259,7 +259,7 @@ task FeatureMapProcess {
     File monitoring_script
   }
   
-  String annotated_featuremap_vcf = "~{output_basename}.featuremap.annotated.vcf.gz"
+  String annotated_featuremap_vcf = basename(featuremap, ".vcf.gz") + ".annotated.vcf.gz"
   String single_sub_pref = "~{output_basename}.single_substitution"
 
   command <<<
@@ -354,6 +354,7 @@ task FeatureMapMerge {
 
   command <<<
     set -eo pipefail
+    set -x
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     
     source ~/.bashrc

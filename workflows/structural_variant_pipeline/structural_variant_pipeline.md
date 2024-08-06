@@ -86,7 +86,7 @@ The steps of the pipeline are as following:
 <p name="SVPipeline.input_germline_crams">
         <b>SVPipeline.input_germline_crams</b><br />
         <i>Array[File] &mdash; Default: []</i><br />
-        Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only
+        Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only, default []
 </p>
 <p name="SVPipeline.input_germline_crams_indexes">
         <b>SVPipeline.input_germline_crams_indexes</b><br />

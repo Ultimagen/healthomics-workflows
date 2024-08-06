@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.13.1" # !UnusedDeclaration
+  String pipeline_version = "1.13.2" # !UnusedDeclaration
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -345,7 +345,7 @@ parameter_meta {
       preemptible_tries = preemptibles,
       monitoring_script = monitoring_script,  #!FileCoercion
   }
-  Int mean_coverage = GetMeanCoverageFromSorterStats.mean_coverage
+  Float mean_coverage = GetMeanCoverageFromSorterStats.mean_coverage
   Int featuremap_shard_number_calc = select_first([featuremap_scatter_count_override, ceil(mean_coverage / 1.4)])
   # patch because there is no "max" function...
   if (featuremap_shard_number_calc<2) {

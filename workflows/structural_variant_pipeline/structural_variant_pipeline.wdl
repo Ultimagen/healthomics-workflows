@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.13.1" # !UnusedDeclaration
+        String pipeline_version = "1.13.2" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -99,10 +99,10 @@ workflow SVPipeline {
         #@wv is_somatic -> defined(input_tumor_crams) and len(input_tumor_crams)>0
         #@wv is_somatic -> defined(input_tumor_crams_indexes) and len(input_tumor_crams_indexes)>0
         # germline only
-        #@wv not is_somatic -> defined(input_germline_crams) and len(input_germline_crams)>0
-        #@wv not is_somatic -> defined(input_germline_crams_indexes) and len(input_germline_crams_indexes)>0
-        #@wv not is_somatic -> not defined(input_tumor_crams) or len(input_tumor_crams)==0
-        #@wv not is_somatic -> not defined(input_tumor_crams_indexes) or len(input_tumor_crams_indexes)==0
+        #@wv not is_somatic -> len(input_germline_crams)>0
+        #@wv not is_somatic -> len(input_germline_crams_indexes)>0
+        #@wv not is_somatic -> len(input_tumor_crams)==0
+        #@wv not is_somatic -> len(input_tumor_crams_indexes)==0
 
     }
     meta {
@@ -150,7 +150,7 @@ workflow SVPipeline {
         }
         input_germline_crams: {
         type: "File",
-        help: "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
+        help: "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only, default []",
         category: "optional"
         }
         input_germline_crams_indexes: {
@@ -689,10 +689,10 @@ workflow SVPipeline {
 
 task CreateAssembly {
     input {
-        Array[File]? input_germline_crams
-        Array[File]? input_germline_crams_indexes
-        Array[File]? input_tumor_crams
-        Array[File]? input_tumor_crams_indexes
+        Array[File] input_germline_crams
+        Array[File] input_germline_crams_indexes
+        Array[File] input_tumor_crams
+        Array[File] input_tumor_crams_indexes
         Boolean is_somatic
         String output_prefix
         String assembly_docker
@@ -709,11 +709,11 @@ task CreateAssembly {
         Boolean no_address
         Int? memory_override
     }
-    Int disk_size = 3*ceil((if defined(input_germline_crams) then size(select_first([input_germline_crams]),"GB")/number_of_shards else 0) +
-                    (if is_somatic then size(select_first([input_tumor_crams]), "GB")/number_of_shards else 0)  +
-                       size(references.ref_fasta,"GB")) + 10
+    Int disk_size = 3*ceil(size(input_germline_crams,"GB")/number_of_shards +
+                    (size(input_tumor_crams, "GB")/number_of_shards)  +
+                       size(references.ref_fasta,"GB") + 10)
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
-    Boolean defined_germline = if(defined(input_germline_crams)) then true else false
+    Boolean defined_germline = if(length(input_germline_crams)>0) then true else false
     Int mem = select_first([memory_override,4])
 
     command <<<
@@ -766,7 +766,7 @@ task CreateAssembly {
             --sv
 
         else
-            if ~{defined(input_germline_crams)}
+            if ~{defined_germline}
             then
                 gatk --java-options "-Xms2G" PrintReads \
                 -I ~{sep=' -I ' input_germline_crams} \
@@ -789,8 +789,8 @@ task CreateAssembly {
             fi
 
             tool \
-            ~{if is_somatic then (if defined(input_germline_crams) then "--input input_tumor.cram\\;input_germline.cram" else "--input input_tumor.cram") else "--input input_germline.cram"} \
-            ~{if is_somatic then (if defined(input_germline_crams) then "--cram-index input_tumor.cram.crai\\;input_germline.cram.crai" else "--cram-index input_tumor.cram.crai") else "--cram-index input_germline.cram.crai"} \
+            ~{if is_somatic then (if defined_germline then "--input input_tumor.cram\\;input_germline.cram" else "--input input_tumor.cram") else "--input input_germline.cram"} \
+            ~{if is_somatic then (if defined_germline then "--cram-index input_tumor.cram.crai\\;input_germline.cram.crai" else "--cram-index input_tumor.cram.crai") else "--cram-index input_germline.cram.crai"} \
             ~{if is_somatic then "--somatic" else ""} \
             --output ~{output_prefix} \
             --ref ~{references.ref_fasta} \
@@ -1088,10 +1088,10 @@ task AnnotateVariants {
     input {
         File input_vcf
         File input_vcf_index
-        Array[File]? input_germline_crams
-        Array[File]? input_germline_crams_indexes
-        Array[File]? input_tumor_crams
-        Array[File]? input_tumor_crams_indexes
+        Array[File] input_germline_crams
+        Array[File] input_germline_crams_indexes
+        Array[File] input_tumor_crams
+        Array[File] input_tumor_crams_indexes
         References references
         File assembly
         File assembly_index
@@ -1116,11 +1116,11 @@ task AnnotateVariants {
         Int? memory_override
     }
     Int disk_size = 3*ceil(
-            (if defined(input_germline_crams) then size(select_first([input_germline_crams]),"GB")/number_of_shards else 0) +
-            (if is_somatic then size(select_first([input_tumor_crams]), "GB")/number_of_shards else 0) +
+            size(input_germline_crams,"GB")/number_of_shards +
+            size(input_tumor_crams, "GB")/number_of_shards +
             size(assembly,"GB")/number_of_shards + size(references.ref_fasta,"GB")) + 10
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
-    Boolean defined_germline = if(defined(input_germline_crams)) then true else false
+    Boolean defined_germline = if(length(input_germline_crams)>0) then true else false
     Int cpu = select_first([cpu_override, if(is_aws) then 8 else 1])
     Int mem = select_first([memory_override, if(!is_aws) then 32 else if(!is_somatic) then 16 else 64])
     #variables for metrics files reordering
@@ -1228,7 +1228,7 @@ task AnnotateVariants {
                 samtools index input_tumor.cram
             fi
 
-            if ~{defined(input_germline_crams)}
+            if ~{defined_germline}
             then
                 java -Xms4g -jar /opt/gatk/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar  \
                     PrintReads \
@@ -1253,7 +1253,7 @@ task AnnotateVariants {
             INPUT_VCF=$input_vcf \
             R=~{references.ref_fasta} \
             ~{if is_somatic then "I=input_tumor.cram" else ""} \
-            ~{if defined(input_germline_crams) then "I=input_germline.cram" else ""} \
+            ~{if defined_germline then "I=input_germline.cram" else ""} \
             ~{"BLACKLIST= " + blacklist_bed} \
             C=gridss.config \
             ASSEMBLY=assembly_partial.cram \
