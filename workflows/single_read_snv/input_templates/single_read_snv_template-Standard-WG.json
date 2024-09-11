@@ -26,6 +26,7 @@
     ],
     "SingleReadSNV.min_coverage_to_train_model": 8.0,
     "SingleReadSNV.preemptible_tries": 1,
+    "SingleReadSNV.raise_exceptions_in_report": false,
     "SingleReadSNV.categorical_features": {
         "ref": [
             "A",
@@ -77,6 +78,7 @@
         ]
     },
     "SingleReadSNV.single_read_snv_params": {
+        "ppmSeq_adapter_version": "None",
         "numerical_features": [
             "X_SCORE",
             "X_EDIST",

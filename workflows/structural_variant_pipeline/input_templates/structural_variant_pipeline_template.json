@@ -35,6 +35,7 @@
     "SVPipeline.config_file_string": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5",
     "SVPipeline.exclude_filters": "SHORT_SR_NORMAL",
     "SVPipeline.symbolic_vcf_format": true,
+    "SVPipeline.single_strand_filter": true,
     "germline": {
         "SVPipeline.num_shards": 50,
         "SVPipeline.is_somatic": false,

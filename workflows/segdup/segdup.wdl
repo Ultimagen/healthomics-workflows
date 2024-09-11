@@ -25,7 +25,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.13.2" # !UnusedDeclaration
+        String pipeline_version = "1.14.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -59,7 +59,10 @@ workflow SegDupAnalysis {
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
-            "Globals.glob"]
+            "Globals.glob",
+            "DV.FilterVCF.ref_fasta",
+            "DV.FilterVCF.ref_fasta_idx"
+]
         }
     }
     parameter_meta{

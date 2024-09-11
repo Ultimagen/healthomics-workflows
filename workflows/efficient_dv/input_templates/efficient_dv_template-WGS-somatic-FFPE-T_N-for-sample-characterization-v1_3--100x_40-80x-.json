@@ -25,7 +25,6 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
     ],
     "EfficientDV.target_intervals": "s3://broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list",
-    "EfficientDV.hmer_runs_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/runs.conservative.bed",
     "EfficientDV.filtering_blacklist_file": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/hapmap2.1_wgs.v0.6.2.blacklist.bed",
     "EfficientDV.sec_models": [],
     "EfficientDV.background_cram_files": [
@@ -36,7 +35,7 @@
     ],
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wgs-ffpe-model-v1.3.ckpt-890000.onnx",
     "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wgs-ffpe-model-v1.3.ckpt-890000.onnx.serialized.a10g",
-    "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality,soft_clips --add-proxy-support-to-non-hmer-insertion --pragmatic",
+    "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality,soft_clips --add-proxy-support-to-non-hmer-insertion --pragmatic --single-strand-filter",
     "EfficientDV.min_fraction_hmer_indels": 0.03,
     "EfficientDV.min_fraction_non_hmer_indels": 0.03,
     "EfficientDV.min_fraction_snps": 0.03,

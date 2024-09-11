@@ -63,7 +63,7 @@ workflow SingleSampleCnmopsReadsCount{
         window_length = window_length,
         base_file_name = base_file_name,
         save_hdf = save_hdf,
-        docker = global.ug_vc_docker,
+        docker = global.cnv_docker,
         preemptible_tries = preemptible_tries,
         monitoring_script = monitoring_script,
         no_address = no_address

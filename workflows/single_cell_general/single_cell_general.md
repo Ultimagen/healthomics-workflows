@@ -18,6 +18,36 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>String </i> &mdash; 
          Base file name for output files. The output files will be named <tt>[base_file_name]*.fastq.gz</tt> <br /> 
 </p>
+<p name="SingleCell.steps">
+        <b>SingleCell.steps</b><br />
+        <i>TrimAlignSortSteps </i> &mdash; 
+         The steps to run in the workflow (trim+sort) <br /> 
+</p>
+<p name="SingleCell.ref_fastas_cram">
+        <b>SingleCell.ref_fastas_cram</b><br />
+        <i>Array[File] </i> &mdash; 
+         Reference fasta files for the CRAM file <br /> 
+</p>
+<p name="SingleCell.references">
+        <b>SingleCell.references</b><br />
+        <i>References </i> &mdash; 
+         References for the workflow <br /> 
+</p>
+<p name="SingleCell.insert_rg">
+        <b>SingleCell.insert_rg</b><br />
+        <i>String </i> &mdash; 
+         Read group name for the insert reads, e.g. S1_L001_R2_001 <br /> 
+</p>
+<p name="SingleCell.barcode_rg">
+        <b>SingleCell.barcode_rg</b><br />
+        <i>String </i> &mdash; 
+         Read group name for the barcode reads, e.g. S1_L001_R1_001 <br /> 
+</p>
+<p name="SingleCell.qc_thresholds">
+        <b>SingleCell.qc_thresholds</b><br />
+        <i>SingleCellQcThresholds </i> &mdash; 
+         Thresholds for the single cell qc <br /> 
+</p>
 
 ### Required parameters
 <p name="SingleCell.no_address">
@@ -41,43 +71,13 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
 <summary> Show/Hide </summary>
 <p name="SingleCell.trimmer_parameters">
         <b>SingleCell.trimmer_parameters</b><br />
-        <i>TrimmerParameters? &mdash; Default: None</i><br />
+        <i>TrimmerParameters &mdash; Default: None</i><br />
         Parameters for Trimmer task.  See input template
 </p>
-<p name="SingleCell.trimmer_stats">
-        <b>SingleCell.trimmer_stats</b><br />
-        <i>File? &mdash; Default: None</i><br />
-        If trimmer was run outside of this workflow, the stats can still be combined in the final report
-</p>
-<p name="SingleCell.barcode_fastq_file_suffix">
-        <b>SingleCell.barcode_fastq_file_suffix</b><br />
-        <i>String? &mdash; Default: None</i><br />
-        Suffix to add to the name of the file with the barcode reads (in case downstream software has name requirements)
-</p>
-<p name="SingleCell.insert_fastq_file_suffix">
-        <b>SingleCell.insert_fastq_file_suffix</b><br />
-        <i>String? &mdash; Default: None</i><br />
-        Suffix to add to the name of the file with the insert reads (in case downstream software has name requirements)
-</p>
-<p name="SingleCell.barcode_fastq_header_suffix">
-        <b>SingleCell.barcode_fastq_header_suffix</b><br />
-        <i>String? &mdash; Default: None</i><br />
-        Suffix to add to the end of the fastq headers for the barcode reads (in case downstream software has fastq header requirements)
-</p>
-<p name="SingleCell.insert_fastq_header_suffix">
-        <b>SingleCell.insert_fastq_header_suffix</b><br />
-        <i>String? &mdash; Default: None</i><br />
-        Suffix to add to the end of the fastq headers for the insert reads (in case downstream software has fastq header requirements)
-</p>
-<p name="SingleCell.fastqc_adapter">
-        <b>SingleCell.fastqc_adapter</b><br />
-        <i>String? &mdash; Default: None</i><br />
-        Adapter that can be passed to fastqc with the --adapters options
-</p>
-<p name="SingleCell.fastqc_limits">
-        <b>SingleCell.fastqc_limits</b><br />
-        <i>File? &mdash; Default: None</i><br />
-        Adapter that can be passed to fastqc with the --limits option
+<p name="SingleCell.sorter_params">
+        <b>SingleCell.sorter_params</b><br />
+        <i>SorterParams &mdash; Default: None</i><br />
+        Parameters for Sorter task.  See input template
 </p>
 <p name="SingleCell.downstream_analysis">
         <b>SingleCell.downstream_analysis</b><br />
@@ -100,12 +100,54 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         The gtf to use in the StarAlignment task.  See input template
 </p>
 
-### Optional parameters
-<p name="SingleCell.demux_extra_args">
-        <b>SingleCell.demux_extra_args</b><br />
+### Optional inputs
+<p name="SingleCell.TrimAlignSort.aligner">
+        <b>SingleCell.TrimAlignSort.aligner</b><br />
         <i>String? </i> &mdash; 
-         Extra parameters to pass to SortTasks.Demux , when converting to fastq <br /> 
+         Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected. <br /> 
 </p>
+<p name="SingleCell.TrimAlignSort.ua_parameters">
+        <b>SingleCell.TrimAlignSort.ua_parameters</b><br />
+        <i>UaReferences? </i> &mdash; 
+         Parameters for the UA aligner. Mandatory if aligner is ua. <br /> 
+</p>
+<p name="SingleCell.TrimAlignSort.ua_meth_parameters">
+        <b>SingleCell.TrimAlignSort.ua_meth_parameters</b><br />
+        <i>UaMethReferences? </i> &mdash; 
+         Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br /> 
+</p>
+<p name="SingleCell.TrimAlignSort.star_genome">
+        <b>SingleCell.TrimAlignSort.star_genome</b><br />
+        <i>File? </i> &mdash; 
+         Star genome file. If aligner is star, supllay either star genome file or generate new genome index. <br /> 
+</p>
+<p name="SingleCell.TrimAlignSort.star_genome_generate_params">
+        <b>SingleCell.TrimAlignSort.star_genome_generate_params</b><br />
+        <i>StarGenomeGenerateParams? </i> &mdash; 
+         Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file. <br /> 
+</p>
+<p name="SingleCell.TrimAlignSort.star_align_extra_args">
+        <b>SingleCell.TrimAlignSort.star_align_extra_args</b><br />
+        <i>String? </i> &mdash; 
+         Extra arguments for the STAR aligner. <br /> 
+</p>
+<p name="SingleCell.TrimAlignSort.star_align_gtf_override">
+        <b>SingleCell.TrimAlignSort.star_align_gtf_override</b><br />
+        <i>File? </i> &mdash; 
+         GTF file to be used for STAR aligner. <br /> 
+</p>
+<p name="SingleCell.StarAlignSubSample.genome_generate_params">
+        <b>SingleCell.StarAlignSubSample.genome_generate_params</b><br />
+        <i>StarGenomeGenerateParams? </i> &mdash; 
+         Parameters for generating the reference genome. <br /> 
+</p>
+<p name="SingleCell.StarAlignSubSample.star_align_gtf_override">
+        <b>SingleCell.StarAlignSubSample.star_align_gtf_override</b><br />
+        <i>File? </i> &mdash; 
+         Override the GTF file used for STAR alignment. <br /> 
+</p>
+
+### Optional parameters
 <p name="SingleCell.star_align_extra_args">
         <b>SingleCell.star_align_extra_args</b><br />
         <i>String? </i> &mdash; 
@@ -135,6 +177,21 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>Array[File?]?</i><br />
         Trimmer extra histograms
 </p>
+<p name="SingleCell.sort_stats_csv">
+        <b>SingleCell.sort_stats_csv</b><br />
+        <i>Array[File?]?</i><br />
+        Sorter statistics csv
+</p>
+<p name="SingleCell.sort_stats_json">
+        <b>SingleCell.sort_stats_json</b><br />
+        <i>Array[File?]?</i><br />
+        Sorter statistics json
+</p>
+<p name="SingleCell.unmatched_cram">
+        <b>SingleCell.unmatched_cram</b><br />
+        <i>File?</i><br />
+        Unmatched cram file output from sorter
+</p>
 <p name="SingleCell.output_barcodes_fastq">
         <b>SingleCell.output_barcodes_fastq</b><br />
         <i>File</i><br />
@@ -145,15 +202,15 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>File</i><br />
         The fastq with the insert portion of the read
 </p>
-<p name="SingleCell.fastqc_reports">
-        <b>SingleCell.fastqc_reports</b><br />
-        <i>Array[File]</i><br />
-        Fastqc output report for insert
-</p>
-<p name="SingleCell.combined_statistics">
-        <b>SingleCell.combined_statistics</b><br />
+<p name="SingleCell.report_html">
+        <b>SingleCell.report_html</b><br />
         <i>File</i><br />
-        A csv with the trimming and alignment statistics
+        The report from the single cell qc
+</p>
+<p name="SingleCell.aggregated_metrics_h5">
+        <b>SingleCell.aggregated_metrics_h5</b><br />
+        <i>File</i><br />
+        The h5 store from the single cell qc
 </p>
 <p name="SingleCell.star_bam">
         <b>SingleCell.star_bam</b><br />

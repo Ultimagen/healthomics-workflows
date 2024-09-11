@@ -55,10 +55,6 @@
         "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
         "optional": true
     },
-    "SegDupAnalysis.DV.hmer_runs_bed": {
-        "description": "Bed file annotating all homopolymer runs longer than 7 in the reference genome. Used to annotate potentially difficult to sequence regions",
-        "optional": true
-    },
     "SegDupAnalysis.DV.input_flow_order": {
         "description": "Flow order. If not provided, it will be extracted from the CRAM header",
         "optional": true
