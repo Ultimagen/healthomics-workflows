@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.14.1" # !UnusedDeclaration
+        String pipeline_version = "1.14.2" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -809,6 +809,7 @@ task CreateAssembly {
             ~{"--max-num-haps " + max_num_haps} \
             --prog \
             --interval-target-nreads 10000 \
+            ~{if single_strand_filter then "--single-strand-filter" else ""} \
             --sv
 
         fi

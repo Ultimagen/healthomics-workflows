@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.14.1" 
+  String pipeline_version = "1.14.2" 
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -371,7 +371,7 @@ parameter_meta {
             include_regions = training_include_regions,
             exclude_regions = tp_training_exclude_regions,
             output_basename = "TP",
-            memory_gb = 8,
+            memory_gb = 4,
             docker = global.ug_vc_docker,
             monitoring_script = monitoring_script,  #!FileCoercion
             preemptibles = preemptibles
@@ -383,7 +383,7 @@ parameter_meta {
             include_regions = training_include_regions,
             exclude_regions = flatten([select_first([fp_training_exclude_regions, []]), select_first([somatic_mutations_list, []])]),
             output_basename = "FP",
-            memory_gb = 16,
+            memory_gb = 8,
             cpus = 4,
             docker = global.ug_vc_docker,
             monitoring_script = monitoring_script,  #!FileCoercion

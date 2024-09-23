@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.14.1" # !UnusedDeclaration
+    String pipeline_version = "1.14.2" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -65,7 +65,7 @@ workflow EfficientDV {
     Array[Int] optimal_coverages = [ 50 ]
     Boolean cap_at_optimal_coverage = false
     Boolean output_realignment = false
-    String ug_make_examples_extra_args = "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic --single-strand-filter"
+    String ug_make_examples_extra_args = "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic"
     Boolean log_make_examples_progress = false
 
     # Background files (for somatic calling)

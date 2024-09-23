@@ -106,7 +106,7 @@
         "test_set_size": 0
     },
     "SingleReadSNV.featuremap_params": {
-        "extra_args": "--flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --copy-attr tm --copy-attr a3 --copy-attr rq",
+        "extra_args": "--nm-edit-distance --flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --copy-attr tm --copy-attr a3 --copy-attr rq",
         "min_mapq": 60,
         "snv_identical_bases": 5,
         "snv_identical_bases_after": 5,

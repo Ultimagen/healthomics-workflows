@@ -2,7 +2,6 @@ version 1.0
 
 struct GlobalVariables {
   String ubuntu_docker
-  String ubuntu_with_bc_docker
   String gitc_docker
   String gitc_jar_path
   String ug_vc_docker
@@ -31,16 +30,16 @@ struct GlobalVariables {
   String subread_docker
   String starfusion_docker
   String cnv_docker
+  String vcflite_docker
 }
 workflow Globals {
   input {
   GlobalVariables glob ={
         "ubuntu_docker": "ubuntu:focal",
-        "ubuntu_with_bc_docker": "ultimagenomics/ubuntu-base:bc",
         "gitc_docker": "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.4.6-1599252698",
         "gitc_jar_path": "/usr/gitc/",
-        "ug_vc_docker": "ultimagenomics/ugvc:0.24_6c29bb8",
-        "ug_gatk_picard_docker": "ultimagenomics/ug_gatk_picard:0.13",
+        "ug_vc_docker": "ultimagenomics/ugvc:0.24.1_31c65bce",
+        "ug_gatk_picard_docker": "ultimagenomics/ug_gatk_picard:0.14",
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "ug_call_variants_docker": "ultimagenomics/call_variants:2.2.2",
         "ug_make_examples_docker": "ultimagenomics/make_examples:2.2.4",
@@ -60,11 +59,12 @@ workflow Globals {
         "gripss_docker": "ultimagenomics/gripss:ug_2.4.0_cb91bca",
         "reads_transformer_docker": "ultimagenomics/ug-reads-transformer:1.0",
         "single_cell_qc_docker": "ultimagenomics/ugbio_single_cell:1.0.0",
-        "segdup_docker": "ultimagenomics/parascopy:cf76c4b",
+        "segdup_docker": "ultimagenomics/parascopy:1.0_30e2e98",
         "arriba_docker": "uhrigs/arriba:2.4.0",
         "subread_docker": "us.gcr.io/broad-gotc-prod/subread:1.0.0-2.0.1-1689097353",
         "starfusion_docker": "trinityctat/starfusion:1.13.0",
-        "cnv_docker": "ugbio_cnv:1.0.0"
+        "cnv_docker": "ugbio_cnv:1.0.0",
+        "vcflite_docker": "ultimagenomics/ugbio_vcflite:1.1.0"
 }
 }
 
