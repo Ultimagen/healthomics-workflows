@@ -19,5 +19,13 @@ jobs:
     - name: Install dependencies
       run: pip install boto3
 
-    - name: validate input templates
+    - name: Validate input templates
       run: python .github/utils/validate_input_templates.py
+
+  validate-docker-images:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate docker images
+      run: python .github/utils/validate_globals_docker_images.py workflows
