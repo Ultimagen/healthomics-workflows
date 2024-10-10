@@ -183,6 +183,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Boolean </i> &mdash; 
          Should systematic errors be annotated from a database of common systematic errors <br /> 
 </p>
+<p name="SegDupAnalysis.DV.hmer_runs_bed">
+        <b>SegDupAnalysis.DV.hmer_runs_bed</b><br />
+        <i>File? </i> &mdash; 
+         Bed file annotating all homopolymer runs longer than 7 in the reference genome. Used to annotate potentially difficult to sequence regions <br /> 
+</p>
 <p name="SegDupAnalysis.DV.input_flow_order">
         <b>SegDupAnalysis.DV.input_flow_order</b><br />
         <i>String? </i> &mdash; 

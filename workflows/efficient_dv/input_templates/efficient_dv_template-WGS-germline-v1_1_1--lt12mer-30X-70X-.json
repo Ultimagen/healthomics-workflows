@@ -25,6 +25,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
     ],
     "EfficientDV.target_intervals": "s3://broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list",
+    "EfficientDV.hmer_runs_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/runs.conservative.bed",
     "EfficientDV.filtering_blacklist_file": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/hapmap2.1_wgs.v0.6.2.blacklist.bed",
     "EfficientDV.sec_models": [],
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/v1.1.1/ultima_deep_variant_v1.1.1.ckpt-780000.onnx",

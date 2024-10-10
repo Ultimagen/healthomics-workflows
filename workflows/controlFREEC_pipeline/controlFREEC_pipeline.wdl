@@ -31,7 +31,7 @@ import "tasks/qc_tasks.wdl" as UGQCTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.14.2" # !UnusedDeclaration
+        String pipeline_version = "1.13.3" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -49,8 +49,8 @@ workflow SomaticCNVCallingControlFREEC{
         String dummy_input_for_call_caching = ""
 
         #Create mpileup args
-        File snp_file
-        File snp_file_index
+        File SNPfile
+        File SNPfile_index
 
         #external mpileup
         File? normal_mpileup_override
@@ -69,25 +69,21 @@ workflow SomaticCNVCallingControlFREEC{
         Array[File]? tumor_sorter_zipped_bed_graph
 
         #controlFREEC args
-        Boolean high_sensitivity_mode
-        Boolean naive_normalization
-        Boolean bed_graph_output
-        Boolean contamination_adjustment
-        Float? contamination_fraction
-        String input_format
+        Boolean BedGraphOutput
+        Boolean contaminationAdjustment
+        Float? contaminationFraction
+        String inputFormat
         Int window
         File? chrLenFile_override
         Int degree
         Int? ploidy
-        Int? max_threads_override
+        Int? maxThreads_override
         String? sex
-        File? gem_mappability_file
+        File? gemMappabilityFile
         Boolean? no_address_override
         Int? preemptible_tries_override
 
         #Filter CNV calls
-        Float? CNV_gain_cutoff_override
-        Float? CNV_loss_cutoff_override
         Int min_cnv_length
         Float intersection_cutoff
         File cnv_lcr_file
@@ -130,10 +126,6 @@ workflow SomaticCNVCallingControlFREEC{
 
         #@wv min_cnv_length >  0
         #@wv intersection_cutoff <1 and intersection_cutoff >0
-
-        #@wv defined(CNV_gain_cutoff_override) -> CNV_gain_cutoff_override > 1
-        #@wv defined(CNV_loss_cutoff_override) -> CNV_loss_cutoff_override < 1
-    
     }
     Boolean run_createMpileup = !(defined(normal_mpileup_override))
     Boolean run_bedgraph_to_cpn = !(defined(normal_coverage_cpn))
@@ -146,12 +138,10 @@ workflow SomaticCNVCallingControlFREEC{
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
     String input_tumor_cram_bam_file_name = input_tumor_cram_bam_file[0]
     String input_normal_cram_bam_file_name = input_normal_cram_bam_file[0]
-    Int maxThreads = select_first([max_threads_override,8])
-    Float CNV_gain_cutoff = select_first([CNV_gain_cutoff_override,1.03])
-    Float CNV_loss_cutoff = select_first([CNV_gain_cutoff_override,0.97])
-    
+    Int maxThreads = select_first([maxThreads_override,8])
+
     meta {
-        description: "Runs single sample somatic CNV calling workflow based on \<a href=\"https://boevalab.inf.ethz.ch/FREEC/\"\>ControlFREEC</a>.\n\nCNVs are called based on both coverage and allele frequencies in the tumor and the matched germline sample.\n\nThe pipeline will gather coverage and allele frequencies, run controlFREEC and filter called CNVs by length and low confidence regions.\n\ncoverage will be calculted based on the input cram/bam. Alternativley, it can recieve coverage input as one of:bedGraph, cpn formats.\n\nAllele frequencies will be calculated based on the input cram/bam and a given vcf file to specify locations. Alternativley, it can recieve precalculated frequencies as mpileup format.\n\nPipeline has an option to run in High-Sensitivity-Mode which can be used for low tumor purity samples. in this case segmentation results will be outputed and filtered by their average fold change.\n\nfor High-Sensitivity-Mode fold changes for gain and loss calls can be defined by the user. (default cutoff values are [gain,loss]=[1.03,0.97])\n\nThe pipeline outputs: \n\n&nbsp;&nbsp;- calculated coverage for tumor and normal samples\n\n&nbsp;&nbsp;- calculated mpileup for tumor and normal samples\n\n&nbsp;&nbsp;- called CNVs + filtered called CNVs\n\n&nbsp;&nbsp;- controlFREEC run-summary\n\n&nbsp;&nbsp;-coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples.\n\n&nbsp;&nbsp;-duplications and deletions figure - showing gains and losses along the genome.\n\n&nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.\n\n"
+        description: "Runs single sample somatic CNV calling workflow based on \<a href=\"https://boevalab.inf.ethz.ch/FREEC/\"\>ControlFREEC</a>.\n\nCNVs are called based on both coverage and allele frequencies in the tumor and the matched germline sample.\n\nThe pipeline will gather coverage and allele frequencies, run controlFREEC and filter called CNVs by length and low confidence regions.\n\ncoverage will be calculted based on the input cram/bam. Alternativley, it can recieve coverage input as one of:bedGraph, cpn formats.\n\nAllele frequencies will be calculated based on the input cram/bam and a given vcf file to specify locations. Alternativley, it can recieve precalculated frequencies as mpileup format.\n\nThe pipeline outputs: \n\n&nbsp;&nbsp;- calculated coverage for tumor and normal samples\n\n&nbsp;&nbsp;- calculated mpileup for tumor and normal samples\n\n&nbsp;&nbsp;- called CNVs + filtered called CNVs\n\n&nbsp;&nbsp;- controlFREEC run-summary\n\n&nbsp;&nbsp;-coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples.\n\n&nbsp;&nbsp;-duplications and deletions figure - showing gains and losses along the genome.\n\n&nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.\n\n"
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
@@ -218,13 +208,13 @@ workflow SomaticCNVCallingControlFREEC{
             type: "Int",
             category: "param_advanced"
         }
-        snp_file: {
+        SNPfile: {
             help: "Vcf file holding locations of the common variants to calculate pileup statistics on",
             type: "File",
             category: "input_required"
         }
-        snp_file_index : {
-            help: "Vcf.tbi index file for snp_file",
+        SNPfile_index : {
+            help: "Vcf.tbi index file for SNPfile",
             type: "File",
             category: "input_required"
         }
@@ -273,22 +263,22 @@ workflow SomaticCNVCallingControlFREEC{
             type: "File",
             category: "input_optional"
         }
-        bed_graph_output: {
-            help: "Whether to add bed_graph_output to controlFREEC outputs, recommended value set in the template",
+        BedGraphOutput: {
+            help: "Whether to add BedGraphOutput to controlFREEC outputs, recommended value set in the template",
             type: "Boolean",
             category: "param_advanced"
         }
-        contamination_adjustment: {
-            help: "Whether to run controlFREEC with contamination_adjustment option, recommended value set in the template",
+        contaminationAdjustment: {
+            help: "Whether to run controlFREEC with contaminationAdjustment option, recommended value set in the template",
             type: "Boolean",
             category: "param_advanced"
         }
-        contamination_fraction : {
+        contaminationFraction : {
             help: "a priori known value of tumor sample contamination by normal cells. Default: contamination=0",
             type: "Float",
             category: "param_optional"
         }
-        input_format: {
+        inputFormat: {
             help: "controlFREEC input format, recommended value set in the template",
             type: "String",
             category: "param_advanced"
@@ -313,7 +303,7 @@ workflow SomaticCNVCallingControlFREEC{
             type: "Int",
             category: "param_optional"
         }
-        max_threads_override: {
+        maxThreads_override: {
             help: "maximal threads for controlFREEC. Default is 8",
             type: "Int",
             category: "param_optional"
@@ -323,30 +313,10 @@ workflow SomaticCNVCallingControlFREEC{
             type: "String",
             category: "param_optional"
         }
-        gem_mappability_file :{
+        gemMappabilityFile :{
             help: "Gem file holding mappablity biased regions. ",
             type: "File",
             category: "param_optional"
-        }
-        CNV_gain_cutoff_override: {
-            help: "Gain cutoff for CNV filtering. Default is 1.03",
-            type: "Float",
-            category: "param_optional"
-        }
-        CNV_loss_cutoff_override: {
-            help: "Loss cutoff for CNV filtering. Default is 0.97",
-            type: "Float",
-            category: "param_optional"
-        }
-        high_sensitivity_mode : {
-            help: "Whether to run controlFREEC in high sensitivity mode",
-            type: "Boolean",
-            category: "param_advanced"
-        }
-        naive_normalization : {
-            help: "Whether to run controlFREEC with naive normalization mode (Rather than using FREEC Polynomial fitting)",
-            type: "Boolean",
-            category: "param_advanced"
         }
         min_cnv_length : {
             help: "Minimum length for reported CNVs. Default is 10,000",
@@ -369,11 +339,6 @@ workflow SomaticCNVCallingControlFREEC{
             category: "param_optional"
         }
 
-        tumor_segments: {
-            help: "controlFREEC segmentation for tumor sample",
-            type: "File",
-            category: "output"
-        }
         tumor_CNVs : {
             help: "controlFREEC predicted copy number alterations for tumor sample",
             type: "File",
@@ -434,16 +399,6 @@ workflow SomaticCNVCallingControlFREEC{
             type: "File",
             category: "output"
         }
-        neutral_AF_plot : {
-            help: "Neutral allele frequency plot",
-            type: "File",
-            category: "output"
-        }
-        neutral_AF_bed : {
-            help: "Neutral allele frequency bed file",
-            type: "File",
-            category: "output"
-        }
     }
 
     call Globals.Globals as Globals
@@ -471,8 +426,8 @@ workflow SomaticCNVCallingControlFREEC{
                     reference_fai = references.ref_fasta_index,
                     reference_dict = references.ref_dict,
                     min_MapQ = mapq,
-                    snp_file = snp_file,
-                    snp_file_index = snp_file_index,
+                    SNPfile = SNPfile,
+                    SNPfile_index = SNPfile_index,
                     interval = interval,
                     docker = global.ug_vc_docker,
                     no_address = no_address,
@@ -489,8 +444,8 @@ workflow SomaticCNVCallingControlFREEC{
                     reference_fai = references.ref_fasta_index,
                     reference_dict = references.ref_dict,
                     min_MapQ = mapq,
-                    snp_file = snp_file,
-                    snp_file_index = snp_file_index,
+                    SNPfile = SNPfile,
+                    SNPfile_index = SNPfile_index,
                     interval = interval,
                     docker = global.ug_vc_docker,
                     no_address = no_address,
@@ -626,7 +581,7 @@ workflow SomaticCNVCallingControlFREEC{
     }
     File tumor_cpn = select_first([tumor_BedGraphToCpn.coverage_file,tumor_coverage_cpn])
     File normal_cpn = select_first([normal_BedGraphToCpn.coverage_file,normal_coverage_cpn])
-    
+
     call runControlFREEC{
             input:
         sample_name =  base_file_name,
@@ -638,16 +593,14 @@ workflow SomaticCNVCallingControlFREEC{
         normal_cpn = normal_cpn,
         reference_fasta = references.ref_fasta,
         chrLenFile = chrLenFile,
-        input_format = input_format,
-        snp_file = snp_file,
-        snp_file_index = snp_file_index,
-        high_sensitivity_mode = high_sensitivity_mode,
-        naive_normalization = naive_normalization,
-        bed_graph_output = bed_graph_output,
-        contamination_adjustment = contamination_adjustment,
-        contamination_fraction = contamination_fraction,
+        inputFormat = inputFormat,
+        SNPfile = SNPfile,
+        SNPfile_index = SNPfile_index,
+        BedGraphOutput = BedGraphOutput,
+        contaminationAdjustment = contaminationAdjustment,
+        contaminationFraction = contaminationFraction,
         ploidy = ploidy,
-        gem_mappability_file = gem_mappability_file,
+        gemMappabilityFile = gemMappabilityFile,
         maxThreads = maxThreads,
         sex = sex,
         window =  window,
@@ -662,29 +615,24 @@ workflow SomaticCNVCallingControlFREEC{
         input:
         sample_name = base_file_name,
         CNV_calls = runControlFREEC.tumor_CNVs,
-        segments_file = runControlFREEC.segments_file,
-        gain_cutoff = CNV_gain_cutoff,
-        loss_cutoff = CNV_loss_cutoff,
-        high_sensitivity_mode = high_sensitivity_mode,
         min_cnv_length = min_cnv_length,
         intersection_cutoff = intersection_cutoff,
         cnv_lcr_file = cnv_lcr_file,
         tumor_coverage_cpn=tumor_cpn,
         normal_coverage_cpn=normal_cpn,
         ploidy = runControlFREEC.ploidy_value,
-        tumor_mpileup = tumor_pileup,
-        docker = global.cnv_docker,
+        docker = global.ug_vc_docker,
         monitoring_script = monitoring_script,
         no_address = no_address,
         preemptible_tries = preemptible_tries
         }
-    
+
     output {
          File tumor_mpileup = tumor_pileup
          File normal_mpileup = normal_pileup
          File tumor_coverage = tumor_cpn
          File normal_coverage = normal_cpn
-         File tumor_segments = runControlFREEC.segments_file
+         File tumor_CNVs = runControlFREEC.tumor_CNVs
          File controlFREEC_info = runControlFREEC.controlFREEC_info
          File tumor_ratio_bedgraph = runControlFREEC.tumor_ratio_bedgraph
          File tumor_CNVs_annotated_bed_file = FilterControlFREECCnvs.sample_cnvs_bed
@@ -692,8 +640,6 @@ workflow SomaticCNVCallingControlFREEC{
          File coverage_plot = FilterControlFREECCnvs.coverage_plot
          File dup_del_plot = FilterControlFREECCnvs.dup_del_plot
          File copy_number_plot = FilterControlFREECCnvs.copy_number_plot
-         File neutral_AF_plot = FilterControlFREECCnvs.neutral_AF_plot
-         File neutral_AF_bed = FilterControlFREECCnvs.neutral_AF_bed
     }
 }
 task CreateMpileup {
@@ -707,8 +653,8 @@ task CreateMpileup {
         Int max_depth = 8000
         Int min_MapQ
         Int min_BaseQ = 0
-        File snp_file
-        File snp_file_index
+        File SNPfile
+        File SNPfile_index
         File interval
         String docker
         Boolean no_address
@@ -716,7 +662,7 @@ task CreateMpileup {
         File monitoring_script
         String? cloud_provider
     }
-    Int disk_size = ceil(size(reference_fasta,"GB") + size(snp_file,"GB") + 50)
+    Int disk_size = ceil(size(reference_fasta,"GB") + size(SNPfile,"GB") + 50)
     String base_input_name = basename(input_bam_files[0])
     Boolean is_aws = defined(cloud_provider)
 
@@ -751,12 +697,12 @@ command <<<
 
     echo "inputs_string:"
     echo $inputs_string
-    echo "DEBUG start intersect snp_file with current interval $(date)"
-    # intersect snp_file with current interval
+    echo "DEBUG start intersect SNPfile with current interval $(date)"
+    # intersect SNPfile with current interval
     gatk IntervalListToBed -I ~{interval} -O interval.bed
-    bcftools view -R interval.bed -O z -o out.vcf.gz ~{snp_file}
+    bcftools view -R interval.bed -O z -o out.vcf.gz ~{SNPfile}
     tabix out.vcf.gz
-    echo "DEBUG end intersect snp_file with current interval $(date)"
+    echo "DEBUG end intersect SNPfile with current interval $(date)"
 
     echo "DEBUG start mpileup $(date)"
     #caclulate mpileup for current interval
@@ -986,18 +932,16 @@ task runControlFREEC{
             File reference_fasta
             File chrLenFile
 
-            File snp_file
-            File snp_file_index
+            File SNPfile
+            File SNPfile_index
 
-            Boolean high_sensitivity_mode
-            String input_format
-            Boolean bed_graph_output
-            Boolean naive_normalization
-            Boolean contamination_adjustment
-            Float? contamination_fraction
+            String inputFormat
+            Boolean BedGraphOutput
+            Boolean contaminationAdjustment
+            Float? contaminationFraction
             Int degree
             Int? ploidy
-            File? gem_mappability_file
+            File? gemMappabilityFile
             Int? maxThreads
             String? sex
             Int window
@@ -1009,8 +953,8 @@ task runControlFREEC{
     
     Int disk_size = ceil(size(tumor_mpileup,"GB") + size(tumor_cpn,"GB") +
                          size(normal_mpileup,"GB") + size(normal_cpn,"GB") +
-                         2*size(reference_fasta,"GB") + size(snp_file,"GB") + size(snp_file_index,"GB") +
-                         size(gem_mappability_file,"GB")+ 5)
+                         2*size(reference_fasta,"GB") + size(SNPfile,"GB") + size(SNPfile_index,"GB") +
+                         size(gemMappabilityFile,"GB")+ 5)
 
     String base_input_tumor = basename(tumor_bam_file)
     String base_input_normal = basename(normal_bam_file)
@@ -1021,7 +965,6 @@ task runControlFREEC{
 
         touch ~{sample_name}.config.txt
         touch ~{base_input_normal}_BAF.txt
-        touch ~{base_input_tumor}_segments.txt
         touch ~{base_input_tumor}_BAF.txt
         touch ~{base_input_tumor}_CNVs
         touch ~{base_input_tumor}_info.txt
@@ -1038,40 +981,33 @@ task runControlFREEC{
         faidx -x ~{reference_fasta}
         cd ../
 
-        if ~{high_sensitivity_mode}
-        then
-            ploidy_contam_args="--ploidy 4 --contamination 0.1"
-        else
-            ploidy_contam_args=~{"--ploidy " + ploidy} ~{" --contamination " + contamination_fraction}
-        fi
-
         #create controlFREEC config file
         python /generate_controlFREEC_config.py \
             --sample_name ~{sample_name} \
-            ~{true="--BedGraphOutput TRUE" false='--BedGraphOutput FALSE' bed_graph_output} \
-            ~{true="--NaiveNormalization TRUE" false='--NaiveNormalization FALSE' naive_normalization} \
+            ~{true="--BedGraphOutput TRUE" false='--BedGraphOutput FALSE' BedGraphOutput} \
             --chrLenFile ~{chrLenFile}\
-            ~{true="--contaminationAdjustment TRUE" false='--contaminationAdjustment FALSE' contamination_adjustment} \
+            ~{true="--contaminationAdjustment TRUE" false='--contaminationAdjustment FALSE' contaminationAdjustment} \
+            ~{"--contamination " + contaminationFraction} \
             ~{"--maxThreads " + maxThreads} \
             --window ~{window} \
             --chrFiles chrFiles_dir \
             --degree ~{degree} \
             ~{"--sex " + sex} \
-            ~{"--gemMappabilityFile " + gem_mappability_file} \
+            ~{"--ploidy " + ploidy} \
+            ~{"--gemMappabilityFile " + gemMappabilityFile} \
             --sample_mateFile ~{tumor_bam_file} \
             --sample_mateCopyNumberFile ~{tumor_cpn} \
             --sample_miniPileupFile ~{tumor_mpileup} \
-            --sample_inputFormat ~{input_format} \
+            --sample_inputFormat ~{inputFormat} \
             --sample_mateOrientation 0 \
             --control_mateFile ~{normal_bam_file} \
             --control_mateCopyNumberFile ~{normal_cpn} \
             --control_miniPileupFile ~{normal_mpileup} \
-            --control_inputFormat ~{input_format} \
+            --control_inputFormat ~{inputFormat} \
             --control_mateOrientation 0 \
-            --baf_makePileup ~{snp_file} \
+            --baf_makePileup ~{SNPfile} \
             --baf_fastaFile ~{reference_fasta} \
-            --baf_SNPfile ~{snp_file} \
-            $ploidy_contam_args 
+            --baf_SNPfile ~{SNPfile}
 
         #run controlFREEC
         /freec -conf ~{sample_name}.config.txt
@@ -1089,7 +1025,6 @@ task runControlFREEC{
     output {
         File sample_config_file = "~{sample_name}.config.txt"
         File normal_BAF = "~{base_input_normal}_BAF.txt"
-        File segments_file = "~{base_input_tumor}_segments.txt"
         File tumor_BAF = "~{base_input_tumor}_BAF.txt"
         File tumor_CNVs = "~{base_input_tumor}_CNVs"
         File controlFREEC_info = "~{base_input_tumor}_info.txt"
@@ -1106,18 +1041,13 @@ task runControlFREEC{
 task FilterControlFREECCnvs {
     input {
         String sample_name
-        File segments_file
         File CNV_calls
-        Float gain_cutoff
-        Float loss_cutoff
         Int min_cnv_length
         Float intersection_cutoff
         File cnv_lcr_file
         File tumor_coverage_cpn
         File normal_coverage_cpn
         Int ploidy
-        Boolean high_sensitivity_mode
-        File tumor_mpileup
         String docker
         File monitoring_script
         Boolean no_address
@@ -1125,89 +1055,54 @@ task FilterControlFREECCnvs {
     }
 
     Float CNV_calls_file_size = size(CNV_calls, "GB")
-    Float segments_file_size = size(segments_file, "GB")
     Float cnv_lcr_file_size = size(cnv_lcr_file, "GB")
     Float additional_disk = 5
-    Int disk_size = ceil(CNV_calls_file_size + segments_file_size + cnv_lcr_file_size + additional_disk)
-    String out_annotated_cnv_file = basename(segments_file)+"_annotated.txt"
-    String out_cnvs_file = basename(segments_file)+"_CNVs.bed"
-    String out_filtered_cnv_file = basename(segments_file)+"_CNVs.filter.bed"
-    String mpileup_basename = basename(tumor_mpileup)    
-    
+    Int disk_size = ceil(CNV_calls_file_size + cnv_lcr_file_size + additional_disk)
+
     command <<<
-        set -xeo pipefail
+        set -eo pipefail
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        if ~{high_sensitivity_mode}
-        then
-            #annotate segments to CNVs
-            python -m ugbio_cnv.annotate_FREEC_segments \
-                --input_segments_file ~{segments_file}\
-                --gain_cutoff ~{gain_cutoff} \
-                --loss_cutoff ~{loss_cutoff}
-        else
-            #convert to bedfile
-            cat ~{CNV_calls} | sed 's/^/chr/' | grep -v "neutral" | cut -f1-4 > ~{out_cnvs_file}
-        fi
-              
+        source ~/.bashrc
+        conda activate genomics.py3
+
+        #convert to bedfile
+        cat ~{CNV_calls} | sed 's/^/chr/' | grep -v "neutral" | cut -f1-4 > ~{sample_name}.cnvs.bed
+
         #annotate cnvs bed file
-        python -m ugbio_cnv.filter_sample_cnvs \
-                --input_bed_file ~{out_cnvs_file} \
+        python /VariantCalling/ugvc filter_sample_cnvs \
+                --input_bed_file ~{sample_name}.cnvs.bed \
                 --intersection_cutoff ~{intersection_cutoff} \
                 --cnv_lcr_file ~{cnv_lcr_file} \
                 --min_cnv_length ~{min_cnv_length}
         
         cat ~{normal_coverage_cpn} | awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' | sed 's/^/chr/' > normal_coverage.cpn.bed
         cat ~{tumor_coverage_cpn} | awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' | sed 's/^/chr/' > tumor_coverage.cpn.bed
-        
-        if ~{high_sensitivity_mode}
-        then 
-            cat ~{out_filtered_cnv_file} | awk '$4>~{gain_cutoff}' > ~{sample_name}.cnvs.filter.DUP.bed
-            cat ~{out_filtered_cnv_file} | awk '$4<~{loss_cutoff}' > ~{sample_name}.cnvs.filter.DEL.bed
-        else
-            cat  ~{out_filtered_cnv_file} | sed 's/CN//' | awk '$4>~{ploidy}' > ~{sample_name}.cnvs.filter.DUP.bed
-            cat  ~{out_filtered_cnv_file} | sed 's/CN//' | awk '$4<~{ploidy}' > ~{sample_name}.cnvs.filter.DEL.bed
-        fi
+        cat ~{sample_name}.cnvs.filter.bed | sed 's/CN//' | awk '$4>~{ploidy}' > ~{sample_name}.cnvs.filter.DUP.bed
+        cat ~{sample_name}.cnvs.filter.bed | sed 's/CN//' | awk '$4<~{ploidy}' > ~{sample_name}.cnvs.filter.DEL.bed
 
-        mkdir CNV_figures
-        touch CNV_figures/~{sample_name}.CNV.coverage.jpeg
-        touch CNV_figures/~{sample_name}.dup_del.calls.jpeg
-        touch CNV_figures/~{sample_name}.CNV.calls.jpeg
-
-
-        python -m ugbio_cnv.plot_cnv_results \
+        python /VariantCalling/ugvc plot_cnv_results \
             --germline_coverage normal_coverage.cpn.bed \
             --tumor_coverage tumor_coverage.cpn.bed \
             --duplication_cnv_calls ~{sample_name}.cnvs.filter.DUP.bed \
             --deletion_cnv_calls ~{sample_name}.cnvs.filter.DEL.bed \
             --sample_name ~{sample_name} \
             --out_directory CNV_figures
-        
-        python -m ugbio_cnv.plot_FREEC_neutral_AF \
-            --mpileup ~{tumor_mpileup} \
-            --cnvs_file ~{out_filtered_cnv_file} \
-            --sample_name ~{sample_name} \
-            --out_directory CNV_figures
-
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: "8 GB"
+        memory: "2 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
         noAddress: no_address
-        cpu: 2
+        cpu: 1
     }
     output {
-        File sample_cnvs_bed = "~{out_cnvs_file}"
-        File? sample_annotate_segments = "~{out_annotated_cnv_file}"
-        File sample_cnvs_filtered_bed = "~{out_filtered_cnv_file}"
+        File sample_cnvs_bed = "~{sample_name}.cnvs.annotate.bed"
+        File sample_cnvs_filtered_bed = "~{sample_name}.cnvs.filter.bed"
         File coverage_plot = "CNV_figures/~{sample_name}.CNV.coverage.jpeg"
         File dup_del_plot = "CNV_figures/~{sample_name}.dup_del.calls.jpeg"
         File copy_number_plot = "CNV_figures/~{sample_name}.CNV.calls.jpeg"
-        File neutral_AF_plot = "CNV_figures/~{mpileup_basename}.freq.SNP.neutral.hist.jpeg"
-        File neutral_AF_bed = "CNV_figures/~{mpileup_basename}.freq.SNP.neutral.bed"
         File monitoring_log = "monitoring.log"
     }
-    
 }

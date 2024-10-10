@@ -26,7 +26,6 @@
     ],
     "SingleReadSNV.min_coverage_to_train_model": 8.0,
     "SingleReadSNV.preemptible_tries": 1,
-    "SingleReadSNV.raise_exceptions_in_report": false,
     "SingleReadSNV.categorical_features": {
         "st": [
             "MIXED",
@@ -91,8 +90,8 @@
             "T"
         ]
     },
+    "SingleReadSNV.ppmSeq_adapter_version": "v1",
     "SingleReadSNV.single_read_snv_params": {
-        "ppmSeq_adapter_version": "v1",
         "numerical_features": [
             "X_SCORE",
             "X_EDIST",
@@ -120,7 +119,7 @@
         "test_set_size": 0
     },
     "SingleReadSNV.featuremap_params": {
-        "extra_args": "--nm-edit-distance --include-dup-reads --flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --surrounding-median-quality-size 20 --copy-attr tm --copy-attr a3 --copy-attr rq --copy-attr st --copy-attr et --copy-attr s3 --copy-attr s2",
+        "extra_args": "--include-dup-reads --flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --surrounding-median-quality-size 20 --copy-attr tm --copy-attr a3 --copy-attr rq --copy-attr st --copy-attr et --copy-attr s3 --copy-attr s2",
         "min_mapq": 60,
         "snv_identical_bases": 5,
         "snv_identical_bases_after": 5,

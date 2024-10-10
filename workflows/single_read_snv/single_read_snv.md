@@ -36,6 +36,11 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <i>Int </i> &mdash; 
          Break wgs_calling_interval_list bands at multiples of this number, recommended value set in the template <br /> 
 </p>
+<p name="SingleReadSNV.ppmSeq_adapter_version">
+        <b>SingleReadSNV.ppmSeq_adapter_version</b><br />
+        <i>String? </i> &mdash; 
+         ppmSeq adapter version of the respective CRAM file, recommended value set in the template <br /> 
+</p>
 <p name="SingleReadSNV.featuremap_params">
         <b>SingleReadSNV.featuremap_params</b><br />
         <i>FeatureMapParams </i> &mdash; 
@@ -92,11 +97,6 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <i>File? &mdash; Default: None</i><br />
         Pre-trained ML model file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
 </p>
-<p name="SingleReadSNV.raise_exceptions_in_report">
-        <b>SingleReadSNV.raise_exceptions_in_report</b><br />
-        <i>Boolean &mdash; Default: None</i><br />
-        Raise and exception and fail the pipeline if an error is raised in the QC report
-</p>
 </details>
 
 
@@ -146,10 +146,25 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <i>File?</i><br />
         ML model test set MRD simulation DataFrame, parquet format
 </p>
+<p name="SingleReadSNV.train_set_mrd_simulation_dataframe">
+        <b>SingleReadSNV.train_set_mrd_simulation_dataframe</b><br />
+        <i>File?</i><br />
+        ML model training set MRD simulation DataFrame, parquet format
+</p>
 <p name="SingleReadSNV.test_set_statistics_h5">
         <b>SingleReadSNV.test_set_statistics_h5</b><br />
         <i>File?</i><br />
         ML model test set statistics h5 file
+</p>
+<p name="SingleReadSNV.train_set_statistics_h5">
+        <b>SingleReadSNV.train_set_statistics_h5</b><br />
+        <i>File?</i><br />
+        ML model training set statistics h5 file
+</p>
+<p name="SingleReadSNV.train_set_statistics_json">
+        <b>SingleReadSNV.train_set_statistics_json</b><br />
+        <i>File?</i><br />
+        ML model training set statistics json file
 </p>
 <p name="SingleReadSNV.aggregated_metrics_json">
         <b>SingleReadSNV.aggregated_metrics_json</b><br />
@@ -165,6 +180,16 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <b>SingleReadSNV.fp_training_regions_bed</b><br />
         <i>File?</i><br />
         ML model training set FP regions bed file
+</p>
+<p name="SingleReadSNV.train_report_file_notebook">
+        <b>SingleReadSNV.train_report_file_notebook</b><br />
+        <i>File?</i><br />
+        ML model training set report notebook file
+</p>
+<p name="SingleReadSNV.train_report_file_html">
+        <b>SingleReadSNV.train_report_file_html</b><br />
+        <i>File?</i><br />
+        ML model training set report html file
 </p>
 <p name="SingleReadSNV.test_report_file_notebook">
         <b>SingleReadSNV.test_report_file_notebook</b><br />

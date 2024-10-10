@@ -76,8 +76,7 @@ tool \
 	--max-num-haps 10 \
 	--prog \
 	--interval-nreads 10000 \
-	--sv \
-	--single-strand-filter 	
+	--sv	
 
 samtools view -bS output_basename_assembly_hap_out.sam > output_basename_assembly_hap_out.bam
 samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_hap_out_sorted.bam
@@ -100,8 +99,7 @@ tool \
 	--max-num-haps 10 \
 	--prog \
 	--interval-nreads 10000 \
-	--sv \
-	--single-strand-filter
+	--sv	
 samtools view -bS output_basename_assembly_hap_out.sam > output_basename_assembly_hap_out.bam
 samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_hap_out_sorted.bam
 samtools index output_basename_assembly_hap_out_sorted.bam
@@ -122,7 +120,7 @@ tool \
 	--max-num-haps 10 \
 	--prog \
 	--interval-nreads 10000 \
-	--sv
+	--sv	
 samtools view -bS output_basename_assembly_hap_out.sam > output_basename_assembly_hap_out.bam
 samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_hap_out_sorted.bam
 samtools index output_basename_assembly_hap_out_sorted.bam

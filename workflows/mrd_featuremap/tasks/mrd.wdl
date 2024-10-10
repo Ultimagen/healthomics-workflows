@@ -19,7 +19,7 @@ task MrdDataAnalysis {
     File monitoring_script
   }
   command <<<
-    set -xeuo pipefail
+    set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     source ~/.bashrc
     conda activate genomics.py3
@@ -87,7 +87,7 @@ task SelectMRDQualitySNVs {
   String base_file_name_ = select_first([base_file_name, basename(input_vcf)])
   String output_file_name = base_file_name_ + output_suffix
   command <<<
-    set -xeuo pipefail
+    set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     source ~/.bashrc
     conda activate genomics.py3
@@ -135,7 +135,7 @@ task GenerateControlSignaturesFromDatabase {
     File monitoring_script
   }
   command <<<
-    set -xeuo pipefail
+    set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     source ~/.bashrc
     conda activate genomics.py3
@@ -187,7 +187,7 @@ task FeatureMapIntersectWithSignatures {
   Boolean is_defined_control_signatures = defined(control_signatures)
   Boolean is_defined_db_signatures = defined(db_signatures)
   command <<<
-    set -xeuo pipefail
+    set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     . ~/.bashrc
     conda activate genomics.py3
@@ -272,10 +272,8 @@ task TrainSnvQualityRecalibrationModel {
     File single_substitution_regions_bed
     References references
     String flow_order
-    Boolean raise_exceptions_in_report
     File monitoring_script
     String docker
-    String? pipeline_version
     Int preemptible_tries
     Int cpus = 1
     Float memory_gb = 16
@@ -283,7 +281,7 @@ task TrainSnvQualityRecalibrationModel {
   }
   Boolean random_split = single_read_snv_params.split_folds_by=="random"
   command <<<
-    set -xeuo pipefail
+    set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     source ~/.bashrc
     conda activate genomics.py3
@@ -303,12 +301,6 @@ task TrainSnvQualityRecalibrationModel {
         data1["categorical_features"] = {entry["left"]: entry["right"] for entry in data2}
       else:  # this is how write_json works in Omics - "{'ref': ['A', 'C', 'G', 'T'], ...}"
         data1["categorical_features"] = data2
-      if len("~{pipeline_version}") > 0:
-        data1["pipeline_version"] = "~{pipeline_version}"
-      data1["docker"] = "~{docker}"
-      ppmSeq_adapter_version = "~{single_read_snv_params.ppmSeq_adapter_version}"
-      if len(ppmSeq_adapter_version) > 0:
-        data1["ppmSeq_adapter_version"] = ppmSeq_adapter_version
       json.dump(data1, f3, indent=4)
     CODE
     echo "DEBUG - single_read_snv_params.json file:"
@@ -325,7 +317,6 @@ task TrainSnvQualityRecalibrationModel {
     --cram_stats_file "~{sorter_json_stats_file}" \
     --hom_snv_regions "~{hom_snv_regions_bed}" \
     --single_sub_regions "~{single_substitution_regions_bed}" \
-    ~{true="--raise_exceptions_in_report" false="" raise_exceptions_in_report} \
     --output "$PWD" \
     --basename "~{basename}"
     
@@ -336,8 +327,6 @@ task TrainSnvQualityRecalibrationModel {
       secs_elapsed=0$secs_elapsed
     fi
     echo "Run time: $mins_elapsed:$secs_elapsed"
-
-    ls -ltr
 
   >>>
   runtime {
@@ -353,8 +342,13 @@ task TrainSnvQualityRecalibrationModel {
     File featuremap_df_file = "~{basename}.featuremap_df.parquet"
     File params_file = "~{basename}.params.json"
     File test_set_mrd_simulation_dataframe = "~{basename}.test.df_mrd_simulation.parquet"
-    File test_set_statistics_h5 = "~{basename}.single_read_snv.applicationQC.h5"
+    File train_set_mrd_simulation_dataframe = "~{basename}.train.df_mrd_simulation.parquet"
+    File test_set_statistics_h5 = "~{basename}.test.statistics.h5"
+    File train_set_statistics_h5 = "~{basename}.train.statistics.h5"
     File test_set_statistics_json = "~{basename}.test.statistics.json"
+    File train_set_statistics_json = "~{basename}.train.statistics.json"
+    File train_report_file_notebook = "~{basename}.train_report.ipynb"
+    File train_report_file_html = "~{basename}.train_report.html"
     File test_report_file_notebook = "~{basename}.test_report.ipynb"
     File test_report_file_html = "~{basename}.test_report.html"
   }
@@ -537,7 +531,7 @@ task ExtractCoverageOverVcfFiles {
       Int mapping_quality_threshold = 60  
       References references
       String docker
-      Int memory_gb
+      Float memory_gb = 2
       Int cpus = 1
       Int preemptibles
       File monitoring_script
@@ -577,8 +571,7 @@ task ExtractCoverageOverVcfFiles {
         -I ~{input_cram_bam} \
         --intervals merged_loci.bed \
         --read-filter MappingQualityReadFilter --minimum-mapping-quality ~{mapping_quality_threshold} \
-        --output-format "~{output_format}" \
-        --java-options "-Xmx~{memory_gb-2}G -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10"
+        --output-format "~{output_format}"
 
       # The default output does not contain a prefix
       mv "~{base_file_name}.coverage" "~{base_file_name}.coverage.csv"

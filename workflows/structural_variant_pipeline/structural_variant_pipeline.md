@@ -174,11 +174,6 @@ The steps of the pipeline are as following:
         <i>String &mdash; Default: None</i><br />
          Gridss config file content 
 </p>
-<p name="SVPipeline.single_strand_filter">
-        <b>SVPipeline.single_strand_filter</b><br />
-        <i>Boolean &mdash; Default: None</i><br />
-         Whether to filter out non snp candidates that are on a single strand 
-</p>
 <p name="SVPipeline.create_assembly_memory_override">
         <b>SVPipeline.create_assembly_memory_override</b><br />
         <i>Int? &mdash; Default: None</i><br />

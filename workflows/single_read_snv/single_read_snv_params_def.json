@@ -47,6 +47,10 @@
         "description": "no_address_override",
         "optional": true
     },
+    "SingleReadSNV.ppmSeq_adapter_version": {
+        "description": "ppmSeq adapter version of the respective CRAM file, recommended value set in the template",
+        "optional": true
+    },
     "SingleReadSNV.pre_trained_model_file": {
         "description": "Pre-trained ML model file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
         "optional": true
@@ -57,10 +61,6 @@
     },
     "SingleReadSNV.process_featuremap_memory_gb_override": {
         "description": "process_featuremap_memory_gb_override",
-        "optional": true
-    },
-    "SingleReadSNV.raise_exceptions_in_report": {
-        "description": "Raise and exception and fail the pipeline if an error is raised in the QC report",
         "optional": true
     },
     "SingleReadSNV.references": {

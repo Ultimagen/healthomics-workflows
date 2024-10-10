@@ -28,12 +28,15 @@ task CnmopsGetReadCountsFromBam{
     String out_bam_filtered='~{base_file_name}.MAPQ~{mapq}.bam'
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
+        source ~/.bashrc
         set -eo pipefail
 
+        conda activate genomics.py3
         samtools view ~{input_bam_file} -O BAM -o ~{out_bam_filtered} -bq ~{mapq} -T ~{reference_genome}
         samtools index ~{out_bam_filtered}
 
-        Rscript --vanilla  /src/cnv/cnmops/get_reads_count_from_bam.R \
+        conda activate cn.mops
+        Rscript --vanilla  /VariantCalling/ugvc/cnv/get_reads_count_from_bam.R \
             -i ~{out_bam_filtered} \
             -refseq ~{sep="," ref_seq_names} \
             -wl ~{window_length} \
@@ -56,7 +59,7 @@ task CnmopsGetReadCountsFromBam{
         File out_reads_count_hdf5="~{base_file_name}.ReadCounts.hdf5"
         String out_sample_name = "~{out_bam_filtered}"
         File monitoring_log = "monitoring.log"
-
+        
     }
 }
 
@@ -77,7 +80,9 @@ task ConvertBedGraphToGranges {
 
     command <<<
         bash ~{monitoring_script} > monitoring.log &
+        source ~/.bashrc
         set -eo pipefail
+        conda activate genomics.py3
 
         for bedgraph in ~{sep=" " input_bed_graph}; 
         do 
@@ -102,7 +107,8 @@ task ConvertBedGraphToGranges {
             cp $file_basename.bedgraph.mean ~{input_bedGraph_basename}.win.bedGraph
         fi            
 
-        Rscript --vanilla /src/cnv/cnmops/convert_bedGraph_to_Granges.R \
+        conda run -n cn.mops \
+        Rscript --vanilla /VariantCalling/ugvc/cnv/convert_bedGraph_to_Granges.R \
         -i ~{input_bedGraph_basename}.win.bedGraph \
         -sample_name ~{sample_name}
     >>>
@@ -139,8 +145,10 @@ task AddCountsToCohortMatrix {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
+        source ~/.bashrc
         set -eo pipefail
-        Rscript --vanilla /src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
+        conda activate cn.mops
+        Rscript --vanilla /VariantCalling/ugvc/cnv/merge_reads_count_sample_to_cohort.R \
             -cohort_rc ~{cohort_reads_count_matrix} \
             -sample_rc ~{sample_reads_count} \
             ~{true="--save_hdf" false='' save_hdf}
@@ -177,8 +185,10 @@ task CreateCohortReadsCountMatrix {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
+        source ~/.bashrc
         set -eo pipefail
-        Rscript --vanilla /src/cnv/cnmops/create_reads_count_cohort_matrix.R \
+        conda activate cn.mops
+        Rscript --vanilla /VariantCalling/ugvc/cnv/create_reads_count_cohort_matrix.R \
             -samples_read_count_files_list ~{write_lines(sample_reads_count_files)} \
             ~{true="--save_csv" false='' save_csv} \
             ~{true="--save_hdf" false='' save_hdf}
@@ -221,20 +231,22 @@ task RunCnmops {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
+        source ~/.bashrc
         set -eo pipefail
+        conda activate cn.mops
 
         # use touch for optional output files
         touch .estimate_gender
         touch chrX_mean_coverage_distribution.png
 
-        Rscript --vanilla /src/cnv/cnmops/normalize_reads_count.R \
+        Rscript --vanilla /VariantCalling/ugvc/cnv/normalize_reads_count.R \
              --cohort_reads_count_file ~{merged_cohort_reads_count_matrix} \
              ~{"--ploidy " + ploidy} \
              ~{"--chrX_name " + chrX_name} \
              ~{"--chrY_name " + chrY_name} \
              ~{true="--cap_coverage" false="" cap_coverage}
 
-        Rscript --vanilla /src/cnv/cnmops/cnv_calling_using_cnmops.R \
+        Rscript --vanilla /VariantCalling/ugvc/cnv/cnv_calling_using_cnmops.R \
             -cohort_rc cohort_reads_count.norm.rds \
             -minWidth ~{min_width_value} \
             -p ~{parallel} \
@@ -287,8 +299,10 @@ task FilterSampleCnvs {
         set -eo pipefail
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
+        source ~/.bashrc
 
         #write all samples coverage to bed files
+        conda activate cn.mops
         Rscript --vanilla -e "args=commandArgs(trailingOnly=TRUE)
             suppressPackageStartupMessages(library('GenomicRanges'))
             gr <- readRDS(args[2])
@@ -298,6 +312,7 @@ task FilterSampleCnvs {
                     write.table(df_sample[,c('seqnames','start','end',make.names(sample))], paste(sample,'cov.bed',sep='.') , sep = '\t', col.names = FALSE, row.names = FALSE, quote = FALSE)
             }" --args ~{germline_coverge_rds}
 
+        conda activate genomics.py3
         #get samples CNVs
         for sample_name in ~{sep=" " sample_names}
         do 
@@ -305,15 +320,15 @@ task FilterSampleCnvs {
                 then grep "$sample_name" ~{cohort_cnvs_csv} > $sample_name.cnvs.csv ;
                 awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' $sample_name.cnvs.csv > $sample_name.cnvs.bed;
 
-                #filter CNVs
-                python -m ugbio_cnv.filter_sample_cnvs \
+                #filter CNVs 
+                python /VariantCalling/ugvc filter_sample_cnvs \
                     --input_bed_file $sample_name.cnvs.bed \
                     --intersection_cutoff ~{intersection_cutoff} \
                     --cnv_lcr_file ~{cnv_lcr_file} \
                     --min_cnv_length ~{min_cnv_length};
                 
                 #convert bed file to vcf
-                python -m ugbio_cnv.convert_cnv_results_to_vcf\
+                python /VariantCalling/ugvc convert_cnv_results_to_vcf \
                     --cnv_annotated_bed_file $sample_name.cnvs.annotate.bed \
                     --fasta_index_file ~{ref_genome_file} \
                     --sample_name $sample_name
@@ -321,8 +336,9 @@ task FilterSampleCnvs {
                 #generate figure for each sample
                 cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
                 cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
-
-                python -m ugbio_cnv.plot_cnv_results \
+                
+                conda activate genomics.py3
+                python /VariantCalling/ugvc plot_cnv_results \
                     --germline_coverage $sample_name.cov.bed \
                     --duplication_cnv_calls $sample_name.cnvs.filter.DUP.bed \
                     --deletion_cnv_calls $sample_name.cnvs.filter.DEL.bed \
@@ -517,7 +533,10 @@ task Bicseq2PostProcessing {
     command {
         set -eo pipefail
 
-        python -m ugbio_cnv.bicseq2_post_processing \
+        source ~/.bashrc
+        conda activate genomics.py3
+
+        python /VariantCalling/ugvc bicseq2_post_processing \
         --input_bicseq2_txt_file ~{input_bicseq2_txt_file} \
         ~{"--ratio_DUP_cutoff " + ratio_DUP_cutoff} \
         ~{"--ratio_DEL_cutoff " + ratio_DEL_cutoff}

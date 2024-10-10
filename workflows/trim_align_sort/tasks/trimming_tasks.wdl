@@ -43,7 +43,7 @@ task Trimmer {
 
 
     command <<<
-        set -xeo pipefail
+        set -eo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         touch ~{output_trimmed_failed_file_name}
         python <<CODE
@@ -83,6 +83,7 @@ task Trimmer {
             --directory="$formats_base_path" \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
+            ~{trimmer_extra_args} \
             ~{failure_codes_args} \
             --progress \
             --vector \
@@ -90,8 +91,7 @@ task Trimmer {
             ~{if defined(parameters.output_failed_file_name_suffix) then "--failure-file=~{output_trimmed_failed_file_name}" else ""} \
             ~{if defined(parameters.cram_reference) then "--reference" else ""} ~{default="" parameters.cram_reference} \
             --cram true \
-            --output ~{output_file_name} \
-            ~{trimmer_extra_args}
+            --output ~{output_file_name}
         else
             samtools view -h ~{input_cram_bam} -@ ~{cpus} | \
             trimmer \
@@ -101,6 +101,7 @@ task Trimmer {
             --directory="$formats_base_path" \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
+            ~{trimmer_extra_args} \
             ~{failure_codes_args} \
             --progress \
             --vector \
@@ -108,8 +109,7 @@ task Trimmer {
             ~{if defined(parameters.output_failed_file_name_suffix) then "--failure-file=~{output_trimmed_failed_file_name}" else ""} \
             ~{if defined(parameters.cram_reference) then "--reference" else ""} ~{default="" parameters.cram_reference} \
             --cram true \
-            --output ~{output_file_name} \
-            ~{trimmer_extra_args}
+            --output ~{output_file_name}
         fi
 
         # If remove_small_files is set to true then remove trimmed ucrams under 1Gb in file size
@@ -157,7 +157,7 @@ task TrimmerGenerateFormatsJson {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -xeuo pipefail
+        set -eo pipefail
 
         /trimmer/generate_format_json.py ~{min_insert_len} ~{max_insert_len} ~{umi_length_5p} ~{umi_length_3p} \
             --adapter-5p ~{read_trimming_parameters.adapter_5p} \
@@ -201,7 +201,7 @@ task TrimmerAggregateStats {
     String aggregated_trimmer_stats_filename = "~{base_file_name}.aggregated_trimmer_stats.csv"
 
     command <<<
-        set -xeuo pipefail
+        set -eo pipefail
         
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         source ~/.bashrc
@@ -253,7 +253,7 @@ task CutadaptMarkAdapter {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -xeuo pipefail
+        set -eo pipefail
         . ~/.bashrc
         conda activate genomics.py3
         export PATH=$PATH:$CONDA_PREFIX/lib/python3.7/site-packages/ugvc/bash/
@@ -299,7 +299,7 @@ task CutadaptTrimAdapter {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -xeuo pipefail
+        set -eo pipefail
         java -Xmx10g -jar ~{gitc_path}GATK_ultima.jar ClipReads --input ~{input_ubam} \
         -O ~{output_base_name}.trimmed.bam \
         -os ~{output_base_name}.trimming.report.txt \

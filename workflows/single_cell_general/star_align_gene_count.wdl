@@ -34,7 +34,6 @@ workflow StarAlignment {
         Boolean no_address
         Int preemptible_tries
         Int cpu
-        Int? memory_gb
 
         # Used for running on other clouds (aws)
         File? monitoring_script_input
@@ -61,8 +60,7 @@ workflow StarAlignment {
                 "Globals.glob",
                 "StarGenomeGenerate.disk_size",
                 "StarAlign.disk_size",
-                "StarAlignStats.disk_size",
-                "memory_gb"
+                "StarAlignStats.disk_size"
             ]
         }
     }
@@ -123,11 +121,6 @@ workflow StarAlignment {
             type: "File",
             category: "output"
         }
-        raw_star_log_file: {
-            help: "The raw STAR log file.",
-            type: "File",
-            category: "output"
-        }
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
@@ -165,8 +158,7 @@ workflow StarAlignment {
             preemptible_tries = preemptible_tries,
             monitoring_script = monitoring_script,  # !FileCoercion
             no_address      =   no_address,
-            cpu             =   cpu,
-            memory_gb       =   memory_gb
+            cpu             =   cpu
     }
 
     call UGRealign.StarAlignStats {
@@ -184,6 +176,5 @@ workflow StarAlignment {
         File output_bam = StarAlign.output_bam
         File reads_per_gene_file = StarAlign.reads_per_gene_file
         File star_stats = StarAlignStats.star_stats
-        File raw_star_log_file = StarAlign.star_log_file
     }
 }

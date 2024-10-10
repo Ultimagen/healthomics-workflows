@@ -26,6 +26,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.target_intervals": "<targeted_exome>.interval_list",
+    "EfficientDV.hmer_runs_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/runs.conservative.bed",
     "EfficientDV.filtering_blacklist_file": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/hapmap2.1_wgs.v0.6.2.blacklist.bed",
     "EfficientDV.sec_models": [],
     "EfficientDV.background_cram_files": [
@@ -36,7 +37,7 @@
     ],
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx",
     "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx.serialized.a10g",
-    "EfficientDV.ug_make_examples_extra_args": "--add-proxy-support-to-non-hmer-insertion --pragmatic --single-strand-filter",
+    "EfficientDV.ug_make_examples_extra_args": "--add-proxy-support-to-non-hmer-insertion --pragmatic",
     "EfficientDV.min_fraction_hmer_indels": 0.02,
     "EfficientDV.min_fraction_non_hmer_indels": 0.02,
     "EfficientDV.min_fraction_snps": 0.02,

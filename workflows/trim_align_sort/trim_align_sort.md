@@ -147,12 +147,12 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 </p>
 <p name="TrimAlignSort.sort_stats_csv">
         <b>TrimAlignSort.sort_stats_csv</b><br />
-        <i>Array[File?]?</i><br />
+        <i>File?</i><br />
         Sorter stats in csv format.
 </p>
 <p name="TrimAlignSort.sort_stats_json">
         <b>TrimAlignSort.sort_stats_json</b><br />
-        <i>Array[File?]?</i><br />
+        <i>File?</i><br />
         Sorter stats in json format.
 </p>
 <p name="TrimAlignSort.bedgraph_mapq0">
@@ -164,21 +164,6 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <b>TrimAlignSort.bedgraph_mapq1</b><br />
         <i>File?</i><br />
         Bedgraph mapq1 file.
-</p>
-<p name="TrimAlignSort.fastq_files">
-        <b>TrimAlignSort.fastq_files</b><br />
-        <i>Array[File?]?</i><br />
-        Sorter output in Fastq format (allow multiple files for applications like single-cell).
-</p>
-<p name="TrimAlignSort.sub_sampled_output">
-        <b>TrimAlignSort.sub_sampled_output</b><br />
-        <i>Array[File?]?</i><br />
-        Sub-sampling files as part of sorter output.
-</p>
-<p name="TrimAlignSort.unmatched_cram">
-        <b>TrimAlignSort.unmatched_cram</b><br />
-        <i>File?</i><br />
-        Unmatched cram file output from sorter (if defined).
 </p>
 
 <hr />

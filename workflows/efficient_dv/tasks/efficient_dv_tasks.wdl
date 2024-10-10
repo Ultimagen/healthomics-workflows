@@ -104,10 +104,10 @@ task UGMakeExamples{
     if [[ "~{cloud_provider}" != "aws" ]]; then
       gatk --java-options "-Xms2G" PrintReads \
           -I ~{sep=' -I ' cram_files} \
-          -O input.cram \
+          -O /dev/stdout \
           -L ~{interval} \
-          -R ~{references.ref_fasta}
-
+          -R ~{references.ref_fasta} | \
+      samtools view -C -@ ~{cpu} --reference ~{references.ref_fasta} -o input.cram
       samtools index input.cram -@ ~{cpu}
       input=input.cram
       input_index=input.cram.crai
@@ -117,10 +117,10 @@ task UGMakeExamples{
       if [[ "~{defined_background}" == "true" ]]; then
         gatk --java-options "-Xms2G" PrintReads \
             -I  ~{sep=' -I ' background_cram_files} \
-            -O background.cram \
+            -O /dev/stdout \
             -L ~{interval} \
-            -R ~{references.ref_fasta}
-
+            -R ~{references.ref_fasta} | \
+        samtools view -C -@ ~{cpu} --reference ~{references.ref_fasta} -o background.cram
         samtools index background.cram -@ ~{cpu}
         background=background.cram
         background_index=background.cram.crai
@@ -256,8 +256,8 @@ task UGMakeExamples{
     File background_cram_index = "background.cram.crai"
     File realigned_cram = "~{output_prefix}_realign.cram"
     File realigned_cram_index = "~{output_prefix}_realign.cram.crai"
-    Array[File] output_examples = glob("~{output_prefix}*[0-9].tfrecord.gz")
-    Array[File?] gvcf_records = glob("~{output_prefix}*.gvcf.tfrecord.gz")
+    Array[File] output_examples = glob("~{output_prefix}*[0-9].tfrecord*.gz")
+    Array[File?] gvcf_records = glob("~{output_prefix}*.gvcf.tfrecord*.gz")
     Array[File] output_jsons = glob("~{output_prefix}*.json")
     Array[File] output_gatk = glob("~{output_prefix}*.gatk")
   }
@@ -282,7 +282,6 @@ task UGCallVariants{
   Int num_examples = length(examples)
   Int extra_mem = select_first([call_variants_extra_mem, 8])
   Int mem = num_threads * call_variants_uncompr_buf_size_gb + extra_mem
-  String onnx_base_name = basename(model_onnx)
   command <<<
     set -eo pipefail
 
@@ -294,8 +293,7 @@ task UGCallVariants{
     if [ "~{defined(model_serialized)}" == "true" ] && [ "~{model_serialized}" != "~{model_onnx}.serialized" ]
     then
       echo 'Renaming serialized model to fit onnx file'
-      cp ~{model_onnx} ~{onnx_base_name}
-      cp ~{model_serialized} ~{onnx_base_name}.serialized
+      mv ~{model_serialized} ~{model_onnx}.serialized
     fi
 
     printf "%b\n" "[RT classification]" \
@@ -338,7 +336,7 @@ output {
     File params = "params.ini"
     Array[File] log = glob('call_variants*.log')
     Array[File] output_records = glob('call_variants*.gz')
-    # File output_model_serialized = " ~{onnx_base_name}.serialized" uncomment to output the serilized model (need also to uncomment output_model_serialized in efficient_dv.wdl outputs)
+    # File output_model_serialized = "~{model_onnx}.serialized" # uncomment to output the serilized model (need also to uncomment output_model_serialized in efficient_dv.wdl outputs)
   }
 }
 

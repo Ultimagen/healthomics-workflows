@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.14.2" # !UnusedDeclaration
+        String pipeline_version = "1.13.3" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
@@ -72,7 +72,7 @@ workflow TrimAlignSort {
         String dummy_input_for_call_caching = ""
 
     
-        #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name or 'sample' in base_file_name)
+        #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv len(input_cram_bam_list) > 0
         #@wv suffix(input_cram_bam_list) <= {".bam", ".cram"}
         #@wv 'trim' in steps or 'align' in steps or 'sort' in steps -> (steps['trim'] or steps['align'] or steps['sort'])
@@ -300,21 +300,6 @@ workflow TrimAlignSort {
             type: "File", 
             category: "output"
         }
-        fastq_files: {
-            help: "Sorter output in Fastq format (allow multiple files for applications like single-cell).",
-            type: "Array[File]", 
-            category: "output"
-        }
-        sub_sampled_output: {
-            help: "Sub-sampling files as part of sorter output.",
-            type: "Array[File]", 
-            category: "output"
-        }
-        unmatched_cram: {
-            help: "Unmatched cram file output from sorter (if defined).",
-            type: "File", 
-            category: "output"
-        }
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
@@ -415,7 +400,7 @@ workflow TrimAlignSort {
     }
 
     if (sort) {
-        File input_for_sort = select_first([align_output, trimmer_output_ucram,  single_cram_bam])
+        File input_for_sort = select_first([align_output, single_cram_bam])
 
         call SortTasks.Sorter {
             input:
@@ -428,52 +413,36 @@ workflow TrimAlignSort {
                 preemptible_tries  = preemptible_tries,
                 cpu                = cpu
         }
-        if (length(Sorter.sorter_stats_csv) == 1) {
-            call UGGeneralTasks.ConvertSorterStatsToH5 as ConvertSorterStatsToH5 {
-                input:
-                    monitoring_script = monitoring_script,
-                    base_file_name    = base_file_name,
-                    preemptible_tries = preemptible_tries,
-                    docker            = global.ug_vc_docker,
-                    no_address        = no_address,
-                    input_csv_file    = Sorter.sorter_stats_csv[0],
-                    input_json_file   = Sorter.sorter_stats_json[0]
-            }
 
-            call QCTasks.CreateReportSingleSampleQC as CreateReport {
-                input:
-                    monitoring_script = monitoring_script,
-                    base_file_name    = base_file_name,
-                    preemptible_tries = preemptible_tries,
-                    docker            = global.ug_vc_docker,
-                    disk_size         = 4,
-                    input_h5_file = ConvertSorterStatsToH5.aggregated_metrics_h5
-            }
+        call UGGeneralTasks.ConvertSorterStatsToH5 as ConvertSorterStatsToH5 {
+            input:
+                monitoring_script = monitoring_script,
+                base_file_name    = base_file_name,
+                preemptible_tries = preemptible_tries,
+                docker            = global.ug_vc_docker,
+                no_address        = no_address,
+                input_csv_file    = Sorter.sorter_stats_csv,
+                input_json_file   = Sorter.sorter_stats_json
         }
 
-        if (length(Sorter.sorted_cram) > 0) {
-            File sorted_cram = select_first(Sorter.sorted_cram)
-        }
-        if (length(Sorter.sorted_cram_index) > 0) {
-            File output_cram_bam_index_ = select_first(Sorter.sorted_cram_index)
-        }
-        if (length(Sorter.sorter_out_bedgraph_mapq0) > 0) {
-            File bedgraph_mapq0_ = select_first(Sorter.sorter_out_bedgraph_mapq0)
-        }
-        if (length(Sorter.sorter_out_bedgraph_mapq1) > 0) {
-            File bedgraph_mapq1_ = select_first(Sorter.sorter_out_bedgraph_mapq1)
+        call QCTasks.CreateReportSingleSampleQC as CreateReport {
+            input:
+                monitoring_script = monitoring_script,
+                base_file_name    = base_file_name,
+                preemptible_tries = preemptible_tries,
+                docker            = global.ug_vc_docker,
+                disk_size         = 4,
+                input_h5_file = ConvertSorterStatsToH5.aggregated_metrics_h5
         }
     }
 
-    # select the output of the last stage that ran as the workflow output, the rest remain intermediate outputs.
-    # Note about sorter output: sometimes there is no cram output (only fastq), so the output is selected from the previous stages
-    File output_cram_bam_ = select_first([sorted_cram, align_output, trimmer_output_ucram, single_cram_bam])
-
-
+    # select the output of the last stage that ran as the workflow output, the rest remain intermediate outputs
+    File output_cram_bam_ = select_first([Sorter.sorted_cram, align_output, trimmer_output_ucram, single_cram_bam])
+    
     output {
         # main output
         File output_cram_bam            = output_cram_bam_
-        File? output_cram_bam_index     = output_cram_bam_index_
+        File? output_cram_bam_index     = Sorter.sorted_cram_index
 
         # single sample qc outputs
         File? aggregated_metrics_h5      = ConvertSorterStatsToH5.aggregated_metrics_h5
@@ -491,12 +460,9 @@ workflow TrimAlignSort {
         File? align_star_stats          = StarAlignment.star_stats
 
         # sorter outputs
-        Array[File?]? sort_stats_csv     = Sorter.sorter_stats_csv
-        Array[File?]? sort_stats_json    = Sorter.sorter_stats_json
-        File? bedgraph_mapq0             = bedgraph_mapq0_
-        File? bedgraph_mapq1             = bedgraph_mapq1_
-        Array[File?]? fastq_files        = Sorter.fastq_files
-        Array[File?]? sub_sampled_output = Sorter.sub_sampled_output
-        File? unmatched_cram             = Sorter.unmatched_cram
+        File? sort_stats_csv            = Sorter.sorter_stats_csv
+        File? sort_stats_json           = Sorter.sorter_stats_json
+        File? bedgraph_mapq0            = Sorter.sorter_out_bedgraph_mapq0
+        File? bedgraph_mapq1            = Sorter.sorter_out_bedgraph_mapq1
     }
 }

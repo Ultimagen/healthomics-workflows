@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.14.2" # !UnusedDeclaration
+    String pipeline_version = "1.13.3" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -87,6 +87,7 @@ workflow EfficientDV {
 
     # Systematic error correction args
     Boolean annotate_systematic_errors = false
+    File? hmer_runs_bed
     File? filtering_blacklist_file
     Array[File]? sec_models
 
@@ -131,7 +132,7 @@ workflow EfficientDV {
    #@wv suffix(references['ref_dict']) == '.dict'
    #@wv suffix(references['ref_fasta_index']) == '.fai'
    #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
-   #@wv annotate_systematic_errors -> (defined(filtering_blacklist_file) and defined(sec_models))
+   #@wv annotate_systematic_errors -> (defined(filtering_blacklist_file) and defined(sec_models) and defined(hmer_runs_bed))
    #@wv len(background_cram_files) == len(background_cram_index_files)
    #@wv len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
    #@wv len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai"}
@@ -153,8 +154,6 @@ workflow EfficientDV {
               "FilterVCF.input_model",
               "FilterVCF.custom_annotations",
               "FilterVCF.disk_size",
-              "FilterVCF.ref_fasta",
-              "FilterVCF.ref_fasta_idx",
               "MergeRealignedCrams.cache_tarball",
               "Globals.glob",
               "Sentieon.Globals.glob",
@@ -332,6 +331,10 @@ workflow EfficientDV {
       help: "Models to annotate systematic errors",
       category: "param_advanced"
     }
+    hmer_runs_bed: {
+      help: "Bed file annotating all homopolymer runs longer than 7 in the reference genome. Used to annotate potentially difficult to sequence regions",
+      category: "param_optional"
+    }
     input_flow_order: {
       help: "Flow order. If not provided, it will be extracted from the CRAM header",
       category: "param_optional"
@@ -410,10 +413,6 @@ workflow EfficientDV {
       type: "File",
       category: "output"
     }
-    # output_model_serialized: {  # uncomment to save serialized model
-    #   help: "Output model serialized",
-    #   category: "output"
-    # }
     output_gvcf: {
       help: "Variant in each position (gvcf file)",
       category: "output"
@@ -654,7 +653,6 @@ workflow EfficientDV {
         filter_cg_insertions = false,
         blacklist_file = CreateSECBlacklist.output_blacklist,
         final_vcf_base_name = base_file_name,
-        recalibrate_gt = false,
         preemptible_tries = preemptible_tries,
         docker = global.ug_vc_docker,
         monitoring_script = monitoring_script,

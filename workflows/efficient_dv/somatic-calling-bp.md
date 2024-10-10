@@ -1,6 +1,6 @@
-# Somatic mutation calling - best practices - v1.14
+# Somatic mutation calling - best practices - v1.11.2
 
-Last updated: Sep 12, 2024 
+Last updated: Jun 04, 20242 
 
 ## Table of contents
 1. [Running somatic variant calling pipeline](#running-somatic-variant-calling-pipeline)
@@ -11,7 +11,6 @@ Last updated: Sep 12, 2024
    b. [Signature detection for MRD, fresh frozen, PCR-free WGS libraries](#signature-detection-for-mrd-fresh-frozen-pcr-free-wgs-libraries)
    
    c. [Sample characterization, FFPE, amplified WGS libraries](#sample-characterization-ffpe-amplified-wgs-libraries)
-   
    d. [Sample characterization, amplified WES libraries](#sample-characterization-amplified-wes-libraries)
 3. [Pipeline output](#pipeline-output)
 4. [Evaluation process](#evaluation-process)
@@ -36,7 +35,7 @@ Samples required: tumor sample at coverage 40x-150x, normal sample at coverage 4
 
 Variants called at high confidence: SNVs with allele frequency > 5%, Indels  with allele frequency > 10%
 
-Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_2_3--lt20mer-40-150x_40-100x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_2_3--lt20mer-40-150x_40-100x-.json)
+Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_0-BC-4_9--40-150x_40-100x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_0-BC-4_9--40-150x_40-100x-.json)
 
 <a name="signature-detection-for-mrd-fresh-frozen-pcr-free-wgs-libraries"></a>
 ### Signature detection for MRD, fresh frozen, PCR-free WGS libraries
@@ -44,7 +43,7 @@ Samples required: tumor sample at coverage 40x, normal sample at coverage 40x
 
 Variants called at high confidence: SNVs with allele frequency > 10%
 
-Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-SNV-signature-detection-v1_2_3--40x_40x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-SNV-signature-detection-v1_2_3--40x_40x-.json)
+Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-SNV-signature-detection-v1_0--40x_40x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-SNV-signature-detection-v1_0--40x_40x-.json)
 
 The pipeline can be used for tumor samples with coverage higher than 40x as a much faster and cheaper alternative to the full sample characterization
 

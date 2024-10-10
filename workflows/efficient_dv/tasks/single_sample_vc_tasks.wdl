@@ -180,7 +180,7 @@ task CreateSECBlacklist {
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
 
-    source /opt/conda/etc/profile.d/conda.sh
+    source ~/.bashrc
 
     conda activate genomics.py3
 
@@ -215,45 +215,29 @@ task PrepareTrainingSet {
       File input_vcf
       File input_vcf_index
       String base_file_name 
-      File? blacklist_file
-      File? base_vcf
-      File? base_vcf_index
-      File? hcr
-      File? ref_fasta
-      File? ref_sdf
-      String test_chromosome
+      File blacklist_file
+      String special_chromosome
       Array[String] train_and_test_chromosomes
       Array[String]? custom_annotations
       Int preemptible_tries
       String docker
       File monitoring_script
       Boolean no_address
-      String gt_type = "approximate"
   }
   Int disk_size = ceil(2*size(input_vcf, "GB") + size(blacklist_file, "GB") + 20)
-  Boolean have_sdf = defined(ref_sdf)
-
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    source /opt/conda/etc/profile.d/conda.sh
+    source ~/.bashrc
     conda activate genomics.py3
-    
-    if [ ~{have_sdf} = true ]
-    then
-      python -m tarfile -e ~{ref_sdf} ~{ref_fasta}.sdf
-    fi
 
     training_prep_pipeline.py \
               --call_vcf ~{input_vcf} \
-              ~{"--blacklist " + blacklist_file} \
-              ~{"--base_vcf " + base_vcf} \
-              ~{"--hcr " + hcr} \
-              ~{"--reference " + ref_fasta} \
+              --blacklist ~{blacklist_file} \
               --contigs_to_read ~{sep=" " train_and_test_chromosomes} \
-              --contig_for_test ~{test_chromosome} \
+              --contig_for_test ~{special_chromosome} \
               ~{true="--custom_annotations " false="" defined(custom_annotations)} ~{sep=" --custom_annotations " custom_annotations} \
-              --gt_type ~{gt_type} \
+              --gt_type approximate \
               --output_prefix ~{base_file_name}
     >>>
   runtime {
@@ -276,7 +260,6 @@ task TrainModel {
     Array[File] train_data
     Array[File] test_data
     String base_file_name
-    String gt_type = "approximate"
     Array[String]? custom_annotations
     Int preemptible_tries
     Int disk_size = ceil(size(train_data, "GB") +
@@ -287,14 +270,14 @@ task TrainModel {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    source /opt/conda/etc/profile.d/conda.sh
+    source ~/.bashrc
     conda activate genomics.py3
 
     train_models_pipeline.py \
             --train_dfs ~{sep =" " train_data} \
             --test_dfs  ~{sep =" " test_data} \
             --output_file_prefix ~{base_file_name}.model \
-            --gt_type ~{gt_type} \
+            --gt_type approximate \
             ~{true="--custom_annotations " false="" defined(custom_annotations)} ~{sep=" --custom_annotations " custom_annotations} \
     >>>
   runtime {
@@ -318,12 +301,9 @@ task FilterVCF {
     File input_vcf_index
     File? input_model
     Boolean filter_cg_insertions
-    File? ref_fasta
-    File? ref_fasta_idx
     File? blacklist_file
     String final_vcf_base_name
     Array[String]? custom_annotations
-    Boolean recalibrate_gt
     Int disk_size = 10
     Int preemptible_tries
     String docker
@@ -333,18 +313,15 @@ task FilterVCF {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    source /opt/conda/etc/profile.d/conda.sh
+    source ~/.bashrc
     conda activate genomics.py3
 
-    filter_variants_pipeline.py --input_file ~{input_vcf} \
+      filter_variants_pipeline.py --input_file ~{input_vcf} \
                                        ~{"--model_file " + input_model} \
                                        ~{true="--blacklist_cg_insertions" false="" filter_cg_insertions} \
                                        ~{"--blacklist " + blacklist_file} \
-                                       ~{"--ref_fasta " + ref_fasta} \
                                        ~{true="--custom_annotations " false="" defined(custom_annotations)}~{sep=" --custom_annotations " custom_annotations} \
-                                       ~{true="--recalibrate_genotype --treat_multiallelics" false="" recalibrate_gt} \
                                        --output_file ~{final_vcf_base_name}.filtered.vcf.gz
-                                       
   >>>
   runtime {
     preemptible: preemptible_tries
@@ -374,7 +351,7 @@ task CompressAndIndexVCF {
   command <<< 
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    source /opt/conda/etc/profile.d/conda.sh
+    source ~/.bashrc
     conda activate genomics.py3
 
     bcftools view --threads ~{cpus} -Oz -o ~{base_file_name}.vcf.gz ~{input_vcf}
@@ -415,7 +392,7 @@ task NormalizeVariants {
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
 
-    source /opt/conda/etc/profile.d/conda.sh
+    source ~/.bashrc
     conda activate genomics.py3
 
     bcftools norm -f ~{references.ref_fasta} ~{vcf_file} --threads 2 -O z -o ~{output_filename} > norm_output_stats.txt 2>&1
@@ -433,8 +410,6 @@ task NormalizeVariants {
   >>>
   runtime {
     memory: "3 GB"
-    preemptible: preemptible_tries
-    noAddress: no_address
     cpu: "2"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker

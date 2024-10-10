@@ -170,21 +170,6 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
         <i>Array[File]</i><br />
         Bed file with CNVs filtered by length and overlap with low confidence regions
 </p>
-<p name="SingleSampleCnmopsCNVCalling.out_coverage_plot_files">
-        <b>SingleSampleCnmopsCNVCalling.out_coverage_plot_files</b><br />
-        <i>Array[File]</i><br />
-        List of coverage figures (file per sample)
-</p>
-<p name="SingleSampleCnmopsCNVCalling.out_dup_del_plot_files">
-        <b>SingleSampleCnmopsCNVCalling.out_dup_del_plot_files</b><br />
-        <i>Array[File]</i><br />
-        List of duplication/deletion figures (file per sample)
-</p>
-<p name="SingleSampleCnmopsCNVCalling.out_copy_number_plot_files">
-        <b>SingleSampleCnmopsCNVCalling.out_copy_number_plot_files</b><br />
-        <i>Array[File]</i><br />
-        List of copy number figures (file per sample)
-</p>
 <p name="SingleSampleCnmopsCNVCalling.out_sample_merged_bedGraph">
         <b>SingleSampleCnmopsCNVCalling.out_sample_merged_bedGraph</b><br />
         <i>File?</i><br />

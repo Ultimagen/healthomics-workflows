@@ -9,10 +9,6 @@ coverage will be calculted based on the input cram/bam. Alternativley, it can re
 
 Allele frequencies will be calculated based on the input cram/bam and a given vcf file to specify locations. Alternativley, it can recieve precalculated frequencies as mpileup format.
 
-Pipeline has an option to run in High-Sensitivity-Mode which can be used for low tumor purity samples. in this case segmentation results will be outputed and filtered by their average fold change.
-
-for High-Sensitivity-Mode fold changes for gain and loss calls can be defined by the user. (default cutoff values are [gain,loss]=[1.03,0.97])
-
 The pipeline outputs: 
 
 &nbsp;&nbsp;- calculated coverage for tumor and normal samples
@@ -59,15 +55,15 @@ The pipeline outputs:
         <i>Array[File]+ </i> &mdash; 
          Input normal BAI/CRAI index files <br /> 
 </p>
-<p name="SomaticCNVCallingControlFREEC.snp_file">
-        <b>SomaticCNVCallingControlFREEC.snp_file</b><br />
+<p name="SomaticCNVCallingControlFREEC.SNPfile">
+        <b>SomaticCNVCallingControlFREEC.SNPfile</b><br />
         <i>File </i> &mdash; 
          Vcf file holding locations of the common variants to calculate pileup statistics on <br /> 
 </p>
-<p name="SomaticCNVCallingControlFREEC.snp_file_index">
-        <b>SomaticCNVCallingControlFREEC.snp_file_index</b><br />
+<p name="SomaticCNVCallingControlFREEC.SNPfile_index">
+        <b>SomaticCNVCallingControlFREEC.SNPfile_index</b><br />
         <i>File </i> &mdash; 
-         Vcf.tbi index file for snp_file <br /> 
+         Vcf.tbi index file for SNPfile <br /> 
 </p>
 
 ### Required parameters
@@ -152,8 +148,8 @@ The pipeline outputs:
         <i>Array[String]? </i> &mdash; 
          Genomic region to limit the CNV calling to <br /> 
 </p>
-<p name="SomaticCNVCallingControlFREEC.contamination_fraction">
-        <b>SomaticCNVCallingControlFREEC.contamination_fraction</b><br />
+<p name="SomaticCNVCallingControlFREEC.contaminationFraction">
+        <b>SomaticCNVCallingControlFREEC.contaminationFraction</b><br />
         <i>Float? </i> &mdash; 
          a priori known value of tumor sample contamination by normal cells. Default: contamination=0 <br /> 
 </p>
@@ -167,8 +163,8 @@ The pipeline outputs:
         <i>Int? </i> &mdash; 
          Average sample ploidy (if known) <br /> 
 </p>
-<p name="SomaticCNVCallingControlFREEC.max_threads_override">
-        <b>SomaticCNVCallingControlFREEC.max_threads_override</b><br />
+<p name="SomaticCNVCallingControlFREEC.maxThreads_override">
+        <b>SomaticCNVCallingControlFREEC.maxThreads_override</b><br />
         <i>Int? </i> &mdash; 
          maximal threads for controlFREEC. Default is 8 <br /> 
 </p>
@@ -177,8 +173,8 @@ The pipeline outputs:
         <i>String? </i> &mdash; 
          Sample's sex value, should be 'XX' or 'XY' <br /> 
 </p>
-<p name="SomaticCNVCallingControlFREEC.gem_mappability_file">
-        <b>SomaticCNVCallingControlFREEC.gem_mappability_file</b><br />
+<p name="SomaticCNVCallingControlFREEC.gemMappabilityFile">
+        <b>SomaticCNVCallingControlFREEC.gemMappabilityFile</b><br />
         <i>File? </i> &mdash; 
          Gem file holding mappablity biased regions.  <br /> 
 </p>
@@ -186,16 +182,6 @@ The pipeline outputs:
         <b>SomaticCNVCallingControlFREEC.preemptible_tries_override</b><br />
         <i>Int? </i> &mdash; 
          Number of preemptible tries <br /> 
-</p>
-<p name="SomaticCNVCallingControlFREEC.CNV_gain_cutoff_override">
-        <b>SomaticCNVCallingControlFREEC.CNV_gain_cutoff_override</b><br />
-        <i>Float? </i> &mdash; 
-         Gain cutoff for CNV filtering. Default is 1.03 <br /> 
-</p>
-<p name="SomaticCNVCallingControlFREEC.CNV_loss_cutoff_override">
-        <b>SomaticCNVCallingControlFREEC.CNV_loss_cutoff_override</b><br />
-        <i>Float? </i> &mdash; 
-         Loss cutoff for CNV filtering. Default is 0.97 <br /> 
 </p>
 </details>
 
@@ -221,10 +207,10 @@ The pipeline outputs:
         <i>File</i><br />
         Coverage file for normal sample
 </p>
-<p name="SomaticCNVCallingControlFREEC.tumor_segments">
-        <b>SomaticCNVCallingControlFREEC.tumor_segments</b><br />
+<p name="SomaticCNVCallingControlFREEC.tumor_CNVs">
+        <b>SomaticCNVCallingControlFREEC.tumor_CNVs</b><br />
         <i>File</i><br />
-        controlFREEC segmentation for tumor sample
+        controlFREEC predicted copy number alterations for tumor sample
 </p>
 <p name="SomaticCNVCallingControlFREEC.controlFREEC_info">
         <b>SomaticCNVCallingControlFREEC.controlFREEC_info</b><br />
@@ -260,16 +246,6 @@ The pipeline outputs:
         <b>SomaticCNVCallingControlFREEC.copy_number_plot</b><br />
         <i>File</i><br />
         Copy-number figure  shows the copy number along the genome
-</p>
-<p name="SomaticCNVCallingControlFREEC.neutral_AF_plot">
-        <b>SomaticCNVCallingControlFREEC.neutral_AF_plot</b><br />
-        <i>File</i><br />
-        Neutral allele frequency plot
-</p>
-<p name="SomaticCNVCallingControlFREEC.neutral_AF_bed">
-        <b>SomaticCNVCallingControlFREEC.neutral_AF_bed</b><br />
-        <i>File</i><br />
-        Neutral allele frequency bed file
 </p>
 
 <hr />

@@ -107,11 +107,6 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>Int? </i> &mdash; 
          Number of synthetic signatures to generate from the somatic mutation database. Set to 0 to disable generation of control signatures from the database. <br /> 
 </p>
-<p name="MRDFeatureMap.memory_extract_coverage_override">
-        <b>MRDFeatureMap.memory_extract_coverage_override</b><br />
-        <i>Int? </i> &mdash; 
-         Memory in GB to use for the coverage extraction task <br /> 
-</p>
 <p name="MRDFeatureMap.FilterMatched.base_file_name">
         <b>MRDFeatureMap.FilterMatched.base_file_name</b><br />
         <i>String? </i> &mdash; 

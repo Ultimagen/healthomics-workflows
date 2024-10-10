@@ -139,10 +139,6 @@
         "description": "Maximal resolution for scattering intervals",
         "optional": false
     },
-    "SVPipeline.single_strand_filter": {
-        "description": "Whether to filter out non snp candidates that are on a single strand",
-        "optional": false
-    },
     "SVPipeline.symbolic_vcf_format": {
         "description": "Whether to convert the output vcf to the region format or not, default True",
         "optional": true

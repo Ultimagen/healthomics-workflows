@@ -961,7 +961,6 @@ task StarAlign {
     String? extra_args
 
     Int cpu
-    Int memory_gb = 64
     File monitoring_script
     Int disk_size = ceil(3*size(input_bams, "GB") + 3*size(genome, "GB") + 20 )
     Int preemptible_tries
@@ -969,7 +968,6 @@ task StarAlign {
     String docker
     }
     String genome_dir = "genome_dir"
-    File first_input = input_bams[0]
 
     command <<<
         set -eo pipefail
@@ -978,18 +976,10 @@ task StarAlign {
         mkdir ~{genome_dir}
         unzip ~{genome} -d ~{genome_dir}
 
-        filename="~{first_input}"
-        extension="${filename#*.}"
-
-        if [ "$extension" = "fastq.gz" ]; then
-            readCommand="--readFilesCommand zcat"
-        else
-            readCommand="--readFilesType SAM SE --readFilesCommand samtools view -h -F0x200"
-        fi
-
         STAR \
             --readFilesIn ~{sep=',' input_bams} \
-            $readCommand \
+            --readFilesType SAM SE \
+            --readFilesCommand samtools view -h -F0x200\
             --genomeDir ~{genome_dir} \
             --runThreadN ~{cpu} \
             --quantMode GeneCounts \
@@ -1002,7 +992,7 @@ task StarAlign {
     runtime {
         preemptible: "~{preemptible_tries}"
         cpu: "~{cpu}"
-        memory: "~{memory_gb} GB"
+        memory: "64 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
         noAddress: no_address

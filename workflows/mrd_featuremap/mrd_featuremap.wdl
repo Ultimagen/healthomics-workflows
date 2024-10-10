@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.14.2" # !UnusedDeclaration
+        String pipeline_version = "1.13.3" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -56,8 +56,6 @@ workflow MRDFeatureMap {
         # for generating db control signatures
         File? snv_database
         Int? n_synthetic_signatures
-        # option to increase memory for the coverage extraction task
-        Int? memory_extract_coverage_override
 
         References references
         
@@ -194,11 +192,6 @@ workflow MRDFeatureMap {
           type: "Int",
           category: "input_optional"
       }
-        memory_extract_coverage_override: {
-            help: "Memory in GB to use for the coverage extraction task",
-            type: "Int",
-            category: "input_optional"
-        }
       references: {
           help: "Reference files: fasta, dict and fai, recommended value set in the template",
           type: "References",
@@ -380,7 +373,6 @@ workflow MRDFeatureMap {
 
   # Part 2 - Collect coverage over signatures
   Array[File] all_vcf_files = flatten(select_all([filtered_matched_control_signatures, filtered_external_control_signatures, filtered_db_control_signatures]))
-  Int memory_extract_coverage = select_first([memory_extract_coverage_override, 8])
   call UGMrdTasks.ExtractCoverageOverVcfFiles as ExtractCoverageOverVcfFiles{
     input:
       vcf_files = all_vcf_files,
@@ -390,7 +382,7 @@ workflow MRDFeatureMap {
       mapping_quality_threshold = mapping_quality_threshold,
       references = references,
       docker = global.ug_vc_docker,
-      memory_gb = memory_extract_coverage,
+      memory_gb = 8,
       cpus = 2,
       preemptibles = preemptibles,
       monitoring_script = monitoring_script  #!FileCoercion
@@ -425,7 +417,7 @@ workflow MRDFeatureMap {
       featuremap_df_file = featuremap_df_file,
       docker = global.ug_vc_docker,
       disk_size = 3 * featuremap_size + 30,
-      memory_gb = memory_extract_coverage,
+      memory_gb = 16,
       cpus = 4,
       monitoring_script = monitoring_script  #!FileCoercion
   }
