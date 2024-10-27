@@ -1,8 +1,6 @@
 {
-    "SingleSampleCnmopsCNVCalling.base_file_name": "<sample_name>",
-    "SingleSampleCnmopsCNVCalling.bed_graph": [
-        "s3://<sample>.bedGraph"
-    ],
+    "SingleSampleCnmopsCNVCalling.base_file_name":"test_input_bedgraph",
+    "SingleSampleCnmopsCNVCalling.cohort_reads_count_matrix":"gs://ug-cromwell-tests/cnv/SingleSampleCnmopsCNVCalling/cohort_reads_count.rds",
     "SingleSampleCnmopsCNVCalling.reference_genome": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
     "SingleSampleCnmopsCNVCalling.reference_genome_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
     "SingleSampleCnmopsCNVCalling.ref_seq_names": [

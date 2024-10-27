@@ -1,10 +1,10 @@
 {
-    "MRDFeatureMap.base_file_name": "<base_file_name>",
-    "MRDFeatureMap.cfdna_featuremap": "<cfdna_featuremap>.vcf",
-    "MRDFeatureMap.cfdna_featuremap_index": "<cfdna_featuremap>.vcf.tbi",
-    "MRDFeatureMap.cfdna_cram_bam": "<cfdna_cram_bam>.cram",
-    "MRDFeatureMap.cfdna_cram_bam_index": "<cfdna_cram_bam>.cram.crai",
-    "MRDFeatureMap.featuremap_df_file": "<featuremap_df_file>.parquet",
+    "MRDFeatureMap.base_file_name": "Pa_46_matched_cohort",
+    "MRDFeatureMap.cfdna_featuremap": "gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_46.with_ml_qual.chr20.vcf.gz",
+    "MRDFeatureMap.cfdna_featuremap_index": "gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_46.with_ml_qual.chr20.vcf.gz.tbi",
+    "MRDFeatureMap.cfdna_cram_bam": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram",
+    "MRDFeatureMap.cfdna_cram_bam_index": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai",
+    "MRDFeatureMap.featuremap_df_file": "gs://ug-cromwell-tests/mrd/test_data/Pa_46_333_LuNgs_08.featuremap_df.parquet",
     "MRDFeatureMap.bcftools_extra_args": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'",
     "MRDFeatureMap.include_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
@@ -28,6 +28,6 @@
     "MRDFeatureMap.n_synthetic_signatures": 5,
     "MRDFeatureMap.mapping_quality_threshold": 60,
     "MRDFeatureMap.external_control_signatures": [
-        "<external_control_signatures>"
+        "gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_67_FFPE.ann.chr20.vcf.gz"
     ]
 }

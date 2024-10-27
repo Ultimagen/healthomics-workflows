@@ -1,10 +1,16 @@
 {
-    "EfficientDV.base_file_name": "<base_file_name>",
+    "EfficientDV.base_file_name": "013270-HCC1395-chr9",
     "EfficientDV.cram_files": [
-        "<cram_file>.cram"
+      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.cram"
     ],
     "EfficientDV.cram_index_files": [
-        "<cram_file>.cram.crai"
+      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.cram.crai"
+    ],
+    "EfficientDV.background_cram_files": [
+      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.cram"
+    ],
+    "EfficientDV.background_cram_index_files": [
+      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.cram.crai"
     ],
     "EfficientDV.num_shards": 100,
     "EfficientDV.references": {
@@ -29,12 +35,6 @@
     "EfficientDV.hmer_runs_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/runs.conservative.bed",
     "EfficientDV.filtering_blacklist_file": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/hapmap2.1_wgs.v0.6.2.blacklist.bed",
     "EfficientDV.sec_models": [],
-    "EfficientDV.background_cram_files": [
-        "<normal_bam_file>.cram"
-    ],
-    "EfficientDV.background_cram_index_files": [
-        "<normal_bam_file>.cram.crai"
-    ],
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/deepvariant-ultima-somatic-wgs-model-v1.0_4.9.ckpt-2950000.onnx",
     "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/deepvariant-ultima-somatic-wgs-model-v1.0_4.9.ckpt-2950000.onnx.serialized.a10g",
     "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic",
