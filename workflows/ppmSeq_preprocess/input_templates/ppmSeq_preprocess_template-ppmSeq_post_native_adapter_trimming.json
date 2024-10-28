@@ -1,6 +1,9 @@
 {
-    "ppmSeqPreprocess.input_cram_bam_list": ["gs://ug-cromwell-tests/ppmSeq/401940-HG001-Z0102.ppmSeq.cram"],
-    "ppmSeqPreprocess.base_file_name": "401940-HG001-Z0102",
+    "ppmSeqPreprocess.input_cram_bam_list": [
+        "<input_bam_or_cram_1>.cram",
+        "<input_bam_or_cram_2>.cram"
+    ],
+    "ppmSeqPreprocess.base_file_name": "<base_file_name>",
     "ppmSeqPreprocess.references": {
         "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",

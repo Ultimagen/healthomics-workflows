@@ -1,6 +1,9 @@
 {
-    "TrimAlignSort.input_cram_bam_list": ["gs://ug-cromwell-tests/converted_libraries/013357-Normal-UGAv3-16-CAGTGCTGTGGCATGAT.chr1_1000000-2000000.cram"],
-    "TrimAlignSort.base_file_name": "test",
+    "TrimAlignSort.input_cram_bam_list": [
+        "<input_bam_or_cram_1>.cram",
+        "<input_bam_or_cram_2>.cram"
+    ],
+    "TrimAlignSort.base_file_name": "<base_file_name>",
     "TrimAlignSort.ref_fastas_cram": [
         "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",

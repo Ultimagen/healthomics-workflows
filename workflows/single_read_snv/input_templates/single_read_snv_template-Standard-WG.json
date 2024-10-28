@@ -1,8 +1,8 @@
 {
-    "SingleReadSNV.input_cram_bam": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram",
-    "SingleReadSNV.input_cram_bam_index": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai",
-    "SingleReadSNV.base_file_name": "Pa_46_333_LuNgs_08_chr20",
-    "SingleReadSNV.sorter_json_stats_file": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json",
+    "SingleReadSNV.input_cram_bam": "<input_cram_bam>.cram",
+    "SingleReadSNV.input_cram_bam_index": "<input_cram_bam>.cram.crai",
+    "SingleReadSNV.sorter_json_stats_file": "<sorter_stats>.json",
+    "SingleReadSNV.base_file_name": "<base_file_name>",
     "SingleReadSNV.somatic_mutations_list": [],
     "SingleReadSNV.references": {
         "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",

@@ -1,10 +1,10 @@
 {
-    "EfficientDV.base_file_name": "006919-UGAv3-49",
+    "EfficientDV.base_file_name": "<base_file_name>",
     "EfficientDV.cram_files": [
-        "gs://ug-cromwell-tests/006919/006919-UGAv3-49-CAGCCTCAGCGTGAT-4x.cram"
+        "<cram_file>.cram"
     ],
     "EfficientDV.cram_index_files": [
-        "gs://ug-cromwell-tests/006919/006919-UGAv3-49-CAGCCTCAGCGTGAT-4x.cram.crai"
+        "<cram_file>.cram.crai"
     ],
     "EfficientDV.num_shards": 50,
     "EfficientDV.references": {

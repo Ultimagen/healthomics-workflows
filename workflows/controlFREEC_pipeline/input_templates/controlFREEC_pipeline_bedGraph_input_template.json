@@ -1,11 +1,23 @@
 {
-    "SomaticCNVCallingControlFREEC.base_file_name": "HCC1395.chr19.sorter_input.test",
-    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.chr19.s0.25.cram"],
-    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.chr19.s0.25.cram.crai"],
-    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.chr19.s0.25.cram"],
-    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.chr19.s0.25.cram.crai"],
-    "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph" : ["gs://ug-cromwell-tests/somatic_cnv/HCC1395.normal_0.chr19.bedGraph.gz"],
-    "SomaticCNVCallingControlFREEC.tumor_sorter_zipped_bed_graph" : ["gs://ug-cromwell-tests/somatic_cnv/HCC1395.tumor_0.chr19.bedGraph.gz"],
+    "SomaticCNVCallingControlFREEC.base_file_name": "<base_file_name>",
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": [
+        "<tumor>.cram"
+    ],
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": [
+        "<tumor>.cram.crai"
+    ],
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": [
+        "<normal>.cram"
+    ],
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": [
+        "<normal>.cram.crai"
+    ],
+    "SomaticCNVCallingControlFREEC.tumor_sorter_zipped_bed_graph": [
+        "<tumor>_1.bedGraph.gz"
+    ],
+    "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph": [
+        "<normal>_1.bedGraph.gz"
+    ],
     "SomaticCNVCallingControlFREEC.sex": "XY",
     "SomaticCNVCallingControlFREEC.num_shards": 100,
     "SomaticCNVCallingControlFREEC.scatter_intervals_break": 10000000,

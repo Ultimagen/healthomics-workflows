@@ -1,9 +1,17 @@
 {
-    "SomaticCNVCallingControlFREEC.base_file_name": "HCC1395.chr19.cram_input.test",
-    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.chr19.s0.25.cram"],
-    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.chr19.s0.25.cram.crai"],
-    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.chr19.s0.25.cram"],
-    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": ["gs://ug-cromwell-tests/somatic_cnv/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.chr19.s0.25.cram.crai"],
+    "SomaticCNVCallingControlFREEC.base_file_name": "<sample_base_name>",
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": [
+        "<tumor>.bam"
+    ],
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": [
+        "<tumor>.bam.bai"
+    ],
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": [
+        "<normal>.bam"
+    ],
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": [
+        "<normal>.bam.bai"
+    ],
     "SomaticCNVCallingControlFREEC.num_shards": 100,
     "SomaticCNVCallingControlFREEC.scatter_intervals_break": 10000000,
     "SomaticCNVCallingControlFREEC.interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
