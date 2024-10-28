@@ -12,7 +12,7 @@
     "SingleReadSNV.wgs_calling_interval_list": "gs://ug-cromwell-tests/ppmSeq/wgs_calling_regions.hg38.chr20.interval_list",
     "SingleReadSNV.break_bands_at_multiples_of": 100000,
     "SingleReadSNV.training_include_regions": [
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr_autosomal.bed"
+        "gs://ug-cromwell-tests/ppmSeq/ug_hcr_chr20.bed"
     ],
     "SingleReadSNV.tp_training_exclude_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed",
