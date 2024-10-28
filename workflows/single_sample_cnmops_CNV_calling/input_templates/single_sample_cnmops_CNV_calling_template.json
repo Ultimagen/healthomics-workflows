@@ -1,6 +1,6 @@
 {
-    "SingleSampleCnmopsCNVCalling.input_bam_file":"gs://ug-cromwell-tests/cnv/SingleSampleCnmopsCNVCalling/sample1.cram",
-    "SingleSampleCnmopsCNVCalling.input_bam_file_index":"gs://ug-cromwell-tests/cnv/SingleSampleCnmopsCNVCalling/sample1.cram.crai",
+    "SingleSampleCnmopsCNVCalling.input_bam_file":"s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/cnv/SingleSampleCnmopsCNVCalling/sample1.cram",
+    "SingleSampleCnmopsCNVCalling.input_bam_file_index":"s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/cnv/SingleSampleCnmopsCNVCalling/sample1.cram.crai",
     "SingleSampleCnmopsCNVCalling.base_file_name":"test_input_cram.MAPQ1.bam",
     "SingleSampleCnmopsCNVCalling.reference_genome": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
     "SingleSampleCnmopsCNVCalling.reference_genome_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",

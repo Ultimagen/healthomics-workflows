@@ -1,7 +1,7 @@
 {
     "SegDupAnalysis.base_file_name":"NA00372",
-    "SegDupAnalysis.input_cram_bam":"gs://ug-cromwell-tests/segdup/NA00372.xbrealign.cram",
-    "SegDupAnalysis.input_crai_bai": "gs://ug-cromwell-tests/segdup/NA00372.xbrealign.cram.crai",
+    "SegDupAnalysis.input_cram_bam":"s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/segdup/NA00372.xbrealign.cram",
+    "SegDupAnalysis.input_crai_bai": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/segdup/NA00372.xbrealign.cram.crai",
     "SegDupAnalysis.references": {
         "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
