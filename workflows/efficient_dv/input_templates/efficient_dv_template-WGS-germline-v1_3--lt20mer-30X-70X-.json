@@ -1,10 +1,10 @@
 {
     "EfficientDV.base_file_name": "006919-UGAv3-49",
     "EfficientDV.cram_files": [
-        "gs://ug-cromwell-tests/006919/006919-UGAv3-49-CAGCCTCAGCGTGAT-4x.cram"
+        "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/006919/006919-UGAv3-49-CAGCCTCAGCGTGAT-4x.cram"
     ],
     "EfficientDV.cram_index_files": [
-        "gs://ug-cromwell-tests/006919/006919-UGAv3-49-CAGCCTCAGCGTGAT-4x.cram.crai"
+        "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/006919/006919-UGAv3-49-CAGCCTCAGCGTGAT-4x.cram.crai"
     ],
     "EfficientDV.num_shards": 50,
     "EfficientDV.references": {

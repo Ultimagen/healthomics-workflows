@@ -1,5 +1,5 @@
 {
-    "ppmSeqPreprocess.input_cram_bam_list": ["gs://ug-cromwell-tests/ppmSeq/029368-L4800_A3-Z0035.1M_reads.cram"],
+    "ppmSeqPreprocess.input_cram_bam_list": ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/ppmSeq/029368-L4800_A3-Z0035.1M_reads.cram"],
     "ppmSeqPreprocess.base_file_name": "029368-L4800_A3-Z0035",
     "ppmSeqPreprocess.references": {
         "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",

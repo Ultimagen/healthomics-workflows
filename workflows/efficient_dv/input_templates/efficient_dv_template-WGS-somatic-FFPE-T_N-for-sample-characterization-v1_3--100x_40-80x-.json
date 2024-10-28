@@ -1,16 +1,16 @@
 {
     "EfficientDV.base_file_name": "013270-HCC1395-chr9",
     "EfficientDV.cram_files": [
-      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.cram"
+      "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/run-data/wgs_data/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.cram"
     ],
     "EfficientDV.cram_index_files": [
-      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.cram.crai"
+      "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/run-data/wgs_data/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.cram.crai"
     ],
     "EfficientDV.background_cram_files": [
-      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.cram"
+      "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/run-data/wgs_data/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.cram"
     ],
     "EfficientDV.background_cram_index_files": [
-      "gs://ug-cromwell-tests/run-data/wgs_data/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.cram.crai"
+      "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/run-data/wgs_data/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.cram.crai"
     ],
     "EfficientDV.num_shards": 50,
     "EfficientDV.references": {

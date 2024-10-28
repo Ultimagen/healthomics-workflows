@@ -1,5 +1,5 @@
 {
-    "TrimAlignSort.input_cram_bam_list": ["gs://ug-cromwell-tests/converted_libraries/013357-Normal-UGAv3-16-CAGTGCTGTGGCATGAT.chr1_1000000-2000000.cram"],
+    "TrimAlignSort.input_cram_bam_list": ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/converted_libraries/013357-Normal-UGAv3-16-CAGTGCTGTGGCATGAT.chr1_1000000-2000000.cram"],
     "TrimAlignSort.base_file_name": "test",
     "TrimAlignSort.ref_fastas_cram": [
         "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",

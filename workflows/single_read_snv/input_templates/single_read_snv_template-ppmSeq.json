@@ -1,18 +1,18 @@
 {
-    "SingleReadSNV.input_cram_bam": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram",
-    "SingleReadSNV.input_cram_bam_index": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai",
+    "SingleReadSNV.input_cram_bam": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram",
+    "SingleReadSNV.input_cram_bam_index": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai",
     "SingleReadSNV.base_file_name": "Pa_46_333_LuNgs_08_chr20",
-    "SingleReadSNV.sorter_json_stats_file": "gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json",
+    "SingleReadSNV.sorter_json_stats_file": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.json",
     "SingleReadSNV.somatic_mutations_list": [],
     "SingleReadSNV.references": {
         "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
         "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
     },
-    "SingleReadSNV.wgs_calling_interval_list": "gs://ug-cromwell-tests/ppmSeq/wgs_calling_regions.hg38.chr20.interval_list",
+    "SingleReadSNV.wgs_calling_interval_list": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/ppmSeq/wgs_calling_regions.hg38.chr20.interval_list",
     "SingleReadSNV.break_bands_at_multiples_of": 100000,
     "SingleReadSNV.training_include_regions": [
-        "gs://ug-cromwell-tests/ppmSeq/ug_hcr_chr20.bed"
+        "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/ppmSeq/ug_hcr_chr20.bed"
     ],
     "SingleReadSNV.tp_training_exclude_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed",
