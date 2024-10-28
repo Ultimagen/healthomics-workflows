@@ -23,7 +23,6 @@ struct GlobalVariables {
   String assembly_docker
   String gridss_docker
   String gripss_docker
-  String reads_transformer_docker
   String segdup_docker
 }
 workflow Globals {
@@ -51,7 +50,6 @@ workflow Globals {
         "assembly_docker": "ultimagenomics/haplotype:1.0_db79395",
         "gridss_docker": "ultimagenomics/gridss:5ce69a8",
         "gripss_docker": "ultimagenomics/gripss:ug_2.3.5_8da5ab3",
-        "reads_transformer_docker": "ultimagenomics/ug-reads-transformer:1.0",
         "segdup_docker": "ultimagenomics/parascopy:cf76c4b"
 }
 }
