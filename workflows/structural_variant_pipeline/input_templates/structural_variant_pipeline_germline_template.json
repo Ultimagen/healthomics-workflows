@@ -8,7 +8,7 @@
     ],
     "SVPipeline.prefilter_query": "QUAL>120",
     "SVPipeline.blacklist_bed": "s3://ultimagen-workflow-resources-us-east-1/sv/gridss/ENCFF356LFX.bed",
-    "SVPipeline.wgs_calling_interval_list": "s3://ultimagen-workflow-resources-us-east-1/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list",
+    "SVPipeline.wgs_calling_interval_list": "gs://concordanz/hg38/wgs_calling_regions.hg38.chr9.interval_list",
     "SVPipeline.min_base": 0,
     "SVPipeline.min_mapq": 5,
     "SVPipeline.max_num_haps": 10,

@@ -1,5 +1,5 @@
 {
-    "SingleCell.input_file": "<input_file>.cram",
+    "SingleCell.input_file": "gs://ug-cromwell-tests/single_cell/10x_3prime_v3_gex_subsample.bam",
     "SingleCell.base_file_name": "<base_file_name>",
     "SingleCell.demux_extra_args": "--umi=br --fastq-underscores-for-missing-fields=true",
     "SingleCell.fastqc_limits": "s3://ultimagen-workflow-resources-us-east-1/fastqc_limits.txt",
