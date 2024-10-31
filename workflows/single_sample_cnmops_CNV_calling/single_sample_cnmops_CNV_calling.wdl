@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "v1.13.4" # !UnusedDeclaration
+        String pipeline_version = "1.14.3" # !UnusedDeclaration
 
         String base_file_name
 
@@ -255,6 +255,21 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "File",
             category: "output_optional"
         }
+        out_coverage_plot_files:{
+            help: "List of coverage figures (file per sample)",
+            type: "Array[File]",
+            category: "output"
+        }
+        out_dup_del_plot_files:{
+            help: "List of duplication/deletion figures (file per sample)",
+            type: "Array[File]",
+            category: "output"
+        }
+        out_copy_number_plot_files:{
+            help: "List of copy number figures (file per sample)",
+            type: "Array[File]",
+            category: "output"
+        }
         enable_moderate_amplifications_override:
         {
             help: "whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: False",
@@ -314,7 +329,7 @@ workflow SingleSampleCnmopsCNVCalling {
             input_bed_graph = input_bed_graph,
             genome_windows = input_genome_windows,
             genome_file = reference_genome_index,
-            docker = global.ug_vc_docker,
+            docker = global.cnv_docker,
             monitoring_script = monitoring_script,
             no_address = no_address,
             preemptible_tries = preemptible_tries
@@ -327,7 +342,7 @@ workflow SingleSampleCnmopsCNVCalling {
         input:
         sample_reads_count = sample_reads_count_file,
         cohort_reads_count_matrix = cohort_reads_count_matrix,
-        docker = global.ug_vc_docker,
+        docker = global.cnv_docker,
         save_hdf = save_hdf,
         monitoring_script = monitoring_script,
         no_address = no_address,
@@ -342,7 +357,7 @@ workflow SingleSampleCnmopsCNVCalling {
         chrX_name = chrX_name,
         chrY_name = chrY_name,
         cap_coverage = cap_coverage,
-        docker = global.ug_vc_docker,
+        docker = global.cnv_docker,
         save_hdf = save_hdf,
         save_csv = save_csv,
         moderate_amplificiations = enable_moderate_amplifications,
@@ -362,7 +377,7 @@ workflow SingleSampleCnmopsCNVCalling {
         cnv_lcr_file = cnv_lcr_file,
         ref_genome_file = reference_genome_index,
         germline_coverge_rds = sample_reads_count_file,
-        docker = global.ug_vc_docker,
+        docker = global.cnv_docker,
         monitoring_script = monitoring_script,
         no_address = no_address,
         preemptible_tries = preemptible_tries
@@ -375,6 +390,9 @@ workflow SingleSampleCnmopsCNVCalling {
         Array[File] out_sample_cnvs_vcf = FilterSampleCnvs.sample_cnvs_vcf
         Array[File] out_sample_cnvs_vcf_index = FilterSampleCnvs.sample_cnvs_vcf_index
         Array[File] out_sample_cnvs_filtered_bed = FilterSampleCnvs.sample_cnvs_filtered_bed
+        Array[File] out_coverage_plot_files = FilterSampleCnvs.coverage_plot
+        Array[File] out_dup_del_plot_files = FilterSampleCnvs.dup_del_plot
+        Array[File] out_copy_number_plot_files = FilterSampleCnvs.copy_number_plot
     }
 }
 

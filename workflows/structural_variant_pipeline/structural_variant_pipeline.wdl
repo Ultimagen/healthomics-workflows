@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "v1.13.4" # !UnusedDeclaration
+        String pipeline_version = "1.14.3" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -73,6 +73,7 @@ workflow SVPipeline {
         Int? min_normal_coverage
         String? exclude_filters
         Boolean symbolic_vcf_format
+        Boolean single_strand_filter
 
         Int num_shards
         Boolean no_address = true
@@ -284,6 +285,11 @@ workflow SVPipeline {
             help: "Whether to convert the output vcf to the region format or not, default True",
             category:"optional"
         }
+        single_strand_filter : {
+            type: "Boolean",
+            help: "Whether to filter out non snp candidates that are on a single strand",
+            category: "advanced"
+        }
         cloud_provider_override: {
             type: "String",
             help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
@@ -410,7 +416,7 @@ workflow SVPipeline {
                 input_tumor_crams = input_tumor_crams,
                 input_tumor_crams_indexes = input_tumor_crams_indexes,
                 output_prefix = base_file_name +"_assembly",
-                assembly_docker = global.assembly_docker,
+                make_examples_docker = global.ug_make_examples_docker,
                 references = references,
                 interval = interval,
                 min_base = min_base,
@@ -419,6 +425,7 @@ workflow SVPipeline {
                 min_sc_indel_size = min_indel_sc_size_to_include,
                 is_somatic = is_somatic,
                 number_of_shards = ScatterIntervalList.interval_count,
+                single_strand_filter = single_strand_filter,
                 cloud_provider_override = cloud_provider_override,
                 no_address = no_address,
                 preemptible_tries = preemptibles,
@@ -695,7 +702,7 @@ task CreateAssembly {
         Array[File] input_tumor_crams_indexes
         Boolean is_somatic
         String output_prefix
-        String assembly_docker
+        String make_examples_docker
         References references
         File interval
         Int min_base
@@ -704,6 +711,7 @@ task CreateAssembly {
         Int? max_num_haps
         Int number_of_shards
         String? cloud_provider_override
+        Boolean single_strand_filter
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
@@ -761,8 +769,8 @@ task CreateAssembly {
             --min-mapq ~{min_mapq} \
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
             ~{"--max-num-haps " + max_num_haps} \
+            ~{if single_strand_filter then "--single-strand-filter" else ""} \
             --prog \
-            --interval-nreads 10000 \
             --sv
 
         else
@@ -800,7 +808,8 @@ task CreateAssembly {
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
             ~{"--max-num-haps " + max_num_haps} \
             --prog \
-            --interval-nreads 10000 \
+            --interval-target-nreads 10000 \
+            ~{if single_strand_filter then "--single-strand-filter" else ""} \
             --sv
 
         fi
@@ -822,7 +831,7 @@ task CreateAssembly {
         memory: mem + " GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
-        docker: assembly_docker
+        docker: make_examples_docker
         preemptible: preemptible_tries
         noAddress: no_address
     }
@@ -1208,7 +1217,7 @@ task AnnotateVariants {
 
         else
             # convert interval list to bed file
-            java -Xms4g -jar /opt/gatk/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar  \
+            gatk  \
             IntervalListToBed -I ~{interval} -O interval.bed
 
             # take only the relevant part from the vcf
@@ -1218,7 +1227,7 @@ task AnnotateVariants {
             # download only the relevant part of the crams
             if ~{is_somatic}
             then
-                java -Xms4g -jar /opt/gatk/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar  \
+                gatk  \
                     PrintReads \
                 -I ~{sep=' -I ' input_tumor_crams} \
                 -O input_tumor.cram \
@@ -1230,7 +1239,7 @@ task AnnotateVariants {
 
             if ~{defined_germline}
             then
-                java -Xms4g -jar /opt/gatk/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar  \
+                gatk  \
                     PrintReads \
                 -I ~{sep=' -I ' input_germline_crams} \
                 -O input_germline.cram \
@@ -1240,7 +1249,7 @@ task AnnotateVariants {
                 samtools index input_germline.cram
             fi
 
-        java -Xms4g -jar /opt/gatk/gatk-4.2.6.1/gatk-package-4.2.6.1-local.jar  \
+        gatk \
             PrintReads \
           -I ~{assembly} \
           -O assembly_partial.cram \

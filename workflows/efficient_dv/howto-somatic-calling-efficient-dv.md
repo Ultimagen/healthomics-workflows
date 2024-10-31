@@ -37,15 +37,15 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:2.2.1
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:2.2.4
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:2.2.1
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:2.2.4
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:edv_2.2.0_173435b8
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:2.2.2
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:edv_2.2.0_173435b8
+337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:edv_2.2.2
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
@@ -107,7 +107,8 @@ tool --input "input_reads.cram;background_reads.cram" \
   --cycle-examples-min 100000 \
   --add-ins-size-channel \
   --add-proxy-support-to-non-hmer-insertion \
-  --pragmatic
+  --pragmatic \
+  --single-strand-filter
 ```
 
 The input cram files and the corresponding index files are provided to `--input` and `--cram-index`, respectively. The tumor and background crams are separated by a semicolon (note that the semicolon requires to quote the argument, in order for linux to interpret it correctly). Multiple cram files can be provided, separated by commas.

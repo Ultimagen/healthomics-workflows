@@ -22,18 +22,18 @@
         "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "SomaticCNVCallingControlFREEC.mapq_override": 1,
-    "SomaticCNVCallingControlFREEC.SNPfile": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz",
-    "SomaticCNVCallingControlFREEC.SNPfile_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi",
-    "SomaticCNVCallingControlFREEC.inputFormat": "BAM",
+    "SomaticCNVCallingControlFREEC.snp_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz",
+    "SomaticCNVCallingControlFREEC.snp_file_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi",
+    "SomaticCNVCallingControlFREEC.input_format": "BAM",
     "SomaticCNVCallingControlFREEC.min_cnv_length": 10000,
     "SomaticCNVCallingControlFREEC.intersection_cutoff": 0.5,
-    "SomaticCNVCallingControlFREEC.BedGraphOutput": true,
-    "SomaticCNVCallingControlFREEC.contaminationAdjustment": true,
-    "SomaticCNVCallingControlFREEC.maxThreads_override": 8,
+    "SomaticCNVCallingControlFREEC.bed_graph_output": true,
+    "SomaticCNVCallingControlFREEC.contamination_adjustment": true,
+    "SomaticCNVCallingControlFREEC.max_threads_override": 8,
     "SomaticCNVCallingControlFREEC.window": 1000,
     "SomaticCNVCallingControlFREEC.degree": 3,
     "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.4/ug_cnv_lcr.bed",
-    "SomaticCNVCallingControlFREEC.gemMappabilityFile": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
+    "SomaticCNVCallingControlFREEC.gem_mappability_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
     "SomaticCNVCallingControlFREEC.collect_coverage_region": [
         "chr1",
         "chr2",
@@ -59,5 +59,7 @@
         "chr22",
         "chrX"
     ],
-    "SomaticCNVCallingControlFREEC.chrLenFile_override": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome"
+    "SomaticCNVCallingControlFREEC.chrLenFile_override": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
+    "SomaticCNVCallingControlFREEC.high_sensitivity_mode": false,
+    "SomaticCNVCallingControlFREEC.naive_normalization": true
 }

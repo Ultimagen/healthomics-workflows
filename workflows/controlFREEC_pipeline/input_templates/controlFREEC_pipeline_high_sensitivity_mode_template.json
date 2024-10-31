@@ -1,5 +1,5 @@
 {
-    "SomaticCNVCallingControlFREEC.base_file_name": "<base_file_name>",
+    "SomaticCNVCallingControlFREEC.base_file_name": "<sample_base_name",
     "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": [
         "<tumor>.cram"
     ],
@@ -12,14 +12,10 @@
     "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": [
         "<normal>.cram.crai"
     ],
-    "SomaticCNVCallingControlFREEC.tumor_sorter_zipped_bed_graph": [
-        "<tumor>_1.bedGraph.gz"
-    ],
-    "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph": [
-        "<normal>_1.bedGraph.gz"
-    ],
-    "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "<tumor>_minipileup.pileup",
-    "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>_minipileup.pileup",
+    "SomaticCNVCallingControlFREEC.tumor_coverage_cpn": "<tumor>.cpn",
+    "SomaticCNVCallingControlFREEC.normal_coverage_cpn": "<normal>.cpn",
+    "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "<tumor>.pileup",
+    "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>.pileup",
     "SomaticCNVCallingControlFREEC.sex": "XY",
     "SomaticCNVCallingControlFREEC.num_shards": 100,
     "SomaticCNVCallingControlFREEC.scatter_intervals_break": 10000000,
@@ -44,6 +40,6 @@
     "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
     "SomaticCNVCallingControlFREEC.gem_mappability_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
     "SomaticCNVCallingControlFREEC.chrLenFile_override": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
-    "SomaticCNVCallingControlFREEC.high_sensitivity_mode": false,
+    "SomaticCNVCallingControlFREEC.high_sensitivity_mode": true,
     "SomaticCNVCallingControlFREEC.naive_normalization": true
 }

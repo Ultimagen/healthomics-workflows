@@ -38,7 +38,8 @@
     "germline": {
         "SVPipeline.num_shards": 50,
         "SVPipeline.is_somatic": false,
-        "SVPipeline.min_indel_sc_size_to_include": "10"
+        "SVPipeline.min_indel_sc_size_to_include": "10",
+        "SVPipeline.single_strand_filter": false
     },
     "somatic": {
         "SVPipeline.num_shards": 200,
@@ -49,7 +50,8 @@
         ],
         "SVPipeline.input_tumor_crams_indexes": [
             "<cram>.cram.crai"
-        ]
+        ],
+        "SVPipeline.single_strand_filter": true
     },
     "SVPipeline.cloud_provider_override": "aws"
 }

@@ -212,10 +212,11 @@ In case a GVCF is desired, then the commands should be modified in the following
 
 1. Add the arguments `--gvcf` and `--p-error 0.005` to the make_examples step. The p-error is an estimation of the probability of *any* base-calling error in the reads, and is used in the calculation of the reference confidence model. When these arguments are added, make_examples will output extra files with the `gvcf.tfrecord.gz` suffix.
 2. When running post_process, add the argument `--gvcf_outfile output_prefix.g.vcf.gz` and provide the `gvcf.tfrecord.gz` files as input using the `--nonvariant_site_tfrecord_path` argument. The `gvcf.tfrecord.gz` files can be provided to `--nonvariant_site_tfrecord_path` either as a comma-separated list, or a text file that contains all the paths. In the latter case use the name of the ```--nonvariant_site_tfrecord_path @gvcf_records.txt```.
+3. Optionally, use the `--gq-resolution` or `--gq-thresholds` arguments to reduce the output gvcf size, by binning intervals with similar GQ values together. `--gq-resolution` sets a constant difference between the bins, and `--gq-thresholds` accepts a list of specific bin thresholds, e.g. `--gq-thresholds 0,1,8,15,22` (the rounding is downwards). A value of 0 is special and results in a bin of 0.
 
 ### Additional filtering steps recommended
 
-We recommend to apply another step on the vcf output in order to correct a specific issue where SNVs within long homopolymers are sometimes called with a low confidence. It is difficult for the model to discern between SNV and deletion of a base alleles. We proivde a script that corrects the confidence and removes filters of such variants. This filter is implemented in a [python script](https://github.com/Ultimagen/VariantCalling/blob/master/ugvc/pipelines/vcfbed/calibrate_bridging_snvs.py). 
+We recommend to apply another step on the vcf output in order to correct a specific issue where SNVs within long homopolymers are sometimes called with a low confidence. It is difficult for the model to discern between SNV and deletion of a base alleles. We provide a script that corrects the confidence and removes filters of such variants. This filter is implemented in a [python script](https://github.com/Ultimagen/VariantCalling/blob/master/ugvc/pipelines/vcfbed/calibrate_bridging_snvs.py). 
 To apply this script use this docker: 
 ```
 us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ugvc:0.21
@@ -237,10 +238,20 @@ python /VariantCalling/ugvc calibrate_bridging_snvs \
 
 
 ## Debugging tfrecords using dvtools
-The make_examples code also has a handy utility called `dvtools` to view the data in the tfrecord files (without the images). It can accept a tfrecord.gz file, and output a vcf with the records. You can use it in the following way:
+The make_examples code also has a handy utility called `dvtools` to view the data in the tfrecord files. It can accept a tfrecord.gz file, and output a vcf with the records (without the images):
 ```    
 docker run -v <path mapping> <docker name> \
   dvtools --infile debug.tfrecord.gz \
   --filetype dv --op vcf \
   --outfile debug.dvtools.vcf
 ```
+
+It can also be used to view the sequences in the image:
+```    
+docker run -v <path mapping> <docker name> \
+  dvtools --infile debug.tfrecord.gz \
+  --filetype dv --op image \
+  --outfile debug.dvtools.vcf
+```
+
+

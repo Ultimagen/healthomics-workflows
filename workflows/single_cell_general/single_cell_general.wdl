@@ -51,52 +51,74 @@ version 1.0
 # DESCRIPTION
 #   This workflow processes Ultima single-cell data and creates simulated paired-end reads.
 # CHANGELOG
+# 1.13.0 [BIOIN-1663] Use new versions of Trimmer and Sorter and run costum single cell qc script
 # 1.4.0 [BIOIN-885] Renamed from single_cell_10x.wdl StarSolo based downstream analysis, updated trimmer, optimizations
 
 import "tasks/globals.wdl" as Globals
 import "tasks/structs.wdl" as Structs
-import "tasks/trimming_tasks.wdl" as TrimmingTasks
-import "tasks/qc_tasks.wdl" as QCTasks
 import "tasks/single_cell_tasks.wdl" as SingleCellTasks
 import "star_solo.wdl" as StarSoloWdl
 import "star_align_gene_count.wdl" as StarAlignWorkflow
-import "tasks/sorting_tasks.wdl" as SortTasks
+import "trim_align_sort.wdl" as TrimAlignSortSubWF
 
 workflow SingleCell {
-    # Trimming step is optional. If trimmer_parameters are not provided, the input file is used as is.
     input {
+        String pipeline_version = "1.14.3" # !UnusedDeclaration
+
         File input_file
         String base_file_name
-        TrimmerParameters? trimmer_parameters
-        File? trimmer_stats # if trimmer run outside of this workflow, you can still combine the stats in the final report
 
-        String? demux_extra_args
-        String? barcode_fastq_file_suffix
-        String? insert_fastq_file_suffix
-        String? barcode_fastq_header_suffix
-        String? insert_fastq_header_suffix
+        # Trimming and sorting parameters
+        TrimAlignSortSteps steps
+        Array[File] ref_fastas_cram
+        # References
+        References references
+        # trimmer parameters
+        TrimmerParameters trimmer_parameters
+        # sorter parameters
+        SorterParams sorter_params
 
-        String? fastqc_adapter
-        File? fastqc_limits
-        String pipeline_version = "v1.13.4" # !UnusedDeclaration
-        String? downstream_analysis
-        # STAR and STAR solo parameters
-        StarSoloParams? star_solo_params
-        StarGenomeGenerateParams? genome_generate_params
-        File? star_genome
-        String? star_align_extra_args
-        File? star_align_gtf_override
+        String insert_rg
+        String barcode_rg
+        File star_genome
 
+        SingleCellQcThresholds qc_thresholds
+
+        # general parameters
         Boolean no_address = true
         Int preemptible_tries = 1
         Int cpu
-
-        # Used for running on other clouds (aws)
         File? monitoring_script_input
+        
+        # STAR and STAR solo parameters
+        String? downstream_analysis
+        StarSoloParams? star_solo_params
+        StarGenomeGenerateParams? genome_generate_params
+        String? star_align_extra_args
+        File? star_align_gtf_override
 
-        #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
+        #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name or 'sample' in base_file_name)
         #@wv suffix(input_file) in {".bam", ".cram"}
         #@wv defined(trimmer_parameters) and not 'formats_description' in trimmer_parameters -> 'format' in trimmer_parameters
+
+        #@wv 'trim' in steps or 'align' in steps or 'sort' in steps -> (steps['trim'] or steps['align'] or steps['sort'])
+        #@wv defined(references) -> len(references) == 3
+        #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa','.fna'}
+        #@wv suffix(references['ref_dict']) == '.dict'
+        #@wv suffix(references['ref_fasta_index']) == '.fai'
+        #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
+        #@wv prefix(references['ref_dict']) == prefix(references['ref_fasta'])
+        
+        # Trimmer checks
+        #@wv 'trim' in steps and steps['trim'] -> defined(trimmer_parameters)
+        #@wv defined(trimmer_parameters) and not 'formats_description' in trimmer_parameters -> 'format' in trimmer_parameters
+        ##@wv 'formats_description' in trimmer_parameters -> not('local_formats_description' in trimmer_parameters)
+        ##@wv 'local_formats_description' in trimmer_parameters -> not('formats_description' in trimmer_parameters)
+        # validate that the user updated trimmer extra_args with the correct read_group of the sample
+        #@wv not("<!READ GROUP!>" in trimmer_parameters['extra_args'])
+
+        # Sort checks
+        #@wv 'sort' in steps and steps['sort'] -> defined(sorter_params))
 
         # STAR solo validations
         #@wv defined(downstream_analysis) and downstream_analysis == "star_solo" -> defined(star_solo_params)
@@ -115,19 +137,14 @@ workflow SingleCell {
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
-
+    
     meta {
-            description : "Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.\n\n Intended for reads with a cell barcode, UMI and insert (e.g., 10x, Parse Biosciences, Fluent).\n\n In addition, runs fastqc on the insert and, optionally, runs FastQC and STAR or STARsolo."
-            author: "Ultima Genomics"
-            WDL_AID: { 
-                exclude: [
+        description : "Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.\n\n Intended for reads with a cell barcode, UMI and insert (e.g., 10x, Parse Biosciences, Fluent).\n\n In addition, runs fastqc on the insert and, optionally, runs FastQC and STAR or STARsolo."
+        author: "Ultima Genomics"
+        WDL_AID: { 
+            exclude: [
                 "pipeline_version",
                 "monitoring_script_input",
-                "Trimmer.disk_size",
-                "ConvertToFastq.output_dir",
-                "ConvertToFastq.samtools_extra_args",
-                "ConvertToFastq.reference_fasta",
-                "CreateSyntheticPairedEnd.disk_size",
                 "StarSoloWorkflow.StarGenomeGenerate.disk_size",
                 "StarSoloWorkflow.StarSolo.disk_size",
                 "StarSoloWorkflow.StarAlignStats.disk_size",
@@ -135,12 +152,17 @@ workflow SingleCell {
                 "StarAlignment.StarGenomeGenerate.disk_size",
                 "StarAlignment.StarAlign.disk_size",
                 "StarAlignment.StarAlignStats.disk_size",
-                "CombineStatistics.disk_size",
                 "StarSoloWorkflow.Globals.glob",
                 "StarAlignment.Globals.glob",
-                "Globals.glob"
-            ]}
-    }    
+                "Globals.glob",
+                "TrimAlignSort.StarAlignment.memory_gb",
+                "StarAlignment.memory_gb",
+                "SingleCell.StarAlignSubSample.memory_gb"
+            ]
+        }
+    }
+
+
     parameter_meta {
         base_file_name: {
             help: "Base file name for output files. The output files will be named <tt>[base_file_name]*.fastq.gz</tt>",
@@ -152,50 +174,45 @@ workflow SingleCell {
             type: "File",
             category: "input_required"
         }
+        steps: {
+            help: "The steps to run in the workflow (trim+sort)",
+            type: "TrimAlignSortSteps",
+            category: "input_required"
+        }
         trimmer_parameters: {
             help: "Parameters for Trimmer task.  See input template",
             type: "TrimmerParameters",
             category: "optional"
         }
-        trimmer_stats: {
-            help: "If trimmer was run outside of this workflow, the stats can still be combined in the final report",
-            type: "File",
+        sorter_params: {
+            help: "Parameters for Sorter task.  See input template",
+            type: "SorterParams",
             category: "optional"
         }
-        demux_extra_args: {
-            help: "Extra parameters to pass to SortTasks.Demux , when converting to fastq",
+        insert_rg: {
+            help: "Read group name for the insert reads, e.g. S1_L001_R2_001",
             type: "String",
-            category: "param_optional"
+            category: "input_required"
         }
-        barcode_fastq_file_suffix: {
-            help: "Suffix to add to the name of the file with the barcode reads (in case downstream software has name requirements)",
+        barcode_rg: {
+            help: "Read group name for the barcode reads, e.g. S1_L001_R1_001",
             type: "String",
-            category: "optional"
+            category: "input_required"
         }
-        insert_fastq_file_suffix: {
-            help: "Suffix to add to the name of the file with the insert reads (in case downstream software has name requirements)",
-            type: "String",
-            category: "optional"
+        references: {
+            help: "References for the workflow",
+            type: "References",
+            category: "input_required"
         }
-        barcode_fastq_header_suffix: {
-            help: "Suffix to add to the end of the fastq headers for the barcode reads (in case downstream software has fastq header requirements)",
-            type: "String",
-            category: "optional"
+        ref_fastas_cram: {
+            help: "Reference fasta files for the CRAM file",
+            type: "Array[File]",
+            category: "input_required"
         }
-        insert_fastq_header_suffix: {
-            help: "Suffix to add to the end of the fastq headers for the insert reads (in case downstream software has fastq header requirements)",
-            type: "String",
-            category: "optional"
-        }
-        fastqc_adapter: {
-            help: "Adapter that can be passed to fastqc with the --adapters options",
-            type: "String",
-            category: "optional"
-        }
-        fastqc_limits: {
-            help: "Adapter that can be passed to fastqc with the --limits option",
-            type: "File",
-            category: "optional"
+        qc_thresholds: {
+            help: "Thresholds for the single cell qc",
+            type: "SingleCellQcThresholds",
+            category: "input_required"
         }
         downstream_analysis: {
             help: "Can be either star_solo, star, or undefined (default)",
@@ -252,9 +269,14 @@ workflow SingleCell {
             help: "The fastq with the insert portion of the read", 
             category: "output"
         }
-        combined_statistics: {
+        report_html: {
             type: "File",
-            help: "A csv with the trimming and alignment statistics", 
+            help: "The report from the single cell qc", 
+            category: "output"
+        }
+        aggregated_metrics_h5: {
+            type: "File",
+            help: "The h5 store from the single cell qc", 
             category: "output"
         }
         trimmer_stats_output: {
@@ -277,9 +299,14 @@ workflow SingleCell {
             help: "Trimmer extra histograms", 
             category: "output"
         }
-        fastqc_reports: {
+        sort_stats_csv : {
             type: "Array[File]",
-            help: "Fastqc output report for insert", 
+            help: "Sorter statistics csv", 
+            category: "output"
+        }
+        sort_stats_json : {
+            type: "Array[File]",
+            help: "Sorter statistics json", 
             category: "output"
         }
         star_solo_outputs: {
@@ -302,63 +329,74 @@ workflow SingleCell {
             help: "The Star output statistics",
             category: "output"
         }
+        unmatched_cram: {
+            help: "Unmatched cram file output from sorter",
+            type: "File", 
+            category: "output"
+        }
     }
 
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
-    if (defined(trimmer_parameters)){
-        call TrimmingTasks.Trimmer {
-            input:
-                input_cram_bam      = input_file,
-                parameters  = select_first([trimmer_parameters]),
-                base_file_name      = base_file_name,
-                docker              = global.trimmer_docker,
-                preemptible_tries   = preemptible_tries,
-                monitoring_script   = monitoring_script,  # !FileCoercion
-                no_address          = no_address,
-                cpus                = cpu
-        }
-        File trimmer_output = Trimmer.trimmed_ucram_list[0]
-    }
-
-    File trimmed_file = select_first([trimmer_output, input_file])
-
-    call SortTasks.Demux as ConvertToFastq {
+    call TrimAlignSortSubWF.TrimAlignSort {
         input:
-            input_file          = trimmed_file,
-            base_file_name      = base_file_name,
-            demux_extra_args    = demux_extra_args,
-            output_format       = "fastq",
-            docker              = global.sorter_docker,
-            preemptible_tries   = preemptible_tries,
-            monitoring_script   = monitoring_script,  # !FileCoercion
-            cpu                 = cpu
-    }
-
-    call SingleCellTasks.CreateSyntheticPairedEnd {
-        input:
-            input_fastq             = select_first([ConvertToFastq.output_fastq]),
+            input_cram_bam_list     = [input_file],
             base_file_name          = base_file_name,
-            barcode_fastq_file_suffix = barcode_fastq_file_suffix,
-            insert_fastq_file_suffix  = insert_fastq_file_suffix,
-            barcode_fastq_header_suffix = barcode_fastq_header_suffix,
-            insert_fastq_header_suffix = insert_fastq_header_suffix,
+            steps                   = steps,
+            references              = references,
+            ref_fastas_cram         = ref_fastas_cram,
+            sample_name             = base_file_name,
+            trimmer_parameters      = trimmer_parameters,
+            sorter_params           = sorter_params,
+            no_address              = no_address,
             preemptible_tries       = preemptible_tries,
-            monitoring_script       = monitoring_script,  # !FileCoercion
             cpu                     = cpu,
-            docker                  = global.pigz_docker
+            monitoring_script_input = monitoring_script
     }
 
-    RuntimeParams fastqc_runtime_params = {}
-    call QCTasks.FastQC {
+    call SingleCellTasks.FindInsertBarcodeFastq {
         input:
-            input_fastq             = [CreateSyntheticPairedEnd.output_insert_fastq],
-            adapter_5p              = fastqc_adapter,
-            limits                  = fastqc_limits,
-            fastqc_runtime_params   = fastqc_runtime_params,
-            docker                  = global.fastqc_docker,
-            monitoring_script       = monitoring_script #!FileCoercion
+            input_fastq_list        = select_all(select_first([TrimAlignSort.fastq_files])),
+            sub_sumple_fastq_list   = select_all(select_first([TrimAlignSort.sub_sampled_output])),
+            sorter_csv_stats_list   = select_all(select_first([TrimAlignSort.sort_stats_csv])),
+            base_file_name          = base_file_name,
+            insert_rg               = insert_rg,
+            barcode_rg              = barcode_rg,
+            no_address              = no_address,
+            monitoring_script       = monitoring_script,
+            docker                  = global.single_cell_qc_docker
+    }
+
+    String sub_sample_star_align_extra_args = "--outSAMunmapped Within --chimOutType WithinBAM SoftClip --clip3pNbases 0 --outFilterMatchNminOverLread 0.66 --outFilterScoreMinOverLread 0.66 --scoreDelOpen -2 --scoreDelBase -2 --scoreInsOpen -2--scoreInsBase -2 --alignEndsType Local --outSAMmapqUnique 60"
+    call StarAlignWorkflow.StarAlignment as StarAlignSubSample{
+        input:
+            genome                  = star_genome,
+            input_bams              = [FindInsertBarcodeFastq.insert_sub_sample_fastq],
+            base_file_name          = base_file_name,
+            star_align_extra_args   = sub_sample_star_align_extra_args,
+            preemptible_tries       = preemptible_tries,
+            no_address              = no_address,
+            cpu                     = cpu,
+            monitoring_script_input = monitoring_script
+    }
+
+    call SingleCellTasks.SingleCellQc{
+        input:
+            trimmer_stats               = select_first([TrimAlignSort.trimmer_stats]),
+            trimmer_histogram           = select_first([select_first([TrimAlignSort.trimmer_histogram])[0]]),
+            trimmer_failure_codes       = select_first([TrimAlignSort.trimmer_failure_codes_csv]),
+            sorter_stats_csv            = FindInsertBarcodeFastq.insert_sorter_stats_csv,
+            star_stats                  = StarAlignSubSample.raw_star_log_file,
+            star_reads_per_gene         = StarAlignSubSample.reads_per_gene_file,
+            insert_sub_sample_fastq     = FindInsertBarcodeFastq.insert_sub_sample_fastq,
+            base_file_name              = base_file_name,
+            qc_thresholds               = qc_thresholds,
+            monitoring_script           = monitoring_script,
+            memory_gb                   = 16,
+            preemptible_tries           = preemptible_tries,
+            no_address                  = no_address,
+            docker                      = global.single_cell_qc_docker
     }
 
     if (defined(downstream_analysis)) {
@@ -366,17 +404,16 @@ workflow SingleCell {
         if(analysis_type == "star_solo"){
             call StarSoloWdl.StarSoloWorkflow {
                 input:
-                    insert_fastq            = CreateSyntheticPairedEnd.output_insert_fastq,
-                    barcode_fastq           = CreateSyntheticPairedEnd.output_barcodes_fastq,
+                    insert_fastq            = FindInsertBarcodeFastq.insert_fastq,
+                    barcode_fastq           = FindInsertBarcodeFastq.barcode_fastq,
                     base_file_name          = base_file_name,
                     star_solo_params        = select_first([star_solo_params]),
                     genome_generate_params  = genome_generate_params,
                     no_address              = no_address,
                     preemptible_tries       = preemptible_tries,
                     cpu                     = cpu,
-                    monitoring_script_input = monitoring_script_input
+                    monitoring_script_input = monitoring_script
             }
-            File star_solo_stats_csv = StarSoloWorkflow.outputs.gathered_star_stats_csv
         }
 
         if (analysis_type == "star") {
@@ -386,38 +423,33 @@ workflow SingleCell {
                     genome_generate_params  = genome_generate_params,
                     star_align_extra_args   = star_align_extra_args,
                     star_align_gtf_override = star_align_gtf_override,
-                    input_bams              = [trimmed_file],
+                    input_bams              = [TrimAlignSort.output_cram_bam],
                     base_file_name          = base_file_name + ".star.aln",
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
                     cpu                     = cpu,
-                    monitoring_script_input = monitoring_script_input
+                    monitoring_script_input = monitoring_script
             }
         }
     }
 
-    call SingleCellTasks.CombineStatistics {
-        input:
-            trimmer_stats           = select_first([trimmer_stats,Trimmer.trimmer_stats, ""]),
-            star_solo_stats_csv     = star_solo_stats_csv,
-            star_stats_csv          = StarAlignment.star_stats,
-            base_file_name          = base_file_name,
-            docker                  = global.ug_vc_docker,
-            monitoring_script       = monitoring_script, #!FileCoercion
-            no_address              = no_address,
-            preemptible_tries       = preemptible_tries,
-            cpu                     = 2
-    }
-
     output {
-        File? trimmer_stats_output          = Trimmer.trimmer_stats
-        File? trimmer_failure_codes_csv     = Trimmer.trimmer_failure_codes_csv
-        Array[File?]? trimmer_histogram     = Trimmer.histogram
-        Array[File?]? trimmer_histogram_extra = Trimmer.histogram_extra
-        File output_barcodes_fastq          = CreateSyntheticPairedEnd.output_barcodes_fastq
-        File output_insert_fastq            = CreateSyntheticPairedEnd.output_insert_fastq
-        Array[File] fastqc_reports          = FastQC.reports_html
-        File combined_statistics            = CombineStatistics.combined_statistics
+        #TrimAlignSort outputs
+        File? trimmer_stats_output          = TrimAlignSort.trimmer_stats
+        File? trimmer_failure_codes_csv     = TrimAlignSort.trimmer_failure_codes_csv
+        Array[File?]? trimmer_histogram     = TrimAlignSort.trimmer_histogram
+        Array[File?]? trimmer_histogram_extra = TrimAlignSort.trimmer_histogram_extra
+        Array[File?]? sort_stats_csv        = TrimAlignSort.sort_stats_csv
+        Array[File?]? sort_stats_json       = TrimAlignSort.sort_stats_json
+        File? unmatched_cram                = TrimAlignSort.unmatched_cram
+
+        # Fastq outputs
+        File output_barcodes_fastq          = FindInsertBarcodeFastq.barcode_fastq
+        File output_insert_fastq            = FindInsertBarcodeFastq.insert_fastq
+
+        # SingleCellQc outputs
+        File report_html                    = SingleCellQc.report
+        File aggregated_metrics_h5          = SingleCellQc.h5
 
         # Star solo outputs
         StarSoloOutputs? star_solo_outputs = StarSoloWorkflow.outputs
