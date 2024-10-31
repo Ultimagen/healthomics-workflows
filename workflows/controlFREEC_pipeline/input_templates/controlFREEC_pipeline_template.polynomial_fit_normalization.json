@@ -1,14 +1,17 @@
 {
-    "SomaticCNVCallingControlFREEC.base_file_name": "HCC1395.chr19.sorter_input.test",
-    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.chr19.s0.25.cram"],
-    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/013270-Lb1050-UGAv3-5-CATCCTGTGCGCATGAT.chr19.s0.25.cram.crai"],
-    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.chr19.s0.25.cram"],
-    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/013270-Lb1051-UGAv3-13-CTGATCAGTGGCGAT.chr19.s0.25.cram.crai"],
-    "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph" : ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/HCC1395.normal_0.chr19.bedGraph.gz"],
-    "SomaticCNVCallingControlFREEC.tumor_sorter_zipped_bed_graph" : ["s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/HCC1395.tumor_0.chr19.bedGraph.gz"],
-    "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/colo829_100_colo829bl_0_031865_036101.cram_minipileup.CHR1.pileup",
-    "SomaticCNVCallingControlFREEC.normal_mpileup_override": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/somatic_cnv/colo829bl_40x.cram_minipileup.CHR1.pileup",
-    "SomaticCNVCallingControlFREEC.sex": "XY",
+    "SomaticCNVCallingControlFREEC.base_file_name": "<sample_base_name>",
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": [
+        "<tumor>.bam"
+    ],
+    "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": [
+        "<tumor>.bam.bai"
+    ],
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": [
+        "<normal>.bam"
+    ],
+    "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": [
+        "<normal>.bam.bai"
+    ],
     "SomaticCNVCallingControlFREEC.num_shards": 100,
     "SomaticCNVCallingControlFREEC.scatter_intervals_break": 10000000,
     "SomaticCNVCallingControlFREEC.interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
@@ -29,9 +32,34 @@
     "SomaticCNVCallingControlFREEC.max_threads_override": 8,
     "SomaticCNVCallingControlFREEC.window": 1000,
     "SomaticCNVCallingControlFREEC.degree": 3,
-    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.4/ug_cnv_lcr.bed",
     "SomaticCNVCallingControlFREEC.gem_mappability_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
+    "SomaticCNVCallingControlFREEC.collect_coverage_region": [
+        "chr1",
+        "chr2",
+        "chr3",
+        "chr4",
+        "chr5",
+        "chr6",
+        "chr7",
+        "chr8",
+        "chr9",
+        "chr10",
+        "chr11",
+        "chr12",
+        "chr13",
+        "chr14",
+        "chr15",
+        "chr16",
+        "chr17",
+        "chr18",
+        "chr19",
+        "chr20",
+        "chr21",
+        "chr22",
+        "chrX"
+    ],
     "SomaticCNVCallingControlFREEC.chrLenFile_override": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
     "SomaticCNVCallingControlFREEC.high_sensitivity_mode": false,
-    "SomaticCNVCallingControlFREEC.naive_normalization": true
+    "SomaticCNVCallingControlFREEC.naive_normalization": false
 }

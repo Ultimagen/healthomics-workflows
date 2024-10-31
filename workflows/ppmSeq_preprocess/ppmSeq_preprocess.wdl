@@ -32,7 +32,7 @@ import "tasks/globals.wdl" as Globals
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "v1.13.4" # !UnusedDeclaration
+    String pipeline_version = "1.14.3" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -251,8 +251,8 @@ workflow ppmSeqPreprocess {
     File trimmer_histogram_csv_extra_out = select_all(trimmer_histogram_csv_extra_out_arr)[0]  # convert Array[File?]? to File
   }
   File trimmer_failure_codes = select_first([TrimAlignSort.trimmer_failure_codes_csv])
-  File sort_stats_csv_out = select_first([TrimAlignSort.sort_stats_csv])
-  File sort_stats_json_out = select_first([TrimAlignSort.sort_stats_json])
+  File sort_stats_csv_out = select_first([select_first([TrimAlignSort.sort_stats_csv])[0]]) # convert Array[File?]? to File
+  File sort_stats_json_out = select_first([select_first([TrimAlignSort.sort_stats_json])[0]]) # convert Array[File?]? to File
   File output_cram_bam = TrimAlignSort.output_cram_bam
   File output_cram_bam_index = select_first([TrimAlignSort.output_cram_bam_index])
 

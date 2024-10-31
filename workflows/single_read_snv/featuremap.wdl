@@ -54,7 +54,7 @@ input {
   Int dynamic_featuremap_disk_size = ceil(input_cram_bam_size) + 50
   Int secure_disk_size_threshold = 512
   Int featuremap_disk_size = if dynamic_featuremap_disk_size > secure_disk_size_threshold then dynamic_featuremap_disk_size else secure_disk_size_threshold
-  Int process_featuremap_memory_gb = select_first([process_featuremap_memory_gb_override, 6])
+  Int process_featuremap_memory_gb = select_first([process_featuremap_memory_gb_override, 16])
 
   call Globals.Globals as Globals
   GlobalVariables global = Globals.global_dockers
@@ -93,53 +93,19 @@ input {
         preemptibles = preemptibles,
         monitoring_script = global.monitoring_script  #!FileCoercion
     }
-
-    Float featuremap_size_gb = size(FeatureMapCreate.featuremap, "GB")
-    Int process_featuremap_disk_size_gb = ceil(featuremap_size_gb * 8) + ref_fasta_size
-    Int process_featuremap_cpus = 1
-    
-    call FeatureMapProcess {
-      input:
-        featuremap = FeatureMapCreate.featuremap,
-        featuremap_index = FeatureMapCreate.featuremap_index,
-        references = references,
-        featuremap_params = featuremap_params,
-        flow_order = flow_order,
-        output_basename = base_file_name,
-        ppmSeq_adapter_version = ppmSeq_adapter_version,
-        docker = global.ug_vc_docker,
-        memory_gb = process_featuremap_memory_gb,
-        cpus = process_featuremap_cpus,
-        disk_size = process_featuremap_disk_size_gb,
-        preemptibles = preemptibles,
-        monitoring_script = global.monitoring_script  #!FileCoercion
-    }
+  
   }
 
   Int merge_featuremap_disk_size_gb = (ceil(size(FeatureMapCreate.featuremap,"GB")) * 7) + 3
   Int merge_featuremap_memory_gb = 4
   Int merge_featuremap_cpus = 4
 
-  call FeatureMapMerge as AnnotatedFeatureMapMerge {
+  call FeatureMapMerge {
     input:
-      featuremap_parts = FeatureMapProcess.annotated_featuremap,
-      featuremap_parts_indices = FeatureMapProcess.annotated_featuremap_index,
+      featuremap_parts = FeatureMapCreate.featuremap,
+      featuremap_parts_indices = FeatureMapCreate.featuremap_index,
       output_basename = base_file_name,
-      tag = "featuremap_no_qual",
-      disk_size = merge_featuremap_disk_size_gb,
-      memory_gb = merge_featuremap_memory_gb,
-      cpus = merge_featuremap_cpus,
-      docker = global.ug_vc_docker,
-      preemptibles = preemptibles,
-      monitoring_script = global.monitoring_script  #!FileCoercion
-  }
-  
-  call FeatureMapMerge as FeatureMapSingleSubstitutionsMerge {
-    input:
-      featuremap_parts = FeatureMapProcess.featuremap_single_substitutions,
-      featuremap_parts_indices = FeatureMapProcess.featuremap_single_substitutions_index,
-      tag = "featuremap_no_qual.single_substitutions",
-      output_basename = base_file_name,
+      tag = "featuremap_no_annots",
       disk_size = merge_featuremap_disk_size_gb,
       memory_gb = merge_featuremap_memory_gb,
       cpus = merge_featuremap_cpus,
@@ -148,11 +114,44 @@ input {
       monitoring_script = global.monitoring_script  #!FileCoercion
   }
 
+  Float featuremap_size_gb = size(FeatureMapMerge.featuremap, "GB")
+  Int process_featuremap_disk_size_gb = ceil(featuremap_size_gb * 8) + ref_fasta_size
+  Int process_featuremap_cpus = 8
+
+  call FeatureMapAnnotations {
+    input:
+      featuremap = FeatureMapMerge.featuremap,
+      featuremap_index = FeatureMapMerge.featuremap_index,
+      references = references,
+      featuremap_params = featuremap_params,
+      flow_order = flow_order,
+      output_basename = base_file_name,
+      ppmSeq_adapter_version = ppmSeq_adapter_version,
+      docker = global.ug_vc_docker,
+      memory_gb = process_featuremap_memory_gb,
+      cpus = process_featuremap_cpus,
+      disk_size = process_featuremap_disk_size_gb,
+      preemptibles = preemptibles,
+      monitoring_script = global.monitoring_script  #!FileCoercion
+  }
+
+  call FeatureMapSingleSubstitutions {
+    input:
+      featuremap = FeatureMapAnnotations.annotated_featuremap,
+      featuremap_index = FeatureMapAnnotations.annotated_featuremap_index,
+      output_basename = base_file_name,
+      docker = global.vcflite_docker,
+      memory_gb = 4,
+      cpus = 2,
+      preemptibles = preemptibles,
+      monitoring_script = global.monitoring_script  #!FileCoercion
+  }
+
   output {
-    File featuremap = AnnotatedFeatureMapMerge.featuremap
-    File featuremap_index = AnnotatedFeatureMapMerge.featuremap_index
-    File featuremap_single_substitutions = FeatureMapSingleSubstitutionsMerge.featuremap
-    File featuremap_single_substitutions_index = FeatureMapSingleSubstitutionsMerge.featuremap_index
+    File featuremap = FeatureMapAnnotations.annotated_featuremap
+    File featuremap_index = FeatureMapAnnotations.annotated_featuremap_index
+    File featuremap_single_substitutions = FeatureMapSingleSubstitutions.featuremap_single_substitutions
+    File featuremap_single_substitutions_index = FeatureMapSingleSubstitutions.featuremap_single_substitutions_index
   }
 }
 
@@ -179,7 +178,7 @@ task FeatureMapCreate {
   }
   String interval_list_basename = basename(interval_list, ".interval_list")
   command <<<
-    set -eo pipefail
+    set -xeo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
     source ~/.bashrc
@@ -198,6 +197,7 @@ task FeatureMapCreate {
       --min-score ~{featuremap_params.min_score} \
       --limit-score ~{featuremap_params.limit_score} \
       --read-filter MappingQualityReadFilter --minimum-mapping-quality ~{featuremap_params.min_mapq} \
+      --threaded-walker --threaded-writer \
       ~{featuremap_params.extra_args} 
 
     echo "***************************** Filtering on region *****************************"
@@ -229,7 +229,7 @@ task FeatureMapCreate {
   >>>
   runtime {
     preemptible: preemptibles
-    cpu: 1
+    cpu: 2
     memory: "~{memory_gb} GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker
@@ -242,7 +242,7 @@ task FeatureMapCreate {
   }
 }
 
-task FeatureMapProcess {
+task FeatureMapAnnotations {
   input  {
     File featuremap
     File featuremap_index
@@ -260,16 +260,15 @@ task FeatureMapProcess {
   }
   
   String annotated_featuremap_vcf = basename(featuremap, ".vcf.gz") + ".annotated.vcf.gz"
-  String single_sub_pref = "~{output_basename}.single_substitution"
 
   command <<<
-    set -eo pipefail
+    set -xeo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
     source ~/.bashrc
     conda activate genomics.py3
 
-    echo "***************************** 1/2 Add additional features to featuremap *****************************"
+    echo "***************************** Add additional features to featuremap *****************************"
     start=$(date +%s)
     start_task=$(date +%s)
     python /VariantCalling/ugvc annotate_featuremap \
@@ -279,22 +278,8 @@ task FeatureMapProcess {
       ~{true="--ppmSeq_adapter_version " false="" defined(ppmSeq_adapter_version)}~{default="" ppmSeq_adapter_version} \
       --flow_order ~{flow_order} \
       --motif_length_to_annotate ~{featuremap_params.motif_length_to_annotate} \
-      --max_hmer_length ~{featuremap_params.max_hmer_length}
-
-    end=$(date +%s)
-    mins_elapsed=$(( ($end - $start_task) / 60))
-    secs_elapsed=$(( ($end - $start_task) % 60 ))
-    if [ $secs_elapsed -lt 10 ]; then
-      secs_elapsed=0$secs_elapsed
-    fi
-    echo "Run time: $mins_elapsed:$secs_elapsed"
-
-    echo "***************************** 2/2 Generating FeatureMaps of single substitutions *****************************"
-    start_task=$(date +%s)
-
-    bcftools view ~{annotated_featuremap_vcf} -H | vcf2bed | bedtools groupby -c 3 -o count | awk '($4==1) {print }' > ~{single_sub_pref}.bed
-    bcftools view -R ~{single_sub_pref}.bed -Oz -o ~{single_sub_pref}.vcf.gz ~{annotated_featuremap_vcf}
-    bcftools index -t ~{single_sub_pref}.vcf.gz
+      --max_hmer_length ~{featuremap_params.max_hmer_length} \
+      --process_number ~{cpus}
 
     end=$(date +%s)
     mins_elapsed=$(( ($end - $start_task) / 60))
@@ -304,23 +289,6 @@ task FeatureMapProcess {
     fi
     echo "Run time: $mins_elapsed:$secs_elapsed"
     echo "***************************** Done *****************************"
-
-    end=$(date +%s)
-    mins_elapsed=$(( ($end - $start_task) / 60))
-    secs_elapsed=$(( ($end - $start_task) % 60 ))
-    if [ $secs_elapsed -lt 10 ]; then
-      secs_elapsed=0$secs_elapsed
-    fi
-    echo "Run time: $mins_elapsed:$secs_elapsed"
-    echo "***************************** Done *****************************"
-
-    end=$(date +%s)
-    mins_elapsed=$(( ($end - $start) / 60))
-    secs_elapsed=$(( ($end - $start) % 60 ))
-    if [ $secs_elapsed -lt 10 ]; then
-      secs_elapsed=0$secs_elapsed
-    fi
-    echo "Total run time: $mins_elapsed:$secs_elapsed"
   >>>
   runtime {
     preemptible: preemptibles
@@ -332,8 +300,53 @@ task FeatureMapProcess {
   output{
     File annotated_featuremap = "~{annotated_featuremap_vcf}"
     File annotated_featuremap_index = "~{annotated_featuremap_vcf}.tbi"
-    File featuremap_single_substitutions = "~{single_sub_pref}.vcf.gz"
-    File featuremap_single_substitutions_index = "~{single_sub_pref}.vcf.gz.tbi"
+    File monitoring_log = "monitoring.log"
+  }
+}
+
+task FeatureMapSingleSubstitutions {
+  input  {
+    File featuremap
+    File featuremap_index
+    String output_basename
+    String docker
+    Int memory_gb
+    Int cpus
+    # Int disk_size
+    Int preemptibles
+    File monitoring_script
+  }
+  
+  String single_sub_output = "~{output_basename}.single_substitution.vcf.gz"
+  Int disk_size = ceil(size(featuremap, "GB") * 30) + 20
+
+  command <<<
+    set -xeo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    echo "$(date) ***************************** Importing vcf into SQLite database *****************************"
+
+    vcflite import --vcf-in ~{featuremap} 
+
+    echo "$(date) ***************************** Generating FeatureMap of single substitutions *****************************"
+
+    vcflite query --group-by "chrom, pos" --having "COUNT(*) = 1" --vcf-out ~{single_sub_output}
+
+    echo "$(date) ***************************** Indexing FeatureMap of single substitutions *****************************"
+    tabix -p vcf ~{single_sub_output}
+
+    echo "$(date) ***************************** Done *****************************"
+  >>>
+  runtime {
+    preemptible: preemptibles
+    cpu: "~{cpus}"
+    memory: "~{memory_gb} GB"
+    disks: "local-disk " + ceil(disk_size) + " HDD"
+    docker: docker
+  }
+  output{
+    File featuremap_single_substitutions = "~{single_sub_output}"
+    File featuremap_single_substitutions_index = "~{single_sub_output}.tbi"
     File monitoring_log = "monitoring.log"
   }
 }
@@ -366,7 +379,7 @@ task FeatureMapMerge {
     for part in ~{sep=" " featuremap_parts}; do if ! test -f $part.tbi; then bcftools index -t $part; fi; done
 
     bcftools concat --threads ~{cpus} -a -Oz -o ~{output_basename}.~{tag}.vcf.gz ~{sep=" " featuremap_parts}
-    bcftools index -f -t ~{output_basename}.~{tag}.vcf.gz
+    bcftools index --threads ~{cpus} -f -t ~{output_basename}.~{tag}.vcf.gz
 
     end=$(date +%s)
     mins_elapsed=$(( ($end - $start) / 60))

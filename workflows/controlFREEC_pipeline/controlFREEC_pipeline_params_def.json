@@ -1,18 +1,18 @@
 {
-    "SomaticCNVCallingControlFREEC.BedGraphOutput": {
-        "description": "Whether to add BedGraphOutput to controlFREEC outputs, recommended value set in the template",
-        "optional": false
+    "SomaticCNVCallingControlFREEC.CNV_gain_cutoff_override": {
+        "description": "Gain cutoff for CNV filtering. Default is 1.03",
+        "optional": true
     },
-    "SomaticCNVCallingControlFREEC.SNPfile": {
-        "description": "Vcf file holding locations of the common variants to calculate pileup statistics on",
-        "optional": false
-    },
-    "SomaticCNVCallingControlFREEC.SNPfile_index": {
-        "description": "Vcf.tbi index file for SNPfile",
-        "optional": false
+    "SomaticCNVCallingControlFREEC.CNV_loss_cutoff_override": {
+        "description": "Loss cutoff for CNV filtering. Default is 0.97",
+        "optional": true
     },
     "SomaticCNVCallingControlFREEC.base_file_name": {
         "description": "Base file name used for some output files",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.bed_graph_output": {
+        "description": "Whether to add bed_graph_output to controlFREEC outputs, recommended value set in the template",
         "optional": false
     },
     "SomaticCNVCallingControlFREEC.chrLenFile_override": {
@@ -31,11 +31,11 @@
         "description": "Genomic region to limit the CNV calling to",
         "optional": true
     },
-    "SomaticCNVCallingControlFREEC.contaminationAdjustment": {
-        "description": "Whether to run controlFREEC with contaminationAdjustment option, recommended value set in the template",
+    "SomaticCNVCallingControlFREEC.contamination_adjustment": {
+        "description": "Whether to run controlFREEC with contamination_adjustment option, recommended value set in the template",
         "optional": false
     },
-    "SomaticCNVCallingControlFREEC.contaminationFraction": {
+    "SomaticCNVCallingControlFREEC.contamination_fraction": {
         "description": "a priori known value of tumor sample contamination by normal cells. Default: contamination=0",
         "optional": true
     },
@@ -47,7 +47,7 @@
         "description": "dummy_input_for_call_caching",
         "optional": true
     },
-    "SomaticCNVCallingControlFREEC.gemMappabilityFile": {
+    "SomaticCNVCallingControlFREEC.gem_mappability_file": {
         "description": "Gem file holding mappablity biased regions. ",
         "optional": true
     },
@@ -55,7 +55,11 @@
         "description": "Bed file of the genome binned to equal sized windows",
         "optional": false
     },
-    "SomaticCNVCallingControlFREEC.inputFormat": {
+    "SomaticCNVCallingControlFREEC.high_sensitivity_mode": {
+        "description": "Whether to run controlFREEC in high sensitivity mode",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.input_format": {
         "description": "controlFREEC input format, recommended value set in the template",
         "optional": false
     },
@@ -87,7 +91,7 @@
         "description": "Reads mapping-quality cutoff for coverage calculation. Default is 1",
         "optional": true
     },
-    "SomaticCNVCallingControlFREEC.maxThreads_override": {
+    "SomaticCNVCallingControlFREEC.max_threads_override": {
         "description": "maximal threads for controlFREEC. Default is 8",
         "optional": true
     },
@@ -98,6 +102,10 @@
     "SomaticCNVCallingControlFREEC.monitoring_script_input": {
         "description": "monitoring_script_input",
         "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.naive_normalization": {
+        "description": "Whether to run controlFREEC with naive normalization mode (Rather than using FREEC Polynomial fitting)",
+        "optional": false
     },
     "SomaticCNVCallingControlFREEC.no_address_override": {
         "description": "no_address_override",
@@ -138,6 +146,14 @@
     "SomaticCNVCallingControlFREEC.sex": {
         "description": "Sample's sex value, should be 'XX' or 'XY'",
         "optional": true
+    },
+    "SomaticCNVCallingControlFREEC.snp_file": {
+        "description": "Vcf file holding locations of the common variants to calculate pileup statistics on",
+        "optional": false
+    },
+    "SomaticCNVCallingControlFREEC.snp_file_index": {
+        "description": "Vcf.tbi index file for snp_file",
+        "optional": false
     },
     "SomaticCNVCallingControlFREEC.tumor_coverage_cpn": {
         "description": "Pre-calculated binned coverage for the tumor sample in the format needed for controlFREEC (cpn)",

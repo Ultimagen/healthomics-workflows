@@ -26,7 +26,6 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
-    "EfficientDV.hmer_runs_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/runs.conservative.bed",
     "EfficientDV.filtering_blacklist_file": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/hapmap2.1_wgs.v0.6.2.blacklist.bed",
     "EfficientDV.sec_models": [],
     "EfficientDV.background_cram_files": [
@@ -35,9 +34,9 @@
     "EfficientDV.background_cram_index_files": [
         "<normal_cram_file>.cram.crai"
     ],
-    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/deepvariant-ultima-somatic-wgs-model-v1.0_4.9.ckpt-2950000.onnx",
-    "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/deepvariant-ultima-somatic-wgs-model-v1.0_4.9.ckpt-2950000.onnx.serialized.a10g",
-    "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic",
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/v1.2.3/deepvariant-ultima-somatic-wgs-model-v1.2.3.ckpt-2980000.batch1000.onnx",
+    "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/v1.2.3/deepvariant-ultima-somatic-wgs-model-v1.2.3.ckpt-2980000.batch1000.onnx.serialized.a10g",
+    "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic --single-strand-filter",
     "EfficientDV.min_fraction_hmer_indels": 0.03,
     "EfficientDV.min_fraction_non_hmer_indels": 0.03,
     "EfficientDV.min_fraction_snps": 0.03,
@@ -48,8 +47,8 @@
     "EfficientDV.allele_frequency_ratio": 10,
     "EfficientDV.show_bg_fields": true,
     "EfficientDV.optimal_coverages": [
-        100,
-        40
+        150,
+        100
     ],
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,

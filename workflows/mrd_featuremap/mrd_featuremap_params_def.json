@@ -107,6 +107,10 @@
         "description": "Mapping quality threshold for reads to be included in the coverage analysis, corresponding to the value used to filter the srsnv output",
         "optional": false
     },
+    "MRDFeatureMap.memory_extract_coverage_override": {
+        "description": "Memory in GB to use for the coverage extraction task",
+        "optional": true
+    },
     "MRDFeatureMap.monitoring_script_input": {
         "description": "monitoring_script_input",
         "optional": true

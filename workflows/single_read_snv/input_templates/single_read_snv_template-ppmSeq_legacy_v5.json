@@ -28,14 +28,14 @@
     "SingleReadSNV.preemptible_tries": 1,
     "SingleReadSNV.raise_exceptions_in_report": false,
     "SingleReadSNV.categorical_features": {
-        "st": [
+        "strand_ratio_category_start": [
             "MIXED",
             "MINUS",
             "PLUS",
             "END_UNREACHED",
             "UNDETERMINED"
         ],
-        "et": [
+        "strand_ratio_category_end": [
             "MIXED",
             "MINUS",
             "PLUS",
@@ -92,7 +92,7 @@
         ]
     },
     "SingleReadSNV.single_read_snv_params": {
-        "ppmSeq_adapter_version": "v1",
+        "ppmSeq_adapter_version": "legacy_v5",
         "numerical_features": [
             "X_SCORE",
             "X_EDIST",
@@ -120,7 +120,7 @@
         "test_set_size": 0
     },
     "SingleReadSNV.featuremap_params": {
-        "extra_args": "--nm-edit-distance --include-dup-reads --flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --surrounding-median-quality-size 20 --copy-attr tm --copy-attr a3 --copy-attr rq --copy-attr st --copy-attr et --copy-attr s3 --copy-attr s2",
+        "extra_args": "--nm-edit-distance --include-dup-reads --flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --surrounding-median-quality-size 20 --copy-attr tm --copy-attr a3 --copy-attr rq --copy-attr as --copy-attr ts --copy-attr ae --copy-attr te --copy-attr s3 --copy-attr s2",
         "min_mapq": 60,
         "snv_identical_bases": 5,
         "snv_identical_bases_after": 5,
