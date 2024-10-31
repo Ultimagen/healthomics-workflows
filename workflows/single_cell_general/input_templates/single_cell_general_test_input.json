@@ -1,0 +1,49 @@
+{
+  "SingleCell.input_file": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/single_cell/410378-Z0097.flex_subsample.bam",
+  "SingleCell.ref_fastas_cram": [
+    "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+    "s3://genomics-pipeline-concordanz-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
+    "s3://broad-references/hg19/v0/Homo_sapiens_assembly19.fasta",
+    "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/hg19.ucsc.fa",
+    "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+    "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+  ],
+  "SingleCell.base_file_name": "test-10x-flex-nomatch",
+  "SingleCell.preemptible_tries": 1,
+  "SingleCell.no_address": true,
+  "SingleCell.references": {
+    "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+    "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict",
+    "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta"
+  },
+  "SingleCell.star_genome": "s3://genomics-pipeline-concordanz-us-east-1/bioinfo-resources/tools/STAR_hg38_cr_2.7.8a.zip",
+  "SingleCell.barcode_rg": "S1_L001_R1_001",
+  "SingleCell.qc_thresholds": {
+    "pass_trim_rate": 85,
+    "fraction_below_read_length": 10,
+    "read_length": 72,
+    "percent_aligned": 90
+  },
+  "SingleCell.sorter_params": {
+    "output_path": "{RunID}/{RunID}_{minorRG}",
+    "aligned": false,
+    "mark_duplicates": false,
+    "output_group": "{minorRG}",
+    "demux_extra_args": "--fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false"
+  },
+  "SingleCell.trimmer_parameters": {
+    "format": "10x flex",
+    "pattern_files": [
+      "s3://genomics-pipeline-concordanz-us-east-1/trimmer_formats/single_cell/10x-737K-fixed-rna-profiling.csv"
+    ],
+    "memory_gb": 128,
+    "formats_description": "s3://genomics-pipeline-trimmer-dev-formats/single_cell/bkp_oldtrimmer_241007/single_cell_trimmer_formats_10x_flex.json",
+    "extra_args": "--histogram=%1.%2.histogram.csv --failure-field=rg:Z:unmatched --failure-field=fm:Z:cram --read-group Z0097 --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %3"
+  },
+  "SingleCell.cpu": 32,
+  "SingleCell.insert_rg": "S1_L001_R2_001",
+  "SingleCell.steps": {
+    "trim": true,
+    "sort": true
+  }
+}
