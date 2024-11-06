@@ -283,6 +283,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>File?</i><br />
         gvcf index
 </p>
+<p name="EfficientDV.output_gvcf_hcr">
+        <b>EfficientDV.output_gvcf_hcr</b><br />
+        <i>File?</i><br />
+        HCR file - callability regions BED file defined from the gVCF
+</p>
 <p name="EfficientDV.realigned_cram">
         <b>EfficientDV.realigned_cram</b><br />
         <i>File?</i><br />
@@ -316,4 +321,4 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

@@ -257,4 +257,4 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

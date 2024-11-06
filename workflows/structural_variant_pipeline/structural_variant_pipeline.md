@@ -194,6 +194,16 @@ The steps of the pipeline are as following:
         <i>Int? &mdash; Default: None</i><br />
          memory override for annotate_variants task 
 </p>
+<p name="SVPipeline.convert_vcf_format_memory_override">
+        <b>SVPipeline.convert_vcf_format_memory_override</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+         memory override for convert_vcf_format task 
+</p>
+<p name="SVPipeline.germline_link_variants_memory_override">
+        <b>SVPipeline.germline_link_variants_memory_override</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+         memory override for germline_link_variants task 
+</p>
 <p name="SVPipeline.scatter_intervals_break">
         <b>SVPipeline.scatter_intervals_break</b><br />
         <i>Int &mdash; Default: None</i><br />
@@ -245,4 +255,4 @@ The steps of the pipeline are as following:
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

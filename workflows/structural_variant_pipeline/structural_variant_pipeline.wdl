@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.14.3" # !UnusedDeclaration
+        String pipeline_version = "1.15.1" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -81,6 +81,8 @@ workflow SVPipeline {
         Int? create_assembly_memory_override
         Int? annotate_variants_cpu_override
         Int? annotate_variants_memory_override
+        Int? convert_vcf_format_memory_override
+        Int? germline_link_variants_memory_override
         # Used for running on other clouds (aws)
         String? cloud_provider_override
         Int scatter_intervals_break # Maximal resolution for scattering intervals
@@ -104,6 +106,8 @@ workflow SVPipeline {
         #@wv not is_somatic -> len(input_germline_crams_indexes)>0
         #@wv not is_somatic -> len(input_tumor_crams)==0
         #@wv not is_somatic -> len(input_tumor_crams_indexes)==0
+        #@wv prefix(input_germline_crams_indexes) == input_germline_crams
+        #@wv prefix(input_tumor_crams_indexes) == input_tumor_crams
 
     }
     meta {
@@ -136,9 +140,6 @@ workflow SVPipeline {
             "AnnotateVariants.germline_metrics",
             "AnnotateVariants.tumor_metrics",
             "AnnotateVariants.assembly_metrics",
-            "AnnotateVariants.germline_metrics_folder",
-            "AnnotateVariants.tumor_metrics_folder",
-            "AnnotateVariants.assembly_metrics_folder",
             "AnnotateVariants.cpu_override",
             "AnnotateVariants.memory_override"
             ]}
@@ -313,6 +314,16 @@ workflow SVPipeline {
         annotate_variants_memory_override: {
             type: "Int",
             help: "memory override for annotate_variants task",
+            category: "advanced"
+        }
+        convert_vcf_format_memory_override: {
+            type: "Int",
+            help: "memory override for convert_vcf_format task",
+            category: "advanced"
+        }
+        germline_link_variants_memory_override: {
+            type: "Int",
+            help: "memory override for germline_link_variants task",
             category: "advanced"
         }
         annotate_variants_cpu_override: {
@@ -575,11 +586,8 @@ workflow SVPipeline {
                 is_somatic = is_somatic,
                 number_of_shards = 1,
                 germline_metrics = germline_CollectGridssMetrics.out_metrics,
-                germline_metrics_folder = germline_CollectGridssMetrics.out_metrics_folder,
                 tumor_metrics = tumor_CollectGridssMetrics.out_metrics,
-                tumor_metrics_folder = tumor_CollectGridssMetrics.out_metrics_folder,
                 assembly_metrics = assembly_CollectGridssMetrics.out_metrics,
-                assembly_metrics_folder = assembly_CollectGridssMetrics.out_metrics_folder,
                 gridss_docker = global.gridss_docker,
                 cloud_provider_override = cloud_provider_override,
                 preemptible_tries = preemptibles,
@@ -641,7 +649,8 @@ workflow SVPipeline {
                 gridss_docker = global.gridss_docker,
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
-                no_address = no_address
+                no_address = no_address,
+                memory_override = germline_link_variants_memory_override,
         }
     }
     if(is_somatic){
@@ -679,6 +688,7 @@ workflow SVPipeline {
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
                 no_address = no_address,
+                memory_override = convert_vcf_format_memory_override,
                 cloud_provider_override = cloud_provider_override
         }
     }
@@ -855,7 +865,7 @@ task RevertLowMAPQUASecondaryAlignment {
         File monitoring_script
         Boolean no_address
     }
-    Int disk_size = ceil(size(before_UA,"GB") + 3*size(after_UA,"GB"))+20
+    Int disk_size = ceil(size(before_UA,"GB") + 4*size(after_UA,"GB"))+20
     command <<<
         set -o pipefail
         set -e
@@ -863,8 +873,6 @@ task RevertLowMAPQUASecondaryAlignment {
 
         samtools sort ~{after_UA} -o ~{after_UA}_sorted.bam
         samtools index ~{after_UA}_sorted.bam
-        # just to save disk space
-        rm ~{after_UA}
 
         python3 /opt/gridss/revert_sup_low_mapq_ua_alignment.py \
             --before ~{before_UA} \
@@ -875,7 +883,7 @@ task RevertLowMAPQUASecondaryAlignment {
         samtools index ~{outptut_prefix}.bam
     >>>
     runtime {
-        memory: "4 GiB"
+        memory: "8 GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
@@ -1089,7 +1097,6 @@ VERBOSITY=INFO \
     output {
         File monitoring_log = "monitoring.log"
         Array[File] out_metrics = [output_file + ".cigar_metrics", output_file + ".mapq_metrics",output_file + ".coverage.blacklist.bed", output_file + ".tag_metrics", output_file + ".idsv_metrics"]
-        String out_metrics_folder = "~{output_folder}"
     }
 }
 
@@ -1111,11 +1118,8 @@ task AnnotateVariants {
         Boolean is_somatic
         Int number_of_shards
         Array[File]? germline_metrics
-        String? germline_metrics_folder
         Array[File]? tumor_metrics
-        String? tumor_metrics_folder
         Array[File]? assembly_metrics
-        String? assembly_metrics_folder
         String gridss_docker
         String? cloud_provider_override
         File monitoring_script
@@ -1132,12 +1136,13 @@ task AnnotateVariants {
     Boolean defined_germline = if(length(input_germline_crams)>0) then true else false
     Int cpu = select_first([cpu_override, if(is_aws) then 8 else 1])
     Int mem = select_first([memory_override, if(!is_aws) then 32 else if(!is_somatic) then 16 else 64])
-    #variables for metrics files reordering
-    Boolean defined_germline_metrics = if(defined(germline_metrics_folder)) then true else false
-    Boolean defined_tumor_metrics = if(defined(tumor_metrics_folder)) then true else false
-    Boolean defined_assembly_metrics = if(defined(assembly_metrics_folder)) then true else false
+    # variables for metrics files reordering
+    Boolean defined_germline_metrics = if(defined(germline_metrics)) then true else false
+    Boolean defined_tumor_metrics = if(defined(tumor_metrics)) then true else false
+    Boolean defined_assembly_metrics = if(defined(assembly_metrics)) then true else false
 
     command <<<
+        find
         set -o pipefail
         set -o xtrace
         set -e
@@ -1162,7 +1167,9 @@ task AnnotateVariants {
             first_cram=$(echo $input_germline_crams_string | awk -F "," '{print $1}')
             germline_working_folder=$first_cram".gridss.working/"
             mkdir -p $germline_working_folder
-            cp -r ~{germline_metrics_folder}* $germline_working_folder
+            for germline_metric_file in ~{sep=' ' germline_metrics}; do
+                cp $germline_metric_file $germline_working_folder
+            done
             ls -lrta $germline_working_folder
         fi
 
@@ -1172,7 +1179,9 @@ task AnnotateVariants {
             first_cram=$(echo $input_tumor_crams_string | awk -F "," '{print $1}')
             tumor_working_folder=$first_cram".gridss.working/"
             mkdir -p $tumor_working_folder
-            cp -r ~{tumor_metrics_folder}* $tumor_working_folder
+            for tumor_metric_file in ~{sep=' ' tumor_metrics}; do
+                cp $tumor_metric_file $tumor_working_folder
+            done
             ls -lrta $tumor_working_folder
         fi
 
@@ -1180,7 +1189,9 @@ task AnnotateVariants {
         then
             assembly_working_folder="~{assembly}.gridss.working/"
             mkdir -p $assembly_working_folder
-            cp -r ~{assembly_metrics_folder}* $assembly_working_folder
+            for assembly_metric_file in ~{sep=' ' assembly_metrics}; do
+                cp $assembly_metric_file $assembly_working_folder
+            done
             ls -lrta $assembly_working_folder
         fi
         ### Done order metrics files ###
@@ -1306,6 +1317,7 @@ task GermlineLinkVariants {
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
+        Int? memory_override
     }
     Int disk_size = 4*ceil(size(input_vcf,"GB")) + 10
     command <<<
@@ -1320,7 +1332,7 @@ task GermlineLinkVariants {
             --scriptdir /opt/gridss/
     >>>
     runtime {
-        memory: "8 GiB"
+        memory: select_first([memory_override, 64]) + " GiB"
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
@@ -1362,10 +1374,8 @@ task SomaticGripss {
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        # todo add xmx and try reduce memory
-
         mkdir gripss_output
-        java -jar /opt/wtsi-cgp/java/gripss.jar \
+        java -XX:MaxRAMPercentage=80.0 -jar /opt/wtsi-cgp/java/gripss.jar \
         -vcf ~{input_vcf} \
         -sample ~{tumor_sample} \
         ~{"-reference " + germline_sample} \
@@ -1408,11 +1418,13 @@ task ConvertVcfFormat {
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
+        Int? memory_override
         String? cloud_provider_override
     }
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
-    Int cpu = if(is_aws) then 4 else 8
-    Int mem = if(is_aws) then 16 else 64
+    Int cpu = 8
+    Int mem = select_first([memory_override, 64])
+
     Int disk_size = ceil(2*size(input_vcf,"GB")) + 10
     command <<<
         set -o pipefail

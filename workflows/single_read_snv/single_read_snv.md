@@ -174,4 +174,4 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

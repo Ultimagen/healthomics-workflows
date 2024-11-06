@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.14.3" # !UnusedDeclaration
+        String pipeline_version = "1.15.1" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -366,7 +366,7 @@ workflow MRDFeatureMap {
         ref_fasta = references.ref_fasta,
         ref_fasta_index = references.ref_fasta_index,
         ref_dict = references.ref_dict,
-        docker = global.ug_vc_docker,
+        docker = global.ugbio_mrd_docker,
         disk_size = 2 * (size(snv_database, "GB") + size(FilterDb.output_vcf, "GB")) + 10,
         memory_gb = 8,
         cpus = 2,
@@ -389,7 +389,7 @@ workflow MRDFeatureMap {
       base_file_name = base_file_name,
       mapping_quality_threshold = mapping_quality_threshold,
       references = references,
-      docker = global.ug_vc_docker,
+      docker = global.ugbio_mrd_docker,
       memory_gb = memory_extract_coverage,
       cpus = 2,
       preemptibles = preemptibles,
@@ -405,7 +405,7 @@ workflow MRDFeatureMap {
       matched_signatures = FilterMatched.output_vcf,
       control_signatures = FilterControlSignatures.output_vcf,
       db_signatures = GenerateControlSignaturesFromDatabase.db_signatures,
-      docker = global.ug_vc_docker,
+      docker = global.ugbio_mrd_docker,
       disk_size = 2 * featuremap_size + 30,
       memory_gb = 8,
       cpus = 2,
@@ -423,7 +423,7 @@ workflow MRDFeatureMap {
       mrd_analysis_params = mrd_analysis_params,
       basename = base_file_name,
       featuremap_df_file = featuremap_df_file,
-      docker = global.ug_vc_docker,
+      docker = global.ugbio_mrd_docker,
       disk_size = 3 * featuremap_size + 30,
       memory_gb = memory_extract_coverage,
       cpus = 4,

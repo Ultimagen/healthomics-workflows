@@ -12,7 +12,6 @@
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
         "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
     },
-    "EfficientDV.make_gvcf": false,
     "EfficientDV.preemptible_tries": 2,
     "EfficientDV.ref_dbsnp": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
     "EfficientDV.ref_dbsnp_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
@@ -40,12 +39,13 @@
     "EfficientDV.min_fraction_hmer_indels": 0.03,
     "EfficientDV.min_fraction_non_hmer_indels": 0.03,
     "EfficientDV.min_fraction_snps": 0.03,
-    "EfficientDV.min_variant_quality_hmer_indels": 16,
-    "EfficientDV.min_variant_quality_exome_hmer_indels": 16,
-    "EfficientDV.min_variant_quality_non_hmer_indels": 16,
+    "EfficientDV.min_variant_quality_hmer_indels": 20,
+    "EfficientDV.min_variant_quality_exome_hmer_indels": 20,
+    "EfficientDV.min_variant_quality_non_hmer_indels": 20,
     "EfficientDV.min_variant_quality_snps": 14,
     "EfficientDV.allele_frequency_ratio": 10,
     "EfficientDV.show_bg_fields": true,
+    "EfficientDV.make_gvcf": false,
     "EfficientDV.optimal_coverages": [
         150,
         100

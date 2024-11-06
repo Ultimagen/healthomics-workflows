@@ -198,4 +198,4 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

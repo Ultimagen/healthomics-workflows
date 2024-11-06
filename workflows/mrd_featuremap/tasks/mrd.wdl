@@ -21,11 +21,9 @@ task MrdDataAnalysis {
   command <<<
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
 
     echo "********** Aggregating data to neat dataframes **********"
-    python /VariantCalling/ugvc prepare_data_from_mrd_pipeline \
+    prepare_data_from_mrd_pipeline \
       --intersected-featuremaps ~{sep=" " intersected_featuremaps_parquet} \
       --coverage-csv ~{coverage_csv} \
       ~{true="--matched-signatures-vcf " false="" defined(matched_signatures_vcf)}~{sep=" " matched_signatures_vcf} \
@@ -36,7 +34,7 @@ task MrdDataAnalysis {
 
 
     echo "********** Creating MRD analysis notebook **********"
-    papermill /VariantCalling/ugvc/reports/mrd_automatic_data_analysis.ipynb ~{basename}.mrd_data_analysis.ipynb \
+    papermill /src/mrd/ugbio_mrd/reports/mrd_automatic_data_analysis.ipynb ~{basename}.mrd_data_analysis.ipynb \
       -p features_file_parquet "~{basename}.features.parquet" \
       -p signatures_file_parquet "~{basename}.signatures.parquet" \
       -p signature_filter_query "~{mrd_analysis_params.signature_filter_query}" \
@@ -137,11 +135,9 @@ task GenerateControlSignaturesFromDatabase {
   command <<<
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
 
     echo "********** Generating control signatures from database **********"
-    python /VariantCalling/ugvc generate_synthetic_signatures \
+    generate_synthetic_signatures \
       --signature_vcf ~{signature_file} \
       --db_vcf ~{snv_database} \
       --n_synthetic_signatures ~{n_synthetic_signatures} \
@@ -150,7 +146,7 @@ task GenerateControlSignaturesFromDatabase {
 
     echo "********** Converting control signatures to dataframe **********"
     find syn*.vcf.gz | \
-      xargs -P~{cpus} -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
+      xargs -P~{cpus} -I% sh -c "featuremap_to_dataframe -i %"
     echo "********** DONE **********"
 
   >>>
@@ -189,8 +185,6 @@ task FeatureMapIntersectWithSignatures {
   command <<<
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    . ~/.bashrc
-    conda activate genomics.py3
 
 
     # run intersections
@@ -200,14 +194,14 @@ task FeatureMapIntersectWithSignatures {
         echo "******** 1/2 Run intersections ********"
         echo ~{sep=" " matched_signatures} | tr " " $"\n" | sort | uniq | \
           xargs -P~{cpus} -I% sh -c \
-          "python /VariantCalling/ugvc intersect_featuremap_with_signature \
+          "intersect_featuremap_with_signature \
           --featuremap ~{featuremap} \
           --signature % \
           --signature_type matched"
       echo "******** 2/2 Converting to dataframes ********"
       # the next command is not multiprocessed because it uses pyfaidx which is not multiprocessing-safe
       find *.matched.intersection.vcf.gz | \
-        xargs -P1 -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
+        xargs -P1 -I% sh -c "featuremap_to_dataframe -i %"
     fi
 
     if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_control_signatures} ]]
@@ -216,13 +210,13 @@ task FeatureMapIntersectWithSignatures {
       echo "******** 1/2 Run intersections ********"
       echo ~{sep=" " control_signatures} | tr " " $"\n" | sort | uniq | \
         xargs -P~{cpus} -I% sh -c \
-        "python /VariantCalling/ugvc intersect_featuremap_with_signature \
+        "intersect_featuremap_with_signature \
         --featuremap ~{featuremap} \
         --signature % \
         --signature_type control"
       echo "******** 2/2 Converting to dataframes ********"
       find *.control.intersection.vcf.gz | \
-        xargs -P1 -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
+        xargs -P1 -I% sh -c "featuremap_to_dataframe -i %"
     fi
 
     if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_db_signatures} ]]
@@ -231,13 +225,13 @@ task FeatureMapIntersectWithSignatures {
       echo "******** 1/2 Run intersections ********"
       echo ~{sep=" " db_signatures} | tr " " $"\n" | sort | uniq | \
         xargs -P~{cpus} -I% sh -c \
-        "python /VariantCalling/ugvc intersect_featuremap_with_signature \
+        "intersect_featuremap_with_signature \
         --featuremap ~{featuremap} \
         --signature % \
         --signature_type db_control"
       echo "******** 2/2 Converting to dataframes ********"
       find *.db_control.intersection.vcf.gz | \
-        xargs -P1 -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
+        xargs -P1 -I% sh -c "featuremap_to_dataframe -i %"
     fi
 
     echo "******** DONE ********"
@@ -285,8 +279,6 @@ task TrainSnvQualityRecalibrationModel {
   command <<<
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
 
     start_task=$(date +%s)
     echo "***************************** Create parameters json file *****************************"
@@ -315,7 +307,7 @@ task TrainSnvQualityRecalibrationModel {
     cat single_read_snv_params.json
 
     echo "***************************** Running Train Snv Quality Recalibration Model *****************************"
-    python /VariantCalling/ugvc srsnv_training \
+    srsnv_training \
     --hom_snv_featuremap ~{hom_snv_featuremap} \
     --single_substitution_featuremap ~{singleton_snv_featuremap} \
     --dataset_params_json_path single_read_snv_params.json \
@@ -378,13 +370,11 @@ task InferenceSnvQualityRecalibrationModel {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    . ~/.bashrc
-    conda activate genomics.py3
 
     echo "***************************** Running Inference Snv Quality Recalibration Model *****************************"
     start_task=$(date +%s)
 
-    python /VariantCalling/ugvc srsnv_inference \
+    srsnv_inference \
     --featuremap_path "~{featuremap}" \
     --model_joblib_path "~{model_file}" \
     --output_path "~{output_file}" \
@@ -434,10 +424,8 @@ task CreateHomSnvFeatureMap {
   command <<<
     set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
 
-    python /VariantCalling/ugvc create_hom_snv_featuremap \
+    create_hom_snv_featuremap \
       --featuremap ~{featuremap} \
       ~{true="--sorter_stats_json " false="" defined(sorter_json_stats_file)} ~{sorter_json_stats_file} \
       --hom_snv_featuremap ~{hom_snv_vcf} \
@@ -478,10 +466,8 @@ task BedIntersectAndExclude {
     command <<<
       set -eo pipefail
       bash ~{monitoring_script} | tee monitoring.log >&2 &
-      source ~/.bashrc
-      conda activate genomics.py3
 
-      python /VariantCalling/ugvc intersect_bed_regions \
+      intersect_bed_regions \
         --include-regions ~{sep=" " include_regions} \
         ~{true="--exclude-regions " false="" exclude_regions_defined}~{sep=" " exclude_regions} \
         --output-bed "~{output_basename}.bed"
@@ -555,10 +541,8 @@ task ExtractCoverageOverVcfFiles {
     String output_format = "CSV"
 
     command <<<
-      set -eo pipefail
+      set -xeo pipefail
       bash ~{monitoring_script} | tee monitoring.log >&2 &
-      source ~/.bashrc
-      conda activate genomics.py3
 
       echo "Combining all the VCF loci into one BED file..."
 
@@ -629,11 +613,9 @@ task PileupFeatureMapInterval {
   command <<<
     set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
 
     echo "********** Pileups featuremap into a single locus per entry **********"
-    python /VariantCalling/ugvc pileup_featuremap \
+    pileup_featuremap \
       --featuremap ~{featuremap} \
       --interval_list ~{interval_list} \
       --output_vcf "~{output_vcf_file_name}.vcf.gz" \

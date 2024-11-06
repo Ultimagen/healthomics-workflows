@@ -306,14 +306,14 @@ task FilterSampleCnvs {
                 awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' $sample_name.cnvs.csv > $sample_name.cnvs.bed;
 
                 #filter CNVs
-                python -m ugbio_cnv.filter_sample_cnvs \
+                filter_sample_cnvs \
                     --input_bed_file $sample_name.cnvs.bed \
                     --intersection_cutoff ~{intersection_cutoff} \
                     --cnv_lcr_file ~{cnv_lcr_file} \
                     --min_cnv_length ~{min_cnv_length};
                 
                 #convert bed file to vcf
-                python -m ugbio_cnv.convert_cnv_results_to_vcf\
+                convert_cnv_results_to_vcf \
                     --cnv_annotated_bed_file $sample_name.cnvs.annotate.bed \
                     --fasta_index_file ~{ref_genome_file} \
                     --sample_name $sample_name
@@ -322,7 +322,7 @@ task FilterSampleCnvs {
                 cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
                 cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
 
-                python -m ugbio_cnv.plot_cnv_results \
+                plot_cnv_results \
                     --germline_coverage $sample_name.cov.bed \
                     --duplication_cnv_calls $sample_name.cnvs.filter.DUP.bed \
                     --deletion_cnv_calls $sample_name.cnvs.filter.DEL.bed \
@@ -517,7 +517,7 @@ task Bicseq2PostProcessing {
     command {
         set -eo pipefail
 
-        python -m ugbio_cnv.bicseq2_post_processing \
+        bicseq2_post_processing \
         --input_bicseq2_txt_file ~{input_bicseq2_txt_file} \
         ~{"--ratio_DUP_cutoff " + ratio_DUP_cutoff} \
         ~{"--ratio_DEL_cutoff " + ratio_DEL_cutoff}

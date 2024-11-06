@@ -274,4 +274,4 @@ The pipeline outputs:
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

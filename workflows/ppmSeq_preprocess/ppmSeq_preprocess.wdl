@@ -32,7 +32,7 @@ import "tasks/globals.wdl" as Globals
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.14.3" # !UnusedDeclaration
+    String pipeline_version = "1.15.1" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -266,7 +266,7 @@ workflow ppmSeqPreprocess {
         sorter_stats_json =                   sort_stats_json_out,
         base_file_name =                      base_file_name,
         ppmSeq_analysis_extra_args = ppmSeq_analysis_extra_args,
-        docker =                              global.ug_vc_docker,
+        docker =                              global.ugbio_ppmseq_docker,
         monitoring_script =                   global.monitoring_script, # !FileCoercion
   }
 

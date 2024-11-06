@@ -63,7 +63,7 @@ import "trim_align_sort.wdl" as TrimAlignSortSubWF
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.14.3" # !UnusedDeclaration
+        String pipeline_version = "1.15.1" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -83,6 +83,7 @@ workflow SingleCell {
         File star_genome
 
         SingleCellQcThresholds qc_thresholds
+        Int qc_memory_gb = 16
 
         # general parameters
         Boolean no_address = true
@@ -157,7 +158,8 @@ workflow SingleCell {
                 "Globals.glob",
                 "TrimAlignSort.StarAlignment.memory_gb",
                 "StarAlignment.memory_gb",
-                "SingleCell.StarAlignSubSample.memory_gb"
+                "SingleCell.StarAlignSubSample.memory_gb",
+                "qc_memory_gb"
             ]
         }
     }
@@ -393,7 +395,7 @@ workflow SingleCell {
             base_file_name              = base_file_name,
             qc_thresholds               = qc_thresholds,
             monitoring_script           = monitoring_script,
-            memory_gb                   = 16,
+            memory_gb                   = qc_memory_gb,
             preemptible_tries           = preemptible_tries,
             no_address                  = no_address,
             docker                      = global.single_cell_qc_docker

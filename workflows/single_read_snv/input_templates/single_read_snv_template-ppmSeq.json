@@ -9,7 +9,7 @@
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
         "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
     },
-    "SingleReadSNV.wgs_calling_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
+    "SingleReadSNV.wgs_calling_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
     "SingleReadSNV.break_bands_at_multiples_of": 100000,
     "SingleReadSNV.training_include_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr_autosomal.bed"

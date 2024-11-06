@@ -235,4 +235,4 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

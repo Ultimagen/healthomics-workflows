@@ -183,4 +183,4 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

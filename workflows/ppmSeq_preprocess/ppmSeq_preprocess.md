@@ -107,4 +107,4 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
 
 <hr />
 
-> Generated using WDL AID (1.0.0)
+> Generated using WDL AID (1.0.1)

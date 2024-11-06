@@ -24,10 +24,7 @@ task ppmSeqQC {
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
 
-    source ~/.bashrc
-    conda activate genomics.py3
-
-    python /VariantCalling/ugvc ppmSeq_qc_analysis \
+    ppmSeq_qc_analysis \
       --adapter-version ~{adapter_version} \
       --trimmer-histogram-csv ~{trimmer_histogram_csv} \
       ~{true="--trimmer-histogram-extra-csv " false="" defined(trimmer_histogram_extra_csv)}~{trimmer_histogram_extra_csv} \

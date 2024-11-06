@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.14.3" # !UnusedDeclaration
+    String pipeline_version = "1.15.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -422,6 +422,10 @@ workflow EfficientDV {
       help: "gvcf index",
       category: "output"
     }
+    output_gvcf_hcr: {
+      help: "HCR file - callability regions BED file defined from the gVCF",
+      category: "output"
+    }
     realigned_cram: {
       help: "Realigned reads cram from make_examples",
       category: "output"
@@ -690,20 +694,23 @@ workflow EfficientDV {
           bcftools_docker =  global.bcftools_docker
   }
 
+  if (make_gvcf) {
+    File gvcf_maybe = UGPostProcessing.gvcf_file
+    File gvcf_index_maybe = UGPostProcessing.gvcf_file_index
+    File gvcf_hcr_maybe = UGPostProcessing.gvcf_hcr
+  }
+
   call UGDVTasks.QCReport {
     input:
       input_vcf = RemoveRefCalls.output_vcf,
       input_vcf_index = RemoveRefCalls.output_vcf_index,
+      callable_bed  = gvcf_hcr_maybe,
       output_prefix = output_prefix,
       ref = references.ref_fasta,
       docker = global.ug_make_examples_docker,
       monitoring_script = monitoring_script
   }
   
-  if (make_gvcf) {
-    File gvcf_maybe = UGPostProcessing.gvcf_file
-    File gvcf_index_maybe = UGPostProcessing.gvcf_file_index
-  }
 
   if (output_realignment) {
     File? realigned_cram_maybe = MergeRealignedCrams.output_cram
@@ -722,6 +729,7 @@ workflow EfficientDV {
     File vcf_no_ref_calls_index = RemoveRefCalls.output_vcf_index
     File? output_gvcf       = gvcf_maybe
     File? output_gvcf_index = gvcf_index_maybe
+    File? output_gvcf_hcr   = gvcf_hcr_maybe
     File? realigned_cram    = realigned_cram_maybe
     File? realigned_cram_index = realigned_cram_index_maybe
     String flow_order       = flow_order_

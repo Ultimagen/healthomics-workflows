@@ -372,7 +372,7 @@ task UGPostProcessing{
                          4 + (if make_gvcf then 5 else 0))
 
   }
-  String gvcf_args = if make_gvcf then "--gvcf_outfile ~{output_prefix}.g.vcf.gz --nonvariant_site_tfrecord_path @gvcf_records.txt" else ""
+  String gvcf_args = if make_gvcf then "--gvcf_outfile ~{output_prefix}.g.vcf.gz --nonvariant_site_tfrecord_path @gvcf_records.txt --hcr_bed_file ~{output_prefix}.hcr.bed " else ""
   Array[File] gvcf_records_not_opt = select_first([gvcf_records, []])
   Array[File] empty_array_of_files = []
   Array[File] annotation_intervals_or_empty = select_first([annotation_intervals, empty_array_of_files])
@@ -425,6 +425,7 @@ task UGPostProcessing{
 
       touch "~{output_prefix}.g.vcf.gz"
       touch "~{output_prefix}.g.vcf.gz.tbi"
+      touch "~{output_prefix}.hcr.bed"
 
     echo 'Saving header IDs to a file...'
     export header_file=header.hdr
@@ -451,6 +452,7 @@ task UGPostProcessing{
     File vcf_index = '~{output_prefix}.vcf.gz.tbi'
     File gvcf_file = '~{output_prefix}.g.vcf.gz'
     File gvcf_file_index = '~{output_prefix}.g.vcf.gz.tbi'
+    File gvcf_hcr = '~{output_prefix}.hcr.bed'
     Array[String] interval_annotation_names = read_lines('all_ids.txt')
   }
 }
@@ -460,6 +462,7 @@ task QCReport{
   input{
     File input_vcf
     File input_vcf_index
+    File? callable_bed
     String output_prefix
     File ref
     String docker
@@ -481,6 +484,7 @@ task QCReport{
       python /opt/deepvariant/qc_report/run_no_gt_report.py \
         --input_file "~{output_prefix}.pass.vcf.gz" \
         --reference ~{ref} \
+        ~{"--hcr_bed " + callable_bed} \
         --output_prefix "~{output_prefix}" \
         --output_metrics_h5
 

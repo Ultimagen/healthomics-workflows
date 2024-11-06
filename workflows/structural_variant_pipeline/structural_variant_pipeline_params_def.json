@@ -23,6 +23,10 @@
         "description": "Gridss config file content",
         "optional": false
     },
+    "SVPipeline.convert_vcf_format_memory_override": {
+        "description": "memory override for convert_vcf_format task",
+        "optional": true
+    },
     "SVPipeline.create_assembly_memory_override": {
         "description": "memory override for create_assembly task",
         "optional": true
@@ -33,6 +37,10 @@
     },
     "SVPipeline.exclude_filters": {
         "description": "gripss paramter: Exclude filters from the output vcf, separated by ;",
+        "optional": true
+    },
+    "SVPipeline.germline_link_variants_memory_override": {
+        "description": "memory override for germline_link_variants task",
         "optional": true
     },
     "SVPipeline.gridss_metrics_interval": {

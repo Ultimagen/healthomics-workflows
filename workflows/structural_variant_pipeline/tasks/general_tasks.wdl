@@ -44,6 +44,7 @@ task ExtractSampleNameFlowOrder{
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
+
         gatk GetSampleName  \
             -I ~{input_bam} \
             -R ~{references.ref_fasta} \
@@ -389,13 +390,12 @@ task FastaLengthFromIndex {
   }
    command <<<
      set -e
-     bash ~{monitoring_script} | tee monitoring.log >&2 &
+     bash ~{monitoring_script} >&2 &
      awk '{sum+=$2} END {printf "%0.f\n", sum}' ~{fasta_index} > sum.txt
   >>>
 
   output {
     Float fasta_length = read_float('sum.txt')
-    File monitoring_log = "monitoring.log"
   }
 
    runtime {

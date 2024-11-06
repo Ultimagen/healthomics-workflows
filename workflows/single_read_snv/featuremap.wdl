@@ -93,7 +93,7 @@ input {
         preemptibles = preemptibles,
         monitoring_script = global.monitoring_script  #!FileCoercion
     }
-  
+
   }
 
   Int merge_featuremap_disk_size_gb = (ceil(size(FeatureMapCreate.featuremap,"GB")) * 7) + 3
@@ -109,7 +109,7 @@ input {
       disk_size = merge_featuremap_disk_size_gb,
       memory_gb = merge_featuremap_memory_gb,
       cpus = merge_featuremap_cpus,
-      docker = global.ug_vc_docker,
+      docker = global.ugbio_featuremap_docker,
       preemptibles = preemptibles,
       monitoring_script = global.monitoring_script  #!FileCoercion
   }
@@ -127,7 +127,7 @@ input {
       flow_order = flow_order,
       output_basename = base_file_name,
       ppmSeq_adapter_version = ppmSeq_adapter_version,
-      docker = global.ug_vc_docker,
+      docker = global.ugbio_featuremap_docker,
       memory_gb = process_featuremap_memory_gb,
       cpus = process_featuremap_cpus,
       disk_size = process_featuremap_disk_size_gb,
@@ -198,7 +198,7 @@ task FeatureMapCreate {
       --limit-score ~{featuremap_params.limit_score} \
       --read-filter MappingQualityReadFilter --minimum-mapping-quality ~{featuremap_params.min_mapq} \
       --threaded-walker --threaded-writer \
-      ~{featuremap_params.extra_args} 
+      ~{featuremap_params.extra_args}
 
     echo "***************************** Filtering on region *****************************"
     java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms~{memory_gb-2}g -jar ~{gitc_path}GATK_ultima.jar  \
@@ -265,13 +265,10 @@ task FeatureMapAnnotations {
     set -xeo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    source ~/.bashrc
-    conda activate genomics.py3
-
     echo "***************************** Add additional features to featuremap *****************************"
     start=$(date +%s)
     start_task=$(date +%s)
-    python /VariantCalling/ugvc annotate_featuremap \
+    annotate_featuremap \
       -i ~{featuremap} \
       -o ~{annotated_featuremap_vcf} \
       --ref_fasta ~{references.ref_fasta} \
@@ -316,7 +313,7 @@ task FeatureMapSingleSubstitutions {
     Int preemptibles
     File monitoring_script
   }
-  
+
   String single_sub_output = "~{output_basename}.single_substitution.vcf.gz"
   Int disk_size = ceil(size(featuremap, "GB") * 30) + 20
 
@@ -326,7 +323,7 @@ task FeatureMapSingleSubstitutions {
 
     echo "$(date) ***************************** Importing vcf into SQLite database *****************************"
 
-    vcflite import --vcf-in ~{featuremap} 
+    vcflite import --vcf-in ~{featuremap}
 
     echo "$(date) ***************************** Generating FeatureMap of single substitutions *****************************"
 
@@ -369,11 +366,8 @@ task FeatureMapMerge {
     set -eo pipefail
     set -x
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    
-    source ~/.bashrc
-    start=$(date +%s)
 
-    conda activate genomics.py3
+    start=$(date +%s)
     mkdir -p tmp
     # bypass for architectures where index files are not synced with vcf files (such as local miniwdl)
     for part in ~{sep=" " featuremap_parts}; do if ! test -f $part.tbi; then bcftools index -t $part; fi; done

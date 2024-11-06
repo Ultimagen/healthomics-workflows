@@ -1,0 +1,43 @@
+{
+    "SVPipeline.base_file_name": "<base_name>",
+    "SVPipeline.input_germline_crams": [
+        "<cram>.cram"
+    ],
+    "SVPipeline.input_germline_crams_indexes": [
+        "<cram>.cram.crai"
+    ],
+    "SVPipeline.prefilter_query": "QUAL>120",
+    "SVPipeline.blacklist_bed": "s3://ultimagen-workflow-resources-us-east-1/sv/gridss/ENCFF356LFX.bed",
+    "SVPipeline.wgs_calling_interval_list": "s3://ultimagen-workflow-resources-us-east-1/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list",
+    "SVPipeline.min_base": 0,
+    "SVPipeline.min_mapq": 5,
+    "SVPipeline.max_num_haps": 10,
+    "SVPipeline.realign_mapq": 60,
+    "SVPipeline.homopolymer_length": 10,
+    "SVPipeline.ua_references": {
+        "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/Homo_sapiens_assembly38.fasta.uai",
+        "ref_alt": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+        "v_aware_alignment_flag": false,
+        "ua_extra_args": "--seed-score-ratio 0.5 --vector --huge --soft-clipping --realignment-tag re --mismatch-cost -6"
+    },
+    "SVPipeline.references": {
+        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "SVPipeline.reference_name": "38",
+    "SVPipeline.run_ua": true,
+    "SVPipeline.scatter_intervals_break": 10000000,
+    "SVPipeline.pon_sgl_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/sgl_pon.38.bed.gz",
+    "SVPipeline.pon_sv_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/sv_pon.38.bedpe.gz",
+    "SVPipeline.known_hotspot_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/known_fusions.38.sorted.bedpe",
+    "SVPipeline.repeat_mask_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/repeat_mask_data.38.fa.gz",
+    "SVPipeline.config_file_string": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5",
+    "SVPipeline.exclude_filters": "SHORT_SR_NORMAL",
+    "SVPipeline.symbolic_vcf_format": true,
+    "SVPipeline.num_shards": 50,
+    "SVPipeline.is_somatic": false,
+    "SVPipeline.min_indel_sc_size_to_include": "10",
+    "SVPipeline.single_strand_filter": false,
+    "SVPipeline.cloud_provider_override": "aws"
+}

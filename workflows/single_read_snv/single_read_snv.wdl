@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.14.3" 
+  String pipeline_version = "1.15.1"
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -361,7 +361,7 @@ parameter_meta {
         min_coverage =            20,
         memory_gb =               2,
         cpus =                    1,
-        docker =                  global.ug_vc_docker,
+        docker =                  global.ugbio_featuremap_docker,
         preemptibles =            preemptibles,
         monitoring_script =       monitoring_script,  #!FileCoercion
     }
@@ -372,7 +372,7 @@ parameter_meta {
             exclude_regions = tp_training_exclude_regions,
             output_basename = "TP",
             memory_gb = 4,
-            docker = global.ug_vc_docker,
+            docker = global.ugbio_srsnv_docker,
             monitoring_script = monitoring_script,  #!FileCoercion
             preemptibles = preemptibles
     }
@@ -385,7 +385,7 @@ parameter_meta {
             output_basename = "FP",
             memory_gb = 8,
             cpus = 4,
-            docker = global.ug_vc_docker,
+            docker = global.ugbio_srsnv_docker,
             monitoring_script = monitoring_script,  #!FileCoercion
             preemptibles = preemptibles
     }
@@ -406,7 +406,7 @@ parameter_meta {
       raise_exceptions_in_report      = raise_exceptions_in_report,
       flow_order                      = ExtractSampleNameFlowOrder.flow_order,
       monitoring_script               = monitoring_script,  #!FileCoercion
-      docker                          = global.ug_vc_docker,
+      docker                          = global.ugbio_srsnv_docker,
       pipeline_version                = pipeline_version,
       preemptible_tries               = preemptibles,
     }
@@ -422,7 +422,7 @@ parameter_meta {
         featuremap                              = FeatureMap.featuremap,
         featuremap_index		                = FeatureMap.featuremap_index,
         monitoring_script                       = monitoring_script,  #!FileCoercion
-        docker                                  = global.ug_vc_docker,
+        docker                                  = global.ugbio_srsnv_docker,
         preemptible_tries                       = preemptibles,
     }
   }

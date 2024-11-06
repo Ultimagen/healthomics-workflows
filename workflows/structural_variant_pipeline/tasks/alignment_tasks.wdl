@@ -498,7 +498,7 @@ task AlignWithUA {
     Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
     command <<<
     set -eo pipefail
-
+    set -x
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     echo "~{sep='\n'input_bams}" > bam_list.txt
 
@@ -507,8 +507,10 @@ task AlignWithUA {
     
     # for compatibility with the old image where ua was in /ua/ua and not in PATH
     export PATH=$PATH:/ua
-
-    REF_CACHE=cache/%2s/%2s/ REF_PATH='.' samtools cat -b bam_list.txt | \
+    export REF_CACHE=cache/%2s/%2s/ 
+    export REF_PATH='.' 
+    
+    samtools cat -b bam_list.txt | \
     samtools view -h -@ ~{cpu} - | \
     ua \
         --index ~{ua_index} \
@@ -579,8 +581,9 @@ task AlignWithUAMeth {
 
     # for compatibility with the old image where ua was in /ua/ua and not in PATH
     export PATH=$PATH:/ua
-
-    REF_CACHE=cache/%2s/%2s/ REF_PATH='.' samtools cat -b bam_list.txt | \
+    export REF_CACHE=cache/%2s/%2s/
+    export REF_PATH='.'
+    samtools cat -b bam_list.txt | \
     samtools view -h -@ ~{cpus} - | \
     ua \
         ~{ua_meth_mode} \

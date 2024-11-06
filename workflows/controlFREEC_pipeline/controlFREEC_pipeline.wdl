@@ -31,7 +31,7 @@ import "tasks/qc_tasks.wdl" as UGQCTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.14.3" # !UnusedDeclaration
+        String pipeline_version = "1.15.1" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -673,7 +673,7 @@ workflow SomaticCNVCallingControlFREEC{
         normal_coverage_cpn=normal_cpn,
         ploidy = runControlFREEC.ploidy_value,
         tumor_mpileup = tumor_pileup,
-        docker = global.cnv_docker,
+        docker = global.ugbio_cnv_docker,
         monitoring_script = monitoring_script,
         no_address = no_address,
         preemptible_tries = preemptible_tries
@@ -1141,7 +1141,7 @@ task FilterControlFREECCnvs {
         if ~{high_sensitivity_mode}
         then
             #annotate segments to CNVs
-            python -m ugbio_cnv.annotate_FREEC_segments \
+            annotate_FREEC_segments \
                 --input_segments_file ~{segments_file}\
                 --gain_cutoff ~{gain_cutoff} \
                 --loss_cutoff ~{loss_cutoff}
@@ -1151,7 +1151,7 @@ task FilterControlFREECCnvs {
         fi
               
         #annotate cnvs bed file
-        python -m ugbio_cnv.filter_sample_cnvs \
+        filter_sample_cnvs \
                 --input_bed_file ~{out_cnvs_file} \
                 --intersection_cutoff ~{intersection_cutoff} \
                 --cnv_lcr_file ~{cnv_lcr_file} \
@@ -1175,7 +1175,7 @@ task FilterControlFREECCnvs {
         touch CNV_figures/~{sample_name}.CNV.calls.jpeg
 
 
-        python -m ugbio_cnv.plot_cnv_results \
+        plot_cnv_results \
             --germline_coverage normal_coverage.cpn.bed \
             --tumor_coverage tumor_coverage.cpn.bed \
             --duplication_cnv_calls ~{sample_name}.cnvs.filter.DUP.bed \
@@ -1183,7 +1183,7 @@ task FilterControlFREECCnvs {
             --sample_name ~{sample_name} \
             --out_directory CNV_figures
         
-        python -m ugbio_cnv.plot_FREEC_neutral_AF \
+        plot_FREEC_neutral_AF \
             --mpileup ~{tumor_mpileup} \
             --cnvs_file ~{out_filtered_cnv_file} \
             --sample_name ~{sample_name} \

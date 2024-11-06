@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.14.3" # !UnusedDeclaration
+        String pipeline_version = "1.15.1" # !UnusedDeclaration
 
         String base_file_name
 
@@ -329,7 +329,7 @@ workflow SingleSampleCnmopsCNVCalling {
             input_bed_graph = input_bed_graph,
             genome_windows = input_genome_windows,
             genome_file = reference_genome_index,
-            docker = global.cnv_docker,
+            docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,
             no_address = no_address,
             preemptible_tries = preemptible_tries
@@ -342,7 +342,7 @@ workflow SingleSampleCnmopsCNVCalling {
         input:
         sample_reads_count = sample_reads_count_file,
         cohort_reads_count_matrix = cohort_reads_count_matrix,
-        docker = global.cnv_docker,
+        docker = global.ugbio_cnv_docker,
         save_hdf = save_hdf,
         monitoring_script = monitoring_script,
         no_address = no_address,
@@ -357,7 +357,7 @@ workflow SingleSampleCnmopsCNVCalling {
         chrX_name = chrX_name,
         chrY_name = chrY_name,
         cap_coverage = cap_coverage,
-        docker = global.cnv_docker,
+        docker = global.ugbio_cnv_docker,
         save_hdf = save_hdf,
         save_csv = save_csv,
         moderate_amplificiations = enable_moderate_amplifications,
@@ -377,7 +377,7 @@ workflow SingleSampleCnmopsCNVCalling {
         cnv_lcr_file = cnv_lcr_file,
         ref_genome_file = reference_genome_index,
         germline_coverge_rds = sample_reads_count_file,
-        docker = global.cnv_docker,
+        docker = global.ugbio_cnv_docker,
         monitoring_script = monitoring_script,
         no_address = no_address,
         preemptible_tries = preemptible_tries

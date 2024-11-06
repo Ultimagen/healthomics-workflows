@@ -116,7 +116,7 @@ task Trimmer {
         output_file_name_suffix=~{output_file_name_suffix} # weird line, but otherwise find does not work
 
         if [ ~{parameters.remove_small_files} = true ]; then
-            find . -type f -size -1000M -name "*${output_file_name_suffix}" | xargs -I {} rm {}
+            find . -type f -size -500M -name "*${output_file_name_suffix}" | xargs -I {} rm {}
         fi
     >>>
     runtime {

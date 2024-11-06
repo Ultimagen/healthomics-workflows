@@ -75,6 +75,10 @@
         "description": "Number of preemptible tries",
         "optional": false
     },
+    "SingleCell.qc_memory_gb": {
+        "description": "qc_memory_gb",
+        "optional": true
+    },
     "SingleCell.qc_thresholds": {
         "description": "Thresholds for the single cell qc",
         "optional": false

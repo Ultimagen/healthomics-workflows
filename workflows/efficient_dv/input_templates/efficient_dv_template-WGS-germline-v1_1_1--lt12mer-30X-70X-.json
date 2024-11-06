@@ -12,7 +12,6 @@
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
         "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
     },
-    "EfficientDV.make_gvcf": false,
     "EfficientDV.preemptible_tries": 2,
     "EfficientDV.ref_dbsnp": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
     "EfficientDV.ref_dbsnp_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
@@ -33,5 +32,6 @@
         70
     ],
     "EfficientDV.min_variant_quality_exome_hmer_indels": 20,
+    "EfficientDV.make_gvcf": true,
     "EfficientDV.cloud_provider_override": "aws"
 }
