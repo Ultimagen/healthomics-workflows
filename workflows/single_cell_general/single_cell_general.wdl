@@ -63,7 +63,7 @@ import "trim_align_sort.wdl" as TrimAlignSortSubWF
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.15.2" # !UnusedDeclaration
+        String pipeline_version = "1.15.3" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -386,7 +386,6 @@ workflow SingleCell {
     call SingleCellTasks.SingleCellQc{
         input:
             trimmer_stats               = select_first([TrimAlignSort.trimmer_stats]),
-            trimmer_histogram           = select_first([select_first([TrimAlignSort.trimmer_histogram])[0]]),
             trimmer_failure_codes       = select_first([TrimAlignSort.trimmer_failure_codes_csv]),
             sorter_stats_csv            = FindInsertBarcodeFastq.insert_sorter_stats_csv,
             star_stats                  = StarAlignSubSample.raw_star_log_file,
@@ -394,6 +393,7 @@ workflow SingleCell {
             insert_sub_sample_fastq     = FindInsertBarcodeFastq.insert_sub_sample_fastq,
             base_file_name              = base_file_name,
             qc_thresholds               = qc_thresholds,
+            star_db                     = basename(star_genome,".zip"),
             monitoring_script           = monitoring_script,
             memory_gb                   = qc_memory_gb,
             preemptible_tries           = preemptible_tries,

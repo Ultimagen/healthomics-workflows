@@ -32,7 +32,7 @@ import "tasks/globals.wdl" as Globals
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.15.2" # !UnusedDeclaration
+    String pipeline_version = "1.15.3" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list

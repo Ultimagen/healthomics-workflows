@@ -183,7 +183,6 @@ task FindInsertBarcodeFastq {
 task SingleCellQc {
     input{
         File trimmer_stats
-        File trimmer_histogram
         File trimmer_failure_codes
         File sorter_stats_csv
         File star_stats
@@ -191,6 +190,7 @@ task SingleCellQc {
         File insert_sub_sample_fastq
         String base_file_name
         SingleCellQcThresholds qc_thresholds
+        String star_db
 
         File monitoring_script
 
@@ -201,8 +201,8 @@ task SingleCellQc {
 
     }
 
-    Int disk_size = round(3*size(trimmer_stats, "GB") + 3*size(trimmer_histogram, "GB") + 3*size(trimmer_failure_codes, "GB") + 3*size(sorter_stats_csv, "GB") + 3*size(star_stats, "GB") + 3*size(star_reads_per_gene, "GB") + 3*size(insert_sub_sample_fastq, "GB") + 20)
-
+    Int disk_size = round(3*size(trimmer_stats, "GB") + 3*size(trimmer_failure_codes, "GB") + 3*size(sorter_stats_csv, "GB") + 3*size(star_stats, "GB") + 3*size(star_reads_per_gene, "GB") + 3*size(insert_sub_sample_fastq, "GB") + 20)
+    
     command <<<
         set -eo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -213,7 +213,6 @@ task SingleCellQc {
         single_cell_qc \
             --sample-name ~{base_file_name} \
             --trimmer-stats ~{trimmer_stats} \
-            --trimmer-histogram ~{trimmer_histogram} \
             --trimmer-failure-codes ~{trimmer_failure_codes} \
             --sorter-stats ~{sorter_stats_csv} \
             --star-stats ~{star_stats} \
@@ -223,7 +222,8 @@ task SingleCellQc {
             --pass-trim-rate ~{qc_thresholds.pass_trim_rate} \
             --read-length ~{qc_thresholds.read_length} \
             --fraction-below-read-length ~{qc_thresholds.fraction_below_read_length} \
-            --percent-aligned ~{qc_thresholds.percent_aligned}
+            --percent-aligned ~{qc_thresholds.percent_aligned} \
+            --star-db ~{star_db}
     >>>
 
     runtime{
