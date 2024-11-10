@@ -2,9 +2,9 @@ import argparse
 import logging
 import glob
 from pathlib import Path
-from localize_dockers import localize_wdl_docker_images
-from localize_s3 import localize_s3_files
-from omics_workflows import create_omics_workflow
+from utils.modules.localize_dockers import localize_wdl_docker_images
+from utils.modules.localize_s3 import localize_s3_files
+from utils.modules.omics_workflows import create_omics_workflow
 
 log_format = "[%(levelname)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
