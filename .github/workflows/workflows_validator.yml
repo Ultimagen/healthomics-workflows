@@ -20,7 +20,7 @@ jobs:
       run: pip install boto3
 
     - name: Validate input templates
-      run: python .github/utils/validate_input_templates.py
+      run: python scripts/healthomics_wf/utils/validate_input_templates.py
 
   validate-docker-images:
     runs-on: ubuntu-latest
@@ -28,4 +28,4 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Validate docker images
-      run: python .github/utils/validate_globals_docker_images.py workflows
+      run: python scripts/healthomics_wf/utils/validate_globals_docker_images.py workflows
