@@ -27,5 +27,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install dependencies
+      run: pip install boto3
+
     - name: Validate docker images
       run: python scripts/healthomics_wf/utils/validate_globals_docker_images.py workflows
