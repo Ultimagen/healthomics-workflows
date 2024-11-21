@@ -65,7 +65,7 @@ workflow Globals {
         "arriba_docker": "uhrigs/arriba:2.4.0",
         "subread_docker": "us.gcr.io/broad-gotc-prod/subread:1.0.0-2.0.1-1689097353",
         "starfusion_docker": "trinityctat/starfusion:1.13.0",
-        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.3.0",
+        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.3.4",
         "vcflite_docker": "ultimagenomics/ugbio_vcflite:1.3.0",
         "ugbio_mrd_docker": "ultimagenomics/ugbio_mrd:1.3.3",
         "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.3.0",

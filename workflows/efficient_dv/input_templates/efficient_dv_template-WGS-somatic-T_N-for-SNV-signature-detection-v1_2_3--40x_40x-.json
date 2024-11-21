@@ -21,7 +21,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.0/ug_hcr.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
