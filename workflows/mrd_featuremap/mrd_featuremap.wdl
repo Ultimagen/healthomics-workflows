@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.15.6" # !UnusedDeclaration
+        String pipeline_version = "1.16.2" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -434,7 +434,6 @@ workflow MRDFeatureMap {
     # MRD analysis results
     File features_dataframe = MrdDataAnalysis.features
     File signatures_dataframe = MrdDataAnalysis.signatures
-    File mrd_analysis_notebook = MrdDataAnalysis.mrd_analysis_notebook
     File report_html = MrdDataAnalysis.mrd_analysis_html
     File tumor_fraction_h5 = MrdDataAnalysis.tumor_fraction_h5
     # Intersected featuremaps

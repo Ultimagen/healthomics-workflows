@@ -26,7 +26,7 @@ The steps of the pipeline are as following:
 </p>
 <p name="SVPipeline.ua_references">
         <b>SVPipeline.ua_references</b><br />
-        <i>UaReferences </i> &mdash; 
+        <i>UaParameters </i> &mdash; 
          UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template <br /> 
 </p>
 <p name="SVPipeline.wgs_calling_interval_list">

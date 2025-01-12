@@ -1,55 +1,54 @@
 # Single Read SNV (SRSNV) pipeline
 
 ## Table of Contents
-
-- [Introduction](#introduction)
-- [Naming convention](#naming-convention)
-- [Reference data files](#reference-data-files)
-  - [hg38 reference genome](#hg38-reference-genome)
-  - [Interval list - region in which FeatureMap is generated](#interval-list---region-in-which-featuremap-is-generated)
-  - [Model training bed and vcf files](#model-training-bed-and-vcf-files)
-    - [Regions used for TP training data](#regions-used-for-tp-training-data)
-    - [Regions used for FP training data](#regions-used-for-fp-training-data)
-- [Test data files](#test-data-files)
-  - [Small test file - chr20 only](#small-test-file---chr20-only)
-  - [Full test file](#full-test-file)
-- [Running using separate command lines](#running-using-separate-command-lines)
-  - [Installation](#installation)
-    - [GATK](#gatk)
-    - [UGVC repository](#ugvc-repository)
-- [Variables](#variables)
-  - [Input files and names](#input-files-and-names)
-  - [Main outputs](#main-outputs)
-  - [Intermediate/advanced outputs](#intermediateadvanced-outputs)
-- [Model training features and filter](#model-training-features-and-filter)
-- [Running the SRSNV pipeline](#running-the-srsnv-pipeline)
-  - [Featuremap](#featuremap)
-    - [Split IntervalList](#split-intervallist)
-      - [Output files](#output-files)
-    - [Create FeatureMap](#create-featuremap)
-      - [Output files](#output-files-1)
-    - [Annotate FeatureMap](#annotate-featuremap)
-      - [Output files](#output-files-2)
-    - [Merge FeatureMap parts](#merge-featuremap-parts)
-      - [Output files](#output-files-3)
-    - [Generate a FeatureMap of single substitutions](#generate-a-featuremap-of-single-substitutions)
-      - [Output files](#output-files-4)
-  - [CreateHomSnvFeatureMap](#createhomsnvfeaturemap)
-    - [Output files](#output-files-5)
-  - [BedIntersectAndExclude](#bedintersectandexclude)
-    - [Output files](#output-files-6)
-  - [TrainSnvQualityRecalibrationModel](#trainsnvqualityrecalibrationmodel)
-    - [Create a json file with parameters for the model](#create-a-json-file-with-parameters-for-the-model)
-  - [InferenceSnvQualityRecalibrationModel](#inferencesnvqualityrecalibrationmodel)
-    - [Output files](#output-files-7)
-- [Detailed explanation of keys output files](#detailed-explanation-of-keys-output-files)
-  - [output_featuremap](#output_featuremap)
-  - [featuremap_df_file](#featuremap_df_file)
-  - [Model joblib file](#model-joblib-file)
-- [Details of ML model Cross-Validation scheme](#details-of-ml-model-cross-validation-scheme)
-  - [Training with train/test split](#training-with-traintest-split)
-  - [Training with k-fold CV](#training-with-k-fold-cv)
-- [References](#references)
+- [Single Read SNV (SRSNV) pipeline](#single-read-snv-srsnv-pipeline)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Naming convention](#naming-convention)
+  - [Reference data files](#reference-data-files)
+    - [hg38 reference genome](#hg38-reference-genome)
+    - [Interval list - region in which FeatureMap is generated](#interval-list---region-in-which-featuremap-is-generated)
+    - [Model training bed and vcf files](#model-training-bed-and-vcf-files)
+      - [Regions used for TP training data](#regions-used-for-tp-training-data)
+      - [Regions used for FP training data](#regions-used-for-fp-training-data)
+  - [Variables](#variables)
+    - [Input files and names](#input-files-and-names)
+    - [Main outputs](#main-outputs)
+    - [Intermediate/advanced outputs](#intermediateadvanced-outputs)
+  - [Running the SRSNV pipline without the WDL](#running-the-srsnv-pipline-without-the-wdl)
+    - [Fetching dockers](#fetching-dockers)
+    - [Manual installation](#manual-installation)
+      - [GATK and Picard](#gatk-and-picard)
+      - [ugbio-utils repository](#ugbio-utils-repository)
+    - [Pipeline structure](#pipeline-structure)
+    - [Featuremap](#featuremap)
+      - [Split IntervalList](#split-intervallist)
+        - [Output files:](#output-files)
+      - [Create FeatureMap:](#create-featuremap)
+        - [Output files:](#output-files-1)
+      - [Annotate FeatureMap:](#annotate-featuremap)
+        - [Output files:](#output-files-2)
+      - [Merge FeatureMap parts](#merge-featuremap-parts)
+        - [Output files:](#output-files-3)
+      - [Generate a FeatureMap of single substitutions:](#generate-a-featuremap-of-single-substitutions)
+        - [Output files:](#output-files-4)
+    - [CreateHomSnvFeatureMap](#createhomsnvfeaturemap)
+        - [Output files:](#output-files-5)
+    - [BedIntersectAndExclude](#bedintersectandexclude)
+        - [Output files:](#output-files-6)
+    - [TrainSnvQualityRecalibrationModel](#trainsnvqualityrecalibrationmodel)
+        - [Output files:](#output-files-7)
+    - [InferenceSnvQualityRecalibrationModel](#inferencesnvqualityrecalibrationmodel)
+        - [Output files:](#output-files-8)
+  - [Detailed explanation of keys output files](#detailed-explanation-of-keys-output-files)
+    - [output\_featuremap](#output_featuremap)
+    - [featuremap\_df\_file](#featuremap_df_file)
+    - [Model joblib file](#model-joblib-file)
+  - [Model training features and filter](#model-training-features-and-filter)
+  - [Details of ML model Cross-Validation scheme](#details-of-ml-model-cross-validation-scheme)
+    - [Training with train/test split](#training-with-traintest-split)
+    - [Training with k-fold CV](#training-with-k-fold-cv)
+  - [References](#references)
 
 
 ## Introduction
@@ -97,11 +96,11 @@ or
 {ref_dict}: s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict
 
 ### Interval list - region in which FeatureMap is generated
-{interval_list}: gs://concordanz/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
+{interval_list}: gs://concordanz/hg38/wgs_calling_regions.without_encode_blacklist.interval_list
 
 or
 
-{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
+{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.interval_list
 
 ### Model training bed and vcf files
 
@@ -112,11 +111,11 @@ Genomic region filtering can be modified by the user (e.g. by excluding a specif
 #### Regions used for TP training data
 
 {include_regions_tp}:
-- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed
+- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr_autosomal.bed
 
 or
 
-- s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed
+- s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr_autosomal.bed
 
 {exclude_regions_tp}:
 - gs://concordanz/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
@@ -149,41 +148,12 @@ or
 - s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz
 - s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz
 
-***Note 1 - for cfDNA samples from cancer patients, it's recommended to add the somatic mutation vcf (signature) to the fp exclude regions to avoid true cancer mutations present in the cfDNA being used as FP training examples***
+***Note 1 - for cfDNA samples from cancer patients, it is recommended to add the somatic mutation vcf (signature) to the fp exclude regions to avoid true cancer mutations present in the cfDNA being used as FP training examples***
 
 ***Note 2 - you can add any bed or vcf.gz file with loci of interest to exclude from model training***
 
 ***Note 3 - some files appear in two lists***
 
-
-## Running using separate command lines
-### Installation
-
-#### GATK
-
-GATK can be downloaded or built according to the instructions on https://github.com/broadinstitute/gatk
-Using a built jar file, denoted {gatk_jar}, running java with a prescribed memory is recommended, e.g.
-{gatk}="java -Xms4g -jar {gatk_jar}"
-
-For 4GB of memory. In the remainder of the document, {gatk} refers to the command running gatk.
-
-
-#### UGVC repository
-
-1. Clone the https://github.com/Ultimagen/VariantCalling repository (e.g. to `software/VariantCalling`)
-2. Create conda environment:
-`conda env create -f software/VariantCalling/setup/environment.yml`
-This will create an environment called `genomics.py3`
-3. Install the ugvc package:
-```
-conda activate genomics.py3
-cd software/VariantCalling
-pip install .
-```
-4. To run, cd to the installation path and use "python ugvc"
-
-In the remainder of the document, {ugvc} refers to the command running ugvc from the correct environment, e.g.
-{ugvc} = "conda run -n genomics.py3 python /path/to/ugvc"
 
 ## Variables
 
@@ -207,85 +177,43 @@ In the remainder of the document, {ugvc} refers to the command running ugvc from
 * {hom_snv_featuremap}: FeatureMap vcf.gz file of homozygous SNVs with a respective .tbi index file
 * {training_regions_tp}/{training_regions_fp} - TP/FP bed files with the intersected and excluded regions to train the model
 
-## Model training features and filter
 
-Parameters to the ugvc srsnv_training command described in TrainSnvQualityRecalibrationModel are given as a json file referred to as {single_read_snv_params} with the values below. Notice the comments inline.
-```json
-{
-  "SingleReadSNV.categorical_features": {
-    "st": ["MIXED", "MINUS", "PLUS", "END_UNREACHED", "UNDETERMINED"],  # (for ppmSeq_legacy_v5 adapters change key to "strand_ratio_category_start", for non-ppmSeq remove)
-    "et": ["MIXED", "MINUS", "PLUS", "END_UNREACHED", "UNDETERMINED"],  # (for ppmSeq_legacy_v5 adapters change key to "strand_ratio_category_end", for non-ppmSeq remove)
-    "ref": ["A", "C", "G", "T"],
-    "alt": ["A", "C", "G", "T"],
-    "next_1": ["A", "C", "G", "T"],
-    "next_2": ["A", "C", "G", "T"],
-    "next_3": ["A", "C", "G", "T"],
-    "prev_1": ["A", "C", "G", "T"],
-    "prev_2": ["A", "C", "G", "T"],
-    "prev_3": ["A", "C", "G", "T"]
-  },
-  "numerical_features": [
-    "X_SCORE",
-    "X_EDIST",
-    "X_LENGTH",
-    "X_INDEX",
-    "X_FC1",
-    "rq",
-    "max_softclip_length",
-    "hmer_context_ref",
-    "hmer_context_alt"
-  ],
-  "boolean_features": [
-    "is_cycle_skip",
-    "is_forward"
-  ],
-  "balanced_sampling_info_fields": [
-    "trinuc_context_with_alt",
-    "is_forward"
-  ],
-  "pre_filter": "(X_SCORE>4) && (X_EDIST<10)",
-  "random_seed": 0,
-  "num_CV_folds": 5,
-  "split_folds_by": "chrom",
-  "train_set_size": 3000000,
-  "test_set_size": 0
-}
-```
+## Running the SRSNV pipline without the WDL
+It is possible to run the same code as in the SingleReadSNV workflow (https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/single_read_snv/single_read_snv.wdl) without using the WDL. This section details the required steps and installation methods, lifted from the code in the WDL tasks. Readers fluent in the WDL language might prefer to use the code in the WDL itself and the various imported tasks in https://github.com/Ultimagen/healthomics-workflows/tree/main/workflows/single_read_snv/tasks, to ensure the exact same code runs in either case. 
+Running the pipeline is possible either using the dockers (recommended), or by installing the required environments manually, as detailed below. 
 
-Explanation of key features:
-* {pre_filter} - cutoff criteria for SNVs to be included in the model
-* {numerical_features} - numerical features used for training the model:
-  - "X_SCORE" (Sequencing error likelihood)
-  - "X_EDIST" (Levenshtein distance between the read and reference)
-  - "X_FC1" (Number of SNVs in the read)
-  - "X_LENGTH" (Read length)
-  - "X_INDEX" (Index of the SNV in the read)
-  - "rq" (Read quality)
-  - "max_softclip_length" (Maximum softclip length)
-  - "hmer_context_ref" (homopolymer length in the reference allele)
-  - "hmer_context_alt" (homopolymer length in the alternative allele)
-* {categorical_features} - categorical features used for training the model:
-  - "is_cycle_skip", (Is the SNV a cycle skip)
-  - "is_forward", (Is the read aligned to the forward strand, required to interpret reference related features)
-  - "ref", (Reference base)
-  - "alt", (Alternative base)
-  - "next_1", (Reference base after the SNV)
-  - "next_2", (Reference base 2bp after the SNV)
-  - "next_3", (Reference base 3bp after the SNV)
-  - "prev_1", (Reference base before the SNV)
-  - "prev_2", (Reference base 2bp before the SNV)
-  - "prev_3" (Reference base 3bp before the SNV)
-  - "st" or "strand_ratio_category_start" (ppmSeq read category measured in the read start)
-  - "et" or "strand_ratio_category_end" (ppmSeq read category measured in the read end)
+### Fetching dockers
+The docker required in this workflow are:
+- ug_gatk_picard_docker
+- broad_gatk_docker
+- ugbio_srsnv_docker
+- ugbio_featuremap_docker
+- ugbio_vcflite_docker
+- gitc_docker
+Pull each docker according to the latest version referred to in https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/single_read_snv/tasks/globals.wdl
 
-  ***Note - the last two are only required for ppmSeq data***
-* {num_CV_folds} - Number of Cross-Validation folds to use. 
-* {split_folds_by} - when using k-fold Cross-Validation, method by which SNVs are assigned `fold_id` values. Two methods are possible: "chrom" and "random". 
-  
-  ***Note - See section [Details of ML model Cross-Validation scheme](#details-of-ml-model-cross-validation-scheme) below for more details on Cross-Validation scheme and parameter values.***
+### Manual installation
 
-## Running the SRSNV pipline
+#### GATK and Picard
+For code running in "broad_gatk_docker", GATK can be downloaded or built according to the instructions on https://github.com/broadinstitute/gatk
+Using a built jar file, denoted {gatk_jar}, running java with a prescribed memory is recommended, e.g.
+{gatk}="java -Xms4g -jar {gatk_jar}"
+For 4GB of memory.
 
+For code running in "ug_gatk_picard_docker", refer to the UG gatk fork https://github.com/Ultimagen/gatk instead, and proceed using the same instructions.
+
+For code running in "gitc_docker", follow the same instructions in https://github.com/broadinstitute/picard
+
+#### ugbio-utils repository
+ugbio-utils
+1. Clone the https://github.com/Ultimagen/ugbio-utils repository
+2. Install the environment using uv according to the repository instructions
+3. To run code relying on the "ugbio_featuremap_docker", run "uv sync --package ugbio_featuremap" before code execution
+4. To run code relying on the "ugbio_srsnv_docker", run "uv sync --package ugbio_srsnv" before code execution
+5. To run code relying on the "vcflite_docker", run "uv sync --package ugbio_vcflite" before code execution
+
+
+### Pipeline structure
 The SRSNV pipeline includes 4 modules:
 1. FeatureMap - create featuremap from cram file, along with single substitution featuremap (FP)
 2. BedIntersectAndExclude - intersect include and exclude regions, run for TP and FP each
@@ -302,6 +230,7 @@ The Featuremap stage includes the following stages:
 
 #### Split IntervalList
 Using gatk IntervalListTools, the interval list is split into smaller intervals, to allow parallel processing on so called "shards".
+Docker = broad_gatk_docker
 ```
 {gatk} \
   IntervalListTools \
@@ -326,6 +255,7 @@ Using gatk IntervalListTools, the interval list is split into smaller intervals,
 The gatk FlowFeatureMapper tool is used to create the FeatureMap, a file that contains a record for each SNV in each read, along with additional information about the SNV or the read saved in the INFO field. Since each entry represents a single substitution with respect to the reference genome in a specific read, multiple entries per locus are possible, and a specific read can appear multiple times for multiple SNVs. 
 
 For each interval_list file used, whether the full interval list or one of the shards (split interval lists), the following command is run. Note that the second command is needed when running in parallel across many shards to avoid duplication of entries around the interval edges: 
+Docker = ug_gatk_picard_docker
 ```
 {gatk} \
   FlowFeatureMapper -I {input_cram_bam} -O tmp.vcf.gz -R {ref_fasta}  \
@@ -382,8 +312,9 @@ java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms~{memory_gb-2}g -jar ~{gitc_p
 
 #### Annotate FeatureMap:
 After creating the FeatureMap file, additional annotations are added to the INFO field of each entry. This is done per shard. The following command is run:
+Docker = ugbio_featuremap_docker
 ```
-{ugvc} annotate_featuremap \
+annotate_featuremap \
   -i {featuremap} \
   -o {annotated_featuremap} \
   --ref_fasta {ref_fasta} \
@@ -395,13 +326,14 @@ After creating the FeatureMap file, additional annotations are added to the INFO
 
 *Recommended hardware - 1 CPU, 4GB RAM*
 
-***Note - the "ppmSeq_adapter_version" is required for ppmSeq data, remove it when running on different data.***
+***Note - the "ppmSeq_adapter_version" is required for ppmSeq data, remove it when running on non-ppmSeq data.***
 
 ##### Output files:
   {annotated_featuremap}: FeatureMap vcf.gz file with additional annotations and a respective .tbi index file
 
 #### Merge FeatureMap parts
 Only relevant if the interval list was split into shards in the previous stages.
+Docker = ugbio_featuremap_docker
 ```
 bcftools concat --threads {cpus} -a -Oz -o {annotated_featuremap} {sep=" " featuremap_parts}
 bcftools index -t {annotated_featuremap}
@@ -418,17 +350,16 @@ bcftools index -t {annotated_featuremap}
 
 #### Generate a FeatureMap of single substitutions:
 Ae explained in the opening section, SNV supported by 1 read only in a high coverage locus used as FP in the model training data. To find positions where only one substitution is observed in the FeatureMap, and create a FeatureMap of these positions, this command is used:
+Docker = ugbio_vcflite_docker
 ```
-bcftools view {annotated_featuremap} -H | vcf2bed | bedtools groupby -c 3 -o count | awk '($4==1) {print }' > single_sub_loci.bed
-bcftools view -R single_sub_loci.bed -Oz -o {single_substitutions_featuremap} {annotated_featuremap}
-bcftools index -t {single_substitutions_featuremap}
+vcflite import --vcf-in {annotated_featuremap}
+vcflite query --group-by "chrom, pos" --having "COUNT(*) = 1" --vcf-out {single_substitutions_featuremap}
+tabix -p vcf {single_substitutions_featuremap}
 ```
 
 Filtering positions by coverage is done in the TrainSnvQualityRecalibrationModel stage when sampling FeatureMap entries.
 
 *Recommended hardware - 1 CPU, 4GB RAM*
-
-***Note - vcf2bed is a bedops tool that is installed as part of the genomics.py3 conda environment***
 
 ##### Output files:
   {single_substitutions_featuremap}: FeatureMap vcf.gz file of single substitutions with a respective .tbi index file
@@ -436,8 +367,9 @@ Filtering positions by coverage is done in the TrainSnvQualityRecalibrationModel
 ### CreateHomSnvFeatureMap
 
 As explained in the opening section, SNV supporting homozygous SNVs are used as TP in the model training data. To find positions where only homozygous substitutions are observed in the FeatureMap, and create a FeatureMap of these positions, this command is used:
+Docker = ugbio_srsnv_docker
 ```
-{ugvc} create_hom_snv_featuremap \
+create_hom_snv_featuremap \
   --featuremap {annotated_featuremap} \
   --sorter_stats_json {sorter_json_stats_file} \
   --hom_snv_featuremap {hom_snv_featuremap} \
@@ -455,13 +387,9 @@ As explained in the opening section, SNV supporting homozygous SNVs are used as 
 
 ### BedIntersectAndExclude
 Prepare regions for training and inference by intersecting and excluding regions of interest. One region for FP entries and one region for TP entries are created. Note that these two commands can run in parallel.
+Docker = ugbio_srsnv_docker
 ```
-{ugvc} intersect_bed_regions \
-  --include-regions {sep=" " include_regions_tp} \
-  --exclude-regions {sep=" " exclude_regions_tp} \
-  --output-bed {training_regions_tp}
-
-{ugvc} intersect_bed_regions \
+intersect_bed_regions \
   --include-regions {sep=" " include_regions_fp} \
   --exclude-regions {sep=" " exclude_regions_fp} \
   --output-bed {training_regions_fp}
@@ -474,21 +402,21 @@ Prepare regions for training and inference by intersecting and excluding regions
 
 ### TrainSnvQualityRecalibrationModel
 This code trains the ML model on the annotated FeatureMap, and produces a report and a model file. 
+Docker = ugbio_srsnv_docker
 ```
 # Create a json file with parameters for the model
-{ugvc} srsnv_training \
---hom_snv_featuremap {hom_snv_featuremap} \
---single_substitution_featuremap {single_substitutions_featuremap} \
---output output_dir \
---basename {base_file_name} \
---flow_order "TGCA" \
---reference_fasta {ref_fasta}  \
---reference_dict {references.ref_dict} \
---cram_stats_file {sorter_json_stats_file} \
---hom_snv_regions {training_regions_tp} \
---single_sub_regions {training_regions_fp} \
---dataset_params_json_path {single_read_snv_params} \
---ppmSeq_adapter_version "ppmSeq"  # or ppmSeq_legacy_v5, for non-ppmSeq data remove this line.
+srsnv_training \
+  --hom_snv_featuremap {hom_snv_featuremap} \
+  --single_substitution_featuremap {single_substitutions_featuremap} \
+  --dataset_params_json_path {single_read_snv_params} \
+  --flow_order "TGCA" \
+  --reference_fasta "~{references.ref_fasta}" \
+  --reference_dict "~{references.ref_dict}" \
+  --cram_stats_file "~{sorter_json_stats_file}" \
+  --hom_snv_regions "~{hom_snv_regions_bed}" \
+  --single_sub_regions "~{single_substitution_regions_bed}" \
+  --output "$PWD" \
+  --basename "~{basename}"
 ```
 *Recommended hardware - 1 CPU, 16GB RAM*
 
@@ -498,22 +426,17 @@ This code trains the ML model on the annotated FeatureMap, and produces a report
   - {model_file}: "{base_file_name}.model.joblib"
   - {params_file}: "{base_file_name}.params.json"
   - {featuremap_df_file}: "{base_file_name}.featuremap_df.parquet"    
-  - {test_set_mrd_simulation_dataframe}: "{base_file_name}.test.df_mrd_simulation.parquet"
-  - {train_set_mrd_simulation_dataframe}: "{base_file_name}.train.df_mrd_simulation.parquet"
   - {test_set_statistics_h5}: "{base_file_name}.test.statistics.h5"
-  - {train_set_statistics_h5}: "{base_file_name}.train.statistics.h5"
   - {test_set_statistics_json}: "{base_file_name}.test.statistics.json"
-  - {train_set_statistics_json}: "{base_file_name}.train.statistics.json"
-  - {train_report_file_notebook}: "{base_file_name}.train_report.ipynb"
-  - {train_report_file_html}: "{base_file_name}.train_report.html"
   - {test_report_file_notebook}: "{base_file_name}.test_report.ipynb"
   - {test_report_file_html}: "{base_file_name}.test_report.html"
 
 
 ### InferenceSnvQualityRecalibrationModel
 This code applies the ML model to the annotated FeatureMap, and produces a FeatureMap with SNVQ values.
+Docker = ugbio_srsnv_docker
 ```
-{ugvc} srsnv_inference \
+srsnv_inference \
 --featuremap_path "{annotated_featuremap}" \
 --model_joblib_path "{model_file}" \
 --output_path "{output_featuremap}" \
@@ -594,6 +517,86 @@ A dictionary that contains all components needed to run inference on a FeatureMa
   - "chroms_to_folds" - a mapping of chromosome values to the corresponding `fold_id` values. Needed to decide which of the k-fold models is used for each SNV. Equalsl None when {split_folds_by}=="random".
   - "categorical_features_dict" - dictionary of all categorical variables and the corresponding category values. Note that the order of the category values is important: the same order should be used during inference as was used during training. 
 * "quality_interpolation_function" - a function that maps `ML_qual_1` values (model outputs) to `qual` values. 
+
+
+## Model training features and filter
+
+Parameters for the srsnv_training command described in TrainSnvQualityRecalibrationModel are given as a json file referred to as {single_read_snv_params} with the values below. Notice the comments inline.
+```json
+{
+  "ppmSeq_adapter_version": "v1",
+  "SingleReadSNV.categorical_features": {
+    "st": ["MIXED", "MINUS", "PLUS", "END_UNREACHED", "UNDETERMINED"],  # (for ppmSeq_legacy_v5 adapters change key to "strand_ratio_category_start", for non-ppmSeq remove)
+    "et": ["MIXED", "MINUS", "PLUS", "END_UNREACHED", "UNDETERMINED"],  # (for ppmSeq_legacy_v5 adapters change key to "strand_ratio_category_end", for non-ppmSeq remove)
+    "ref": ["A", "C", "G", "T"],
+    "alt": ["A", "C", "G", "T"],
+    "next_1": ["A", "C", "G", "T"],
+    "next_2": ["A", "C", "G", "T"],
+    "next_3": ["A", "C", "G", "T"],
+    "prev_1": ["A", "C", "G", "T"],
+    "prev_2": ["A", "C", "G", "T"],
+    "prev_3": ["A", "C", "G", "T"]
+  },
+  "numerical_features": [
+    "X_SCORE",
+    "X_EDIST",
+    "X_LENGTH",
+    "X_INDEX",
+    "X_FC1",
+    "rq",
+    "max_softclip_length",
+    "hmer_context_ref",
+    "hmer_context_alt"
+  ],
+  "boolean_features": [
+    "is_cycle_skip",
+    "is_forward"
+  ],
+  "balanced_sampling_info_fields": [
+    "trinuc_context_with_alt",
+    "is_forward"
+  ],
+  "pre_filter": "(X_SCORE>4) && (X_EDIST<10)",
+  "random_seed": 0,
+  "num_CV_folds": 5,
+  "split_folds_by": "chrom",
+  "train_set_size": 3000000,
+  "test_set_size": 0
+}
+```
+
+Explanation of key features:
+* {pre_filter} - cutoff criteria for SNVs to be included in the model
+* {numerical_features} - numerical features used for training the model:
+  - "X_SCORE" (Sequencing error likelihood)
+  - "X_EDIST" (Levenshtein distance between the read and reference)
+  - "X_FC1" (Number of SNVs in the read)
+  - "X_LENGTH" (Read length)
+  - "X_INDEX" (Index of the SNV in the read)
+  - "rq" (Read quality)
+  - "max_softclip_length" (Maximum softclip length)
+  - "hmer_context_ref" (homopolymer length in the reference allele)
+  - "hmer_context_alt" (homopolymer length in the alternative allele)
+* {categorical_features} - categorical features used for training the model:
+  - "is_cycle_skip", (Is the SNV a cycle skip)
+  - "is_forward", (Is the read aligned to the forward strand, required to interpret reference related features)
+  - "ref", (Reference base)
+  - "alt", (Alternative base)
+  - "next_1", (Reference base after the SNV)
+  - "next_2", (Reference base 2bp after the SNV)
+  - "next_3", (Reference base 3bp after the SNV)
+  - "prev_1", (Reference base before the SNV)
+  - "prev_2", (Reference base 2bp before the SNV)
+  - "prev_3" (Reference base 3bp before the SNV)
+  - "st" or "strand_ratio_category_start" (ppmSeq read category measured in the read start)
+  - "et" or "strand_ratio_category_end" (ppmSeq read category measured in the read end)
+
+  ***Note - the last two are only required for ppmSeq data***
+* {num_CV_folds} - Number of Cross-Validation folds to use. 
+* {split_folds_by} - when using k-fold Cross-Validation, method by which SNVs are assigned `fold_id` values. Two methods are possible: "chrom" and "random". 
+  
+  ***Note - See section [Details of ML model Cross-Validation scheme](#details-of-ml-model-cross-validation-scheme) below for more details on Cross-Validation scheme and parameter values.***
+
 
 ## Details of ML model Cross-Validation scheme
 The ML model can be trained either by employing a test/train split, or by employing a k-fold Cross-Validation (CV) scheme. 

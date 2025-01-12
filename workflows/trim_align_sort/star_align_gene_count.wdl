@@ -26,7 +26,7 @@ workflow StarAlignment {
         File? genome
         StarGenomeGenerateParams? genome_generate_params
 
-        Array[File] input_bams
+        Array[File] input_bams_or_fastqs
         String base_file_name
         String? star_align_extra_args
         File? star_align_gtf_override
@@ -45,8 +45,8 @@ workflow StarAlignment {
         #@wv defined(genome_generate_params) -> suffix(genome_generate_params['fasta_files']) <= {'.fasta','.fa'}
         #@wv defined(genome_generate_params) -> suffix(genome_generate_params['gtf_file']) == '.gtf'
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
-        #@wv len(input_bams) >= 1
-        #@wv suffix(input_bams) <= {".bam", ".cram", ".ucram"}
+        #@wv len(input_bams_or_fastqs) >= 1
+        #@wv suffix(input_bams_or_fastqs) <= {".bam", ".cram", ".ucram"}
         
 
     }
@@ -78,8 +78,8 @@ workflow StarAlignment {
             type: "StarGenomeGenerateParams",
             category: "input_optional"
         }
-        input_bams: {
-            help: "The input BAM files to align.",
+        input_bams_or_fastqs: {
+            help: "The input BAM or fastq files to align.",
             type: "Array[File]",
             category: "input_required"
         }
@@ -156,7 +156,7 @@ workflow StarAlignment {
 
     call UGRealign.StarAlign {
         input:
-            input_bams      =   input_bams,
+            input_bams_or_fastqs =   input_bams_or_fastqs,
             genome          =   genome_override,
             base_file_name  =   base_file_name,
             gtf_override    =   star_align_gtf_override,

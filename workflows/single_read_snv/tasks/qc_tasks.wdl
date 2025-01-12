@@ -633,39 +633,18 @@ task CreateReportSingleSampleQC {
 
         # python notebook args
         File input_h5_file
-        String notebook_file_in= "/VariantCalling/ugvc/reports/single_sample_qc_create_html_report.ipynb"
-        String top_metrics_file = "/VariantCalling/ugvc/reports/top_metrics_for_tbl.csv"
-
-    }
+        String notebook_file_in= "/src/core/ugbio_core/reports/single_sample_qc_create_html_report.ipynb"
+        String top_metrics_file = "/src/core/ugbio_core/reports/top_metrics_for_tbl.csv"
+    }   
     command <<<
-        set -eo pipefail
-        start=$(date +%s)
-
-        # shellcheck source=/dev/null
-        source ~/.bashrc
-        conda activate genomics.py3
+        set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        basename_notebook=$(basename ~{notebook_file_in} ".ipynb")
-
-        papermill ~{notebook_file_in} "${basename_notebook}.papermill.ipynb" \
-            -p top_metrics_file ~{top_metrics_file} \
-            -p input_h5_file ~{input_h5_file} \
-            -p input_base_file_name ~{base_file_name}
-
-        jupyter nbconvert --to html "${basename_notebook}.papermill.ipynb" --template classic --no-input --output ~{base_file_name}.html
-
-        echo "**************** D O N E ****************"
-
-        end=$(date +%s)
-        mins_elapsed=$(( (end - start) / 60))
-        secs_elapsed=$(( (end - start) % 60 ))
-        if [ $secs_elapsed -lt 10 ]; then
-            secs_elapsed=0$secs_elapsed
-        fi
-        echo "Total run time: $mins_elapsed:$secs_elapsed"
-
-
+        params="{\"top_metrics_file\": \"~{top_metrics_file}\", \"input_h5_file\": \"~{input_h5_file}\", \"input_base_file_name\": \"~{base_file_name}\"}"
+        generate_report \
+            --template_path ~{notebook_file_in} \
+            --params "$params" \
+            --output_path ~{base_file_name}.html
     >>>
     runtime {
         preemptible: preemptible_tries

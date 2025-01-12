@@ -31,7 +31,7 @@ import "tasks/qc_tasks.wdl" as UGQCTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.15.6" # !UnusedDeclaration
+        String pipeline_version = "1.16.2" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -82,6 +82,7 @@ workflow SomaticCNVCallingControlFREEC{
         Int? max_threads_override
         String? sex
         File? gem_mappability_file
+        Boolean? output_all_controlFREEC_outputs_override
         Boolean? no_address_override
         Int? preemptible_tries_override
 
@@ -149,6 +150,7 @@ workflow SomaticCNVCallingControlFREEC{
     Int maxThreads = select_first([max_threads_override,8])
     Float CNV_gain_cutoff = select_first([CNV_gain_cutoff_override,1.03])
     Float CNV_loss_cutoff = select_first([CNV_gain_cutoff_override,0.97])
+    Boolean output_all_controlFREEC_outputs =  select_first([output_all_controlFREEC_outputs_override,false])
     
     meta {
         description: "Runs single sample somatic CNV calling workflow based on \<a href=\"https://boevalab.inf.ethz.ch/FREEC/\"\>ControlFREEC</a>.\n\nCNVs are called based on both coverage and allele frequencies in the tumor and the matched germline sample.\n\nThe pipeline will gather coverage and allele frequencies, run controlFREEC and filter called CNVs by length and low confidence regions.\n\ncoverage will be calculted based on the input cram/bam. Alternativley, it can recieve coverage input as one of:bedGraph, cpn formats.\n\nAllele frequencies will be calculated based on the input cram/bam and a given vcf file to specify locations. Alternativley, it can recieve precalculated frequencies as mpileup format.\n\nPipeline has an option to run in High-Sensitivity-Mode which can be used for low tumor purity samples. in this case segmentation results will be outputed and filtered by their average fold change.\n\nfor High-Sensitivity-Mode fold changes for gain and loss calls can be defined by the user. (default cutoff values are [gain,loss]=[1.03,0.97])\n\nThe pipeline outputs: \n\n&nbsp;&nbsp;- calculated coverage for tumor and normal samples\n\n&nbsp;&nbsp;- calculated mpileup for tumor and normal samples\n\n&nbsp;&nbsp;- called CNVs + filtered called CNVs\n\n&nbsp;&nbsp;- controlFREEC run-summary\n\n&nbsp;&nbsp;-coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples.\n\n&nbsp;&nbsp;-duplications and deletions figure - showing gains and losses along the genome.\n\n&nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.\n\n"
@@ -199,9 +201,9 @@ workflow SomaticCNVCallingControlFREEC{
             category: "input_required"
         }
         references: {
-        help: "Struct of reference objects holding reference fasta with corresponding fai and dict files",
-        type: "References",
-        category: "ref_required"
+            help: "Struct of reference objects holding reference fasta with corresponding fai and dict files",
+            type: "References",
+            category: "ref_required"
         }
         interval_list: {
             help:"Interval list defining the regions to gather allele frequencies on, recommended value set in the template",
@@ -313,6 +315,11 @@ workflow SomaticCNVCallingControlFREEC{
             type: "Int",
             category: "param_optional"
         }
+        output_all_controlFREEC_outputs_override: {
+            help: "Whether to output all original controlFREEC outputs",
+            type: "Boolean",
+            category: "param_optional"
+        }
         max_threads_override: {
             help: "maximal threads for controlFREEC. Default is 8",
             type: "Int",
@@ -368,7 +375,6 @@ workflow SomaticCNVCallingControlFREEC{
             type: "Int",
             category: "param_optional"
         }
-
         tumor_segments: {
             help: "controlFREEC segmentation for tumor sample",
             type: "File",
@@ -444,6 +450,41 @@ workflow SomaticCNVCallingControlFREEC{
             type: "File",
             category: "output"
         }
+         FREEC_normal_BAF :{
+            help: "controlFREEC BAF for normal sample",
+            type: "File",
+            category: "optional_output"
+         }         
+         FREEC_tumor_BAF :{
+            help: "controlFREEC BAF for tumor sample",
+            type: "File",
+            category: "optional_output"
+         }
+         FREEC_tumor_CNVs :{
+            help: "controlFREEC predicted copy number alterations for tumor sample",
+            type: "File",
+            category: "optional_output"
+         }
+         FREEC_normal_CNVs :{
+            help: "controlFREEC predicted copy number alterations for normal sample",
+            type: "File",
+            category: "optional_output"
+         }
+         FREEC_noraml_ratio_bedgraph :{
+            help: "controlFREEC ratios in BedGraph format for normal sample",
+            type: "File",
+            category: "optional_output"
+         }
+         FREEC_normal_ratio : {
+            help: "controlFREEC ratios for normal sample",
+            type: "File",
+            category: "optional_output"
+         }
+         FREEC_tumor_ratio : {
+            help: "controlFREEC ratios for tumor sample",
+            type: "File",
+            category: "optional_output"
+         }
     }
 
     call Globals.Globals as Globals
@@ -474,7 +515,7 @@ workflow SomaticCNVCallingControlFREEC{
                     snp_file = snp_file,
                     snp_file_index = snp_file_index,
                     interval = interval,
-                    docker = global.ug_vc_docker,
+                    docker = global.ugbio_freec_docker,
                     no_address = no_address,
                     preemptible_tries = preemptible_tries,
                     monitoring_script = monitoring_script,
@@ -492,7 +533,7 @@ workflow SomaticCNVCallingControlFREEC{
                     snp_file = snp_file,
                     snp_file_index = snp_file_index,
                     interval = interval,
-                    docker = global.ug_vc_docker,
+                    docker = global.ugbio_freec_docker,
                     no_address = no_address,
                     preemptible_tries = preemptible_tries,
                     monitoring_script = monitoring_script,
@@ -540,7 +581,7 @@ workflow SomaticCNVCallingControlFREEC{
                         bigwig_file = bw_file,
                         genome_windows = genome_windows,
                         genome_file = references.ref_fasta_index,
-                        docker = global.ug_vc_docker,
+                        docker = global.ugbio_freec_docker,
                         no_address = no_address,
                         preemptible_tries = preemptible_tries,
                         monitoring_script = monitoring_script
@@ -554,7 +595,7 @@ workflow SomaticCNVCallingControlFREEC{
                     out_file_name = basename(tumor_bedgraph_files[0])+".bedGraph",
                     genome_file = chrLenFile,
                     monitoring_script = monitoring_script,
-                    docker = global.ug_vc_docker
+                    docker = global.ugbio_freec_docker
             }
         }
         Array[File] t_cov_merged_file = TumorConcatFilesBwBedgraphFiles.out_merged_file
@@ -578,7 +619,7 @@ workflow SomaticCNVCallingControlFREEC{
                         bigwig_file = bw_file,
                         genome_windows = genome_windows,
                         genome_file = references.ref_fasta_index,
-                        docker = global.ug_vc_docker,
+                        docker = global.ugbio_freec_docker,
                         no_address = no_address,
                         preemptible_tries = preemptible_tries,
                         monitoring_script = monitoring_script
@@ -592,7 +633,7 @@ workflow SomaticCNVCallingControlFREEC{
                     out_file_name = basename(normal_bedgraph_files[0])+".bedGraph",
                     genome_file = chrLenFile,
                     monitoring_script = monitoring_script,
-                    docker = global.ug_vc_docker
+                    docker = global.ugbio_freec_docker
             }
         }
         Array[File] n_cov_merged_file = NormalConcatFilesBwBedgraphFiles.out_merged_file
@@ -607,7 +648,7 @@ workflow SomaticCNVCallingControlFREEC{
                 bedgraph_files = normal_bedgraph,
                 genome_windows = genome_windows,
                 genome_file = chrLenFile,
-                docker = global.ug_vc_docker,
+                docker = global.ugbio_freec_docker,
                 no_address = no_address,
                 preemptible_tries = preemptible_tries,
                 monitoring_script = monitoring_script
@@ -618,7 +659,7 @@ workflow SomaticCNVCallingControlFREEC{
                 bedgraph_files = tumor_bedgraph,
                 genome_windows = genome_windows,
                 genome_file = chrLenFile,
-                docker = global.ug_vc_docker,
+                docker = global.ugbio_freec_docker,
                 no_address = no_address,
                 preemptible_tries = preemptible_tries,
                 monitoring_script = monitoring_script
@@ -652,7 +693,7 @@ workflow SomaticCNVCallingControlFREEC{
         sex = sex,
         window =  window,
         degree = degree,
-        docker = global.ug_control_freec_docker,
+        docker = global.ugbio_freec_docker,
         no_address = no_address,
         preemptible_tries = preemptible_tries,
         monitoring_script = monitoring_script
@@ -679,6 +720,17 @@ workflow SomaticCNVCallingControlFREEC{
         preemptible_tries = preemptible_tries
         }
     
+    if(output_all_controlFREEC_outputs)
+    {
+        File FREEC_normal_BAF_maybe = runControlFREEC.normal_BAF
+        File FREEC_tumor_BAF_maybe = runControlFREEC.tumor_BAF
+        File FREEC_tumor_CNVs_maybe = runControlFREEC.tumor_CNVs
+        File FREEC_normal_CNVs_maybe = runControlFREEC.normal_CNVs
+        File FREEC_noraml_ratio_bedgraph_maybe = runControlFREEC.noraml_ratio_bedgraph
+        File FREEC_normal_ratio_maybe =  runControlFREEC.normal_ratio
+        File FREEC_tumor_ratio_maybe = runControlFREEC.tumor_ratio
+    }
+
     output {
          File tumor_mpileup = tumor_pileup
          File normal_mpileup = normal_pileup
@@ -694,6 +746,14 @@ workflow SomaticCNVCallingControlFREEC{
          File copy_number_plot = FilterControlFREECCnvs.copy_number_plot
          File neutral_AF_plot = FilterControlFREECCnvs.neutral_AF_plot
          File neutral_AF_bed = FilterControlFREECCnvs.neutral_AF_bed
+
+         File? FREEC_normal_BAF = FREEC_normal_BAF_maybe
+         File? FREEC_tumor_BAF = FREEC_tumor_BAF_maybe
+         File? FREEC_tumor_CNVs = FREEC_tumor_CNVs_maybe
+         File? FREEC_normal_CNVs = FREEC_normal_CNVs_maybe
+         File? FREEC_noraml_ratio_bedgraph = FREEC_noraml_ratio_bedgraph_maybe
+         File? FREEC_normal_ratio = FREEC_normal_ratio_maybe
+         File? FREEC_tumor_ratio = FREEC_tumor_ratio_maybe
     }
 }
 task CreateMpileup {
@@ -729,11 +789,8 @@ task CreateMpileup {
 
 command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        source ~/.bashrc
         set -eo pipefail
-        conda activate genomics.py3
 
-    
     # if ~{is_aws}
     # then 
     #     inputs_string="~{sep=' ' input_bam_files}"
@@ -818,15 +875,13 @@ task ConcatFilesBwBedgraphFiles{
     
     command {
 bash ~{monitoring_script} | tee monitoring.log >&2 &
-source ~/.bashrc
 set -eo pipefail
-conda activate genomics.py3
 echo ~{out_file_name}
 echo -e "~{sep="\n" files}"
 echo -e "~{sep="\n" files}" > files.txt
 cat ~{genome_file} | cut -f1
 cat ~{genome_file} | cut -f1 > chroms_order.txt
-python3 <<CODE
+python <<CODE
 import pandas as pd
 import os
 df_files = pd.read_csv("files.txt",header=None)
@@ -865,9 +920,7 @@ task BigWigToBedGraph{
     String base_file_name = basename(bigwig_file, ".bw")
     command<<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        source ~/.bashrc
         set -eo pipefail
-        conda activate ucsc
 
         bigWigToBedGraph ~{bigwig_file} ~{base_file_name}.bedGraph
         echo ~{bigwig_file} 
@@ -904,9 +957,7 @@ task BedGraphToCpn{
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        source ~/.bashrc
         set -eo pipefail
-        conda activate genomics.py3
 
         ##unzip in case of zipped bedgraph
         
@@ -1046,7 +1097,7 @@ task runControlFREEC{
         fi
 
         #create controlFREEC config file
-        python /generate_controlFREEC_config.py \
+        generate_controlFREEC_config \
             --sample_name ~{sample_name} \
             ~{true="--BedGraphOutput TRUE" false='--BedGraphOutput FALSE' bed_graph_output} \
             ~{true="--NaiveNormalization TRUE" false='--NaiveNormalization FALSE' naive_normalization} \

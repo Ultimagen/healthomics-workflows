@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.15.6" # !UnusedDeclaration
+    String pipeline_version = "1.16.2" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -65,8 +65,9 @@ workflow EfficientDV {
     Array[Int] optimal_coverages = [ 50 ]
     Boolean cap_at_optimal_coverage = false
     Boolean output_realignment = false
-    String ug_make_examples_extra_args = "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic"
+    String ug_make_examples_extra_args = "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic --haps-sw-params 10,-128,-15,-30,-5 --bsnv-detection"
     Boolean log_make_examples_progress = false
+    File? germline_vcf
 
     # Background files (for somatic calling)
     Array[File] background_cram_files = []
@@ -75,6 +76,7 @@ workflow EfficientDV {
     # Call variants args
     File model_onnx
     File? model_serialized
+    Boolean output_call_variants_tfrecords = false
 
     # PostProcessing args
     Int min_variant_quality_hmer_indels = 5
@@ -84,11 +86,7 @@ workflow EfficientDV {
     Int hard_qual_filter = 1
     Float? allele_frequency_ratio
     Boolean show_bg_fields = false  # Show fields from background sample (for somatic calling)
-
-    # Systematic error correction args
-    Boolean annotate_systematic_errors = false
-    File? filtering_blacklist_file
-    Array[File]? sec_models
+    String ug_post_processing_extra_args = ""
 
     String dummy_input_for_call_caching = ""
 
@@ -123,18 +121,21 @@ workflow EfficientDV {
    #@mv min_read_count_snps >= 1
    #@mv min_read_count_hmer_indels >= 1
    #@mv min_read_count_non_hmer_indels >= 1
-   #@wv suffix(cram_files) <= {".cram"}
-   #@wv suffix(cram_index_files) <= {".crai"}
+   #@wv cloud_provider_override == "aws" -> suffix(cram_files) <= {".cram"}
+   #@wv cloud_provider_override == "aws" -> suffix(cram_index_files) <= {".crai", ".csi"}
+   #@wv cloud_provider_override == "gcp" -> suffix(cram_files) <= {".cram", ".bam"}
+   #@wv cloud_provider_override == "gcp" -> suffix(cram_index_files) <= {".crai", ".bai", ".csi"}
    #@wv prefix(cram_index_files) == cram_files
    #@wv len(cram_files) >= 0
    #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa'}
    #@wv suffix(references['ref_dict']) == '.dict'
    #@wv suffix(references['ref_fasta_index']) == '.fai'
    #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
-   #@wv annotate_systematic_errors -> (defined(filtering_blacklist_file) and defined(sec_models))
    #@wv len(background_cram_files) == len(background_cram_index_files)
-   #@wv len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
-   #@wv len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai"}
+   #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
+   #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".csi"}
+   #@wv cloud_provider_override == "gcp" and len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram", ".bam"}
+   #@wv cloud_provider_override == "gcp" and len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".bai", ".csi"}
    #@wv len(optimal_coverages) == 1 + (len(background_cram_files) > 0)
    #@wv len(background_cram_files) > 0 -> defined(allele_frequency_ratio)
   }
@@ -161,7 +162,8 @@ workflow EfficientDV {
               "AnnotateVCF.Globals.glob",
               "SingleSampleQC.Globals.glob",
               "VariantCallingEvaluation.Globals.glob",
-              "QCReport.disk_size"
+              "QCReport.disk_size",
+              "UGMakeExamples.count_candidates_with_dvtools"
           ]}
   }
 
@@ -283,6 +285,10 @@ workflow EfficientDV {
       help: "Cause make_examples to output detailed progress information (for debugging)",
       category: "param_optional"
     }
+    germline_vcf:{
+      help: "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+      category: "param_optional"
+    }
     model_onnx: {
       help: "TensorRT model for calling variants (onnx format)",
       category: "ref_required"
@@ -290,6 +296,10 @@ workflow EfficientDV {
     model_serialized: {
       help: "TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
       category: "ref_optional"
+    }
+    output_call_variants_tfrecords: {
+      help: "Output tfrecords from call_variants",
+      category: "param_optional"
     }
     min_variant_quality_snps: {
       help: "Minimal snp variant quality in order to be labeled as PASS",
@@ -320,18 +330,6 @@ workflow EfficientDV {
       help: "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
       category: "param_optional"
     }
-    annotate_systematic_errors: {
-      help: "Should systematic errors be annotated from a database of common systematic errors",
-      category: "param_optional"
-    }
-    filtering_blacklist_file: {
-      help: "Database of known positions with systematic errors",
-      category: "param_advanced"
-    }
-    sec_models: {
-      help: "Models to annotate systematic errors",
-      category: "param_advanced"
-    }
     input_flow_order: {
       help: "Flow order. If not provided, it will be extracted from the CRAM header",
       category: "param_optional"
@@ -351,6 +349,10 @@ workflow EfficientDV {
     ref_dbsnp_index: {
       help: "DbSNP vcf index",
       category: "ref_required"
+    }
+    ug_post_processing_extra_args: {
+      help: "Additional arguments for post-processing",
+      category: "param_optional"
     }
     ug_make_examples_memory_override: {
       help: "Memory override for make_examples step",
@@ -392,11 +394,11 @@ workflow EfficientDV {
       help: "Nvidia System Management (nvidia-smi) log",
       category: "output"
     }
-    vcf_file: {
+    output_vcf: {
       help: "Called variants in vcf format",
       category: "output"
     }
-    vcf_index: {
+    output_vcf_index: {
       help: "vcf index",
       category: "output"
     }
@@ -408,6 +410,10 @@ workflow EfficientDV {
     vcf_no_ref_calls_index: {
       help: "vcf without references calls index",
       type: "File",
+      category: "output"
+    }
+    call_variants_output_tfrecords: {
+      help: "The tfrecords that call_variants outputs",
       category: "output"
     }
     # output_model_serialized: {  # uncomment to save serialized model
@@ -453,6 +459,10 @@ workflow EfficientDV {
     custom_annotation_names: {
       help: "List of custom annotations added to the VCF by postprocessing (currently only through the annotation_intervals)",
       type: "Array[String]",
+      category: "output"
+    }
+    num_candidates: {
+      help: "Number of candidates that call_variants processed",
       category: "output"
     }
   }
@@ -535,6 +545,7 @@ workflow EfficientDV {
         cram_index_files = cram_index_files,
         background_cram_files = background_cram_files,
         background_cram_index_files = background_cram_index_files,
+        germline_vcf = germline_vcf,
         min_base_quality = min_base_quality,
         pileup_min_mapping_quality = pileup_min_mapping_quality,
         min_read_count_snps = min_read_count_snps,
@@ -548,7 +559,7 @@ workflow EfficientDV {
         assembly_min_base_quality  = dbg_min_base_quality,
         make_gvcf = make_gvcf,
         p_error = p_error,
-        ug_make_examples_extra_args = ug_make_examples_extra_args,
+        extra_args = ug_make_examples_extra_args,
         prioritize_alt_supporting_reads = prioritize_alt_supporting_reads,
         log_progress = log_make_examples_progress,
         docker = global.ug_make_examples_docker,
@@ -619,6 +630,7 @@ workflow EfficientDV {
       output_prefix = output_prefix,
       dbsnp = ref_dbsnp,
       dbsnp_index = ref_dbsnp_index,
+      extra_args = ug_post_processing_extra_args,
       monitoring_script = monitoring_script
   }
 
@@ -630,55 +642,24 @@ workflow EfficientDV {
         output_base_name = output_prefix + "_realign",
         sample_name = "realigned",
         references = references,
-        docker = global.ug_vc_docker,
+        docker = global.ug_gatk_picard_docker,
         no_address = true,
         cpus = 4,
         preemptible_tries = preemptible_tries
     }
   }
 
-  if (annotate_systematic_errors) {
-    call VCTasks.CreateSECBlacklist {
-      input:
-       monitoring_script = monitoring_script,
-       input_gvcf = UGPostProcessing.vcf_file,
-       input_gvcf_index = UGPostProcessing.vcf_index,
-       output_blacklist_path = base_file_name + '_sec.pickle',
-       blacklist_file = filtering_blacklist_file,
-       sec_models = sec_models,
-       preemptible_tries = preemptible_tries,
-       no_address = true,
-       docker = global.ug_vc_docker,
-    }
-
-    call VCTasks.FilterVCF as FilterVCF {
-      input:
-        input_vcf = UGPostProcessing.vcf_file,
-        input_vcf_index = UGPostProcessing.vcf_index,
-        filter_cg_insertions = false,
-        blacklist_file = CreateSECBlacklist.output_blacklist,
-        final_vcf_base_name = base_file_name,
-        recalibrate_gt = false,
-        preemptible_tries = preemptible_tries,
-        docker = global.ug_vc_docker,
-        monitoring_script = monitoring_script,
-        no_address = true
-    }
+  if (output_call_variants_tfrecords){
+    Array[File] call_variants_output_tfrecords_maybe = UGCallVariants.output_records
   }
 
-  call PostProcesTasks.CalibrateBridgingSnvs as CalibrateBridgingSnvs {
-    input:
-        input_vcf         = select_first([FilterVCF.output_vcf_filtered, UGPostProcessing.vcf_file]),
-        input_vcf_index   = select_first([FilterVCF.output_vcf_filtered_index, UGPostProcessing.vcf_index]),
-        references = references,
-        final_vcf_base_name = base_file_name,
-        monitoring_script = monitoring_script,
-        ugvc_docker =  global.ug_vc_docker
-  }
+  File raw_output_vcf = UGPostProcessing.vcf_file
+  File raw_output_vcf_index = UGPostProcessing.vcf_index
+
   if (length(background_cram_files) > 0) {
-    call PostProcesTasks.ApplyAlleleFrequencyRatioFilter as ApplyAlleleFrequencyRatioFilter {
+    call PostProcesTasks.ApplyAlleleFrequencyRatioFilter {
       input:
-          input_vcf = CalibrateBridgingSnvs.output_vcf,
+          input_vcf = raw_output_vcf,
           af_ratio = select_first([allele_frequency_ratio]),
           final_vcf_base_name = base_file_name,
           monitoring_script = monitoring_script,
@@ -688,7 +669,7 @@ workflow EfficientDV {
 
   call PostProcesTasks.RemoveRefCalls as RemoveRefCalls {
        input:
-          input_vcf = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, CalibrateBridgingSnvs.output_vcf]),
+          input_vcf = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf]),
           final_vcf_base_name = base_file_name,
           monitoring_script = monitoring_script,
           bcftools_docker =  global.bcftools_docker
@@ -710,7 +691,6 @@ workflow EfficientDV {
       docker = global.ug_make_examples_docker,
       monitoring_script = monitoring_script
   }
-  
 
   if (output_realignment) {
     File? realigned_cram_maybe = MergeRealignedCrams.output_cram
@@ -723,10 +703,11 @@ workflow EfficientDV {
   {
     File nvidia_smi_log     = UGCallVariants.nvidia_smi_log
     # File output_model_serialized   = UGCallVariants.output_model_serialized # uncomment to output the serilized model
-    File vcf_file           = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, CalibrateBridgingSnvs.output_vcf])
-    File vcf_index          = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf_index, CalibrateBridgingSnvs.output_vcf_index])
+    File output_vcf         = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf])
+    File output_vcf_index   = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf_index, raw_output_vcf_index])
     File vcf_no_ref_calls   = RemoveRefCalls.output_vcf
     File vcf_no_ref_calls_index = RemoveRefCalls.output_vcf_index
+    Array[File]? call_variants_output_tfrecords = call_variants_output_tfrecords_maybe
     File? output_gvcf       = gvcf_maybe
     File? output_gvcf_index = gvcf_index_maybe
     File? output_gvcf_hcr   = gvcf_hcr_maybe
@@ -736,5 +717,6 @@ workflow EfficientDV {
     File report_html        = QCReport.qc_report
     File qc_h5              = QCReport.qc_h5
     File qc_metrics_h5      = QCReport.qc_metrics_h5
+    Array[File] num_candidates   = UGCallVariants.num_candidates
   }
 }

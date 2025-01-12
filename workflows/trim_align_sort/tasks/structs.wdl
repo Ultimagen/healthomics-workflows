@@ -54,11 +54,13 @@ struct BwaMethReferences {
 }
 
 # UA alignment
-struct UaReferences {
+struct UaParameters {
   File? ua_index
   File ref_alt
   String ua_extra_args
   Boolean v_aware_alignment_flag
+  Int? cpus
+  Int? memory_gb
 }
 
 # UA-METH alignment
@@ -117,17 +119,19 @@ struct SimpleReadTrimmingParameters {
 struct TrimmerParameters {
   File? formats_description         # optional formtas.json file. If not provided, the default trimmer formats will be used (https://github.com/Ultimagen/trimmer/blob/master/formats/formats.json)
   String? local_formats_description # path to description file stored in the docker, default is /trimmer/formats/formats.json
-  String? untrimmed_reads_action     # either "" (do nothing), "filter" (mark in sam flag) or "discard"
+  String? untrimmed_reads_action    # either "" (do nothing), "filter" (mark in sam flag) or "discard"
   String? format                    # format name to be used, as defined in the formats.json file
-  String? extra_args
+  String? failure_read_group        # name of field to be used to mark failed reads, generally "unmatched" (will show as "rg:Z:unmatched" in the cram)
+  String? minor_read_group          # name of the minor read group to be used in the output file
+  String? extra_args                # extra arguments to be passed to trimmer
   Array[File]? pattern_files        # If the formats description uses pattern files (specified with file: or enc: prefix in format file), they must be provided also here.
                                     # Note that built-in pattern files from the Trimmer repo do not need to be provided here.
   File? cram_reference              # Use this in case the reference is not embedded in the input cram (or if you want to read the cram with a different reference)
   Int? memory_gb                    # Ovverride the default memory (in GB) used by trimmer
   String? output_demux_format       # If provided, trimmer will perform demultiplexing and the output file name will be in this format. E.g. "output-2%"
-  String? filename_prefix_sep # default is set to "_", but this can be changed to "-" as in the case of ancient DNA trimmed output
+  String? filename_prefix_sep       # default is set to "_", but this can be changed to "-" as in the case of ancient DNA trimmed output
   String? output_failed_file_name_suffix # Setting the name for the failed reads file. Default is "failed.cram", if this parameter is given will be <base_file_name>_<output_failed_file_name_suffix>
-  Boolean? remove_small_files # Allows to remove trimmed files below 1Gb in size
+  Boolean? remove_small_files       # Allows to remove trimmed files below 1Gb in size
 }
 
 struct ReferenceDbSnp {
@@ -262,6 +266,7 @@ struct SorterParams {
   String? demux_extra_args
   String? sort_extra_args
   Int? memory_gb            # Override the default memory (in GB) used by sorter
+  Int? demux_memory_gb            # Override the default memory (in GB) used by demux
   File? coverage_intervals  # tar.gz file with the coverage intervals tsv pointing to the relevant coverage intervals files
 }
 

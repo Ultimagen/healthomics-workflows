@@ -63,7 +63,7 @@ import "trim_align_sort.wdl" as TrimAlignSortSubWF
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.15.6" # !UnusedDeclaration
+        String pipeline_version = "1.16.2" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -130,11 +130,6 @@ workflow SingleCell {
         # STAR genome generation validations
         #@wv defined(downstream_analysis) and (downstream_analysis == "star_solo" or downstream_analysis == "star") and defined(genome_generate_params) -> suffix(genome_generate_params['fasta_files']) <= {'.fasta','.fa'}
         #@wv defined(downstream_analysis) and (downstream_analysis == "star_solo" or downstream_analysis == "star") and defined(genome_generate_params) -> suffix(genome_generate_params['gtf_file']) == '.gtf'
-        
-        # STAR validations
-        #@wv defined(downstream_analysis) and downstream_analysis == "star" -> defined(star_genome) or defined(genome_generate_params)
-        #@wv defined(downstream_analysis) and downstream_analysis == "star" and defined(star_genome) -> suffix(star_genome) == '.zip'
-
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
@@ -301,12 +296,12 @@ workflow SingleCell {
             help: "Trimmer extra histograms", 
             category: "output"
         }
-        sort_stats_csv : {
+        sorter_stats_csv : {
             type: "Array[File]",
             help: "Sorter statistics csv", 
             category: "output"
         }
-        sort_stats_json : {
+        sorter_stats_json : {
             type: "Array[File]",
             help: "Sorter statistics json", 
             category: "output"
@@ -359,9 +354,9 @@ workflow SingleCell {
 
     call SingleCellTasks.FindInsertBarcodeFastq {
         input:
-            input_fastq_list        = select_all(select_first([TrimAlignSort.fastq_files])),
+            input_fastq_list        = select_all(select_first([TrimAlignSort.fastq_file_list])),
             sub_sumple_fastq_list   = select_all(select_first([TrimAlignSort.sub_sampled_output])),
-            sorter_csv_stats_list   = select_all(select_first([TrimAlignSort.sort_stats_csv])),
+            sorter_csv_stats_list   = select_all(select_first([TrimAlignSort.sorter_stats_csv_list])),
             base_file_name          = base_file_name,
             insert_rg               = insert_rg,
             barcode_rg              = barcode_rg,
@@ -374,7 +369,7 @@ workflow SingleCell {
     call StarAlignWorkflow.StarAlignment as StarAlignSubSample{
         input:
             genome                  = star_genome,
-            input_bams              = [FindInsertBarcodeFastq.insert_sub_sample_fastq],
+            input_bams_or_fastqs    = [FindInsertBarcodeFastq.insert_sub_sample_fastq],
             base_file_name          = base_file_name,
             star_align_extra_args   = sub_sample_star_align_extra_args,
             preemptible_tries       = preemptible_tries,
@@ -417,22 +412,6 @@ workflow SingleCell {
                     monitoring_script_input = monitoring_script
             }
         }
-
-        if (analysis_type == "star") {
-            call StarAlignWorkflow.StarAlignment {
-                input:
-                    genome                  = star_genome,
-                    genome_generate_params  = genome_generate_params,
-                    star_align_extra_args   = star_align_extra_args,
-                    star_align_gtf_override = star_align_gtf_override,
-                    input_bams              = [TrimAlignSort.output_cram_bam],
-                    base_file_name          = base_file_name + ".star.aln",
-                    preemptible_tries       = preemptible_tries,
-                    no_address              = no_address,
-                    cpu                     = cpu,
-                    monitoring_script_input = monitoring_script
-            }
-        }
     }
 
     output {
@@ -441,8 +420,8 @@ workflow SingleCell {
         File? trimmer_failure_codes_csv     = TrimAlignSort.trimmer_failure_codes_csv
         Array[File?]? trimmer_histogram     = TrimAlignSort.trimmer_histogram
         Array[File?]? trimmer_histogram_extra = TrimAlignSort.trimmer_histogram_extra
-        Array[File?]? sort_stats_csv        = TrimAlignSort.sort_stats_csv
-        Array[File?]? sort_stats_json       = TrimAlignSort.sort_stats_json
+        Array[File?]? sorter_stats_csv        = TrimAlignSort.sorter_stats_csv_list
+        Array[File?]? sorter_stats_json       = TrimAlignSort.sorter_stats_json_list
         File? unmatched_cram                = TrimAlignSort.unmatched_cram
 
         # Fastq outputs
@@ -457,8 +436,8 @@ workflow SingleCell {
         StarSoloOutputs? star_solo_outputs = StarSoloWorkflow.outputs
 
         # STAR outputs
-        File? star_bam                    = StarAlignment.output_bam
-        File? star_reads_per_gene_file    = StarAlignment.reads_per_gene_file
-        File? star_stats                  = StarAlignment.star_stats
+        File? star_bam                    = StarAlignSubSample.output_bam
+        File? star_reads_per_gene_file    = StarAlignSubSample.reads_per_gene_file
+        File? star_stats                  = StarAlignSubSample.star_stats
     }
 }

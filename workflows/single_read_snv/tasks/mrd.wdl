@@ -22,8 +22,7 @@ task MrdDataAnalysis {
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    echo "********** Aggregating data to neat dataframes **********"
-    prepare_data_from_mrd_pipeline \
+    generate_report \
       --intersected-featuremaps ~{sep=" " intersected_featuremaps_parquet} \
       --coverage-csv ~{coverage_csv} \
       ~{true="--matched-signatures-vcf " false="" defined(matched_signatures_vcf)}~{sep=" " matched_signatures_vcf} \
@@ -31,22 +30,10 @@ task MrdDataAnalysis {
       ~{true="--db-control-signatures-vcf " false="" defined(db_signatures_vcf)}~{sep=" " db_signatures_vcf} \
       --output-dir "$PWD" \
       --output-basename "~{basename}" \
+      --signature-filter-query "~{mrd_analysis_params.signature_filter_query}" \
+      --read-filter-query "~{mrd_analysis_params.read_filter_query}" \
+      --featuremap-file "~{featuremap_df_file}"
 
-
-    echo "********** Creating MRD analysis notebook **********"
-    papermill /src/mrd/ugbio_mrd/reports/mrd_automatic_data_analysis.ipynb ~{basename}.mrd_data_analysis.ipynb \
-      -p features_file_parquet "~{basename}.features.parquet" \
-      -p signatures_file_parquet "~{basename}.signatures.parquet" \
-      -p signature_filter_query "~{mrd_analysis_params.signature_filter_query}" \
-      -p read_filter_query "~{mrd_analysis_params.read_filter_query}" \
-      -p featuremap_df_file "~{featuremap_df_file}" \
-      -p output_dir "$PWD" \
-      -p basename "~{basename}" \
-      -k python3
-
-    echo "********** Creating html version **********"
-    jupyter nbconvert ~{basename}.mrd_data_analysis.ipynb --output ~{basename}.mrd_data_analysis.html \
-      --to html --template classic --no-input
   >>>
   runtime {
     preemptible: 0
@@ -59,7 +46,6 @@ task MrdDataAnalysis {
     File monitoring_log = "monitoring.log"
     File features = "~{basename}.features.parquet"
     File signatures = "~{basename}.signatures.parquet"
-    File mrd_analysis_notebook = "~{basename}.mrd_data_analysis.ipynb"
     File mrd_analysis_html = "~{basename}.mrd_data_analysis.html"
     File tumor_fraction_h5 = "~{basename}.tumor_fraction.h5"
   }
@@ -347,7 +333,6 @@ task TrainSnvQualityRecalibrationModel {
     File test_set_mrd_simulation_dataframe = "~{basename}.test.df_mrd_simulation.parquet"
     File test_set_statistics_h5 = "~{basename}.single_read_snv.applicationQC.h5"
     File test_set_statistics_json = "~{basename}.test.statistics.json"
-    File test_report_file_notebook = "~{basename}.test_report.ipynb"
     File test_report_file_html = "~{basename}.test_report.html"
   }
 }

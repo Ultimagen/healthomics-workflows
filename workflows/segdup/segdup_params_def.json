@@ -3,10 +3,6 @@
         "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
         "optional": true
     },
-    "SegDupAnalysis.DV.annotate_systematic_errors": {
-        "description": "Should systematic errors be annotated from a database of common systematic errors",
-        "optional": true
-    },
     "SegDupAnalysis.DV.annotation_intervals": {
         "description": "List of bed files for VCF annotation",
         "optional": true
@@ -47,8 +43,8 @@
         "description": "Minimal base quality for local assembly of haplotypes",
         "optional": true
     },
-    "SegDupAnalysis.DV.filtering_blacklist_file": {
-        "description": "Database of known positions with systematic errors",
+    "SegDupAnalysis.DV.germline_vcf": {
+        "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
         "optional": true
     },
     "SegDupAnalysis.DV.hard_qual_filter": {
@@ -99,6 +95,10 @@
         "description": "Minimal snp variant quality in order to be labeled as PASS",
         "optional": true
     },
+    "SegDupAnalysis.DV.output_call_variants_tfrecords": {
+        "description": "Output tfrecords from call_variants",
+        "optional": true
+    },
     "SegDupAnalysis.DV.output_realignment": {
         "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
         "optional": true
@@ -117,10 +117,6 @@
     },
     "SegDupAnalysis.DV.scatter_intervals_break": {
         "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
-        "optional": true
-    },
-    "SegDupAnalysis.DV.sec_models": {
-        "description": "Models to annotate systematic errors",
         "optional": true
     },
     "SegDupAnalysis.DV.show_bg_fields": {
@@ -145,6 +141,10 @@
     },
     "SegDupAnalysis.DV.ug_make_examples_memory_override": {
         "description": "Memory override for make_examples step",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ug_post_processing_extra_args": {
+        "description": "Additional arguments for post-processing",
         "optional": true
     },
     "SegDupAnalysis.background_bed": {

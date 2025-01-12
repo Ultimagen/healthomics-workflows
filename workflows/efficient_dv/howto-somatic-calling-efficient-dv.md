@@ -37,9 +37,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:2.2.6
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.0.2
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:2.2.6
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.0.2
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -118,6 +118,13 @@ The `--output` argument is the prefix for the output files (including tfrecords)
 The arguments `optimal-coverages` and `cap-at-optimal-coverage` determine how reads are downsampled for the image (the image contains 95 reads from each sample). The same values are used in the training of the model and the inference. Hence, their values are tightly linked to which model is used.
 
 The program will output a sam file with the re-aligned reads unless the argument `--no-realigned-sam` is provided. Note that these files are very large, so provide a large disk space if you want to save the re-aligned reads.
+
+#### Running somatic-on-germline
+In somatic variant calling, complex somatic variants near germline variants can pose challenges during read alignment and variant calling. To address this, it can be beneficial to "correct" the reference genome by incorporating germline variants during the read-alignment step of `make_examples`. This simplifies the generated image and improves the accuracy of likelihood calculations during `call_variants`.
+
+To enable this, you can provide a germline VCF to the workflow using the `--region-haplotypes-vcf` argument. This VCF can be generated through a separate germline variant-calling workflow on the normal sample.
+
+It’s important to note that using `--region-haplotypes-vcf` influences only the likelihood computations for the variant calls. The REF and ALT fields in the output VCF remain unchanged.
 
 ### Running call_variants
 

@@ -32,7 +32,6 @@
             "MIXED",
             "MINUS",
             "PLUS",
-            "END_UNREACHED",
             "UNDETERMINED"
         ],
         "strand_ratio_category_end": [

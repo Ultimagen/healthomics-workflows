@@ -25,8 +25,6 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
-    "EfficientDV.filtering_blacklist_file": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/hapmap2.1_wgs.v0.6.2.blacklist.bed",
-    "EfficientDV.sec_models": [],
     "EfficientDV.background_cram_files": [
         "<normal_bam_file>.cram"
     ],
@@ -35,7 +33,7 @@
     ],
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/v1.2.3/deepvariant-ultima-somatic-wgs-model-v1.2.3.ckpt-2980000.batch1000.onnx",
     "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/v1.2.3/deepvariant-ultima-somatic-wgs-model-v1.2.3.ckpt-2980000.batch1000.onnx.serialized.a10g",
-    "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic --single-strand-filter",
+    "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic --single-strand-filter --haps-sw-params 10,-128,-15,-30,-5 --bsnv-detection --keep-duplicates",
     "EfficientDV.min_fraction_hmer_indels": 1.1,
     "EfficientDV.min_fraction_non_hmer_indels": 1.1,
     "EfficientDV.min_fraction_snps": 0.075,

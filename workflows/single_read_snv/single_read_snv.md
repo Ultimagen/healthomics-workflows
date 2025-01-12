@@ -166,11 +166,6 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <i>File?</i><br />
         ML model training set FP regions bed file
 </p>
-<p name="SingleReadSNV.test_report_file_notebook">
-        <b>SingleReadSNV.test_report_file_notebook</b><br />
-        <i>File?</i><br />
-        ML model test set report notebook file
-</p>
 
 <hr />
 

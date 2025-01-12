@@ -16,6 +16,8 @@ task UGMakeExamples{
     Array[File] background_cram_files
     Array[File] background_cram_index_files
 
+    File? germline_vcf
+
     Int min_base_quality
     Int pileup_min_mapping_quality
     Int min_read_count_snps
@@ -33,8 +35,9 @@ task UGMakeExamples{
     Array[Int] optimal_coverages
     Boolean cap_at_optimal_coverage
     Boolean output_realignment = false
-    String? ug_make_examples_extra_args
+    String? extra_args
     Boolean log_progress = false
+    Boolean count_candidates_with_dvtools = false
 
     String docker
     File monitoring_script
@@ -204,8 +207,9 @@ task UGMakeExamples{
         ~{true="--prioritize-alt-supporting-reads " false="" prioritize_alt_supporting_reads} \
         --cycle-examples-min 100000 \
         --prefix-logging-with "${part_number}>> " \
-        ~{ug_make_examples_extra_args} \
+        ~{extra_args} \
         ~{true="--progress" false="" log_progress} \
+        ~{if defined(germline_vcf) then "--region-haplotypes-vcf ~{germline_vcf}" else ""} \
          &
         
       # Save the PID of the process
@@ -239,6 +243,15 @@ task UGMakeExamples{
     touch "~{output_prefix}_realign.cram.crai"
 
   ls -lh *tfrecord*
+
+  if [ ~{count_candidates_with_dvtools} == "true" ]
+  then
+    for tfrec in $(ls *tfrecord* | sort); do
+      dvtools --infile $tfrec --filetype dv --op vcf --outfile $tfrec.vcf
+      echo "$prefix: $(wc -l < "$tfrec.vcf")"
+      rm $tfrec.vcf
+    done
+  fi
 
   >>>
   runtime {
@@ -321,6 +334,9 @@ task UGCallVariants{
 
     call_variants --param params.ini --fp16
 
+    num_candidates=$(grep -oP 'total batch size \K\d+(?= vectors)' call_variants*.log)
+    echo "$num_candidates" > num_candidates_${num_candidates}
+
   >>>
   runtime {
     memory: "~{mem} GB"
@@ -338,6 +354,7 @@ output {
     File params = "params.ini"
     Array[File] log = glob('call_variants*.log')
     Array[File] output_records = glob('call_variants*.gz')
+    Array[File] num_candidates = glob("num_candidates_*")
     # File output_model_serialized = " ~{onnx_base_name}.serialized" uncomment to output the serilized model (need also to uncomment output_model_serialized in efficient_dv.wdl outputs)
   }
 }
@@ -362,6 +379,7 @@ task UGPostProcessing{
     Int min_variant_quality_non_hmer_indels
     Int min_variant_quality_snps
     Boolean show_bg_fields
+    String extra_args = ""
 
     File monitoring_script
 
@@ -415,7 +433,8 @@ task UGPostProcessing{
         --filter \
         --filters_file filters.txt \
         --dbsnp ~{dbsnp} \
-        ~{if show_bg_fields then "--consider_bg_fields" else ""}
+        ~{if show_bg_fields then "--consider_bg_fields" else ""} \
+        ~{extra_args}
 
       bcftools index -t "~{output_prefix}.vcf.gz"
       if [ ~{make_gvcf} == "true" ]

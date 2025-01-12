@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.15.6" # !UnusedDeclaration
+        String pipeline_version = "1.16.2" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -49,7 +49,7 @@ workflow SVPipeline {
         Array[File] input_tumor_crams = []
         Array[File] input_tumor_crams_indexes = []
         References references
-        UaReferences ua_references
+        UaParameters ua_references
         File wgs_calling_interval_list
         Int min_base
         Int min_mapq
@@ -141,7 +141,8 @@ workflow SVPipeline {
             "AnnotateVariants.tumor_metrics",
             "AnnotateVariants.assembly_metrics",
             "AnnotateVariants.cpu_override",
-            "AnnotateVariants.memory_override"
+            "AnnotateVariants.memory_override",
+            "AlignWithUA.memory_gb"
             ]}
     }
     parameter_meta {
@@ -176,7 +177,7 @@ workflow SVPipeline {
         category: "required"
         }
         ua_references: {
-        type: "UaReferences",
+        type: "UaParameters",
         help: "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
         category: "required"
         }

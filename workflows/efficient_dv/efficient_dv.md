@@ -162,6 +162,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Boolean </i> &mdash; 
          Cause make_examples to output detailed progress information (for debugging) <br /> 
 </p>
+<p name="EfficientDV.germline_vcf">
+        <b>EfficientDV.germline_vcf</b><br />
+        <i>File? </i> &mdash; 
+         Germline vcf file in order to generate haplotypes that incorporate germline variants <br /> 
+</p>
+<p name="EfficientDV.output_call_variants_tfrecords">
+        <b>EfficientDV.output_call_variants_tfrecords</b><br />
+        <i>Boolean </i> &mdash; 
+         Output tfrecords from call_variants <br /> 
+</p>
 <p name="EfficientDV.min_variant_quality_hmer_indels">
         <b>EfficientDV.min_variant_quality_hmer_indels</b><br />
         <i>Int </i> &mdash; 
@@ -197,10 +207,10 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Boolean </i> &mdash; 
          Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling) <br /> 
 </p>
-<p name="EfficientDV.annotate_systematic_errors">
-        <b>EfficientDV.annotate_systematic_errors</b><br />
-        <i>Boolean </i> &mdash; 
-         Should systematic errors be annotated from a database of common systematic errors <br /> 
+<p name="EfficientDV.ug_post_processing_extra_args">
+        <b>EfficientDV.ug_post_processing_extra_args</b><br />
+        <i>String </i> &mdash; 
+         Additional arguments for post-processing <br /> 
 </p>
 <p name="EfficientDV.input_flow_order">
         <b>EfficientDV.input_flow_order</b><br />
@@ -253,13 +263,13 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>File</i><br />
         Nvidia System Management (nvidia-smi) log
 </p>
-<p name="EfficientDV.vcf_file">
-        <b>EfficientDV.vcf_file</b><br />
+<p name="EfficientDV.output_vcf">
+        <b>EfficientDV.output_vcf</b><br />
         <i>File</i><br />
         Called variants in vcf format
 </p>
-<p name="EfficientDV.vcf_index">
-        <b>EfficientDV.vcf_index</b><br />
+<p name="EfficientDV.output_vcf_index">
+        <b>EfficientDV.output_vcf_index</b><br />
         <i>File</i><br />
         vcf index
 </p>
@@ -272,6 +282,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.vcf_no_ref_calls_index</b><br />
         <i>File</i><br />
         vcf without references calls index
+</p>
+<p name="EfficientDV.call_variants_output_tfrecords">
+        <b>EfficientDV.call_variants_output_tfrecords</b><br />
+        <i>Array[File]?</i><br />
+        The tfrecords that call_variants outputs
 </p>
 <p name="EfficientDV.output_gvcf">
         <b>EfficientDV.output_gvcf</b><br />
@@ -317,6 +332,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.qc_metrics_h5</b><br />
         <i>File</i><br />
         QC stats in specific format for UGDV workflow
+</p>
+<p name="EfficientDV.num_candidates">
+        <b>EfficientDV.num_candidates</b><br />
+        <i>Array[File]</i><br />
+        Number of candidates that call_variants processed
 </p>
 
 <hr />

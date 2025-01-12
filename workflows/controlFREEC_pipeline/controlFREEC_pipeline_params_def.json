@@ -127,6 +127,10 @@
         "description": "Shards for scatter-interval-list",
         "optional": false
     },
+    "SomaticCNVCallingControlFREEC.output_all_controlFREEC_outputs_override": {
+        "description": "Whether to output all original controlFREEC outputs",
+        "optional": true
+    },
     "SomaticCNVCallingControlFREEC.ploidy": {
         "description": "Average sample ploidy (if known)",
         "optional": true

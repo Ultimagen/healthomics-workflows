@@ -108,7 +108,7 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
 </p>
 <p name="SingleCell.TrimAlignSort.ua_parameters">
         <b>SingleCell.TrimAlignSort.ua_parameters</b><br />
-        <i>UaReferences? </i> &mdash; 
+        <i>UaParameters? </i> &mdash; 
          Parameters for the UA aligner. Mandatory if aligner is ua. <br /> 
 </p>
 <p name="SingleCell.TrimAlignSort.ua_meth_parameters">
@@ -177,13 +177,13 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>Array[File?]?</i><br />
         Trimmer extra histograms
 </p>
-<p name="SingleCell.sort_stats_csv">
-        <b>SingleCell.sort_stats_csv</b><br />
+<p name="SingleCell.sorter_stats_csv">
+        <b>SingleCell.sorter_stats_csv</b><br />
         <i>Array[File?]?</i><br />
         Sorter statistics csv
 </p>
-<p name="SingleCell.sort_stats_json">
-        <b>SingleCell.sort_stats_json</b><br />
+<p name="SingleCell.sorter_stats_json">
+        <b>SingleCell.sorter_stats_json</b><br />
         <i>Array[File?]?</i><br />
         Sorter statistics json
 </p>

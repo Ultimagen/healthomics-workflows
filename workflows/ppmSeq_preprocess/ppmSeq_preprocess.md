@@ -28,7 +28,7 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
 </p>
 <p name="ppmSeqPreprocess.ua_parameters">
         <b>ppmSeqPreprocess.ua_parameters</b><br />
-        <i>UaReferences </i> &mdash; 
+        <i>UaParameters </i> &mdash; 
          UA alignment parameters <br /> 
 </p>
 <p name="ppmSeqPreprocess.sorter_params">
@@ -89,6 +89,51 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
 
 
 ## Outputs
+<p name="ppmSeqPreprocess.output_cram_bam">
+        <b>ppmSeqPreprocess.output_cram_bam</b><br />
+        <i>File</i><br />
+        Output CRAM or BAM file, trimmed aligned and sorted
+</p>
+<p name="ppmSeqPreprocess.output_cram_bam_index">
+        <b>ppmSeqPreprocess.output_cram_bam_index</b><br />
+        <i>File</i><br />
+        Output CRAM or BAM index file
+</p>
+<p name="ppmSeqPreprocess.sorter_stats_csv">
+        <b>ppmSeqPreprocess.sorter_stats_csv</b><br />
+        <i>File</i><br />
+        Sorter stats csv output
+</p>
+<p name="ppmSeqPreprocess.sorter_stats_json">
+        <b>ppmSeqPreprocess.sorter_stats_json</b><br />
+        <i>File</i><br />
+        Sorter stats json output
+</p>
+<p name="ppmSeqPreprocess.unmatched_cram">
+        <b>ppmSeqPreprocess.unmatched_cram</b><br />
+        <i>File?</i><br />
+        Unmatched cram file output from sorter (if defined).
+</p>
+<p name="ppmSeqPreprocess.unmatched_sorter_stats_csv">
+        <b>ppmSeqPreprocess.unmatched_sorter_stats_csv</b><br />
+        <i>File?</i><br />
+        Unmatched output cram files sorter stats in csv format (if defined).
+</p>
+<p name="ppmSeqPreprocess.unmatched_sorter_stats_json">
+        <b>ppmSeqPreprocess.unmatched_sorter_stats_json</b><br />
+        <i>File?</i><br />
+        Unmatched output cram files sorter stats in json format (if defined).
+</p>
+<p name="ppmSeqPreprocess.bedgraph_mapq0">
+        <b>ppmSeqPreprocess.bedgraph_mapq0</b><br />
+        <i>File?</i><br />
+        Bedgraph mapq0 file.
+</p>
+<p name="ppmSeqPreprocess.bedgraph_mapq1">
+        <b>ppmSeqPreprocess.bedgraph_mapq1</b><br />
+        <i>File?</i><br />
+        Bedgraph mapq1 file.
+</p>
 <p name="ppmSeqPreprocess.report_html">
         <b>ppmSeqPreprocess.report_html</b><br />
         <i>File</i><br />

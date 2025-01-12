@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.15.6"
+  String pipeline_version = "1.16.2"
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -317,7 +317,7 @@ parameter_meta {
   call UGGeneralTasks.GetMeanCoverageFromSorterStats as GetMeanCoverageFromSorterStats {
     input:
       sorter_json_stats_file = sorter_json_stats_file,
-      docker = global.ug_vc_docker,
+      docker = global.ugbio_srsnv_docker,
       preemptible_tries = preemptibles,
       monitoring_script = monitoring_script,  #!FileCoercion
   }
@@ -361,7 +361,7 @@ parameter_meta {
         min_coverage =            20,
         memory_gb =               2,
         cpus =                    1,
-        docker =                  global.ugbio_featuremap_docker,
+        docker =                  global.ugbio_srsnv_docker,
         preemptibles =            preemptibles,
         monitoring_script =       monitoring_script,  #!FileCoercion
     }
@@ -442,8 +442,6 @@ parameter_meta {
 
     File? tp_training_regions_bed = CreateTpTrainingRegionsBed.merged_bed
     File? fp_training_regions_bed =  CreateFpTrainingRegionsBed.merged_bed
-
-    File? test_report_file_notebook =  TrainSnvQualityRecalibrationModel.test_report_file_notebook
    }
 }
 

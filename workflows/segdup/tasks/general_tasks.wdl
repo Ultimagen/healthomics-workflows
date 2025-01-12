@@ -146,10 +146,8 @@ task AggregateMetricsAndConvertToJson {
     command <<<
     set -eo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
 
-    collect_existing_metrics.py \
+    collect_existing_metrics \
         ~{true="--metric_files " false="" defined(picard_files)} ~{ sep=' ' picard_files} \
         ~{"--coverage_h5 " + coverage_all_h5} \
         ~{"--short_report_h5 " + short_report_h5} \
@@ -157,7 +155,7 @@ task AggregateMetricsAndConvertToJson {
         ~{"--no_gt_report_h5 " + no_gt_report_h5} \
         ~{"--contamination_stdout " + contamination_stdout} \
         --output_h5 ~{base_file_name}.aggregated_metrics.h5
-    convert_h5_to_json.py \
+    convert_h5_to_json \
             --root_element "metrics" \
             --ignored_h5_key_substring histogram \
             --input_h5 ~{base_file_name}.aggregated_metrics.h5 \
@@ -182,7 +180,7 @@ task AggregateMetricsAndConvertToJson {
 task ConvertSorterStatsToH5 {
     input {
         File monitoring_script
-        String base_file_name
+        Int? file_name_suffix
 
         # runtime arguments
         Int disk_size = 20
@@ -193,28 +191,27 @@ task ConvertSorterStatsToH5 {
         # sorter_to_h5 args
         File input_csv_file
         File input_json_file
-        String metric_mapping_file = "/VariantCalling/ugvc/reports/sorter_output_to_aggregated_metrics_h5.csv"
     }
     
-    String basename = basename(input_csv_file, ".csv")
+    String input_basename = basename(input_csv_file, ".csv")
+    String suffix = if defined(file_name_suffix) then ".~{file_name_suffix}" else ""
+    String aggregated_metrics_h5_file = "~{input_basename}~{suffix}.aggregated_metrics.h5"
+    String aggregated_metrics_json_file = "~{input_basename}~{suffix}.aggregated_metrics.json"
     
     command <<<
-        set -eo pipefail
-        source ~/.bashrc
-        conda activate genomics.py3
+        set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        python /VariantCalling/ugvc sorter_to_h5 \
-            --input_csv_file ~{input_csv_file} \
-            --input_json_file ~{input_json_file} \
-            --metric_mapping_file ~{metric_mapping_file} \
-            --output_dir .
+        sorter_to_h5 \
+            --input_csv_file "~{input_csv_file}" \
+            --input_json_file "~{input_json_file}" \
+            --output_h5_file "~{aggregated_metrics_h5_file}"
 
-        convert_h5_to_json.py \
+        convert_h5_to_json \
             --root_element "metrics" \
             --ignored_h5_key_substring histogram \
-            --input_h5 ~{basename}.aggregated_metrics.h5 \
-            --output_json ~{base_file_name}.aggregated_metrics.json
+            --input_h5 "~{aggregated_metrics_h5_file}" \
+            --output_json "~{aggregated_metrics_json_file}"
 
     >>>
     runtime {
@@ -227,8 +224,8 @@ task ConvertSorterStatsToH5 {
     }
     output {
         File monitoring_log = "monitoring.log"
-        File aggregated_metrics_h5 = "~{basename}.aggregated_metrics.h5"
-        File aggregated_metrics_json = "~{base_file_name}.aggregated_metrics.json"
+        File aggregated_metrics_h5 = "~{aggregated_metrics_h5_file}"
+        File aggregated_metrics_json = "~{aggregated_metrics_json_file}"
     }
 }
 
@@ -932,10 +929,8 @@ task GetMeanCoverageFromSorterStats {
     command <<<
         set -eo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        source ~/.bashrc
-        conda activate genomics.py3
 
-        python /VariantCalling/ugvc sorter_stats_to_mean_coverage \
+        sorter_stats_to_mean_coverage \
             --sorter-stats-json "~{sorter_json_stats_file}" \
             --output-file "~{output_file}"
 

@@ -25,7 +25,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.15.6" # !UnusedDeclaration
+        String pipeline_version = "1.16.2" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -61,8 +61,9 @@ workflow SegDupAnalysis {
             exclude: ["pipeline_version",
             "Globals.glob",
             "DV.FilterVCF.ref_fasta",
-            "DV.FilterVCF.ref_fasta_idx"
-]
+            "DV.FilterVCF.ref_fasta_idx",
+            "DV.UGMakeExamples.count_candidates_with_dvtools"
+            ]
         }
     }
     parameter_meta{
@@ -246,8 +247,8 @@ workflow SegDupAnalysis {
         File remap_bam_index = PoolReads.remap_cram_index
         File acnv_calls = CallCNV.acnv_calls
         File acnv_calls_index = CallCNV.acnv_calls_index
-        File small_variants = DV.vcf_file
-        File small_variants_idx = DV.vcf_index
+        File small_variants = DV.output_vcf
+        File small_variants_idx = DV.output_vcf_index
     }
 
 }

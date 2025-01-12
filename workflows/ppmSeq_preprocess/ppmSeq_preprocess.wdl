@@ -32,7 +32,7 @@ import "tasks/globals.wdl" as Globals
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.15.6" # !UnusedDeclaration
+    String pipeline_version = "1.16.2" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -49,7 +49,7 @@ workflow ppmSeqPreprocess {
     TrimmerParameters trimmer_parameters
 
     # alignment parameters
-    UaReferences ua_parameters
+    UaParameters ua_parameters
     
     # sorter parameters (for marking duplicates)
     SorterParams sorter_params
@@ -113,10 +113,7 @@ workflow ppmSeqPreprocess {
             "trimmer_histogram_extra",
             "trimmer_stats",
             "trimmer_failure_codes_csv",
-            "sort_cram",
-            "sort_cram_index",
-            "sort_stats_csv",
-            "sort_stats_json"
+            "Demux.mapq_override"
         ]}
   }
 
@@ -163,7 +160,7 @@ workflow ppmSeqPreprocess {
     }
     ua_parameters: {
       help: "UA alignment parameters",
-      type: "UaReferences",
+      type: "UaParameters",
       category: "param_required"
     }
     sorter_params: {
@@ -186,12 +183,12 @@ workflow ppmSeqPreprocess {
       type: "File",
       category: "output"
     }
-    sort_stats_csv_out: {
+    sorter_stats_csv: {
       help: "Sorter stats csv output",
       type: "File",
       category: "output"
     }
-    sort_stats_json_out: {
+    sorter_stats_json: {
       help: "Sorter stats json output",
       type: "File",
       category: "output"
@@ -203,6 +200,31 @@ workflow ppmSeqPreprocess {
     }
     output_cram_bam_index: {
       help: "Output CRAM or BAM index file",
+      type: "File",
+      category: "output"
+    }
+    unmatched_cram: {
+      help: "Unmatched cram file output from sorter (if defined).",
+      type: "File",
+      category: "output"
+    }
+    unmatched_sorter_stats_csv: {
+      help: "Unmatched output cram files sorter stats in csv format (if defined).",
+      type: "File",
+      category: "output"
+    }
+    unmatched_sorter_stats_json: {
+        help: "Unmatched output cram files sorter stats in json format (if defined).",
+        type: "File",
+        category: "output"
+    }
+    bedgraph_mapq0: {
+      help: "Bedgraph mapq0 file.",
+      type: "File",
+      category: "output"
+    }
+    bedgraph_mapq1: {
+      help: "Bedgraph mapq1 file.",
       type: "File",
       category: "output"
     }
@@ -251,10 +273,8 @@ workflow ppmSeqPreprocess {
     File trimmer_histogram_csv_extra_out = select_all(trimmer_histogram_csv_extra_out_arr)[0]  # convert Array[File?]? to File
   }
   File trimmer_failure_codes = select_first([TrimAlignSort.trimmer_failure_codes_csv])
-  File sort_stats_csv_out = select_first([select_first([TrimAlignSort.sort_stats_csv])[0]]) # convert Array[File?]? to File
-  File sort_stats_json_out = select_first([select_first([TrimAlignSort.sort_stats_json])[0]]) # convert Array[File?]? to File
-  File output_cram_bam = TrimAlignSort.output_cram_bam
-  File output_cram_bam_index = select_first([TrimAlignSort.output_cram_bam_index])
+  File sorter_stats_csv_out = select_first([TrimAlignSort.sorter_stats_csv])
+  File sorter_stats_json_out = select_first([TrimAlignSort.sorter_stats_json])
 
   call ppmSeqTasks.ppmSeqQC as ppmSeqQC {
     input:
@@ -262,8 +282,8 @@ workflow ppmSeqPreprocess {
         trimmer_histogram_csv =               trimmer_histogram_csv_out,
         trimmer_histogram_extra_csv =         trimmer_histogram_csv_extra_out,
         trimmer_failure_codes_csv =           trimmer_failure_codes,
-        sorter_stats_csv =                    sort_stats_csv_out,
-        sorter_stats_json =                   sort_stats_json_out,
+        sorter_stats_csv =                    sorter_stats_csv_out,
+        sorter_stats_json =                   sorter_stats_json_out,
         base_file_name =                      base_file_name,
         ppmSeq_analysis_extra_args = ppmSeq_analysis_extra_args,
         docker =                              global.ugbio_ppmseq_docker,
@@ -276,10 +296,15 @@ output {
         File trimmer_stats              = select_first([TrimAlignSort.trimmer_stats])
         File trimmer_failure_codes_csv  = trimmer_failure_codes
 
-        File sort_cram                  = output_cram_bam
-        File sort_cram_index            = output_cram_bam_index
-        File sort_stats_csv             = sort_stats_csv_out
-        File sort_stats_json            = sort_stats_json_out
+        File output_cram_bam                = select_first([TrimAlignSort.output_cram_bam])
+        File output_cram_bam_index          = select_first([TrimAlignSort.output_cram_bam_index])
+        File sorter_stats_csv               = sorter_stats_csv_out
+        File sorter_stats_json              = sorter_stats_json_out
+        File? unmatched_cram                = TrimAlignSort.unmatched_cram
+        File? unmatched_sorter_stats_csv    = TrimAlignSort.unmatched_sorter_stats_csv
+        File? unmatched_sorter_stats_json   = TrimAlignSort.unmatched_sorter_stats_json
+        File? bedgraph_mapq0                = TrimAlignSort.bedgraph_mapq0
+        File? bedgraph_mapq1                = TrimAlignSort.bedgraph_mapq1
 
         File report_html                = ppmSeqQC.report_html 
         File aggregated_metrics_h5      = ppmSeqQC.aggregated_metrics_h5

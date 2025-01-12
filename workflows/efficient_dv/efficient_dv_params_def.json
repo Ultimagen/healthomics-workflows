@@ -3,10 +3,6 @@
         "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
         "optional": true
     },
-    "EfficientDV.annotate_systematic_errors": {
-        "description": "Should systematic errors be annotated from a database of common systematic errors",
-        "optional": true
-    },
     "EfficientDV.annotation_intervals": {
         "description": "List of bed files for VCF annotation",
         "optional": true
@@ -75,8 +71,8 @@
         "description": "A bed file with exome intervals",
         "optional": false
     },
-    "EfficientDV.filtering_blacklist_file": {
-        "description": "Database of known positions with systematic errors",
+    "EfficientDV.germline_vcf": {
+        "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
         "optional": true
     },
     "EfficientDV.hard_qual_filter": {
@@ -167,6 +163,10 @@
         "description": "Each sample is downsampled to the \"optimal coverage\" (dictated by the coverage of the training set). Downsampling method is determined by cap_at_optimal_coverage.",
         "optional": false
     },
+    "EfficientDV.output_call_variants_tfrecords": {
+        "description": "Output tfrecords from call_variants",
+        "optional": true
+    },
     "EfficientDV.output_realignment": {
         "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
         "optional": true
@@ -203,10 +203,6 @@
         "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
         "optional": true
     },
-    "EfficientDV.sec_models": {
-        "description": "Models to annotate systematic errors",
-        "optional": true
-    },
     "EfficientDV.show_bg_fields": {
         "description": "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
         "optional": true
@@ -229,6 +225,10 @@
     },
     "EfficientDV.ug_make_examples_memory_override": {
         "description": "Memory override for make_examples step",
+        "optional": true
+    },
+    "EfficientDV.ug_post_processing_extra_args": {
+        "description": "Additional arguments for post-processing",
         "optional": true
     }
 }

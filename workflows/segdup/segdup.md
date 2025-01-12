@@ -148,6 +148,16 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Boolean </i> &mdash; 
          Cause make_examples to output detailed progress information (for debugging) <br /> 
 </p>
+<p name="SegDupAnalysis.DV.germline_vcf">
+        <b>SegDupAnalysis.DV.germline_vcf</b><br />
+        <i>File? </i> &mdash; 
+         Germline vcf file in order to generate haplotypes that incorporate germline variants <br /> 
+</p>
+<p name="SegDupAnalysis.DV.output_call_variants_tfrecords">
+        <b>SegDupAnalysis.DV.output_call_variants_tfrecords</b><br />
+        <i>Boolean </i> &mdash; 
+         Output tfrecords from call_variants <br /> 
+</p>
 <p name="SegDupAnalysis.DV.min_variant_quality_hmer_indels">
         <b>SegDupAnalysis.DV.min_variant_quality_hmer_indels</b><br />
         <i>Int </i> &mdash; 
@@ -178,10 +188,10 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Boolean </i> &mdash; 
          Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling) <br /> 
 </p>
-<p name="SegDupAnalysis.DV.annotate_systematic_errors">
-        <b>SegDupAnalysis.DV.annotate_systematic_errors</b><br />
-        <i>Boolean </i> &mdash; 
-         Should systematic errors be annotated from a database of common systematic errors <br /> 
+<p name="SegDupAnalysis.DV.ug_post_processing_extra_args">
+        <b>SegDupAnalysis.DV.ug_post_processing_extra_args</b><br />
+        <i>String </i> &mdash; 
+         Additional arguments for post-processing <br /> 
 </p>
 <p name="SegDupAnalysis.DV.input_flow_order">
         <b>SegDupAnalysis.DV.input_flow_order</b><br />

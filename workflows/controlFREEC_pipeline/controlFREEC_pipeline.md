@@ -182,6 +182,11 @@ The pipeline outputs:
         <i>File? </i> &mdash; 
          Gem file holding mappablity biased regions.  <br /> 
 </p>
+<p name="SomaticCNVCallingControlFREEC.output_all_controlFREEC_outputs_override">
+        <b>SomaticCNVCallingControlFREEC.output_all_controlFREEC_outputs_override</b><br />
+        <i>Boolean? </i> &mdash; 
+         Whether to output all original controlFREEC outputs <br /> 
+</p>
 <p name="SomaticCNVCallingControlFREEC.preemptible_tries_override">
         <b>SomaticCNVCallingControlFREEC.preemptible_tries_override</b><br />
         <i>Int? </i> &mdash; 
@@ -270,6 +275,41 @@ The pipeline outputs:
         <b>SomaticCNVCallingControlFREEC.neutral_AF_bed</b><br />
         <i>File</i><br />
         Neutral allele frequency bed file
+</p>
+<p name="SomaticCNVCallingControlFREEC.FREEC_normal_BAF">
+        <b>SomaticCNVCallingControlFREEC.FREEC_normal_BAF</b><br />
+        <i>File?</i><br />
+        controlFREEC BAF for normal sample
+</p>
+<p name="SomaticCNVCallingControlFREEC.FREEC_tumor_BAF">
+        <b>SomaticCNVCallingControlFREEC.FREEC_tumor_BAF</b><br />
+        <i>File?</i><br />
+        controlFREEC BAF for tumor sample
+</p>
+<p name="SomaticCNVCallingControlFREEC.FREEC_tumor_CNVs">
+        <b>SomaticCNVCallingControlFREEC.FREEC_tumor_CNVs</b><br />
+        <i>File?</i><br />
+        controlFREEC predicted copy number alterations for tumor sample
+</p>
+<p name="SomaticCNVCallingControlFREEC.FREEC_normal_CNVs">
+        <b>SomaticCNVCallingControlFREEC.FREEC_normal_CNVs</b><br />
+        <i>File?</i><br />
+        controlFREEC predicted copy number alterations for normal sample
+</p>
+<p name="SomaticCNVCallingControlFREEC.FREEC_noraml_ratio_bedgraph">
+        <b>SomaticCNVCallingControlFREEC.FREEC_noraml_ratio_bedgraph</b><br />
+        <i>File?</i><br />
+        controlFREEC ratios in BedGraph format for normal sample
+</p>
+<p name="SomaticCNVCallingControlFREEC.FREEC_normal_ratio">
+        <b>SomaticCNVCallingControlFREEC.FREEC_normal_ratio</b><br />
+        <i>File?</i><br />
+        controlFREEC ratios for normal sample
+</p>
+<p name="SomaticCNVCallingControlFREEC.FREEC_tumor_ratio">
+        <b>SomaticCNVCallingControlFREEC.FREEC_tumor_ratio</b><br />
+        <i>File?</i><br />
+        controlFREEC ratios for tumor sample
 </p>
 
 <hr />

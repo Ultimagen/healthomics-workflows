@@ -493,12 +493,12 @@ task AlignWithUA {
         Boolean no_address
         String ua_docker
         Int cpu = 40
+        Int memory_gb = ceil(size(ua_index, "GB")) + 10
     }
 
     Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
     command <<<
-    set -eo pipefail
-    set -x
+    set -exuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     echo "~{sep='\n'input_bams}" > bam_list.txt
 
@@ -518,7 +518,7 @@ task AlignWithUA {
         --progress \
         --tp reference \
         --alt=~{ref_alt} \
-        --json=~{output_bam_basename}.%s.json \
+        --stat=~{output_bam_basename}.%s.json \
         --nthread max \
         ~{"--vcf="+ v_aware_vcf}  \
         ~{true="--vcf-snps-only --vcf-af-threshold=0.01" false='' use_v_aware_alignment} \
@@ -531,7 +531,7 @@ task AlignWithUA {
     runtime {
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries_final
-        memory: "100 GB"
+        memory: "~{memory_gb} GiB"
         cpu: "~{cpu}"
         disks: "local-disk " + disk_size + " HDD"
         docker: ua_docker
@@ -862,6 +862,7 @@ task ConvertToCram {
         String output_basename
         Int preemptible_tries
         String docker
+        String cloud_provider = "gcp"
         File monitoring_script
     }
 
@@ -879,10 +880,12 @@ task ConvertToCram {
         tee ~{output_basename}.cram | \
         md5sum | awk '{print $1}' > ~{output_basename}.cram.md5
 
-        # Create REF_CACHE. Used when indexing a CRAM
-        seq_cache_populate.pl -root ./ref/cache ~{references.ref_fasta}
-        export REF_PATH=:
-        export REF_CACHE=./ref/cache/%2s/%2s/%s
+        if [[ "~{cloud_provider}" != "aws" ]]; then
+            # Create REF_CACHE. Used when indexing a CRAM
+            seq_cache_populate.pl -root ./ref/cache ~{references.ref_fasta}
+            export REF_PATH=:
+            export REF_CACHE=./ref/cache/%2s/%2s/%s
+        fi
 
         samtools index ~{output_basename}.cram
     >>>
@@ -956,7 +959,7 @@ task ValidateSamFile {
 # Run STAR alignment. Since it is fast, we can run on all chunks together
 task StarAlign {
   input {
-    Array[File] input_bams
+    Array[File] input_bams_or_fastqs
     String base_file_name
     File genome
 
@@ -966,13 +969,13 @@ task StarAlign {
     Int cpu
     Int memory_gb = 64
     File monitoring_script
-    Int disk_size = ceil(3*size(input_bams, "GB") + 3*size(genome, "GB") + 20 )
+    Int disk_size = ceil(3*size(input_bams_or_fastqs, "GB") + 3*size(genome, "GB") + 20 )
     Int preemptible_tries
     Boolean no_address
     String docker
     }
     String genome_dir = "genome_dir"
-    File first_input = input_bams[0]
+    File first_input = input_bams_or_fastqs[0]
 
     command <<<
         set -eo pipefail
@@ -991,7 +994,7 @@ task StarAlign {
         fi
 
         STAR \
-            --readFilesIn ~{sep=',' input_bams} \
+            --readFilesIn ~{sep=',' input_bams_or_fastqs} \
             $readCommand \
             --genomeDir ~{genome_dir} \
             --runThreadN ~{cpu} \

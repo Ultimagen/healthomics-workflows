@@ -25,7 +25,7 @@ workflow UAAlignment {
     input {
         Array[File] input_files
         String base_file_name
-        UaReferences ua_parameters
+        UaParameters ua_parameters
         References? references
         File cache_tarball
         Boolean no_address
@@ -64,6 +64,8 @@ workflow UAAlignment {
             monitoring_script       = global.monitoring_script, # !FileCoercion
             preemptible_tries       = preemptible_tries,
             ua_docker               = global.ua_docker,
+            cpu                     = ua_parameters.cpus,
+            memory_gb               = ua_parameters.memory_gb,
     }
     output {
         Array[File] ua_output_json = AlignWithUA.ua_output_json

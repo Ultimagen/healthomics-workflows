@@ -53,7 +53,7 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 </p>
 <p name="TrimAlignSort.ua_parameters">
         <b>TrimAlignSort.ua_parameters</b><br />
-        <i>UaReferences? </i> &mdash; 
+        <i>UaParameters? </i> &mdash; 
          Parameters for the UA aligner. Mandatory if aligner is ua. <br /> 
 </p>
 <p name="TrimAlignSort.ua_meth_parameters">
@@ -92,13 +92,53 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 ## Outputs
 <p name="TrimAlignSort.output_cram_bam">
         <b>TrimAlignSort.output_cram_bam</b><br />
-        <i>File</i><br />
+        <i>File?</i><br />
         Output file after the pipeline is executed.
 </p>
 <p name="TrimAlignSort.output_cram_bam_index">
         <b>TrimAlignSort.output_cram_bam_index</b><br />
         <i>File?</i><br />
         Index file for the output cram file.
+</p>
+<p name="TrimAlignSort.fastq_file">
+        <b>TrimAlignSort.fastq_file</b><br />
+        <i>File?</i><br />
+        Sorter output in Fastq format.
+</p>
+<p name="TrimAlignSort.sorter_stats_csv">
+        <b>TrimAlignSort.sorter_stats_csv</b><br />
+        <i>File?</i><br />
+        Sorter stats in csv format.
+</p>
+<p name="TrimAlignSort.sorter_stats_json">
+        <b>TrimAlignSort.sorter_stats_json</b><br />
+        <i>File?</i><br />
+        Sorter stats in json format.
+</p>
+<p name="TrimAlignSort.unmatched_cram">
+        <b>TrimAlignSort.unmatched_cram</b><br />
+        <i>File?</i><br />
+        Unmatched cram file output from sorter (if defined).
+</p>
+<p name="TrimAlignSort.unmatched_sorter_stats_csv">
+        <b>TrimAlignSort.unmatched_sorter_stats_csv</b><br />
+        <i>File?</i><br />
+        Unmatched output cram files sorter stats in csv format (if defined).
+</p>
+<p name="TrimAlignSort.unmatched_sorter_stats_json">
+        <b>TrimAlignSort.unmatched_sorter_stats_json</b><br />
+        <i>File?</i><br />
+        Unmatched output cram files sorter stats in json format (if defined).
+</p>
+<p name="TrimAlignSort.bedgraph_mapq0">
+        <b>TrimAlignSort.bedgraph_mapq0</b><br />
+        <i>File?</i><br />
+        Bedgraph mapq0 file.
+</p>
+<p name="TrimAlignSort.bedgraph_mapq1">
+        <b>TrimAlignSort.bedgraph_mapq1</b><br />
+        <i>File?</i><br />
+        Bedgraph mapq1 file.
 </p>
 <p name="TrimAlignSort.aggregated_metrics_h5">
         <b>TrimAlignSort.aggregated_metrics_h5</b><br />
@@ -114,6 +154,76 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <b>TrimAlignSort.report_html</b><br />
         <i>File?</i><br />
         Report in html format.
+</p>
+<p name="TrimAlignSort.fastq_file_list">
+        <b>TrimAlignSort.fastq_file_list</b><br />
+        <i>Array[File?]?</i><br />
+        Sorter output in Fastq format (allow multiple files for applications like single-cell).
+</p>
+<p name="TrimAlignSort.sub_sampled_output">
+        <b>TrimAlignSort.sub_sampled_output</b><br />
+        <i>Array[File?]?</i><br />
+        Sub-sampling files as part of sorter output.
+</p>
+<p name="TrimAlignSort.output_cram_bam_list">
+        <b>TrimAlignSort.output_cram_bam_list</b><br />
+        <i>Array[File?]?</i><br />
+        Output file list after the pipeline is executed in multiple outputs mode
+</p>
+<p name="TrimAlignSort.output_cram_bam_index_list">
+        <b>TrimAlignSort.output_cram_bam_index_list</b><br />
+        <i>Array[File?]?</i><br />
+        Index files for the output cram files (when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.sorter_stats_csv_list">
+        <b>TrimAlignSort.sorter_stats_csv_list</b><br />
+        <i>Array[File?]?</i><br />
+        Sorter stats in csv format (when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.sorter_stats_json_list">
+        <b>TrimAlignSort.sorter_stats_json_list</b><br />
+        <i>Array[File?]?</i><br />
+        Sorter stats in json format (when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.unmatched_cram_list">
+        <b>TrimAlignSort.unmatched_cram_list</b><br />
+        <i>Array[File?]?</i><br />
+        Unmatched cram file output from sorter (if defined, when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.unmatched_sorter_stats_csv_list">
+        <b>TrimAlignSort.unmatched_sorter_stats_csv_list</b><br />
+        <i>Array[File?]?</i><br />
+        Unmatched output cram files sorter stats in csv format (if defined, when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.unmatched_sorter_stats_json_list">
+        <b>TrimAlignSort.unmatched_sorter_stats_json_list</b><br />
+        <i>Array[File?]?</i><br />
+        Unmatched output cram files sorter stats in json format (if defined, when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.bedgraph_mapq0_list">
+        <b>TrimAlignSort.bedgraph_mapq0_list</b><br />
+        <i>Array[File?]?</i><br />
+        Bedgraph mapq0 files (when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.bedgraph_mapq1_list">
+        <b>TrimAlignSort.bedgraph_mapq1_list</b><br />
+        <i>Array[File?]?</i><br />
+        Bedgraph mapq1 files (when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.aggregated_metrics_h5_list">
+        <b>TrimAlignSort.aggregated_metrics_h5_list</b><br />
+        <i>Array[File?]?</i><br />
+        Aggregated metrics in h5 format (if defined, when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.aggregated_metrics_json_list">
+        <b>TrimAlignSort.aggregated_metrics_json_list</b><br />
+        <i>Array[File?]?</i><br />
+        Aggregated metrics in json format (if defined, when running in multiple outputs mode).
+</p>
+<p name="TrimAlignSort.report_html_list">
+        <b>TrimAlignSort.report_html_list</b><br />
+        <i>Array[File?]?</i><br />
+        Reports in html format (if defined, when running in multiple outputs mode).
 </p>
 <p name="TrimAlignSort.trimmer_stats">
         <b>TrimAlignSort.trimmer_stats</b><br />
@@ -135,6 +245,11 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <i>Array[File?]?</i><br />
         Trimmer histogram extra files.
 </p>
+<p name="TrimAlignSort.ua_stats_jsons">
+        <b>TrimAlignSort.ua_stats_jsons</b><br />
+        <i>Array[File]?</i><br />
+        Statistics file in json format from UA.
+</p>
 <p name="TrimAlignSort.align_star_reads_per_gene_file">
         <b>TrimAlignSort.align_star_reads_per_gene_file</b><br />
         <i>File?</i><br />
@@ -144,41 +259,6 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <b>TrimAlignSort.align_star_stats</b><br />
         <i>File?</i><br />
         STAR stats file.
-</p>
-<p name="TrimAlignSort.sort_stats_csv">
-        <b>TrimAlignSort.sort_stats_csv</b><br />
-        <i>Array[File?]?</i><br />
-        Sorter stats in csv format.
-</p>
-<p name="TrimAlignSort.sort_stats_json">
-        <b>TrimAlignSort.sort_stats_json</b><br />
-        <i>Array[File?]?</i><br />
-        Sorter stats in json format.
-</p>
-<p name="TrimAlignSort.bedgraph_mapq0">
-        <b>TrimAlignSort.bedgraph_mapq0</b><br />
-        <i>File?</i><br />
-        Bedgraph mapq0 file.
-</p>
-<p name="TrimAlignSort.bedgraph_mapq1">
-        <b>TrimAlignSort.bedgraph_mapq1</b><br />
-        <i>File?</i><br />
-        Bedgraph mapq1 file.
-</p>
-<p name="TrimAlignSort.fastq_files">
-        <b>TrimAlignSort.fastq_files</b><br />
-        <i>Array[File?]?</i><br />
-        Sorter output in Fastq format (allow multiple files for applications like single-cell).
-</p>
-<p name="TrimAlignSort.sub_sampled_output">
-        <b>TrimAlignSort.sub_sampled_output</b><br />
-        <i>Array[File?]?</i><br />
-        Sub-sampling files as part of sorter output.
-</p>
-<p name="TrimAlignSort.unmatched_cram">
-        <b>TrimAlignSort.unmatched_cram</b><br />
-        <i>File?</i><br />
-        Unmatched cram file output from sorter (if defined).
 </p>
 
 <hr />

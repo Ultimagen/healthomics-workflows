@@ -26,6 +26,8 @@
     },
     "ppmSeqPreprocess.sorter_params": {
         "mark_duplicates": true,
+        "aligned": true,
+        "output_path": "{outputGroup}/{outputGroup}{?_minorRG}",
         "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
     },
     "ppmSeqPreprocess.steps": {
@@ -35,14 +37,14 @@
     },
     "ppmSeqPreprocess.adapter_version": "v1",
     "ppmSeqPreprocess.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/ppmSeq_post_native_adapter_trimming_formats.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/post_native_adapter_trimming/ppmSeq_post_native_adapter_trimming_formats.json",
         "pattern_files": [
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/ppmSeq_start_loop.csv",
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/ppmSeq_end_loop.csv"
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/post_native_adapter_trimming/ppmSeq_start_loop.csv",
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/post_native_adapter_trimming/ppmSeq_end_loop.csv"
         ],
         "format": "ppmSeq_post_native_adapter_trimming",
         "extra_args": "--histogram %1.%2.%3.%4.%5.histogram.csv",
-        "untrimmed_reads_action": "filter",
+        "failure_read_group": "unmatched",
         "cram_reference": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta"
     }
 }

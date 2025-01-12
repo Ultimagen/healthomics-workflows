@@ -140,7 +140,7 @@ input {
       featuremap = FeatureMapAnnotations.annotated_featuremap,
       featuremap_index = FeatureMapAnnotations.annotated_featuremap_index,
       output_basename = base_file_name,
-      docker = global.vcflite_docker,
+      docker = global.ugbio_vcflite_docker,
       memory_gb = 4,
       cpus = 2,
       preemptibles = preemptibles,

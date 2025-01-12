@@ -16,11 +16,12 @@ task Trimmer {
     # Output: output format is always ucram (unmapped cram)
     input {
         File monitoring_script
-        File input_cram_bam
+        Array[File] input_cram_bam_list
         TrimmerParameters parameters
+        File? cache_tarball
         String base_file_name
         String docker
-        Int disk_size = ceil(3 * size(input_cram_bam, "GB") + 20)
+        Int disk_size = ceil(3 * size(input_cram_bam_list, "GB") + size(cache_tarball, "GB") + 20)
         Int cpus
         Int preemptible_tries
         Boolean no_address
@@ -28,7 +29,7 @@ task Trimmer {
     Int memory_gb = select_first([parameters.memory_gb, 8])
 
     String trimmer_mode = if defined(parameters.untrimmed_reads_action) then "--~{parameters.untrimmed_reads_action}" else ""
-    String trimmer_format_flag = if defined(parameters.format) then '--format="~{parameters.format}"' else ""
+    String trimmer_format_flag = if defined(parameters.format) then "--format=\"~{parameters.format}\"" else ""
     String trimmer_extra_args = if defined(parameters.extra_args) then " ~{parameters.extra_args}" else ""
     Array[File] pattern_files = select_first([parameters.pattern_files, []])
     String local_description_file = select_first([parameters.local_formats_description, "/trimmer/formats/formats.json"])
@@ -37,20 +38,19 @@ task Trimmer {
     String output_file_name_prefix = if defined(parameters.output_demux_format) then "~{base_file_name}~{trimmer_prefix_sep}~{parameters.output_demux_format}" else base_file_name
     String output_file_name_suffix = ".trimmed.ucram"
     String output_file_name = "~{output_file_name_prefix}~{output_file_name_suffix}"
-    String output_trimmed_failed_file_name = if defined(parameters.output_failed_file_name_suffix) then "~{base_file_name}~{trimmer_prefix_sep}~{parameters.output_failed_file_name_suffix}" else "fail.cram"
+    String trimmer_stats_file = "~{output_file_name_prefix}.trimmer_stats.csv"
+    String output_trimmed_failed_file_name = if defined(parameters.output_failed_file_name_suffix) then "~{base_file_name}~{trimmer_prefix_sep}~{parameters.output_failed_file_name_suffix}" else "PLACEHOLDER_THAT_SHOULD_NOT_EXIST"
+    String failure_file_args = if defined(parameters.output_failed_file_name_suffix) then "--failure-file=~{output_trimmed_failed_file_name}" else ""
     String output_fc_file_name = "~{output_file_name_prefix}.failure_codes.csv"
     String failure_codes_args = if trimmer_mode == "--discard" then "--failure-code-file ~{output_fc_file_name}" else "--failure-code-tag fc --failure-code-file ~{output_fc_file_name}"  # --discard and error codes don't mix
+    String failure_read_group_args = if defined(parameters.failure_read_group) then "--failure-field rg:Z:~{parameters.failure_read_group}" else ""
+    String minor_read_group_args = if defined(parameters.minor_read_group) then "--output-field rg:Z:~{parameters.minor_read_group}" else ""
+    File? cram_reference = parameters.cram_reference
 
 
     command <<<
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        touch ~{output_trimmed_failed_file_name}
-        python <<CODE
-        # validating inputs
-        if "~{trimmer_mode}" not in ("", "--filter", "--discard"):
-            raise ValueError(f'Trimmer mode for reads that do not match all required segments can be either "" (do nothing), "filter" (mark in sam flag) or "discard"\nGot ~{trimmer_mode}')
-        CODE
 
         # determine the formats base path
         formats_base_path=$(dirname ~{local_description_file})
@@ -71,52 +71,78 @@ task Trimmer {
         fi
 
         # update the command according to the input file type (bam/cram)
-        filename="~{input_cram_bam}"
+        filename="~{input_cram_bam_list[0]}"
         extension="${filename##*.}"
 
+
+        # this next part has code duplication, the parameters are the same for both cram and bam, but the input is different, make sure to keep them in sync
         if [ "$extension" = "cram" ]; then
             trimmer \
-            --input=~{input_cram_bam} \
+            --input=~{sep=" --input=" input_cram_bam_list} \
             --description=$trimmer_description_file \
             ~{trimmer_format_flag} \
-            --statistics=trimmer_stats.csv \
-            --directory="$formats_base_path" \
+            --statistics=~{trimmer_stats_file} \
+            --directory=$formats_base_path \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
             ~{failure_codes_args} \
+            ~{failure_read_group_args} \
+            ~{minor_read_group_args} \
             --progress \
             --vector \
             --nthreads=~{cpus} \
-            ~{if defined(parameters.output_failed_file_name_suffix) then "--failure-file=~{output_trimmed_failed_file_name}" else ""} \
-            ~{if defined(parameters.cram_reference) then "--reference" else ""} ~{default="" parameters.cram_reference} \
+            ~{failure_file_args} \
+            ~{"--reference=" + cram_reference} \
             --cram true \
             --output ~{output_file_name} \
             ~{trimmer_extra_args}
-        else
-            samtools view -h ~{input_cram_bam} -@ ~{cpus} | \
+        else  # bam extension
+            echo "~{sep='\n'input_cram_bam_list}" > bam_list.txt
+            ~{"tar -zxf "+cache_tarball}
+
+            export REF_CACHE=cache/%2s/%2s/
+            export REF_PATH='.'
+
+            samtools cat -b bam_list.txt | \
+            samtools view -h -@ 2 - | \
             trimmer \
             --description=$trimmer_description_file \
             ~{trimmer_format_flag} \
-            --statistics=trimmer_stats.csv \
-            --directory="$formats_base_path" \
+            --statistics=~{trimmer_stats_file} \
+            --directory=$formats_base_path \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
             ~{failure_codes_args} \
+            ~{failure_read_group_args} \
+            ~{minor_read_group_args} \
             --progress \
             --vector \
             --nthreads=~{cpus} \
-            ~{if defined(parameters.output_failed_file_name_suffix) then "--failure-file=~{output_trimmed_failed_file_name}" else ""} \
-            ~{if defined(parameters.cram_reference) then "--reference" else ""} ~{default="" parameters.cram_reference} \
+            ~{failure_file_args} \
+            ~{"--reference=" + cram_reference} \
             --cram true \
             --output ~{output_file_name} \
             ~{trimmer_extra_args}
         fi
 
-        # If remove_small_files is set to true then remove trimmed ucrams under 1Gb in file size
-        output_file_name_suffix=~{output_file_name_suffix} # weird line, but otherwise find does not work
-
+        
+        OUT_CRAM_SUFFIX=~{output_file_name_suffix} 
+        # If remove_small_files is set to true then remove trimmed ucrams under 500M in file size
+        
+        OUT_CRAM_SUFFIX=~{output_file_name_suffix} 
+        # If remove_small_files is set to true then remove trimmed ucrams under 500M in file size
         if [ ~{parameters.remove_small_files} = true ]; then
-            find . -type f -size -500M -name "*${output_file_name_suffix}" | xargs -I {} rm {}
+            find . -type f -size -500M -name "*${OUT_CRAM_SUFFIX}" | xargs -I {} rm {}
+        fi
+
+        # To make sure an output cram was created, we check for any files ending in the specified suffix
+        # The -type f ensures we only match regular files.
+        # -maxdepth 1 ensures we only look in the current directory (optional).
+        find . -maxdepth 1 -type f -name "*${OUT_CRAM_SUFFIX}"
+        if ! find . -maxdepth 1 -type f -name "*${OUT_CRAM_SUFFIX}" | grep -q .; then
+            echo "ERROR: No file found ending with '${OUT_CRAM_SUFFIX}', this indicates that no output cram was created, likely because all the reads did not match on Trimmer." >&2
+            ls -ltr           
+            exit 1
         fi
     >>>
     runtime {
@@ -131,7 +157,7 @@ task Trimmer {
     }
     output {
         Array[File] trimmed_ucram_list = glob("*~{output_file_name_suffix}")
-        File trimmer_stats = "trimmer_stats.csv"
+        File trimmer_stats = "~{trimmer_stats_file}"
         File trimmer_failure_codes_csv = "~{output_fc_file_name}"
         File? output_trimmed_failed_file = "~{output_trimmed_failed_file_name}"
         File monitoring_log = "monitoring.log"
@@ -140,51 +166,6 @@ task Trimmer {
     }
 }
 
-task TrimmerGenerateFormatsJson {
-    input {
-        SimpleReadTrimmingParameters read_trimming_parameters
-        File monitoring_script
-        String docker
-        Int preemptible_tries
-        Int disk_size = 1
-        Boolean no_address
-    }
-    String output_trimmer_formats_filename = "trimmer_formats.json"
-    String min_insert_len = if defined(read_trimming_parameters.min_insert_length) then "--min-insert-length ~{read_trimming_parameters.min_insert_length}" else ""
-    String max_insert_len = if defined(read_trimming_parameters.max_insert_length) then "--max-insert-length ~{read_trimming_parameters.max_insert_length}" else ""
-    String umi_length_5p = if defined(read_trimming_parameters.umi_length_5p) then "--umi-length-5p ~{read_trimming_parameters.umi_length_5p}" else ""
-    String umi_length_3p = if defined(read_trimming_parameters.umi_length_3p) then "--umi-length-3p ~{read_trimming_parameters.umi_length_3p}" else ""
-
-    command <<<
-        bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -xeuo pipefail
-
-        /trimmer/generate_format_json.py ~{min_insert_len} ~{max_insert_len} ~{umi_length_5p} ~{umi_length_3p} \
-            --adapter-5p ~{read_trimming_parameters.adapter_5p} \
-            --adapter-5p-required \
-            --adapter-5p-min-overlap ~{read_trimming_parameters.min_overlap_5p} \
-            --adapter-5p-max-error-rate ~{read_trimming_parameters.max_error_rate_5p} \
-            --adapter-3p ~{read_trimming_parameters.adapter_3p} \
-            --adapter-3p-min-overlap ~{read_trimming_parameters.min_overlap_3p} \
-            --adapter-3p-max-error-rate ~{read_trimming_parameters.max_error_rate_3p} \
-            --output-file ~{output_trimmer_formats_filename}
-
-        cat  ~{output_trimmer_formats_filename}
-    >>>
-    runtime {
-    preemptible: preemptible_tries
-    cpu: "1"
-    memory: "5 GB"
-    disks: "local-disk " + ceil(disk_size) + " HDD"
-    docker: docker
-    noAddress: no_address
-    maxRetries: 1
-    }
-    output {
-        File trimmer_formats = "~{output_trimmer_formats_filename}"
-        File monitoring_log = "monitoring.log"
-    }
-}
 
 task TrimmerAggregateStats {
     input {

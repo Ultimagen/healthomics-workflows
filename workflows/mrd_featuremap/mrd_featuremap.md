@@ -198,11 +198,6 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>File</i><br />
         Parquet file of the matched and control signatures dataframe
 </p>
-<p name="MRDFeatureMap.mrd_analysis_notebook">
-        <b>MRDFeatureMap.mrd_analysis_notebook</b><br />
-        <i>File</i><br />
-        Jupyter notebook of the MRD analysis
-</p>
 <p name="MRDFeatureMap.report_html">
         <b>MRDFeatureMap.report_html</b><br />
         <i>File</i><br />
