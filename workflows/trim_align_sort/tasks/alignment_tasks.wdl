@@ -1095,8 +1095,6 @@ task StarAlignStats {
     command <<<
         set -eo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        source ~/.bashrc
-        conda activate genomics.py3
 
         python <<CODE
         import pandas as pd

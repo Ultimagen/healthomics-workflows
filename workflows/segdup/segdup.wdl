@@ -25,7 +25,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.16.2" # !UnusedDeclaration
+        String pipeline_version = "1.16.5" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
