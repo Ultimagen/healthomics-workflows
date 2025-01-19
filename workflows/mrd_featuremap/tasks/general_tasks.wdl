@@ -201,6 +201,7 @@ task ConvertSorterStatsToH5 {
     command <<<
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
+        export HDF5_USE_FILE_LOCKING=FALSE #to prevent unable to lock file, errno = 11, error message = 'Resource temporarily unavailable' errors
 
         sorter_to_h5 \
             --input_csv_file "~{input_csv_file}" \

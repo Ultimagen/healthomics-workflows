@@ -92,7 +92,7 @@ workflow StarSoloWorkflow {
         input:
             star_log_file   =   StarSolo.star_log_file,
             base_file_name  =   base_file_name,
-            docker          =   global.ug_vc_docker,
+            docker          =   global.ugbio_core_docker,
             preemptible_tries = preemptible_tries,
             monitoring_script = monitoring_script,  # !FileCoercion
             no_address      =   no_address
@@ -110,7 +110,7 @@ workflow StarSoloWorkflow {
             library_direction           = star_solo_params.library_direction,
             umi_len                     = star_solo_params.umi_length,
             statistics_runtime_params   = statistics_runtime_params,
-            docker                      = global.ug_vc_docker,
+            docker                      = global.ugbio_core_docker,
             monitoring_script           = monitoring_script #!FileCoercion
     }
 

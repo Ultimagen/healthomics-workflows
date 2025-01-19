@@ -275,9 +275,6 @@ task GatherStatistics {
 
         echo "calling docker ~{docker} with memory 1 MiB, disk ~{disk_size} ~{disk_type} and cpus num ~{cpu_num} no address ~{no_address}"
 
-        source ~/.bashrc
-        conda activate genomics.py3
-
         echo "~{base_file_name} ~{umi_len} ~{default="" library_direction} ~{barcode_file} ~{star_log_file}"
         echo "Params" > ~{base_file_name}.stats.txt
         echo "sample: ~{base_file_name}"

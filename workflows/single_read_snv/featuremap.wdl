@@ -181,7 +181,6 @@ task FeatureMapCreate {
     set -xeo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    source ~/.bashrc
     start=$(date +%s)
 
     echo "***************************** Running FeatureMap *****************************"

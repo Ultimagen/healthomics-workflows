@@ -32,7 +32,7 @@ task Trimmer {
     String trimmer_format_flag = if defined(parameters.format) then "--format=\"~{parameters.format}\"" else ""
     String trimmer_extra_args = if defined(parameters.extra_args) then " ~{parameters.extra_args}" else ""
     Array[File] pattern_files = select_first([parameters.pattern_files, []])
-    String local_description_file = select_first([parameters.local_formats_description, "/trimmer/formats/formats.json"])
+    String formats_base_path = "trimmer/formats"
     String trimmer_prefix_sep = if defined(parameters.filename_prefix_sep) then "~{parameters.filename_prefix_sep}" else "_"
 
     String output_file_name_prefix = if defined(parameters.output_demux_format) then "~{base_file_name}~{trimmer_prefix_sep}~{parameters.output_demux_format}" else base_file_name
@@ -52,37 +52,25 @@ task Trimmer {
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        # determine the formats base path
-        formats_base_path=$(dirname ~{local_description_file})
-        mkdir -p "$formats_base_path"
+        mkdir -p ~{formats_base_path}
 
         # copy external pattern files to the formats base path
         for pattern_file in ~{sep=" " pattern_files}; do
-            cp "$pattern_file" "$formats_base_path"
+            cp "$pattern_file" ~{formats_base_path}
         done
-
-        # determine the description file - required because it can be either a File or a String
-        # Determine whether to use the file content or the string
-        trimmer_description_file=""
-        if [[ -f "~{parameters.formats_description}" ]]; then
-            trimmer_description_file="~{parameters.formats_description}"
-        else
-            trimmer_description_file="~{local_description_file}"
-        fi
 
         # update the command according to the input file type (bam/cram)
         filename="~{input_cram_bam_list[0]}"
         extension="${filename##*.}"
 
-
         # this next part has code duplication, the parameters are the same for both cram and bam, but the input is different, make sure to keep them in sync
         if [ "$extension" = "cram" ]; then
             trimmer \
             --input=~{sep=" --input=" input_cram_bam_list} \
-            --description=$trimmer_description_file \
+            --description=~{parameters.formats_description} \
             ~{trimmer_format_flag} \
             --statistics=~{trimmer_stats_file} \
-            --directory=$formats_base_path \
+            --directory=~{formats_base_path} \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
             ~{failure_codes_args} \
@@ -106,10 +94,10 @@ task Trimmer {
             samtools cat -b bam_list.txt | \
             samtools view -h -@ 2 - | \
             trimmer \
-            --description=$trimmer_description_file \
+            --description=~{parameters.formats_description} \
             ~{trimmer_format_flag} \
             --statistics=~{trimmer_stats_file} \
-            --directory=$formats_base_path \
+            --directory=~{formats_base_path} \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
             ~{failure_codes_args} \
