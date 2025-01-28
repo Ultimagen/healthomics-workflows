@@ -25,7 +25,6 @@ struct GlobalVariables {
   String single_cell_qc_docker
   String segdup_docker
   String arriba_docker
-  String subread_docker
   String starfusion_docker
   String ugbio_core_docker
   String ugbio_cnv_docker
@@ -63,7 +62,6 @@ workflow Globals {
         "single_cell_qc_docker": "ultimagenomics/ugbio_single_cell:1.5.1",
         "segdup_docker": "ultimagenomics/parascopy:1.0_30e2e98",
         "arriba_docker": "uhrigs/arriba:2.4.0",
-        "subread_docker": "us.gcr.io/broad-gotc-prod/subread:1.0.0-2.0.1-1689097353",
         "starfusion_docker": "trinityctat/starfusion:1.13.0",
         "ugbio_core_docker": "ultimagenomics/ugbio_core:1.5.2",
         "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.4.1",

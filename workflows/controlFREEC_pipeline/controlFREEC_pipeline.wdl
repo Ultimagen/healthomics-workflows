@@ -31,7 +31,7 @@ import "tasks/qc_tasks.wdl" as UGQCTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.16.6" # !UnusedDeclaration
+        String pipeline_version = "1.16.7" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.

@@ -63,7 +63,7 @@ import "trim_align_sort.wdl" as TrimAlignSortSubWF
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.16.6" # !UnusedDeclaration
+        String pipeline_version = "1.16.7" # !UnusedDeclaration
 
         File input_file
         String base_file_name

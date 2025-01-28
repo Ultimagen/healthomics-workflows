@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.16.6"
+  String pipeline_version = "1.16.7"
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
