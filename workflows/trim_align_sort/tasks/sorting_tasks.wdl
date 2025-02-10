@@ -69,14 +69,13 @@ task Demux {
         ln -s ~{reference_fasta} reference_folder/~{reference_fasta_base}
 
 
-        echo "~{sep='\n'input_cram_bam_list}" > bam_list.txt
         ~{"tar -zxf "+cache_tarball}
         
         # for compatibility with the old image where ua was in /ua/ua and not in PATH
         export REF_CACHE=cache/%2s/%2s/ 
         export REF_PATH='.' 
         
-        samtools cat -b bam_list.txt | \
+        samtools merge -c /dev/stdout ~{sep=" " input_cram_bam_list} | \
         samtools view -h -@ ~{cpu_samtools} ~{"-q " + mapq} -T reference_folder/~{reference_fasta_base} - | \
         demux \
             --input=- \
@@ -139,11 +138,20 @@ task Sorter {
     Int local_ssd_threshold = 3000
     Int mapped_bam_size_local_ssd = if total_disk_size < local_ssd_threshold then total_disk_size else 9000
 
+    # calculate memory required for sorter
     Float memory_required = if defined(sorter_params.umi_tag) then max_region_size / 0.4 else max_region_size / 0.8
     Int minimum_memory_required_gb = ceil(3 * memory_required / 1073741824) + 2  # 1073741824 is 1GB in bytes, need at least 3x the minimum region
-    Int memory_gb_ = select_first([sorter_params.memory_gb, 64])
-    Int memory_gb = if memory_gb_ < minimum_memory_required_gb then minimum_memory_required_gb else memory_gb_
-    Int cpu = ceil(memory_gb / 3) + 1  # 3GB per CPU
+    Int max_memory_gb_omics = 768 # max memory in omics instances is 768GB (see https://aws.amazon.com/healthomics/pricing/)
+    Int dynamic_memory_gb = if minimum_memory_required_gb > max_memory_gb_omics then max_memory_gb_omics else minimum_memory_required_gb
+    Int memory_gb_from_params = select_first([sorter_params.memory_gb, 64])
+    # if the memory_gb override set by the user is less than the required memory calculated, use the dynamic_memory_gb to avoid sorter out of memory failure. 
+    # if the memory_gb override set by the user is more than the required memory calculated, use the override value.
+    Int memory_gb = if memory_gb_from_params < dynamic_memory_gb then dynamic_memory_gb else memory_gb_from_params 
+
+    # calculate cpu required for sorter
+    Int cpu_ = ceil(memory_gb / 3) + 1  # 3GB per CPU
+    Int cpu = if cpu_ > 96 then 96 else cpu_ # max cpu in omics instances is 96 (see https://aws.amazon.com/healthomics/pricing/)
+
     Int preemptible_tries_final = if (size(demux_output, "GB") < 250) then preemptible_tries else 0
 
     String timestamp = "000" # use this to override sorter output timestemp (used only for the output folder structure)
@@ -188,15 +196,17 @@ task Sorter {
         else
             echo "WARNING: No coverage intervals file given, respective statistics will not be calculated"
         fi
-
+        
+        #~{if defined(sorter_params.single_cell_cbc_classifier) then "--cell-barcode-filter-classifier " + sorter_params.single_cell_cbc_classifier else ""} \
         sorter \
             --runid=~{base_file_name} \
             --input-dir=$(dirname ~{demux_output[0]}) \
             --output-dir=~{sorter_out_dir} \
             --nthreads ~{cpu} \
-            --progress \
             --timestamp=~{timestamp} \
-            ~{default="" sorter_params.sort_extra_args}
+            ~{if defined(sorter_params.single_cell_cbc_classifier) then "--cell-barcode-filter-classifier" else ""} ~{default="" sorter_params.single_cell_cbc_classifier} \
+            ~{default="" sorter_params.sort_extra_args} \
+            --progress
 
         ls -R ~{sorter_output_path}/
 

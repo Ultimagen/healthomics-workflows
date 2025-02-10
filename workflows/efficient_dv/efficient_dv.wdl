@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.16.7" # !UnusedDeclaration
+    String pipeline_version = "1.17.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -527,8 +527,7 @@ workflow EfficientDV {
       scatter_count = num_shards,
       break_bands_at_multiples_of = scatter_intervals_break,
       dummy_input_for_call_caching = dummy_input_for_call_caching,
-      docker = global.gitc_docker,
-      gitc_path = global.gitc_jar_path,
+      docker = global.broad_gatk_docker,
       no_address = true,
       monitoring_script = monitoring_script
   }
@@ -642,7 +641,7 @@ workflow EfficientDV {
         output_base_name = output_prefix + "_realign",
         sample_name = "realigned",
         references = references,
-        docker = global.ug_gatk_picard_docker,
+        docker = global.broad_gatk_docker,
         no_address = true,
         cpus = 4,
         preemptible_tries = preemptible_tries

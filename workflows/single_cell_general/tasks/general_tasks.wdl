@@ -237,7 +237,6 @@ task ScatterIntervalList {
         Int scatter_count
         Int break_bands_at_multiples_of
         String docker
-        String gitc_path
         Boolean no_address
         String dummy_input_for_call_caching  # !UnusedDeclaration
     }
@@ -246,7 +245,7 @@ task ScatterIntervalList {
     echo ~{dummy_input_for_call_caching}
     set -eo pipefail
     mkdir out
-    java -Xms4g -jar ~{gitc_path}picard.jar \
+    gatk --java-options '-Xms4g' \
       IntervalListTools \
       SCATTER_COUNT=~{scatter_count} \
       SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
@@ -256,7 +255,7 @@ task ScatterIntervalList {
       INPUT=~{interval_list} \
       OUTPUT=out
 
-    python3 <<CODE
+    python <<CODE
     import glob, os
     # Works around a JES limitation where multiples files with the same name overwrite each other when globbed
     intervals = sorted(glob.glob("out/*/*.interval_list"))
@@ -420,8 +419,6 @@ task ConcatMetricsJsons {
     set -eo pipefail
 
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
 
     echo ~{sep=',' jsons} > json_files.txt
 
@@ -536,9 +533,6 @@ task ToFastq {
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        source ~/.bashrc
-        conda activate genomics.py3
-
         samtools fastq \
           --reference ~{references.ref_fasta}\
           -F 0x900 \
@@ -581,8 +575,6 @@ task ConcatHtmls {
         set -eo pipefail
 
         start=$(date +%s)
-        source ~/.bashrc
-        conda activate genomics.py3
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
@@ -635,9 +627,6 @@ task ZipAndIndexVcf{
     command <<<
         set -eo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-        source ~/.bashrc
-        conda activate genomics.py3
 
         bcftools view -O z -o ~{output_vcf} ~{input_vcf}
         bcftools index -t ~{output_vcf}
@@ -713,8 +702,6 @@ task MergeCramFiles {
     Int cpus_to_use = select_first([cpus, ceil(size(crams, "GB") / 10)])
     command <<<
             bash ~{monitoring_script} | tee monitoring.log >&2 &
-            source ~/.bashrc
-            conda activate genomics.py3
 
             ~{"tar -zxf "+cache_tarball}
 
@@ -780,7 +767,6 @@ task MergeVCFs {
     Int disk_size = ceil(2*size(input_vcfs,"GB")+5)
     Int preemptible_tries
     String docker
-    String gitc_path = "/usr/gitc/"
     Boolean no_address
   }
   # Using MergeVcfs instead of GatherVcfs so we can create indices
@@ -788,7 +774,7 @@ task MergeVCFs {
   command {
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    java -Xms9000m -jar ~{gitc_path}picard.jar \
+    gatk --java-options '-Xms9000m' \
       MergeVcfs \
       INPUT=~{sep=' INPUT=' input_vcfs} \
       OUTPUT=~{output_vcf_name}
@@ -984,19 +970,17 @@ task VcfToIntervalListAndBed {
     command <<< 
         set -eo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        source /opt/conda/etc/profile.d/conda.sh
-        conda activate genomics.py3
 
-        picard VcfToIntervalList \
+        gatk VcfToIntervalList \
             I=~{input_vcf} \
             O=step1.interval_list 
 
-        picard IntervalListToBed \
+        gatk IntervalListToBed \
             I=step1.interval_list \
             O=step2.bed
         awk 'BEGIN {FS=OFS="\t"} {print $1, $2}' ~{reference_index} > genome_file.txt
         bedtools slop -i step2.bed -g genome_file.txt -b ~{bedtools_expand} | bedtools merge -i - > ~{base_file_name}.bed
-        picard BedToIntervalList \
+        gatk BedToIntervalList \
             I=~{base_file_name}.bed \
             O=~{base_file_name}.interval_list \
             SD=~{reference_dict}

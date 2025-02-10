@@ -32,7 +32,7 @@ import "tasks/globals.wdl" as Globals
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.16.7" # !UnusedDeclaration
+    String pipeline_version = "1.17.1" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -40,7 +40,6 @@ workflow ppmSeqPreprocess {
     String base_file_name
     String adapter_version
     String? ppmSeq_analysis_extra_args  # extra args for python ugvc ppmSeq_analysis
-    String? sample_name  # for when merging cram files, if not provided base_file_name is used
 
     # References
     References references
@@ -140,11 +139,6 @@ workflow ppmSeqPreprocess {
     }
     ppmSeq_analysis_extra_args: {
       help: "Extra arguments for ppmSeq analysis",
-      type: "String",
-      category: "input_optional"
-    }
-    sample_name: {
-      help: "Sample name used when merging cram files, if not provided base_file_name is used",
       type: "String",
       category: "input_optional"
     }
@@ -257,7 +251,6 @@ workflow ppmSeqPreprocess {
         steps =               steps,
         references =          references,
         ref_fastas_cram =     ref_fastas_cram,
-        sample_name =         select_first([sample_name, base_file_name]),
         trimmer_parameters =  trimmer_parameters,
         aligner =             "ua",
         ua_parameters =       ua_parameters,

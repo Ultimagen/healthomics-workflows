@@ -10,8 +10,8 @@ The pipeline takes as input aligned BAM/CRAM files and outputs a filtered VCF co
 
 ## Requirements
 
-1. Input CRAM files and respective indexes for germline or matched normal sample.
-2. Input CRAM files and respective indexes for the tumor (in case of matched T/N calling).
+1. Input CRAM files and respective indexes for germline or matched normal sample. **Note:** All CRAMs in the list should have the same sample name in `SM` tag in the header. 
+2. Input CRAM files and respective indexes for the tumor (in case of matched T/N calling). **Note:** All CRAMs in the list should have the same sample name in `SM` tag in the header. 
 3. For tumor only structural variant calling, Input CRAM and respective index from the tumor. 
 4. Installation of picard and GATK tools.
 
@@ -74,6 +74,7 @@ tool \
 	--min-mapq 5 \
 	--min-feature-length '20;0' \
 	--max-num-haps 10 \
+	--max-reads-per-region 1500 \
 	--prog \
 	--interval-nreads 10000 \
 	--sv \
@@ -98,6 +99,7 @@ tool \
 	--min-mapq 5 \
 	--min-feature-length '10' \
 	--max-num-haps 10 \
+	--max-reads-per-region 1500 \
 	--prog \
 	--interval-nreads 10000 \
 	--sv \
@@ -120,6 +122,7 @@ tool \
 	--min-mapq 5 \
 	--min-feature-length '10' \
 	--max-num-haps 10 \
+	--max-reads-per-region 1500 \
 	--prog \
 	--interval-nreads 10000 \
 	--sv

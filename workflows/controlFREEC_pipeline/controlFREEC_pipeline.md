@@ -29,7 +29,7 @@ The pipeline outputs:
 
 &nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.
 
-
+<b>When Running in AWS HealthOmics this pipeline should run with [static storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b
 
 ## Inputs
 

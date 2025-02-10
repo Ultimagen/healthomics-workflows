@@ -24,7 +24,8 @@
         "aligned": false,
         "output_group": "{minorRG}",
         "output_path": "{RunID}/{RunID}_{minorRG}",
-        "demux_extra_args": "--fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false"
+        "demux_extra_args": "--cell-barcode-filter=true --fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false",
+        "single_cell_cbc_classifier": "s3://ultimagen-workflow-resources-us-east-1/single_cell/class_suspicious_cells/cbc_classifier_params_10x_5prime_250102.json"
     },
     "SingleCell.star_genome": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/STAR_hg38_cr_2.7.8a.zip",
     "SingleCell.preemptible_tries": 1,
@@ -33,10 +34,10 @@
     "SingleCell.barcode_rg": "S1_L001_R1_001",
     "SingleCell.insert_rg": "S1_L001_R2_001",
     "SingleCell.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/1.0/public/single_cell/10x-flex.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/APL-wdls-shared/public/single_cell/10x-flex.json",
         "format": "10x flex",
         "failure_read_group": "unmatched",
-        "extra_args": "--compare \"rq<=1.0\" --failure-field=fm:Z:cram  --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %3",
+        "extra_args": "--compare \"rq<=1.0\" --histogram=%1.histogram.csv --failure-field=fm:Z:cram  --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %3",
         "pattern_files": [
             "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/1.0/public/single_cell/10x-737K-fixed-rna-profiling.csv"
         ],

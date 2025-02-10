@@ -66,8 +66,7 @@ input {
       interval_list = wgs_calling_interval_list,
       scatter_count = scatter_count,
       break_bands_at_multiples_of = break_bands_at_multiples_of,
-      docker = global.gitc_docker,
-      gitc_path = global.gitc_jar_path,
+      docker = global.broad_gatk_docker,
       no_address = true,
       dummy_input_for_call_caching = "",
       monitoring_script = global.monitoring_script   #!FileCoercion

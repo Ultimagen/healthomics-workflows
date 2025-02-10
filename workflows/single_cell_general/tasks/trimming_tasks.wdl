@@ -85,13 +85,12 @@ task Trimmer {
             --output ~{output_file_name} \
             ~{trimmer_extra_args}
         else  # bam extension
-            echo "~{sep='\n'input_cram_bam_list}" > bam_list.txt
             ~{"tar -zxf "+cache_tarball}
 
             export REF_CACHE=cache/%2s/%2s/
             export REF_PATH='.'
 
-            samtools cat -b bam_list.txt | \
+            samtools merge -c /dev/stdout ~{sep=" " input_cram_bam_list} | \
             samtools view -h -@ 2 - | \
             trimmer \
             --description=~{parameters.formats_description} \

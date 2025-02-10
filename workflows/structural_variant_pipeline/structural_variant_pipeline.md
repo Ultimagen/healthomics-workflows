@@ -44,6 +44,11 @@ The steps of the pipeline are as following:
         <i>Int </i> &mdash; 
          Assembly parameter: Minimum mapping quality. Default value in template <br /> 
 </p>
+<p name="SVPipeline.max_reads_per_partition">
+        <b>SVPipeline.max_reads_per_partition</b><br />
+        <i>Int </i> &mdash; 
+         Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region <br /> 
+</p>
 <p name="SVPipeline.max_num_haps">
         <b>SVPipeline.max_num_haps</b><br />
         <i>Int? </i> &mdash; 
@@ -212,6 +217,16 @@ The steps of the pipeline are as following:
 </details>
 
 ## Outputs
+<p name="SVPipeline.annotated_vcf_out">
+        <b>SVPipeline.annotated_vcf_out</b><br />
+        <i>File</i><br />
+        Annotated VCF file, before GRIPSS or GermlineLinkVariants
+</p>
+<p name="SVPipeline.annotated_vcf_index_out">
+        <b>SVPipeline.annotated_vcf_index_out</b><br />
+        <i>File</i><br />
+        Annotated VCF index file
+</p>
 <p name="SVPipeline.output_vcf">
         <b>SVPipeline.output_vcf</b><br />
         <i>File</i><br />

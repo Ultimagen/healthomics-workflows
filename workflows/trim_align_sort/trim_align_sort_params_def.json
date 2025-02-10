@@ -39,10 +39,6 @@
         "description": "References for merging inputs into one file, alignment, and sorting.",
         "optional": false
     },
-    "TrimAlignSort.sample_name": {
-        "description": "Sample name for the merged cram file.",
-        "optional": true
-    },
     "TrimAlignSort.sorter_params": {
         "description": "Parameters for the sorter task. Mandatory if sort step is selected.",
         "optional": true

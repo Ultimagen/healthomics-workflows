@@ -63,7 +63,7 @@ import "trim_align_sort.wdl" as TrimAlignSortSubWF
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.16.7" # !UnusedDeclaration
+        String pipeline_version = "1.17.1" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -343,7 +343,6 @@ workflow SingleCell {
             steps                   = steps,
             references              = references,
             ref_fastas_cram         = ref_fastas_cram,
-            sample_name             = base_file_name,
             trimmer_parameters      = trimmer_parameters,
             sorter_params           = sorter_params,
             no_address              = no_address,
@@ -357,6 +356,7 @@ workflow SingleCell {
             input_fastq_list        = select_all(select_first([TrimAlignSort.fastq_file_list])),
             sub_sumple_fastq_list   = select_all(select_first([TrimAlignSort.sub_sampled_output])),
             sorter_csv_stats_list   = select_all(select_first([TrimAlignSort.sorter_stats_csv_list])),
+            sorter_json_stats_list  = select_all(select_first([TrimAlignSort.sorter_stats_json_list])),
             base_file_name          = base_file_name,
             insert_rg               = insert_rg,
             barcode_rg              = barcode_rg,
@@ -383,6 +383,7 @@ workflow SingleCell {
             trimmer_stats               = select_first([TrimAlignSort.trimmer_stats]),
             trimmer_failure_codes       = select_first([TrimAlignSort.trimmer_failure_codes_csv]),
             sorter_stats_csv            = FindInsertBarcodeFastq.insert_sorter_stats_csv,
+            sorter_stats_json           = FindInsertBarcodeFastq.insert_sorter_stats_json,
             star_stats                  = StarAlignSubSample.raw_star_log_file,
             star_reads_per_gene         = StarAlignSubSample.reads_per_gene_file,
             insert_sub_sample_fastq     = FindInsertBarcodeFastq.insert_sub_sample_fastq,

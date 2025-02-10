@@ -397,7 +397,7 @@ task UGPostProcessing{
   Array[File] exome_and_annotations = flatten([[exome_intervals], annotation_intervals_or_empty])
   command <<<
       bash ~{monitoring_script} | tee monitoring.log >&2 &
-      set -eo pipefail
+      set -xeo pipefail
 
       cp ~{write_lines(called_records)} called_records.txt
 

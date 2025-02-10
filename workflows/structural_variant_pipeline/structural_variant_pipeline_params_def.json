@@ -79,6 +79,10 @@
         "description": "Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report",
         "optional": true
     },
+    "SVPipeline.max_reads_per_partition": {
+        "description": "Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": false
+    },
     "SVPipeline.min_base": {
         "description": "Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template",
         "optional": false

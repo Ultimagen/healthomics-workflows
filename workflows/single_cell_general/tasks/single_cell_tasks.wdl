@@ -101,6 +101,7 @@ task FindInsertBarcodeFastq {
         Array[File] input_fastq_list
         Array[File] sub_sumple_fastq_list
         Array[File] sorter_csv_stats_list
+        Array[File] sorter_json_stats_list
         String base_file_name
         String insert_rg
         String barcode_rg
@@ -111,12 +112,13 @@ task FindInsertBarcodeFastq {
         Boolean no_address
     }
 
-    Int disk_size = round(3*size(input_fastq_list, "GB") + 3*size(sub_sumple_fastq_list, "GB") + 3*size(sorter_csv_stats_list, "GB") + 20)
+    Int disk_size = round(3*size(input_fastq_list, "GB") + 3*size(sub_sumple_fastq_list, "GB") + 3*size(sorter_csv_stats_list, "GB") + 3*size(sorter_json_stats_list, "GB") + 20)
 
     String output_insert_fastq = "~{base_file_name}_~{insert_rg}.fastq.gz"
     String output_barcode_fastq = "~{base_file_name}_~{barcode_rg}.fastq.gz"
     String output_sub_sample_fastq = "~{base_file_name}_~{insert_rg}_sample.fastq.gz"
     String output_sorter_stats_csv = "~{base_file_name}_~{insert_rg}.csv"
+    String output_sorter_stats_json = "~{base_file_name}_~{insert_rg}.json"
 
     command <<<
         set -xeo pipefail
@@ -143,11 +145,17 @@ task FindInsertBarcodeFastq {
         for csv in sorter_csv_stats_list:
             if "~{insert_rg}" in csv:
                 sorter_stats_csv = csv
+        
+        sorter_json_stats_list = "~{sep=',' sorter_json_stats_list}".split(",")
+        for json_file in sorter_json_stats_list:
+            if "~{insert_rg}" in json_file:
+                sorter_stats_json = json_file
+
         try:
-            print(f"{insert_fastq}\n{barcode_fastq}\n{sub_sample_fastq}\n{sorter_stats_csv}")
+            print(f"{insert_fastq}\n{barcode_fastq}\n{sub_sample_fastq}\n{sorter_stats_csv}\n{sorter_stats_json}")
         except NameError as e:
             print(f"ERROR: couldn't find one of the input files. Missing file error: {e}", file=sys.stderr)
-            print(f"ERROR: Given files are:{input_fastq_list},{sub_sumple_fastq_list},{sorter_csv_stats_list}", file=sys.stderr)
+            print(f"ERROR: Given files are:{input_fastq_list},{sub_sumple_fastq_list},{sorter_csv_stats_list},{sorter_stats_json}", file=sys.stderr)
             raise e
 
         # copy files to new location
@@ -156,11 +164,13 @@ task FindInsertBarcodeFastq {
         shutil.copy(barcode_fastq, "~{output_barcode_fastq}")
         shutil.copy(sub_sample_fastq, "~{output_sub_sample_fastq}")
         shutil.copy(sorter_stats_csv, "~{output_sorter_stats_csv}")
+        shutil.copy(sorter_stats_json, "~{output_sorter_stats_json}")
 
         print("[DEBUG] Insert fastq: ~{output_insert_fastq}")
         print("[DEBUG] Barcode fastq: ~{output_barcode_fastq}")
         print("[DEBUG] Sub sample fastq: ~{output_sub_sample_fastq}")
         print("[DEBUG] Sorter stats csv: ~{output_sorter_stats_csv}")
+        print("[DEBUG] Sorter stats json: ~{output_sorter_stats_json}")
         CODE
     >>>
 
@@ -177,6 +187,7 @@ task FindInsertBarcodeFastq {
         File barcode_fastq           = "~{output_barcode_fastq}"
         File insert_sub_sample_fastq = "~{output_sub_sample_fastq}"
         File insert_sorter_stats_csv = "~{output_sorter_stats_csv}"
+        File insert_sorter_stats_json = "~{output_sorter_stats_json}"
     }
 }
 
@@ -185,6 +196,7 @@ task SingleCellQc {
         File trimmer_stats
         File trimmer_failure_codes
         File sorter_stats_csv
+        File sorter_stats_json
         File star_stats
         File star_reads_per_gene
         File insert_sub_sample_fastq
@@ -215,6 +227,7 @@ task SingleCellQc {
             --trimmer-stats ~{trimmer_stats} \
             --trimmer-failure-codes ~{trimmer_failure_codes} \
             --sorter-stats ~{sorter_stats_csv} \
+            --sorter-stats-json ~{sorter_stats_json} \
             --star-stats ~{star_stats} \
             --star-reads-per-gene ~{star_reads_per_gene} \
             --insert ~{insert_sub_sample_fastq} \

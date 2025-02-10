@@ -63,10 +63,6 @@
         "description": "Reference files",
         "optional": false
     },
-    "ppmSeqPreprocess.sample_name": {
-        "description": "Sample name used when merging cram files, if not provided base_file_name is used",
-        "optional": true
-    },
     "ppmSeqPreprocess.sorter_params": {
         "description": "Sorter parameters",
         "optional": false

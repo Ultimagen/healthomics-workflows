@@ -268,6 +268,7 @@ struct SorterParams {
   Int? memory_gb            # Override the default memory (in GB) used by sorter
   Int? demux_memory_gb            # Override the default memory (in GB) used by demux
   File? coverage_intervals  # tar.gz file with the coverage intervals tsv pointing to the relevant coverage intervals files
+  File? single_cell_cbc_classifier  # single cell classifier model (json)
 }
 
 struct SingleCellQcThresholds {

@@ -36,11 +36,6 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 </p>
 
 ### Optional inputs
-<p name="TrimAlignSort.sample_name">
-        <b>TrimAlignSort.sample_name</b><br />
-        <i>String? </i> &mdash; 
-         Sample name for the merged cram file. <br /> 
-</p>
 <p name="TrimAlignSort.trimmer_parameters">
         <b>TrimAlignSort.trimmer_parameters</b><br />
         <i>TrimmerParameters? </i> &mdash; 

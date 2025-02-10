@@ -7,6 +7,7 @@
         "<cram_file>.cram.crai"
     ],
     "EfficientDV.num_shards": 50,
+    "EfficientDV.make_gvcf": false,
     "EfficientDV.references": {
         "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
@@ -21,7 +22,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.0/ug_hcr.bed"
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
     ],
     "EfficientDV.target_intervals": "s3://broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list",
     "EfficientDV.background_cram_files": [
@@ -42,7 +43,6 @@
     "EfficientDV.min_variant_quality_snps": 10,
     "EfficientDV.allele_frequency_ratio": 10,
     "EfficientDV.show_bg_fields": true,
-    "EfficientDV.make_gvcf": false,
     "EfficientDV.optimal_coverages": [
         100,
         80

@@ -35,15 +35,12 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.16.7" # !UnusedDeclaration
+        String pipeline_version = "1.17.1" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
         TrimAlignSortSteps steps
         References references
-
-        # merged cram parameters
-        String? sample_name
 
         # trimmer parameters
         TrimmerParameters? trimmer_parameters
@@ -176,11 +173,6 @@ workflow TrimAlignSort {
             help: "References for merging inputs into one file, alignment, and sorting.",
             type: "String",
             category: "input_required"
-        }
-        sample_name: {
-            help: "Sample name for the merged cram file.",
-            type: "String",
-            category: "input_optional"
         }
         trimmer_parameters: {
             help: "Parameters for the trimmer task. Mandatory if trim step is selected.",

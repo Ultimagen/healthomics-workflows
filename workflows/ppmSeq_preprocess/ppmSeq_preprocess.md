@@ -55,11 +55,6 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
         <i>String? </i> &mdash; 
          Extra arguments for ppmSeq analysis <br /> 
 </p>
-<p name="ppmSeqPreprocess.sample_name">
-        <b>ppmSeqPreprocess.sample_name</b><br />
-        <i>String? </i> &mdash; 
-         Sample name used when merging cram files, if not provided base_file_name is used <br /> 
-</p>
 <p name="ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters">
         <b>ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters</b><br />
         <i>UaMethReferences? </i> &mdash; 

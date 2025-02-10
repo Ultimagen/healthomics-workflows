@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.16.7" # !UnusedDeclaration
+        String pipeline_version = "1.17.1" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -53,6 +53,7 @@ workflow SVPipeline {
         File wgs_calling_interval_list
         Int min_base
         Int min_mapq
+        Int max_reads_per_partition
         Int? max_num_haps
         Int realign_mapq
         String? min_indel_sc_size_to_include
@@ -95,6 +96,7 @@ workflow SVPipeline {
         #@wv max_num_haps >= 0
         #@wv num_shards > 0
         #@wv realign_mapq >= 0
+        #@wv max_reads_per_partition > 0
         #@wv scatter_intervals_break > 0
         #@wv reference_name in {"38","19"}
 
@@ -214,6 +216,11 @@ workflow SVPipeline {
         homopolymer_length: {
             type: "Int",
             help: "Realignment parameter: do realignment on homopolymeres longer than this value",
+            category:"required"
+        }
+        max_reads_per_partition: {
+            type: "Int",
+            help: "Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region",
             category:"required"
         }
         prefilter_query: {
@@ -372,6 +379,16 @@ workflow SVPipeline {
             help: "Final VCF index file in the region (non-breakend) format",
             category: "output"
         }
+        annotated_vcf_out: {
+            type: "File",
+            help: "Annotated VCF file, before GRIPSS or GermlineLinkVariants",
+            category: "output"
+        }
+        annotated_vcf_index_out: {
+            type: "File",
+            help: "Annotated VCF index file",
+            category: "output"
+        }
     }
     Int preemptibles = select_first([preemptible_tries_override, 1])
 
@@ -413,8 +430,7 @@ workflow SVPipeline {
             scatter_count = num_shards,
             break_bands_at_multiples_of = scatter_intervals_break,
             dummy_input_for_call_caching = dummy_input_for_call_caching,
-            docker = global.gitc_docker,
-            gitc_path = global.gitc_jar_path,
+            docker = global.broad_gatk_docker,
             no_address = no_address,
             monitoring_script = monitoring_script
     }
@@ -434,6 +450,7 @@ workflow SVPipeline {
                 min_base = min_base,
                 min_mapq = min_mapq,
                 max_num_haps = max_num_haps,
+                max_reads_per_partition = max_reads_per_partition,
                 min_sc_indel_size = min_indel_sc_size_to_include,
                 is_somatic = is_somatic,
                 number_of_shards = ScatterIntervalList.interval_count,
@@ -449,7 +466,7 @@ workflow SVPipeline {
         input:
             inputs = CreateAssembly.assembly,
             output_prefix = base_file_name + '_merged_assembly',
-            docker = global.gitc_docker,
+            docker = global.broad_gatk_docker,
             monitoring_script=monitoring_script,
             preemptible_tries = preemptibles,
             no_address = no_address
@@ -632,7 +649,7 @@ workflow SVPipeline {
             output_vcf_name = base_file_name + ".ann.vcf.gz",
             preemptible_tries = preemptibles,
             monitoring_script = monitoring_script,
-            docker = global.gitc_docker,
+            docker = global.broad_gatk_docker,
             no_address = no_address
         }
     }
@@ -694,6 +711,8 @@ workflow SVPipeline {
         }
     }
     output {
+        File annotated_vcf_out = annotated_vcf
+        File annotated_vcf_index_out = annotated_vcf_index
         File output_vcf = select_first([GermlineLinkVariants.linked_vcf, SomaticGripss.gripss_vcf])
         File output_vcf_index = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index])
         File assembly = MergeBams.output_bam
@@ -720,6 +739,7 @@ task CreateAssembly {
         Int min_mapq
         String? min_sc_indel_size
         Int? max_num_haps
+        Int max_reads_per_partition
         Int number_of_shards
         String? cloud_provider_override
         Boolean single_strand_filter
@@ -778,6 +798,7 @@ task CreateAssembly {
             --bed interval.bed \
             --min-base ~{min_base} \
             --min-mapq ~{min_mapq} \
+            --max-reads-per-region ~{max_reads_per_partition} \
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
             ~{"--max-num-haps " + max_num_haps} \
             ~{if single_strand_filter then "--single-strand-filter" else ""} \
@@ -816,6 +837,7 @@ task CreateAssembly {
             --bed interval.bed \
             --min-base ~{min_base} \
             --min-mapq ~{min_mapq} \
+            --max-reads-per-region ~{max_reads_per_partition} \
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
             ~{"--max-num-haps " + max_num_haps} \
             --prog \

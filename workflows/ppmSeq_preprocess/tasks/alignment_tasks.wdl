@@ -500,8 +500,6 @@ task AlignWithUA {
     command <<<
     set -exuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    echo "~{sep='\n'input_bams}" > bam_list.txt
-
 
     ~{"tar -zxf "+cache_tarball}
     
@@ -510,7 +508,7 @@ task AlignWithUA {
     export REF_CACHE=cache/%2s/%2s/ 
     export REF_PATH='.' 
     
-    samtools cat -b bam_list.txt | \
+    samtools merge -c /dev/stdout ~{sep=" " input_bams} | \
     samtools view -h -@ ~{cpu} - | \
     ua \
         --index ~{ua_index} \
