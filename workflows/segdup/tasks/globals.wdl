@@ -31,6 +31,7 @@ struct GlobalVariables {
   String ugbio_srsnv_docker
   String ugbio_ppmseq_docker
   String ugbio_freec_docker
+  String ugbio_filtering_docker
 }
 workflow Globals {
   input {
@@ -49,7 +50,7 @@ workflow Globals {
         "trimmer_docker": "ultimagenomics/trimmer:2.1.3",
         "fastqc_docker": "quay.io/biocontainers/fastqc:0.11.9--0",
         "star_docker": "ultimagenomics/star:2.7.10a",
-        "sorter_docker": "ultimagenomics/sorter:1.3.2",
+        "sorter_docker": "ultimagenomics/sorter:1.3.6",
         "pigz_docker": "nsheff/pigz:latest",
         "gridss_docker": "ultimagenomics/gridss:fb1cbae",
         "gripss_docker": "ultimagenomics/gripss:ug_2.4.0_cb91bca",
@@ -64,7 +65,8 @@ workflow Globals {
         "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.4.1",
         "ugbio_srsnv_docker": "ultimagenomics/ugbio_srsnv:1.5.1",
         "ugbio_ppmseq_docker": "ultimagenomics/ugbio_ppmseq:1.5.1",
-        "ugbio_freec_docker": "ultimagenomics/ugbio_freec:1.5.5"
+        "ugbio_freec_docker": "ultimagenomics/ugbio_freec:1.5.5",
+        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.6.0"
 }
 }
 

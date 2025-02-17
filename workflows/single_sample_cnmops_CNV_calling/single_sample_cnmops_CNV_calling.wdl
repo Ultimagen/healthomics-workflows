@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.17.1" # !UnusedDeclaration
+        String pipeline_version = "1.17.2" # !UnusedDeclaration
 
         String base_file_name
 
