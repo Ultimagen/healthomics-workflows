@@ -1,6 +1,6 @@
-# Somatic mutation calling - best practices - v1.14
+# Somatic mutation calling - best practices - v1.17
 
-Last updated: Sep 12, 2024 
+Last updated: Feb 11, 2025 
 
 ## Table of contents
 1. [Running somatic variant calling pipeline](#running-somatic-variant-calling-pipeline)

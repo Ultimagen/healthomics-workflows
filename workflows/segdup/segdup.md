@@ -140,7 +140,7 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 </p>
 <p name="SegDupAnalysis.DV.ug_make_examples_extra_args">
         <b>SegDupAnalysis.DV.ug_make_examples_extra_args</b><br />
-        <i>String </i> &mdash; 
+        <i>String? </i> &mdash; 
          Additional arguments for make-examples tool <br /> 
 </p>
 <p name="SegDupAnalysis.DV.log_make_examples_progress">

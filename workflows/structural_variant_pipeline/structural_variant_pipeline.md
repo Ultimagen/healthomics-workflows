@@ -111,7 +111,12 @@ The steps of the pipeline are as following:
 <p name="SVPipeline.min_indel_sc_size_to_include">
         <b>SVPipeline.min_indel_sc_size_to_include</b><br />
         <i>String? &mdash; Default: None</i><br />
-        Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly.
+        Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly. ;-separated between samples
+</p>
+<p name="SVPipeline.min_mismatch_count_to_include">
+        <b>SVPipeline.min_mismatch_count_to_include</b><br />
+        <i>String? &mdash; Default: None</i><br />
+        Assembly parameter: Minimal number of counts to require to include the read in the assembly. ;-separated between samples
 </p>
 <p name="SVPipeline.blacklist_bed">
         <b>SVPipeline.blacklist_bed</b><br />
@@ -179,11 +184,6 @@ The steps of the pipeline are as following:
         <i>String &mdash; Default: None</i><br />
          Gridss config file content 
 </p>
-<p name="SVPipeline.single_strand_filter">
-        <b>SVPipeline.single_strand_filter</b><br />
-        <i>Boolean &mdash; Default: None</i><br />
-         Whether to filter out non snp candidates that are on a single strand 
-</p>
 <p name="SVPipeline.create_assembly_memory_override">
         <b>SVPipeline.create_assembly_memory_override</b><br />
         <i>Int? &mdash; Default: None</i><br />
@@ -230,22 +230,22 @@ The steps of the pipeline are as following:
 <p name="SVPipeline.output_vcf">
         <b>SVPipeline.output_vcf</b><br />
         <i>File</i><br />
-        Final VCF file
+        Final VCF
 </p>
 <p name="SVPipeline.output_vcf_index">
         <b>SVPipeline.output_vcf_index</b><br />
         <i>File</i><br />
-        Final VCF index file
+        Final VCF index
 </p>
 <p name="SVPipeline.assembly">
         <b>SVPipeline.assembly</b><br />
         <i>File</i><br />
-        Assembly output before UA realingment
+        Raw assembly - before the realignment
 </p>
 <p name="SVPipeline.assembly_index">
         <b>SVPipeline.assembly_index</b><br />
         <i>File</i><br />
-        Assembly output index before UA realingment
+        Raw assembly - before the realignment - index
 </p>
 <p name="SVPipeline.realigned_assembly">
         <b>SVPipeline.realigned_assembly</b><br />

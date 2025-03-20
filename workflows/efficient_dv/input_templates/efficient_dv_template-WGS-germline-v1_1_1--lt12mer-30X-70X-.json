@@ -31,5 +31,8 @@
         70
     ],
     "EfficientDV.min_variant_quality_exome_hmer_indels": 20,
+    "EfficientDV.single_strand_filter": false,
+    "EfficientDV.keep_duplicates": false,
+    "EfficientDV.add_ins_size_channel": true,
     "EfficientDV.cloud_provider_override": "aws"
 }

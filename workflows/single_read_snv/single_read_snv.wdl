@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.17.2"
+  String pipeline_version = "1.18.2"
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -260,9 +260,9 @@ parameter_meta {
         help: "ML model test set MRD simulation DataFrame, parquet format",
         category: "output_optional"
     }
-    test_set_statistics_h5: {
+    application_qc_h5: {
         type: "File",
-        help: "ML model test set statistics h5 file",
+        help: "Application QC statistics h5 file",
         category: "output_optional"
     }
     aggregated_metrics_json: {
@@ -437,7 +437,7 @@ parameter_meta {
     File? model_file = TrainSnvQualityRecalibrationModel.model_file  
     File? params_file = TrainSnvQualityRecalibrationModel.params_file
     File? test_set_mrd_simulation_dataframe = TrainSnvQualityRecalibrationModel.test_set_mrd_simulation_dataframe
-    File? test_set_statistics_h5 = TrainSnvQualityRecalibrationModel.test_set_statistics_h5
+    File? application_qc_h5 = TrainSnvQualityRecalibrationModel.test_set_statistics_h5
     File? aggregated_metrics_json = TrainSnvQualityRecalibrationModel.test_set_statistics_json
 
     File? tp_training_regions_bed = CreateTpTrainingRegionsBed.merged_bed

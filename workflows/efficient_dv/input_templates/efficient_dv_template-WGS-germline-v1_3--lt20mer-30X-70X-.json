@@ -34,6 +34,8 @@
     "EfficientDV.optimal_coverages": [
         70
     ],
-    "EfficientDV.ug_make_examples_extra_args": "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic --bsnv-detection --keep-duplicates",
+    "EfficientDV.single_strand_filter": false,
+    "EfficientDV.keep_duplicates": true,
+    "EfficientDV.add_ins_size_channel": true,
     "EfficientDV.cloud_provider_override": "aws"
 }

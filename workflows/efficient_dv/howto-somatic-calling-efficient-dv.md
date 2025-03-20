@@ -37,9 +37,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.0.3
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.0
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.0.3
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.0
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -83,7 +83,8 @@ cat interval001.interval_list | grep -v @ | awk 'BEGIN{OFS="\t"}{print $1,$2-1,$
 make_examples is invoked using `tool` command in the `make_examples` docker. A typical command line (from within the docker) will look like:
 
 ```
-tool --input "input_reads.cram;background_reads.cram" \
+tool \
+  --input "input_reads.cram;background_reads.cram" \
   --cram-index "input_reads.cram.crai;background_reads.cram.crai" \
   --output output001 \
   --reference Homo_sapiens_assembly38.fasta \
@@ -100,24 +101,19 @@ tool --input "input_reads.cram;background_reads.cram" \
   --cgp-min-mapping-quality 5 \
   --max-reads-per-region 1500 \
   --assembly-min-base-quality 0 \
-  --gzip-output \
-  --no-realigned-sam \
-  --optimal-coverages "100;40" \
-  --cap-at-optimal-coverage \
-  --cycle-examples-min 100000 \
-  --add-ins-size-channel \
-  --add-proxy-support-to-non-hmer-insertion \
-  --pragmatic \
-  --single-strand-filter
+  --optimal-coverages '200;200' \
+  --single-strand-filter \
+  --keep-duplicates \
+  --add-ins-size-channel
 ```
 
 The input cram files and the corresponding index files are provided to `--input` and `--cram-index`, respectively. The tumor and background crams are separated by a semicolon (note that the semicolon requires to quote the argument, in order for linux to interpret it correctly). Multiple cram files can be provided, separated by commas.
 
 The `--output` argument is the prefix for the output files (including tfrecords).
 
-The arguments `optimal-coverages` and `cap-at-optimal-coverage` determine how reads are downsampled for the image (the image contains 95 reads from each sample). The same values are used in the training of the model and the inference. Hence, their values are tightly linked to which model is used.
+The argument `optimal-coverages` (and the related argument `cap-at-optimal-coverage`) determine how reads are internally downsampled before image generation. The same values are used in the training of the model and the inference. Hence, their values are tightly linked to which model is used. The argument `add-ins-size-channel` adds a channel with the length of the insertion, and should also be aligned with the model.
 
-The program will output a sam file with the re-aligned reads unless the argument `--no-realigned-sam` is provided. Note that these files are very large, so provide a large disk space if you want to save the re-aligned reads.
+The `single-strand-filter` reduces the number of candidates, therby reducing compute costs, at a negligible effect on recall.
 
 #### Running somatic-on-germline
 In somatic variant calling, complex somatic variants near germline variants can pose challenges during read alignment and variant calling. To address this, it can be beneficial to "correct" the reference genome by incorporating germline variants during the read-alignment step of `make_examples`. This simplifies the generated image and improves the accuracy of likelihood calculations during `call_variants`.
@@ -131,7 +127,7 @@ It’s important to note that using `--region-haplotypes-vcf` influences only th
 The call_variants step combines the tfrecords from all make_examples jobs. The arguments to the call_variants step are provided as an `.ini`-formatted file. A typical file will look like:
 ```
 [RT classification]
-onnxFileName = gs://concordanz/deepvariant/model/somatic/wgs/model_dyn_1000_200_221_9_2950000.onnx
+onnxFileName = model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx
 useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
 numInferTreadsPerGpu = 2
@@ -221,38 +217,9 @@ dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v
 
 ### Additional filtering steps recommended. 
 
-We recommend applying two additional post-processes filters. 
+We recommend applying an additional post-processes filter. The filter is applied to the allele-frequency ratio between tumor and normal. It filters out loci with germline variants that changed allele-frequency in the tumor, as the model was not trained to filter them, making this inconsistent with some other somatic calling pipelines.
 
-First, to correct a specific issue where SNVs within long homopolymers are sometimes called with a low confidence, we correct the confidence and remove filters of such variants. This is required due to difficulty of the model to discern between SNV and deletion of a base alleles.  
-
-Second, we applied an allele-frequency ratio filter between tumor and normal, to filter out loci with germline variants that changed allele-frequency in the tumor, as the model was not trained to filter them, making this inconsistent with some other somatic calling pipelines.
-
-The process to applying these filters is described below.
-
-#### Recalibrating quality scores of "bridge" variants
-
- 
-This filter is implemented in a [python script](https://github.com/Ultimagen/VariantCalling/blob/master/ugvc/pipelines/vcfbed/calibrate_bridging_snvs.py). 
-To apply this script use this docker: 
-
-```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ugvc:0.21
-```
-or
-```
-337532070941.dkr.ecr.us-east-1.amazonaws.com/ugvc:0.21
-```
-
-Typical command:
-
-```
-conda activate genomics.py3
-python /VariantCalling/ugvc calibrate_bridging_snvs \
-    --vcf input.vcf.gz \
-    --reference Homo_sapiens_assembly38.fasta \
-    --output output.vcf.gz
-```
-#### Removing variants with normal evidence
+The process to applying this filter is:
 
 ```
 bcftools filter input.vcf.gz -e '(VARIANT_TYPE="snp" || VARIANT_TYPE="non-h-indel") && (AD[0:1]/DP)/(BG_AD[0:1]/BG_DP) < 10' -s "LowAFRatioToBackground" -m "+" -Oz -o  output.vcf.gz

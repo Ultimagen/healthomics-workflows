@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.17.2" # !UnusedDeclaration
+    String pipeline_version = "1.18.2" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -65,7 +65,10 @@ workflow EfficientDV {
     Array[Int] optimal_coverages = [ 50 ]
     Boolean cap_at_optimal_coverage = false
     Boolean output_realignment = false
-    String ug_make_examples_extra_args = "--add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic --haps-sw-params 10,-128,-15,-30,-5 --bsnv-detection"
+    Boolean single_strand_filter = false
+    Boolean keep_duplicates = true
+    Boolean add_ins_size_channel = true
+    String? ug_make_examples_extra_args
     Boolean log_make_examples_progress = false
     File? germline_vcf
 
@@ -277,6 +280,21 @@ workflow EfficientDV {
       help: "Output haplotypes and re-aligned reads to a bam file. Default: false.",
       category: "param_optional"
     }
+    single_strand_filter : {
+      type: "Boolean",
+      help: "Whether to filter out non snp candidates that are on a single strand. Reduces the number of candidates and hence the cost. Most useful for somatic calling.",
+      category: "param_advanced"
+    }
+    keep_duplicates : {
+      type: "Boolean",
+      help: "Keep duplicated reads in the images. Do not use in high depth samples (e.g. WES).",
+      category: "param_advanced"
+    }
+    add_ins_size_channel : {
+      type: "Boolean",
+      help: "Use a channel with the insertion size (depends on the model).",
+      category: "param_advanced"
+    }
     ug_make_examples_extra_args: {
       help: "Additional arguments for make-examples tool",
       category: "param_optional"
@@ -335,7 +353,7 @@ workflow EfficientDV {
       category: "param_optional"
     }
     exome_intervals: {
-      help: "A bed file with exome intervals",
+      help: "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
       category: "ref_required"
     }
     annotation_intervals: {
@@ -558,6 +576,9 @@ workflow EfficientDV {
         assembly_min_base_quality  = dbg_min_base_quality,
         make_gvcf = make_gvcf,
         p_error = p_error,
+        single_strand_filter = single_strand_filter,
+        keep_duplicates = keep_duplicates,
+        add_ins_size_channel = add_ins_size_channel,
         extra_args = ug_make_examples_extra_args,
         prioritize_alt_supporting_reads = prioritize_alt_supporting_reads,
         log_progress = log_make_examples_progress,

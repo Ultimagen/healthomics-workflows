@@ -88,12 +88,16 @@
         "optional": false
     },
     "SVPipeline.min_indel_sc_size_to_include": {
-        "description": "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly.",
+        "description": "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly. ;-separated between samples",
         "optional": true
     },
     "SVPipeline.min_mapq": {
         "description": "Assembly parameter: Minimum mapping quality. Default value in template",
         "optional": false
+    },
+    "SVPipeline.min_mismatch_count_to_include": {
+        "description": "Assembly parameter: Minimal number of counts to require to include the read in the assembly. ;-separated between samples",
+        "optional": true
     },
     "SVPipeline.min_normal_coverage": {
         "description": "gripss paramter: Minimum coverage in the normal sample to determine somatic status. Default value:8",
@@ -149,10 +153,6 @@
     },
     "SVPipeline.scatter_intervals_break": {
         "description": "Maximal resolution for scattering intervals",
-        "optional": false
-    },
-    "SVPipeline.single_strand_filter": {
-        "description": "Whether to filter out non snp candidates that are on a single strand",
         "optional": false
     },
     "SVPipeline.symbolic_vcf_format": {

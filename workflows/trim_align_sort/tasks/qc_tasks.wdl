@@ -432,7 +432,9 @@ task CollectIntervalCoverages {
     }
 }
 
-
+# Unused task
+# this task doesn't work on AWS and also doesn't work well in google batch
+# It downloads a full folder using gsutil cp command
 task CollectIntervalCoverageStats {
     input  {
         File input_cram_bam

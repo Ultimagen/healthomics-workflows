@@ -35,27 +35,26 @@ The following files are publicly available
 ## Generating Germline CNV calls for a single sample
 
 ### Installation
-* Install ugvc package:
-    1. Clone the `VariantCalling` repository (e.g. to `software/VariantCalling`)
-    2. Create a clean conda environment defined by `software/VariantCalling/setup/environment.yml`
-    3. Create genomics.py3 conda environment:
-    `conda env create -f software/VariantCalling/setup/environment.yml`
-    This will create an environment called `genomics.py3`
-    4. Create genomics.py3 conda environment:
-    `conda env create -f software/VariantCalling/setup/other_envs/ucsc.yml`
-    This will create an environment called `ucsc`
-    5. Install ugvc package:
-        ```
-        conda activate genomics.py3
-        cd software/VariantCalling
-        pip install .
-        ```
-* Download UG-controlFREEC docker image from: 
-    `us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ug_control_freec:1679a9`
+* Use docker: <br>
+	Pull ugbio_freec and ugbio_cnv docker images :
+	```
+	docker pull ultimagenomics/ugbio_freec:1.5.5
+	docker pull ultimagenomics/ugbio_cnv:1.5.5
+	```
+	Run docker in interactive mode: 
+	```
+	docker run -it -v /data:/data ultimagenomics/ugbio_freec:1.5.5 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.5.5 /bin/bash
+	```
+	for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/902c0def79e17c71ef810f7cdd887e06e736c5b4/workflows/single_read_snv/tasks/globals.wdl#L68C31-L68C64)<br>
+* manual installation: 
+if you would like to manually install the enviorment for UG-germline-CNV-calling you can follow the following Dockerfiles:
+    1. [ugbio_freec Dockerfile](https://github.com/Ultimagen/FREEC/blob/master/Dockerfile) used to build the ugbio_freec docker image.
+    2. [ugbio_cnv Dockerfile](https://github.com/Ultimagen/ugbio-utils/blob/main/src/cnv/Dockerfile) used to build the ugbio_cnv docker image.
 
 ### Create mpileup file for tumor and normal seperatly. 
+from inside ugbio_freec docker image: 
 ```
-conda activate genomics.py3
 samtools mpileup -f Homo_sapiens_assembly38.fasta \
     -d 8000 \
     -Q 0 \
@@ -66,44 +65,24 @@ samtools mpileup -f Homo_sapiens_assembly38.fasta \
 ```
 
 ### Collect coverage for tumor and normal seperatly
+from inside ugbio_freec docker image: 
 ```
-conda activate genomics.py3
-
-COVERAGE_ANALYSIS="coverage_analysis.py collect_coverage"
-OUTPUT=coverage
-mkdir $OUTPUT
-
-$COVERAGE_ANALYSIS \
-	-i {input_cram_bam} \
-	-o $OUTPUT \
+samtools depth \
+	-J \
 	-Q 1 \
-	--reference Homo_sapiens_assembly38.fasta
+	--reference Homo_sapiens_assembly38.fasta \
+	{input_cram_bam} | \
+	awk '{print $1"\t"($2-1)"\t"$2"\t"$3}' > {sample_name}.bedgraph
 ```
 
-### Convert BigWig format to CPN format for tumor and normal seperatly
+### convert BedGraph to CPN format for tumor and normal seperatly. 
+from inside ugbio_freec docker image: 
 ```
-conda activate ucsc
+#unzip input bedgraph file if needed:
+if [[ $bedgraph =~ \.gz$ ]];
+then
+	gzip -d -c $bedgraph > {sample_name}.bedgraph;
 
-for file in coverage/*.depth.bw; do \
-	bigWigToBedGraph $file /dev/stdout | \
-	bedtools map -g Homo_sapiens_assembly38.fasta.fai \
-	-a Homo_sapiens_assembly38.w1000.chr1-23.bed \
-	-b /dev/stdin \
-	-c 4 -o mean | \
-	awk '{if($4=="."){print $1"\t"$2"\t"0}else{print $1"\t"$2"\t"$4}}' | \
-	grep -v "chrY" | \
-	sed 's/^chr//' > \
-	$file.cpn; \
-	done
-	
-cat *.cpn > {sample_name}.cpn
-```
-
-### in case input format is BedGraph, convert BedGraph to CPN format for tumor and normal seperatly. 
-```
-conda activate genomics.py3
-
-gzip -d {sample_name}.BedGraph.gz
 bedtools map -g Homo_sapiens_assembly38.fasta.fai \
 	-a Homo_sapiens_assembly38.w1000.chr1-23.bed \
 	-b {sample_name}.BedGraph \
@@ -115,10 +94,7 @@ bedtools map -g Homo_sapiens_assembly38.fasta.fai \
 ```
 
 ### runControlFREEC
-run the ug_control_freec docker image in interactive mode and mount the volume with your data. 
-for example: 
-`docker run -it -v /data:/data us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ug_control_freec:1679a9`
-
+from inside ugbio_freec docker image: 
 ```
 #split reference to file per chromosome
 mkdir chrFiles_dir
@@ -127,7 +103,7 @@ faidx -x ../Homo_sapiens_assembly38.fasta
 cd ../
 
 #create controlFREEC config file
-python /generate_controlFREEC_config.py \
+generate_controlFREEC_config \
 	--sample_name {sample_name} \
 	--BedGraphOutput TRUE \
 	--chrLenFile Homo_sapiens_assembly38.fasta.fai \
@@ -156,14 +132,13 @@ python /generate_controlFREEC_config.py \
 ```
 
 #### Filter ControlFREEC called CNVs by length and low confidence regions
+from inside ugbio_cnv docker image:
 ```
-conda activate genomics.py3
-
 #convert to bedfile
 cat {tumor}_CNVs | sed 's/^/chr/' | cut -f1-4 > {tumor}.cnvs.bed
 
 #annotate cnvs bed file
-python /VariantCalling/ugvc filter_sample_cnvs \
+filter_sample_cnvs \
 	--input_bed_file {tumor}.cnvs.bed \
 	--intersection_cutoff 0.5 \
 	--cnv_lcr_file ug_cnv_lcr.bed \

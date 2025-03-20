@@ -623,3 +623,47 @@ task PileupFeatureMapInterval {
     File pileup_file_index = "~{output_vcf_file_name}.vcf.gz.tbi"
   }
 }
+
+task AddAggregatedVariablesAndXgbScoreToPileupFeaturemap
+{
+  input {
+    File featuremap_pileup_vcf
+    File featuremap_pileup_vcf_index
+    String output_basename
+    String? filter_string
+    File interval_list
+    File? model 
+    Int memory_gb
+    Int cpus
+    Int preemptibles    
+    File monitoring_script
+    String docker
+  }
+  Int disk_size = ceil(4*size(featuremap_pileup_vcf,"GB"))
+  Boolean is_defined_filter_string = defined(filter_string)
+  command <<<
+  set -eo pipefail
+  bash ~{monitoring_script} | tee monitoring.log >&2 &
+  
+  add_aggregate_params_and_xgb_score_to_pileup_featuremap \
+    -f ~{featuremap_pileup_vcf} \
+    ~{true="-filter_string " false="" defined(filter_string)}~{filter_string} \
+    -o ~{output_basename} \
+    -i ~{interval_list} \
+    -m ~{model}
+  
+  >>>
+  runtime {
+    preemptible: "~{preemptibles}"
+    cpu: "~{cpus}"
+    memory: "~{memory_gb} GB"
+    disks: "local-disk " + ceil(disk_size) + " HDD"
+    docker: docker
+  }
+
+  output {
+    File monitoring_log = "monitoring.log"
+    File pileup_xgb_file = "~{output_basename}.vcf.gz"
+    File pileup_xgb_file_index = "~{output_basename}.vcf.gz.tbi"
+  }    
+}

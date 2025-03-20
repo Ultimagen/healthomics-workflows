@@ -146,10 +146,10 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <i>File?</i><br />
         ML model test set MRD simulation DataFrame, parquet format
 </p>
-<p name="SingleReadSNV.test_set_statistics_h5">
-        <b>SingleReadSNV.test_set_statistics_h5</b><br />
+<p name="SingleReadSNV.application_qc_h5">
+        <b>SingleReadSNV.application_qc_h5</b><br />
         <i>File?</i><br />
-        ML model test set statistics h5 file
+        Application QC statistics h5 file
 </p>
 <p name="SingleReadSNV.aggregated_metrics_json">
         <b>SingleReadSNV.aggregated_metrics_json</b><br />

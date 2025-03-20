@@ -207,10 +207,10 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>File</i><br />
         The report from the single cell qc
 </p>
-<p name="SingleCell.aggregated_metrics_h5">
-        <b>SingleCell.aggregated_metrics_h5</b><br />
+<p name="SingleCell.application_qc_h5">
+        <b>SingleCell.application_qc_h5</b><br />
         <i>File</i><br />
-        The h5 store from the single cell qc
+        Single Cell application QC h5 file
 </p>
 <p name="SingleCell.star_bam">
         <b>SingleCell.star_bam</b><br />

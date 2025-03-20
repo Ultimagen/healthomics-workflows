@@ -38,9 +38,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.0.3
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.0
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.0.3
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.0
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -87,12 +87,11 @@ make_examples is invoked using `tool` command in the `make_examples` docker. A t
 tool \
   --input input_reads.cram \
   --cram-index input_reads.cram.crai \
-  --bed interval001.bed \
+  --bed interval001.bed \  
   --output 001 \
   --reference Homo_sapiens_assembly38.fasta \
   --min-base-quality 5 \
   --min-mapq 5 \
-  --progress \
   --cgp-min-count-snps 2 \
   --cgp-min-count-hmer-indels 2 \
   --cgp-min-count-non-hmer-indels 2 \
@@ -102,15 +101,15 @@ tool \
   --cgp-min-mapping-quality 5 \
   --max-reads-per-region 1500 \
   --assembly-min-base-quality 0 \
-  --gzip-output \
-  --no-realigned-sam \
-  --optimal-coverages "50" --cap-at-optimal-coverage \
-  --add-ins-size-channel --add-proxy-support-to-non-hmer-insertion --pragmatic
+  --optimal-coverages 50 \
+  --add-ins-size-channel
 ```
 
 The input cram files and the corresponding index files are provided to `--input` and `--cram-index`, respectively. Multiple cram files can be provided as a comma separated list.
 
 The `--output` argument is the prefix for the output files (including tfrecords).
+
+The `--optimal-coverages` and `--add-ins-size-channel` are parameters which affect the way images are produced, and should be aligned with the model. `optimal-coverages` is related to how reads are internally downsampled before the image is produced, and `add-ins-size-channel` adds a channel with the length of the insertion.
 
 The program will output a sam file with the re-aligned reads unless the argument `--no-realigned-sam` is provided. Note that these files are very large, so provide a large disk space if you want to save the re-aligned reads.
 
@@ -119,7 +118,7 @@ The program will output a sam file with the re-aligned reads unless the argument
 The call_variants step combines the tfrecords from all make_examples jobs. The arguments to the call_variants step are provided as an `.ini`-formatted file. A typical file will look like:
 ```
 [RT classification]
-onnxFileName = model/germline/v1.3/model.ckpt-890000.dyn_1500.onnx
+onnxFileName = model/germline/v1.5/ultima-usb4-pe-germline-model-v1.5.ckpt-380000.onnx
 useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
 numInferTreadsPerGpu = 2
@@ -213,29 +212,6 @@ In case a GVCF is desired, then the commands should be modified in the following
 1. Add the arguments `--gvcf` and `--p-error 0.005` to the make_examples step. The p-error is an estimation of the probability of *any* base-calling error in the reads, and is used in the calculation of the reference confidence model. When these arguments are added, make_examples will output extra files with the `gvcf.tfrecord.gz` suffix.
 2. When running post_process, add the argument `--gvcf_outfile output_prefix.g.vcf.gz` and provide the `gvcf.tfrecord.gz` files as input using the `--nonvariant_site_tfrecord_path` argument. The `gvcf.tfrecord.gz` files can be provided to `--nonvariant_site_tfrecord_path` either as a comma-separated list, or a text file that contains all the paths. In the latter case use the name of the ```--nonvariant_site_tfrecord_path @gvcf_records.txt```.
 3. Optionally, use the `--gq-resolution` or `--gq-thresholds` arguments to reduce the output gvcf size, by binning intervals with similar GQ values together. `--gq-resolution` sets a constant difference between the bins, and `--gq-thresholds` accepts a list of specific bin thresholds, e.g. `--gq-thresholds 0,1,8,15,22` (the rounding is downwards). A value of 0 is special and results in a bin of 0.
-
-### Additional filtering steps recommended
-
-We recommend to apply another step on the vcf output in order to correct a specific issue where SNVs within long homopolymers are sometimes called with a low confidence. It is difficult for the model to discern between SNV and deletion of a base alleles. We provide a script that corrects the confidence and removes filters of such variants. This filter is implemented in a [python script](https://github.com/Ultimagen/VariantCalling/blob/master/ugvc/pipelines/vcfbed/calibrate_bridging_snvs.py). 
-To apply this script use this docker: 
-```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ugvc:0.21
-```
-or
-```
-337532070941.dkr.ecr.us-east-1.amazonaws.com/ugvc:0.21
-```
-
-Typical command:
-
-```
-conda activate genomics.py3
-python /VariantCalling/ugvc calibrate_bridging_snvs \
-    --vcf input.vcf.gz \
-    --reference Homo_sapiens_assembly38.fasta \
-    --output output.vcf.gz
-```
-
 
 ## Debugging tfrecords using dvtools
 The make_examples code also has a handy utility called `dvtools` to view the data in the tfrecord files. It can accept a tfrecord.gz file, and output a vcf with the records (without the images):

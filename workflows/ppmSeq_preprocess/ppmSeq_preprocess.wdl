@@ -32,7 +32,7 @@ import "tasks/globals.wdl" as Globals
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.17.2" # !UnusedDeclaration
+    String pipeline_version = "1.18.2" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -227,7 +227,7 @@ workflow ppmSeqPreprocess {
       type: "File",
       category: "output"
     }
-    aggregated_metrics_h5: {
+    application_qc_h5: {
       help: "ppmSeq QC aggregated metrics h5",
       type: "File",
       category: "output"
@@ -300,7 +300,7 @@ output {
         File? bedgraph_mapq1                = TrimAlignSort.bedgraph_mapq1
 
         File report_html                = ppmSeqQC.report_html 
-        File aggregated_metrics_h5      = ppmSeqQC.aggregated_metrics_h5
+        File application_qc_h5          = ppmSeqQC.aggregated_metrics_h5
         File aggregated_metrics_json    = ppmSeqQC.aggregated_metrics_json
     }
 }

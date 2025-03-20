@@ -63,7 +63,7 @@ import "trim_align_sort.wdl" as TrimAlignSortSubWF
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.17.2" # !UnusedDeclaration
+        String pipeline_version = "1.18.2" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -271,9 +271,9 @@ workflow SingleCell {
             help: "The report from the single cell qc", 
             category: "output"
         }
-        aggregated_metrics_h5: {
+        application_qc_h5: {
             type: "File",
-            help: "The h5 store from the single cell qc", 
+            help: "Single Cell application QC h5 file", 
             category: "output"
         }
         trimmer_stats_output: {
@@ -431,7 +431,7 @@ workflow SingleCell {
 
         # SingleCellQc outputs
         File report_html                    = SingleCellQc.report
-        File aggregated_metrics_h5          = SingleCellQc.h5
+        File application_qc_h5          = SingleCellQc.h5
 
         # Star solo outputs
         StarSoloOutputs? star_solo_outputs = StarSoloWorkflow.outputs

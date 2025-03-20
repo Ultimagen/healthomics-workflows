@@ -35,6 +35,9 @@ task UGMakeExamples{
     Array[Int] optimal_coverages
     Boolean cap_at_optimal_coverage
     Boolean output_realignment = false
+    Boolean single_strand_filter = false
+    Boolean keep_duplicates = true
+    Boolean add_ins_size_channel = true
     String? extra_args
     Boolean log_progress = false
     Boolean count_candidates_with_dvtools = false
@@ -198,8 +201,7 @@ task UGMakeExamples{
         --cgp-min-mapping-quality ~{candidate_min_mapping_quality} \
         --max-reads-per-region ~{max_reads_per_partition} \
         --assembly-min-base-quality ~{assembly_min_base_quality} \
-        --gzip-output \
-        ~{true="--no-realigned-sam" false="" !output_realignment} \
+        ~{true="--realigned-sam" false="" output_realignment} \
         ~{true="--somatic" false="" defined_background} \
         ~{if make_gvcf then "--gvcf  --p-error ~{p_error}" else ""} \
         --optimal-coverages "~{sep=";" optimal_coverages}" \
@@ -207,6 +209,9 @@ task UGMakeExamples{
         ~{true="--prioritize-alt-supporting-reads " false="" prioritize_alt_supporting_reads} \
         --cycle-examples-min 100000 \
         --prefix-logging-with "${part_number}>> " \
+        ~{true="--single-strand-filter" false="" single_strand_filter} \
+        ~{true="--keep-duplicates" false="" keep_duplicates} \
+        ~{true="--add-ins-size-channel" false="" add_ins_size_channel} \
         ~{extra_args} \
         ~{true="--progress" false="" log_progress} \
         ~{if defined(germline_vcf) then "--region-haplotypes-vcf ~{germline_vcf}" else ""} \

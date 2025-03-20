@@ -32,6 +32,7 @@ struct GlobalVariables {
   String ugbio_ppmseq_docker
   String ugbio_freec_docker
   String ugbio_filtering_docker
+  String ug_jalign_docker
 }
 workflow Globals {
   input {
@@ -41,7 +42,7 @@ workflow Globals {
         "ug_gatk_picard_docker": "ultimagenomics/ug_gatk_picard:0.14",
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "ug_call_variants_docker": "ultimagenomics/call_variants:2.2.2",
-        "ug_make_examples_docker": "ultimagenomics/make_examples:3.0.3",
+        "ug_make_examples_docker": "ultimagenomics/make_examples:3.1.0",
         "perl_docker": "perl:5.38",
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
@@ -55,18 +56,19 @@ workflow Globals {
         "gridss_docker": "ultimagenomics/gridss:fb1cbae",
         "gripss_docker": "ultimagenomics/gripss:ug_2.4.0_cb91bca",
         "single_cell_qc_docker": "ultimagenomics/ugbio_single_cell:1.5.5",
-        "segdup_docker": "ultimagenomics/parascopy:1.0_30e2e98",
+        "segdup_docker": "ultimagenomics/parascopy:1.1_da39450",
         "arriba_docker": "uhrigs/arriba:2.4.0",
         "starfusion_docker": "trinityctat/starfusion:1.13.0",
         "ugbio_core_docker": "ultimagenomics/ugbio_core:1.5.2",
-        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.5.5",
+        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.8.0",
         "ugbio_vcflite_docker": "ultimagenomics/ugbio_vcflite:1.4.1",
         "ugbio_mrd_docker": "ultimagenomics/ugbio_mrd:1.5.1",
-        "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.4.1",
+        "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.7.0",
         "ugbio_srsnv_docker": "ultimagenomics/ugbio_srsnv:1.5.1",
         "ugbio_ppmseq_docker": "ultimagenomics/ugbio_ppmseq:1.5.1",
         "ugbio_freec_docker": "ultimagenomics/ugbio_freec:1.5.5",
-        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.6.0"
+        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.6.0",
+        "ug_jalign_docker": "ultimagenomics/jalign:1.0.0"
 }
 }
 

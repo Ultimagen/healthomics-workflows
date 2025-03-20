@@ -41,7 +41,7 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.exome_intervals">
         <b>EfficientDV.exome_intervals</b><br />
         <i>File </i> &mdash; 
-         A bed file with exome intervals <br /> 
+         A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome. <br /> 
 </p>
 <p name="EfficientDV.ref_dbsnp">
         <b>EfficientDV.ref_dbsnp</b><br />
@@ -154,7 +154,7 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 </p>
 <p name="EfficientDV.ug_make_examples_extra_args">
         <b>EfficientDV.ug_make_examples_extra_args</b><br />
-        <i>String </i> &mdash; 
+        <i>String? </i> &mdash; 
          Additional arguments for make-examples tool <br /> 
 </p>
 <p name="EfficientDV.log_make_examples_progress">

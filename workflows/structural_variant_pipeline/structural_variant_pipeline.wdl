@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.17.2" # !UnusedDeclaration
+        String pipeline_version = "1.18.2" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -57,6 +57,7 @@ workflow SVPipeline {
         Int? max_num_haps
         Int realign_mapq
         String? min_indel_sc_size_to_include
+        String? min_mismatch_count_to_include
         Int homopolymer_length
         String config_file_string
         File? blacklist_bed
@@ -74,7 +75,6 @@ workflow SVPipeline {
         Int? min_normal_coverage
         String? exclude_filters
         Boolean symbolic_vcf_format
-        Boolean single_strand_filter
 
         Int num_shards
         Boolean no_address = true
@@ -200,8 +200,14 @@ workflow SVPipeline {
         }
         min_indel_sc_size_to_include: {
             type: "String",
-            help: "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly.",
+            help: "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly. ;-separated between samples",
             category:"optional"
+        }
+        min_mismatch_count_to_include: {
+            type: "String",
+            help: "Assembly parameter: Minimal number of counts to require to include the read in the assembly. ;-separated between samples",
+            category:"optional"
+
         }
         max_num_haps: {
             type: "Int",
@@ -294,11 +300,6 @@ workflow SVPipeline {
             help: "Whether to convert the output vcf to the region format or not, default True",
             category:"optional"
         }
-        single_strand_filter : {
-            type: "Boolean",
-            help: "Whether to filter out non snp candidates that are on a single strand",
-            category: "advanced"
-        }
         cloud_provider_override: {
             type: "String",
             help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
@@ -341,24 +342,25 @@ workflow SVPipeline {
         }
         output_vcf: {
             type: "File",
-            help: "Final VCF file",
+            help: "Final VCF",
             category: "output"
         }
         output_vcf_index: {
             type: "File",
-            help: "Final VCF index file",
+            help: "Final VCF index",
             category: "output"
         }
         assembly: {
             type: "File",
-            help: "Assembly output before UA realingment",
+            help: "Raw assembly - before the realignment",
             category: "output"
         }
         assembly_index: {
             type: "File",
-            help: "Assembly output index before UA realingment",
+            help: "Raw assembly - before the realignment - index",
             category: "output"
         }
+
         realigned_assembly: {
             type: "File",
             help: "Assembly output after UA realingment",
@@ -452,9 +454,9 @@ workflow SVPipeline {
                 max_num_haps = max_num_haps,
                 max_reads_per_partition = max_reads_per_partition,
                 min_sc_indel_size = min_indel_sc_size_to_include,
+                min_mismatch_count = min_mismatch_count_to_include, 
                 is_somatic = is_somatic,
                 number_of_shards = ScatterIntervalList.interval_count,
-                single_strand_filter = single_strand_filter,
                 cloud_provider_override = cloud_provider_override,
                 no_address = no_address,
                 preemptible_tries = preemptibles,
@@ -738,11 +740,11 @@ task CreateAssembly {
         Int min_base
         Int min_mapq
         String? min_sc_indel_size
+        String? min_mismatch_count
         Int? max_num_haps
         Int max_reads_per_partition
         Int number_of_shards
         String? cloud_provider_override
-        Boolean single_strand_filter
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
@@ -800,10 +802,12 @@ task CreateAssembly {
             --min-mapq ~{min_mapq} \
             --max-reads-per-region ~{max_reads_per_partition} \
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
+            ~{"--min-mismatch-count '" + min_mismatch_count + "'"} \
             ~{"--max-num-haps " + max_num_haps} \
-            ~{if single_strand_filter then "--single-strand-filter" else ""} \
             --prog \
-            --sv
+            --sv \
+            --realigned-sam
+
 
         else
             if ~{defined_germline}
@@ -839,11 +843,12 @@ task CreateAssembly {
             --min-mapq ~{min_mapq} \
             --max-reads-per-region ~{max_reads_per_partition} \
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
+            ~{"--min-mismatch-count '" + min_mismatch_count + "'"} \
             ~{"--max-num-haps " + max_num_haps} \
             --prog \
             --interval-target-nreads 10000 \
-            ~{if single_strand_filter then "--single-strand-filter" else ""} \
-            --sv
+            --sv \
+            --realigned-sam 
 
         fi
 
@@ -1158,7 +1163,7 @@ task AnnotateVariants {
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
     Boolean defined_germline = if(length(input_germline_crams)>0) then true else false
     Int cpu = select_first([cpu_override, if(is_aws) then 8 else 1])
-    Int mem = select_first([memory_override, if(!is_aws) then 32 else if(!is_somatic) then 16 else 64])
+    Int mem = select_first([memory_override, if(!is_aws) then 32 else if(!is_somatic) then 64 else 128])
     # variables for metrics files reordering
     Boolean defined_germline_metrics = if(defined(germline_metrics)) then true else false
     Boolean defined_tumor_metrics = if(defined(tumor_metrics)) then true else false

@@ -8,7 +8,7 @@
         "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "SegDupAnalysis.n_threads": 20,
-    "SegDupAnalysis.cn_model": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_240319/model.tar.gz",
+    "SegDupAnalysis.cn_model": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_250205/model.tar.gz",
     "SegDupAnalysis.segdup_regions": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hom.regions.bed",
     "SegDupAnalysis.homology_table": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz",
     "SegDupAnalysis.homology_table_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz.tbi",

@@ -1,0 +1,10 @@
+{
+    "CombineGermlineCNVCalls.base_file_name": "<sample_name>",
+    "CombineGermlineCNVCalls.cnmops_cnvs_bed": "<input>.cnmops.bed",
+    "CombineGermlineCNVCalls.cnvpytor_cnvs_bed": "<input>.cnvpytor.bed",
+    "CombineGermlineCNVCalls.input_bam_file": "<input>.cram",
+    "CombineGermlineCNVCalls.input_bam_file_index": "<input>.cram.crai",
+    "CombineGermlineCNVCalls.reference_genome": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+    "CombineGermlineCNVCalls.reference_genome_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+    "CombineGermlineCNVCalls.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed"
+}

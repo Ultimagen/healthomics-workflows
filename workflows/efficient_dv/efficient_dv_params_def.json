@@ -1,4 +1,8 @@
 {
+    "EfficientDV.add_ins_size_channel": {
+        "description": "Use a channel with the insertion size (depends on the model).",
+        "optional": false
+    },
     "EfficientDV.allele_frequency_ratio": {
         "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
         "optional": true
@@ -68,7 +72,7 @@
         "optional": true
     },
     "EfficientDV.exome_intervals": {
-        "description": "A bed file with exome intervals",
+        "description": "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
         "optional": false
     },
     "EfficientDV.germline_vcf": {
@@ -86,6 +90,10 @@
     "EfficientDV.intervals_string": {
         "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
         "optional": true
+    },
+    "EfficientDV.keep_duplicates": {
+        "description": "Keep duplicated reads in the images. Do not use in high depth samples (e.g. WES).",
+        "optional": false
     },
     "EfficientDV.log_make_examples_progress": {
         "description": "Cause make_examples to output detailed progress information (for debugging)",
@@ -206,6 +214,10 @@
     "EfficientDV.show_bg_fields": {
         "description": "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
         "optional": true
+    },
+    "EfficientDV.single_strand_filter": {
+        "description": "Whether to filter out non snp candidates that are on a single strand. Reduces the number of candidates and hence the cost. Most useful for somatic calling.",
+        "optional": false
     },
     "EfficientDV.target_intervals": {
         "description": "Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used.",

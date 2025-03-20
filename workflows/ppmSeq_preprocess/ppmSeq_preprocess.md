@@ -134,8 +134,8 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
         <i>File</i><br />
         ppmSeq QC report html
 </p>
-<p name="ppmSeqPreprocess.aggregated_metrics_h5">
-        <b>ppmSeqPreprocess.aggregated_metrics_h5</b><br />
+<p name="ppmSeqPreprocess.application_qc_h5">
+        <b>ppmSeqPreprocess.application_qc_h5</b><br />
         <i>File</i><br />
         ppmSeq QC aggregated metrics h5
 </p>
