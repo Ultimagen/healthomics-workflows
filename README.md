@@ -22,7 +22,7 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 
   	The instructions below include localizing resources, deploying workflow and creating a run.
 
-5.	For more questions about these workflows, please contact healtomics.support@ultimagen.com.
+5.	For more questions about these workflows, please contact healthomics.support@ultimagen.com.
 
 ## Deploying Private Workflow
 ### To localize workflow resources and create a private workflow in AWS HealthOmics you can:
