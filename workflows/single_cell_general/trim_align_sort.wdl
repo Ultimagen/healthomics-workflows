@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.18.2" # !UnusedDeclaration
+        String pipeline_version = "1.18.3" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
@@ -48,7 +48,7 @@ workflow TrimAlignSort {
         # alignment parameters
         String? aligner # ua, ua-meth, star
         UaParameters? ua_parameters
-        UaMethReferences? ua_meth_parameters
+        UaMethParameters? ua_meth_parameters
 
         ## STAR param
         File? star_genome
@@ -110,6 +110,9 @@ workflow TrimAlignSort {
         ## Integration checks
         #@wv 'trim' in steps and steps['trim'] and 'align' in steps and not(steps['align']) -> not('sort' in steps and steps['sort'] and defined(sorter_params) and 'aligned' in sorter_params and sorter_params['aligned'])
 
+        ## Downsample checks
+        #@wv defined(sorter_params) and defined(sorter_params['downsample_frac']) -> sorter_params['downsample_frac'] >= 0.0 and sorter_params['downsample_frac'] <= 1.0
+        #@wv defined(sorter_params) and defined(sorter_params['downsample_seed']) -> defined(sorter_params['downsample_frac'])
     }
 
 
@@ -394,6 +397,11 @@ workflow TrimAlignSort {
             type: "Array[File]",
             category: "output"
         }
+        downsampling_seed: {
+            help: "Seed used for downsampling (if downsampling_frac is set).",
+            type: "File",
+            category: "output"
+        }
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
@@ -498,7 +506,7 @@ workflow TrimAlignSort {
                 monitoring_script  = monitoring_script,  # !FileCoercion
                 docker             = global.sorter_docker,
                 preemptible_tries  = preemptible_tries,
-                cpu                = cpu
+                cpu_input         = cpu,
         }
 
         call SortTasks.Sorter {
@@ -654,6 +662,7 @@ workflow TrimAlignSort {
         File? unmatched_sorter_stats_json   = unmatched_sorter_stats_json_
         File? bedgraph_mapq0                = bedgraph_mapq0_
         File? bedgraph_mapq1                = bedgraph_mapq1_
+        File? downsampling_seed             = Demux.downsampling_seed
         # single sample qc outputs
         File? aggregated_metrics_h5         = aggregated_metrics_h5_
         File? aggregated_metrics_json       = aggregated_metrics_json_

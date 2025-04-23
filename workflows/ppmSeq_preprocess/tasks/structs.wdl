@@ -64,9 +64,10 @@ struct UaParameters {
 }
 
 # UA-METH alignment
-struct UaMethReferences {
+struct UaMethParameters {
   File index_c2t
   File index_g2a
+  Int? cpus
 }
 
 struct VariantCallingSettings {
@@ -263,10 +264,13 @@ struct SorterParams {
   Boolean? aligned          # demux arg to mentioned if the data aligned. The default is true.
   String? output_group      # Define a custom read-group e.g. "majorRG-minorRG"  (instead of the default "majorRG"). majorRG is the value of the RG tag of each read. See sorter documentation for more details.
   String? output_path       # Define the output path for a custom read-group. Default is: {outputGroup}/{outputGroup} !NOTE! the path must include a subfolder
+  Float? downsample_frac # Downsample fraction (0.0-1.0) to be used in Demux
+  Int? downsample_seed  # Downsample seed to be used in Demux
   String? demux_extra_args
   String? sort_extra_args
   Int? memory_gb            # Override the default memory (in GB) used by sorter
   Int? demux_memory_gb            # Override the default memory (in GB) used by demux
+  Int? demux_cpu           # Override the default cpu used by demux
   File? coverage_intervals  # tar.gz file with the coverage intervals tsv pointing to the relevant coverage intervals files
   File? single_cell_cbc_classifier  # single cell classifier model (json)
 }

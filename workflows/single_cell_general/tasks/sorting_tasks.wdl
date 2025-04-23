@@ -10,10 +10,8 @@ task Demux {
         File reference_fasta
         Int? mapq_override
         SorterParams sorter_params
-
         File monitoring_script
-
-        Int cpu
+        Int cpu_input
         Int preemptible_tries
         String docker
     }
@@ -28,6 +26,7 @@ task Demux {
     Int local_ssd_threshold = 3000
     Int mapped_bam_size_local_ssd = if total_disk_size < local_ssd_threshold then total_disk_size else 9000
 
+    Int cpu = select_first([sorter_params.demux_cpu, cpu_input])
     Int cpu_samtools = ceil(cpu / 5)
     Int cpu_demux_tmp = cpu - cpu_samtools
     Int cpu_demux = if cpu_demux_tmp < 1 then 1 else cpu_demux_tmp
@@ -35,13 +34,16 @@ task Demux {
     Int memory_gb = select_first([sorter_params.demux_memory_gb, 2*cpu])
     Int preemptible_tries_final = if (size(input_cram_bam_list, "GB") < 250) then preemptible_tries else 0
 
-    Int mapq = select_first([mapq_override,0])
     String demux_output_path = "demux_output/"
     String align_flag = if defined(sorter_params.aligned) then "--align=~{sorter_params.aligned}" else "--align=true"
     String output_group = select_first([sorter_params.output_group, base_file_name])
     String output_path = select_first([sorter_params.output_path, "{outputGroup}/{outputGroup}"])
     String reference_fasta_base = basename(reference_fasta)
-    
+
+    Boolean defined_downsapling_seed = defined(sorter_params.downsample_seed)
+    Boolean defined_downsapling_frac = defined(sorter_params.downsample_frac)
+    Boolean need_samtools_view = defined(mapq_override) || defined_downsapling_frac  # if filtering or downsampling is needed, samtools view is required
+
 
     command <<<
         set -xeo pipefail
@@ -74,9 +76,29 @@ task Demux {
         # for compatibility with the old image where ua was in /ua/ua and not in PATH
         export REF_CACHE=cache/%2s/%2s/ 
         export REF_PATH='.' 
+
+        if [[ ~{defined_downsapling_seed} == true && ~{defined_downsapling_frac} == true ]]; then
+            seed_var="~{sorter_params.downsample_seed}"
+            echo "Seed used " $seed_var
+            echo $seed_var >> downsampling_seed.txt
+        elif [[ ~{defined_downsapling_seed} == false && ~{defined_downsapling_frac} == true ]]; then
+            seed_var=$RANDOM
+            echo "Seed used " $seed_var
+            echo $seed_var >> downsampling_seed.txt
+        fi
         
-        samtools merge -c /dev/stdout ~{sep=" " input_cram_bam_list} | \
-        samtools view -h -@ ~{cpu_samtools} ~{"-q " + mapq} -T reference_folder/~{reference_fasta_base} - | \
+        if [[ ~{need_samtools_view} == true ]]; then
+            # build filter and/or down-sampling flags
+            mapq_flag="~{true='-q ' false='' defined(mapq_override)}~{mapq_override}"
+            ds_flag="~{true='-s ' false='' defined(sorter_params.downsample_frac)}${seed_var}~{default='' sorter_params.downsample_frac}"
+            VIEW_CMD="samtools view -h -@ ~{cpu_samtools} ${mapq_flag} ${ds_flag} -"
+        else
+            # pass‑through
+            VIEW_CMD="cat"
+        fi
+
+        samtools merge -@ ~{cpu_samtools} -c -O SAM - ~{sep=" " input_cram_bam_list} | \
+        ${VIEW_CMD} | \
         demux \
             --input=- \
             --output-dir=~{demux_output_path} \
@@ -111,6 +133,7 @@ task Demux {
         File monitoring_log = "monitoring.log"
         Int max_region_size = read_int("max_region_size.txt")
         Array[File] demux_output = glob("~{demux_output_path}/*.*")
+        File? downsampling_seed = "downsampling_seed.txt"
     }
 }
 

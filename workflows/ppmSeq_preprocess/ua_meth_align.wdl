@@ -25,7 +25,7 @@ workflow UAMethAlignment {
     input {
         Array[File] input_files
         String base_file_name
-        UaMethReferences? ua_meth_parameters
+        UaMethParameters? ua_meth_parameters
         File cache_tarball
         References? references
         Boolean UaMethIntensiveMode = false  # If false, map against the three-letter C2T index, otherwise  map against both C2T and G2A indexes.
@@ -40,9 +40,10 @@ workflow UAMethAlignment {
 
 
     if (defined(ua_meth_parameters)) {
-        UaMethReferences ua_meth_parameters_ = select_first([ua_meth_parameters])
+        UaMethParameters ua_meth_parameters_ = select_first([ua_meth_parameters])
         File ua_index_c2t_ = ua_meth_parameters_.index_c2t
         File ua_index_g2a_ = ua_meth_parameters_.index_g2a
+        Int ua_meth_paramters_cpus = select_first([ua_meth_parameters_.cpus])
     } 
     if (!defined(ua_meth_parameters)) {
         call AlignTasks.BuildUaMethIndex {
@@ -58,7 +59,9 @@ workflow UAMethAlignment {
     File ua_index_c2t = select_first([ua_index_c2t_, BuildUaMethIndex.index_c2t])
     File ua_index_g2a = select_first([ua_index_g2a_, BuildUaMethIndex.index_g2a])
 
-    Int cpus = 40
+    Int cpu_default = 40  
+    Int cpu = select_first([ua_meth_paramters_cpus, cpu_default])
+
     call AlignTasks.AlignWithUAMeth {
         input :
             input_bams              = input_files,
@@ -71,7 +74,7 @@ workflow UAMethAlignment {
             monitoring_script       = global.monitoring_script,  # !FileCoercion
             preemptible_tries       = preemptible_tries,
             ua_docker               = global.ua_docker,
-            cpus                    = cpus
+            cpus                    = cpu
     }
     output {
         Array[File] ua_output_json = AlignWithUAMeth.ua_output_json

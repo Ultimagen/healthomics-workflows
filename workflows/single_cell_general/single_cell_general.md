@@ -113,7 +113,7 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
 </p>
 <p name="SingleCell.TrimAlignSort.ua_meth_parameters">
         <b>SingleCell.TrimAlignSort.ua_meth_parameters</b><br />
-        <i>UaMethReferences? </i> &mdash; 
+        <i>UaMethParameters? </i> &mdash; 
          Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br /> 
 </p>
 <p name="SingleCell.TrimAlignSort.star_genome">

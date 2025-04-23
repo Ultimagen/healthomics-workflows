@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.18.2" # !UnusedDeclaration
+        String pipeline_version = "1.18.3" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []

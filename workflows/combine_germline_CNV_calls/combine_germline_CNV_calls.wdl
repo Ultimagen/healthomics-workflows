@@ -27,7 +27,7 @@ import "tasks/globals.wdl" as Globals
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.18.2" # !UnusedDeclaration
+        String pipeline_version = "1.18.3" # !UnusedDeclaration
 
         String base_file_name
 

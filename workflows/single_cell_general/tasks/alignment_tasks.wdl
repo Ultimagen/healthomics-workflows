@@ -508,8 +508,7 @@ task AlignWithUA {
     export REF_CACHE=cache/%2s/%2s/ 
     export REF_PATH='.' 
     
-    samtools merge -c /dev/stdout ~{sep=" " input_bams} | \
-    samtools view -h -@ ~{cpu} - | \
+    samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{sep=" " input_bams} | \
     ua \
         --index ~{ua_index} \
         --align true \

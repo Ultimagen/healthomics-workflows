@@ -57,7 +57,7 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters">
         <b>ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters</b><br />
-        <i>UaMethReferences? </i> &mdash; 
+        <i>UaMethParameters? </i> &mdash; 
          Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br /> 
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.star_genome">

@@ -53,7 +53,7 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 </p>
 <p name="TrimAlignSort.ua_meth_parameters">
         <b>TrimAlignSort.ua_meth_parameters</b><br />
-        <i>UaMethReferences? </i> &mdash; 
+        <i>UaMethParameters? </i> &mdash; 
          Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br /> 
 </p>
 <p name="TrimAlignSort.star_genome">
@@ -134,6 +134,11 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <b>TrimAlignSort.bedgraph_mapq1</b><br />
         <i>File?</i><br />
         Bedgraph mapq1 file.
+</p>
+<p name="TrimAlignSort.downsampling_seed">
+        <b>TrimAlignSort.downsampling_seed</b><br />
+        <i>File?</i><br />
+        Seed used for downsampling (if downsampling_frac is set).
 </p>
 <p name="TrimAlignSort.aggregated_metrics_h5">
         <b>TrimAlignSort.aggregated_metrics_h5</b><br />
