@@ -14,3 +14,11 @@ variable "custom_tags" {
   description = "Map of key->value tags to be added to AWS resources"
   type = map(string)
 }
+variable "omics_accessible_buckets" {
+  description = "List of s3 bucket to have read access from omics"
+  type = list(string)
+}
+variable "cross_aws_account" {
+  description = "AWS account id that should have read access to omics input bucket"
+  type        = string
+}

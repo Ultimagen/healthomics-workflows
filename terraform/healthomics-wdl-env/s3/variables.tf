@@ -71,7 +71,6 @@ variable "custom_tags" {
   type = map(string)
 }
 
-variable "cross_account_id" {
+variable "cross_aws_account_id" {
   type    = string
-  default = "525048827230" #todo now - pass from main
 }

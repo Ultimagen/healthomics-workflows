@@ -40,6 +40,5 @@ variable "broad_references_public_bucket" {
 
 variable "accessible_buckets_list" {
   type = list(string)
-  default = ["genomics-pipeline-concordanz-eu-west-1", "gen-pipe-shared-337532070941-eu-west-1"] #todo now pass to main
 }
 

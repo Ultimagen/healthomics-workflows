@@ -21,3 +21,7 @@ output "omics_standard_run_group" {
 output "omics_long_run_group" {
   value = module.omics.long_run_group_arn
 }
+
+output "dynamodb_table" {
+  value = module.dynamodb.table.name
+}
