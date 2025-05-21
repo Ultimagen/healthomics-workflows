@@ -4,6 +4,7 @@ import boto3
 from botocore.exceptions import ClientError
 from botocore.config import Config
 import json
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -13,6 +14,7 @@ DYNAMIC_STORAGE = "DYNAMIC"
 OMICS_DDB_VERSION_KEY = "version"
 OMICS_DDB_WORKFLOW_KEY = "workflow"
 OMICS_DDB_WORKFLOW_ID_KEY = "workflow_id"
+
 
 def extract_run_name_from_inputs(input_params, workflow_name):
     return input_params.get(f'{workflow_name}.{RUN_NAME_PARAM_KEY}', "None")
@@ -37,6 +39,7 @@ def get_run_cache(omics_client, workflow_name, cache_behavior, cache_s3_bucket, 
     logger.info(f"Cache {cache_name} was created (id: {cache_id})")
     return cache_id
 
+
 def start_run(omics_client, **kwargs):
     start_run_resp = omics_client.start_run(**kwargs)
     logger.info(start_run_resp)
@@ -52,16 +55,18 @@ def start_run(omics_client, **kwargs):
     logger.info(f"tag_resources response: {resp}")
     return omics_run_id
 
+
 def _get_client(server_name, max_attempts=20):
     config = Config(retries=dict(total_max_attempts=max_attempts))
 
     client = boto3.client(server_name, config=config)
     return client
 
-def _get_resource(server_name):
 
+def _get_resource(server_name):
     resource = boto3.resource(server_name)
     return resource
+
 
 def _get_workflow_from_dynamodb(version: str, workflow_name: str):
     client = _get_resource("dynamodb")
@@ -72,8 +77,10 @@ def _get_workflow_from_dynamodb(version: str, workflow_name: str):
     db_item = table.get_item(Key=key).get("Item")
     logging.debug(f"Item found:\n{db_item}")
     if not db_item:
-        raise RuntimeError(f"workflow {workflow_name} version: {version} is missing from dynamodb. Make sure the workflow deployed")
+        raise RuntimeError(
+            f"workflow {workflow_name} version: {version} is missing from dynamodb. Make sure the workflow deployed")
     return db_item[OMICS_DDB_WORKFLOW_ID_KEY]
+
 
 def lambda_handler(event, context):
     logger.info(f"Event:\n{event}")
@@ -81,12 +88,11 @@ def lambda_handler(event, context):
     workflow_version = event['WorkflowVersion']
     run_id = event['RunId']
     input_params = event['InputParams']
-    run_name = event.get('RunName')
-    run_group_id = event.get('RunGroupID', os.environ['STANDARD_RUN_GROUP_ID'])
-
-    if not run_name:
-        run_name = extract_run_name_from_inputs(input_params, workflow_name)
+    run_name = event.get('RunName', extract_run_name_from_inputs(input_params, workflow_name))
+    is_long_run = event.get('LongRun', False)
+    run_group_id = os.environ['LONG_RUN_GROUP_ID'] if is_long_run else os.environ['STANDARD_RUN_GROUP_ID']
     cache_behavior = event.get("CacheBehavior", "CACHE_ON_FAILURE")
+
     request_id = context.aws_request_id
     role_arn = os.environ['OMICS_ROLE_ARN']
     output_s3_path = f"s3://{os.environ['OMICS_OUTPUTS_BUCKET']}/{workflow_name}"
@@ -104,9 +110,6 @@ def lambda_handler(event, context):
         }
         call_cache_id = get_run_cache(omics_client, workflow_name, cache_behavior, cache_s3_bucket, run_tags)
         start_run_args = {
-            # WorkflowId here is omics workflow ID, in Mongo WorkflowId is omics Run ID
-            # RunId here is ultima run ID, not omics Run ID
-            # (・_・ヾ
             'workflowId': workflow_id,
             "name": run_id,
             "roleArn": role_arn,
