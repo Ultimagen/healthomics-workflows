@@ -52,7 +52,6 @@ if __name__ == "__main__":
     parser.add_argument("--input-params-file", required=True, help="Path to the JSON file for InputParams")
     parser.add_argument("--long-run", action='store_true', help="mark the run as long and run it under 'long' run group. By default will run under 'standard' run group")
     parser.add_argument("--cache-behavior", help="HealthOmics cache behavior")
-    parser.add_argument("--input-params-file", required=True, help="Path to the JSON file for InputParams")
     parser.add_argument("--aws-region", help="AWS region", default="us-east-1")
     parser.add_argument("--aws-profile", help="AWS CLI profile", required=False)
 

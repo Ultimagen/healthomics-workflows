@@ -27,7 +27,7 @@ resource "aws_lambda_function" "lambda_function" {
       OMICS_OUTPUTS_BUCKET     = var.omics_outputs_bucket
       OMICS_CACHE_BUCKET       = var.omics_cache_bucket
       STANDARD_RUN_GROUP_ID    = var.omics_standard_run_group_id
-      SLONG_RUN_GROUP_ID       = var.omics_long_run_group_id
+      LONG_RUN_GROUP_ID        = var.omics_long_run_group_id
       OMICS_WORKFLOW_DDB_TABLE = var.dynamodb_table
 
     }
