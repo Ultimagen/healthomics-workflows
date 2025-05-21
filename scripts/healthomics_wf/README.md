@@ -19,22 +19,24 @@ The script performs the following tasks:
 The script accepts the following command line arguments:
 
 - `workflow`: Workflow to create (folder under workflows).
-- `aws_region`: AWS region for ECR images.
-- `s3_bucket`: Bucket name to copy resources files to. This bucket must be accessed by the service role that will be used to run the workflow.
+- `--aws-region`: AWS region for ECR images.
+- `--s3-bucket`: Bucket name to copy resources files to. This bucket must be accessed by the service role that will be used to run the workflow.
 #### Optional Arguments
-- `--input_template`: Input template JSON file name to localize (optional). If empty, it will localize all input templates.
-- `--omics_workflow_name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
-- `--aws_profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.
+- `--input-template`: Input template JSON file name to localize (optional). If empty, it will localize all input templates.
+- `--omics-workflow-name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
+- `--aws-profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.
+
+[//]: # (todo now add use-dynamodb)
 
 ### Example Command
 
 ```bash
 python create_healthomics_workflow.py \
   single_rad_snv \
-  us-east-1 \
-  my-s3-bucket \
-  --input_template single_read_snv_template-ppmSeq.json \
-  --omics_workflow_name single_rad_snv_wf
+  --aws-region us-east-1 \
+  --s3-bucket my-s3-bucket \
+  --input-template single_read_snv_template-ppmSeq.json \
+  --omics-workflow-name single_rad_snv_wf
 ```
 
 ## AWS Permissions
