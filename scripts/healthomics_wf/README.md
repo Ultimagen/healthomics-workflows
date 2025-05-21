@@ -23,10 +23,9 @@ The script accepts the following command line arguments:
 - `--s3-bucket`: Bucket name to copy resources files to. This bucket must be accessed by the service role that will be used to run the workflow.
 #### Optional Arguments
 - `--input-template`: Input template JSON file name to localize (optional). If empty, it will localize all input templates.
+- `--use-dynamodb`: Add this flag for storing the version workflow in dynamodb table (Relevant when omics environment was created using the terraform code that shared in this repository)
 - `--omics-workflow-name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
 - `--aws-profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.
-
-[//]: # (todo now add use-dynamodb)
 
 ### Example Command
 
@@ -36,7 +35,7 @@ python create_healthomics_workflow.py \
   --aws-region us-east-1 \
   --s3-bucket my-s3-bucket \
   --input-template single_read_snv_template-ppmSeq.json \
-  --omics-workflow-name single_rad_snv_wf
+  --use-dynamodb
 ```
 
 ## AWS Permissions
