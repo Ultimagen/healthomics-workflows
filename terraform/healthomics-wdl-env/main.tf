@@ -51,10 +51,4 @@ module "start_omics_run_lambda" {
   omics_standard_run_group_id = module.omics.standard_run_group_id
   dynamodb_table = module.dynamodb.table.name
 }
-# module "omics_deployment_iam" {
-#   source = "./iam/omics-deployment"
-#
-#   aws_account_id      = data.aws_caller_identity.current.account_id
-#   aws_region          = var.aws_region
-#   dynamodb_table_name = module.dynamodb.table.name
-# }
+

@@ -73,12 +73,12 @@ def _get_workflow_from_dynamodb(version: str, workflow_name: str):
     table_name = os.environ['OMICS_WORKFLOW_DDB_TABLE']
     table = client.Table(table_name)
     key = {OMICS_DDB_VERSION_KEY: version, OMICS_DDB_WORKFLOW_KEY: workflow_name}
-    logging.info(f"Get item from {table_name} table with key {key}")
+    logger.info(f"Get item from {table_name} table with key {key}")
     db_item = table.get_item(Key=key).get("Item")
     logging.debug(f"Item found:\n{db_item}")
     if not db_item:
         raise RuntimeError(
-            f"workflow {workflow_name} version: {version} is missing from dynamodb. Make sure the workflow deployed")
+            f"workflow {workflow_name} version: {version} is missing from dynamodb. Make sure the workflow is deployed")
     return db_item[OMICS_DDB_WORKFLOW_ID_KEY]
 
 

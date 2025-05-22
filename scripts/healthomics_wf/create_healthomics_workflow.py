@@ -31,15 +31,11 @@ def localize_workflow(wf_root, aws_region, s3_bucket, aws_profile=None, input_te
     logging.info(f"workflow: {args.workflow} localization completed")
 
 
-def create_workflow(aws_region, omics_wf_name, wf_root, workflow, aws_profile, use_dynamodb):
-    return create_omics_workflow(aws_region, omics_wf_name, wf_root, workflow, aws_profile, use_dynamodb)
-
-
 def localize_and_create(workflow_folder, aws_region, s3_bucket, omics_workflow_name,
                         aws_profile=None, input_template=None, use_dynamodb=False):
     workflow_root = f'{Path(__file__).resolve().parent.parent.parent}/workflows/{workflow_folder}'
     localize_workflow(workflow_root, aws_region, s3_bucket, aws_profile, input_template)
-    create_workflow(aws_region, omics_workflow_name, workflow_root, workflow_folder, aws_profile, use_dynamodb)
+    create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workflow_folder, aws_profile, use_dynamodb)
 
 
 if __name__ == "__main__":
