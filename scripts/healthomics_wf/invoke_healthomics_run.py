@@ -46,7 +46,7 @@ def invoke_lambda(workflow_name, workflow_version, run_id, input_params_file, aw
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Invoke a HealthOmics start run Lambda function with a JSON file input.")
-    parser.add_argument("--workflow-name", required=True, help="Workflow name")
+    parser.add_argument("--omics-workflow-name", required=True, help="Workflow name")
     parser.add_argument("--workflow-version", required=True, help="Workflow version")
     parser.add_argument("--run-id", required=True, help="Run ID")
     parser.add_argument("--input-params-file", required=True, help="Path to the JSON file for InputParams")
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     invoke_lambda(
-        workflow_name=args.workflow_name,
+        workflow_name=args.omics_workflow_name,
         workflow_version=args.workflow_version,
         run_id=args.run_id,
         input_params_file=args.input_params_file,

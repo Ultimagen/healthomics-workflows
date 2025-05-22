@@ -3,9 +3,10 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 
 # Table of Contents
 1. [Introduction](#Introduction)
-2. [Deploying Private Workflow](#Deploying-Private-Workflow)
-3. [Running Private Workflow](#Running-Private-Workflow)
-4. [Support Tools](#Support-Tools)
+2. [Terraform Modules for Environment Setup](#Terraform-Modules-for-Environment-Setup)
+3. [Deploying Private Workflow](#Deploying-Private-Workflow)
+4. [Running Private Workflow](#Running-Private-Workflow)
+5. [Support Tools](#Support-Tools)
 ## Introduction
 
 1.	Ultima Genomics offers pipelines as Ready2Run workflows on AWS HealthOmics. Ready2Run workflows enable you to run these pipelines on AWS HealthOmics by simply bringing your data. For more flexibility such as the use of larger file sizes or changing the reference genome, you can convert Ready2Run workflows to private workflows by following the steps in this repository. Once the Ready2Run workflow is converted to a private workflow, the cost to run the workflow will now be based on the compute and run storage used during the private workflow.
@@ -20,13 +21,26 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
     - folder with optional input templates with default parameters for the wdl
     - folder with the different tasks the wdl is running
 
-  	The instructions below include localizing resources, deploying workflow and creating a run.
+4. The instructions below include localizing resources, deploying workflow and creating a run.
+5. For more questions about these workflows, please contact healthomics.support@ultimagen.com.
 
-5.	For more questions about these workflows, please contact healthomics.support@ultimagen.com.
+## Terraform Modules for Environment Setup
+This repository includes [Terraform modules](terraform/healthomics-wdl-env)
+to simplify the deployment of AWS resources required to run Ultima Genomics WDL workflows on AWS HealthOmics.
+These modules automate the creation of necessary infrastructure, such as S3 buckets, IAM roles, and permissions,
+ensuring a consistent and secure environment for workflow execution.
+We strongly recommend using it for building your AWS omics env.
+Feel free to make customizations as per your request
+
+Key features:
+- Automated provisioning of AWS resources for HealthOmics workflows
+- Easy integration with existing workflow deployment steps and version management
+
+Refer to the [terraform/healthomics-wdl-env/README.md](terraform/healthomics-wdl-env/README.md) for detailed usage instructions and module configuration options.
 
 ## Deploying Private Workflow
 ### To localize workflow resources and create a private workflow in AWS HealthOmics you can:
-- [use this script](scripts/healthomics_wf/README.md) that localize the needed resources and create a private workflow on AWS HealthOmics. After running it your workflow [is ready to run](#running-private-workflow).
+- [use this script](scripts/healthomics_wf/create_healthomics_workflow.py) that localizes the necessary resources and create a private workflow on AWS HealthOmics. After running it your workflow [is ready to run](#running-private-workflow).
 - Alternatively, follow the steps below to do it manually:
 #### To localize workflow resources to create a private workflow in AWS HealthOmics, follow the steps below:
 i. Pre requisites: 
@@ -44,8 +58,8 @@ i. Pre requisites:
    
     b. Grant AWS HealthOmics permission to access your private ECR by following the instructions [here](https://docs.aws.amazon.com/omics/latest/dev/permissions-resource.html#permissions-resource-ecr).
    
-4. Import your input files into a S3 bucket.
-5. Create an OmicsService role to access your resources by following the instructions [here](https://docs.aws.amazon.com/omics/latest/dev/setting-up-workflows.html).
+3. Import your input files into a S3 bucket.
+4. Create an OmicsService role to access your resources by following the instructions [here](https://docs.aws.amazon.com/omics/latest/dev/setting-up-workflows.html).
 
 ii. Download the workflow folder as a zipped file, this should include main wdl file on the top level folder, tasks folders and <workflow_name>_params.json . You can save this zipped file locally or in a S3 bucket. 
 
@@ -77,7 +91,9 @@ ii. From the console:
        - Define "Main workflow definition file path" as <workflow_name>.wdl file
 
 ## Running Private Workflow
+In case you chose to build your environment with the healthomics-wdl-env terraform module, and you've deployed the workflow by running the script, you can run your workflow easily using [this script](scripts/healthomics_wf/invoke_healthomics_run.py) that invokes the StartOmicsRun lambda.
 
+Alternatively, follow the steps below to do it manually:
 #### Run your workflow by following one of the two options below:
    
 i. From the CLI:
@@ -101,4 +117,4 @@ ii. From the console (current omics versoin doesn't work well with wdl scoped pa
 ## Support Tools
 
 In case your private workflow's run failed, you can [use this script](scripts/healthomics_support/README.md) to extract information and logs from AWS HealthOmics run to ease failures
-debugging. Please attach the tar file that generated by the script in any support call.
+debugging. Please attach the tar file generated by the script in any support call.

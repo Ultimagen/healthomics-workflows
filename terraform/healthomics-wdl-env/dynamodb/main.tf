@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "omics_table" {
-  name                        = "OmicsWorkflows"
+  name                        = var.table_name
   billing_mode                = "PAY_PER_REQUEST"
   deletion_protection_enabled = false
 
