@@ -106,7 +106,7 @@ $ aws omics start-run \
     --name <run_name> \
     --retention-mode REMOVE
  ~~~
-ii. From the console (current omics versoin doesn't work well with wdl scoped parameters, cli is preferred):
+ii. From the console (current omics version doesn't work well with wdl scoped parameters, cli is preferred):
    
    a. Click **Private Workflows** from the left pane.
 
