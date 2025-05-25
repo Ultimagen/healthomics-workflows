@@ -8,5 +8,5 @@ Terraform modules to simplify the deployment of AWS resources required to run Ul
      1. `export AWS_REGION=<aws region you want the modules to be deployed on>`
      2. `./init.sh <terraform bucket name created on step 1>` 
      3. `terraform plan/apply`
-  3. [optional] Run ./scripts/request_omics_quotas.sh --help and follow the instructions to create quota request as per your needs.
+  3. [optional] Run `./scripts/request_omics_quotas.sh --help` and follow the instructions to create quota request as per your needs.
   
