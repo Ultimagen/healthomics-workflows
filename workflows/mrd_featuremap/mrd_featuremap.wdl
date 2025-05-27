@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.18.3" # !UnusedDeclaration
+        String pipeline_version = "1.19.1" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -114,7 +114,8 @@ workflow MRDFeatureMap {
           "Sentieon.Globals.glob",
           "AnnotateVCF.Globals.glob",
           "SingleSampleQC.Globals.glob",
-          "VariantCallingEvaluation.Globals.glob"
+          "VariantCallingEvaluation.Globals.glob",
+          "MergeVcfsIntoBed.disk_size"
       ]}
   }    
 
@@ -259,42 +260,16 @@ workflow MRDFeatureMap {
           type: "Array[File]",
           category: "output"
       }
-      coverage_per_locus_csv: {
-          help: "CSV file of the coverage per locus across all signatures",
-          type: "File",
-          category: "output"
+      coverage_bed: {
+        help: "Coverage bed file",
+        type: "File",
+        category: "output"
       }
-      sample_summary: {
-          help: "Summary file of the coverage per sample",
-          type: "File",
-          category: "output"
+      coverage_bed_index: {
+        help: "Respective index",
+        type: "File",
+        category: "output"
       }
-      sample_statistics: {
-          help: "Statistics file of the coverage per sample",
-          type: "File",
-          category: "output"
-      }
-      sample_interval_summary: {
-          help: "Summary file of the coverage per interval",
-          type: "File",
-          category: "output"
-      }
-      sample_interval_statistics: {
-          help: "Statistics file of the coverage per interval",
-          type: "File",
-          category: "output"
-      }
-      sample_cumulative_coverage_proportions: {
-          help: "Cumulative coverage proportions file of the coverage per sample",
-          type: "File",
-          category: "output"
-      }
-      sample_cumulative_coverage_counts: {
-          help: "Cumulative coverage counts file of the coverage per sample",
-          type: "File",
-          category: "output"
-      }
-      
   }
 
   Int preemptibles = select_first([preemptible_tries, 1])
@@ -381,15 +356,27 @@ workflow MRDFeatureMap {
   # Part 2 - Collect coverage over signatures
   Array[File] all_vcf_files = flatten(select_all([filtered_matched_control_signatures, filtered_external_control_signatures, filtered_db_control_signatures]))
   Int memory_extract_coverage = select_first([memory_extract_coverage_override, 8])
-  call UGMrdTasks.ExtractCoverageOverVcfFiles as ExtractCoverageOverVcfFiles{
+
+  call UGMrdTasks.MergeVcfsIntoBed as MergeVcfsIntoBed {
     input:
       vcf_files = all_vcf_files,
+      docker = global.ugbio_core_docker,
+      disk_size = ceil(size(all_vcf_files, "GB") * 2 + 20),
+      memory_gb = memory_extract_coverage,
+      cpus = 2,
+      preemptibles = preemptibles,
+      monitoring_script = monitoring_script #!FileCoercion
+  }
+
+  call UGMrdTasks.ExtractCoverageOverVcfFiles as ExtractCoverageOverVcfFiles{
+    input:
+      merged_loci_bed = MergeVcfsIntoBed.merged_loci_bed,
       input_cram_bam = cfdna_cram_bam,
       input_cram_bam_index = cfdna_cram_bam_index,
       base_file_name = base_file_name,
       mapping_quality_threshold = mapping_quality_threshold,
       references = references,
-      docker = global.ugbio_mrd_docker,
+      docker = global.mosdepth_docker,
       memory_gb = memory_extract_coverage,
       cpus = 2,
       preemptibles = preemptibles,
@@ -398,6 +385,10 @@ workflow MRDFeatureMap {
 
   # Part 3 - Intersect FeatureMap with signatures
   Float featuremap_size = size(cfdna_featuremap, "GB")
+  Int tmp_cpus_FeatureMapIntersectWithSignatures = round(length(all_vcf_files) / 2)
+  Int cpus_FeatureMapIntersectWithSignatures = if tmp_cpus_FeatureMapIntersectWithSignatures < 2 then 2 else tmp_cpus_FeatureMapIntersectWithSignatures
+  Int tmp_memory_FeatureMapIntersectWithSignatures = cpus_FeatureMapIntersectWithSignatures * 2
+  Int memory_FeatureMapIntersectWithSignatures = if tmp_memory_FeatureMapIntersectWithSignatures < 4 then 4 else tmp_memory_FeatureMapIntersectWithSignatures
   call UGMrdTasks.FeatureMapIntersectWithSignatures as FeatureMapIntersectWithSignatures{
     input:
       featuremap = cfdna_featuremap,
@@ -407,8 +398,8 @@ workflow MRDFeatureMap {
       db_signatures = GenerateControlSignaturesFromDatabase.db_signatures,
       docker = global.ugbio_mrd_docker,
       disk_size = 2 * featuremap_size + 30,
-      memory_gb = 8,
-      cpus = 2,
+      memory_gb = memory_FeatureMapIntersectWithSignatures,
+      cpus = cpus_FeatureMapIntersectWithSignatures,
       monitoring_script = monitoring_script  #!FileCoercion
   }
 
@@ -419,7 +410,7 @@ workflow MRDFeatureMap {
       matched_signatures_vcf = filtered_matched_control_signatures,
       control_signatures_vcf = filtered_external_control_signatures,
       db_signatures_vcf = filtered_db_control_signatures,
-      coverage_csv = ExtractCoverageOverVcfFiles.coverage_per_locus_csv,
+      coverage_bed = ExtractCoverageOverVcfFiles.coverage_bed,
       mrd_analysis_params = mrd_analysis_params,
       basename = base_file_name,
       featuremap_df_file = featuremap_df_file,
@@ -445,12 +436,7 @@ workflow MRDFeatureMap {
     Array[File]? matched_signatures_vcf = filtered_matched_control_signatures
     Array[File]? db_signatures_vcf = filtered_db_control_signatures
     # Coverage stats
-    File coverage_per_locus_csv = ExtractCoverageOverVcfFiles.coverage_per_locus_csv
-    File sample_summary = ExtractCoverageOverVcfFiles.sample_summary
-    File sample_statistics = ExtractCoverageOverVcfFiles.sample_statistics
-    File sample_interval_summary = ExtractCoverageOverVcfFiles.sample_interval_summary
-    File sample_interval_statistics = ExtractCoverageOverVcfFiles.sample_interval_statistics
-    File sample_cumulative_coverage_proportions = ExtractCoverageOverVcfFiles.sample_cumulative_coverage_proportions
-    File sample_cumulative_coverage_counts = ExtractCoverageOverVcfFiles.sample_cumulative_coverage_counts    
+    File coverage_bed = ExtractCoverageOverVcfFiles.coverage_bed
+    File coverage_bed_index = ExtractCoverageOverVcfFiles.coverage_bed_index  
   }
 }

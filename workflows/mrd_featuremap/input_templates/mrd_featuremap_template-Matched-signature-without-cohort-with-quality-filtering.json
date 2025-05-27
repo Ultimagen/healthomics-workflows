@@ -19,9 +19,9 @@
         "read_filter_query": "qual>60"
     },
     "MRDFeatureMap.references": {
-        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "MRDFeatureMap.preemptible_tries": 1,
     "MRDFeatureMap.snv_database": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz",

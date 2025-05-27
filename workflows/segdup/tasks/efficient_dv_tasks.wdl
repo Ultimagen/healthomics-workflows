@@ -308,16 +308,16 @@ task UGCallVariants{
 
     nvidia-smi --query-gpu=timestamp,name,driver_version,temperature.gpu,utilization.gpu,utilization.memory,memory.used --format=csv -l 60 -f  ./nvidia-smi.log & #todo change from old
 
-    # Rename the serialized model to fit the onnx file (allow various versions of serialized model files with different file names)
+    cp ~{model_onnx} ~{onnx_base_name}
+    # Rename the serialized model to fit the onnx file (allow various versions of serialized model files with different file names)        
     if [ "~{defined(model_serialized)}" == "true" ] && [ "~{model_serialized}" != "~{model_onnx}.serialized" ]
     then
       echo 'Renaming serialized model to fit onnx file'
-      cp ~{model_onnx} ~{onnx_base_name}
       cp ~{model_serialized} ~{onnx_base_name}.serialized
     fi
 
     printf "%b\n" "[RT classification]" \
-      "onnxFileName = ~{model_onnx}" \
+      "onnxFileName = ~{onnx_base_name}" \
       "useSerializedModel = 1" \
       "trtWorkspaceSizeMB = 2000" \
       "numInferTreadsPerGpu = 2" \
@@ -360,13 +360,20 @@ output {
     Array[File] log = glob('call_variants*.log')
     Array[File] output_records = glob('call_variants*.gz')
     Array[File] num_candidates = glob("num_candidates_*")
-    # File output_model_serialized = " ~{onnx_base_name}.serialized" uncomment to output the serilized model (need also to uncomment output_model_serialized in efficient_dv.wdl outputs)
+    # File output_model_serialized = "~{onnx_base_name}.serialized" #uncomment to output the serilized model (need also to uncomment output_model_serialized in efficient_dv.wdl outputs)
   }
 }
 
 task UGPostProcessing{
   input{
     Array[File] called_records
+    Array[File] cram_files
+    Array[File] cram_index_files
+
+    # Background sample inputs
+    Array[File] background_cram_files
+    Array[File] background_cram_index_files
+
     File ref
     File ref_index
     String docker
@@ -379,6 +386,7 @@ task UGPostProcessing{
     Int qual_filter
     Array[File]? gvcf_records
     Boolean make_gvcf
+    Boolean recalibrate_vaf
     Int min_variant_quality_hmer_indels
     Int min_variant_quality_exome_hmer_indels
     Int min_variant_quality_non_hmer_indels
@@ -392,14 +400,21 @@ task UGPostProcessing{
                          size(ref, "GB") +
                          size(dbsnp, "GB") +
                          (if make_gvcf then size(select_first([gvcf_records]), "GB") else 0) +
-                         4 + (if make_gvcf then 5 else 0))
-
+                         4 + (if make_gvcf then 5 else 0)) + 
+                         ceil(size(background_cram_files, "GB")) + 
+                         ceil(size(cram_files, "GB")) +
+                         ceil(size(cram_index_files, "GB")) +
+                         ceil(size(background_cram_index_files, "GB"))
   }
+  Int indel_threshold_for_recalibration = 30000
+
   String gvcf_args = if make_gvcf then "--gvcf_outfile ~{output_prefix}.g.vcf.gz --nonvariant_site_tfrecord_path @gvcf_records.txt --hcr_bed_file ~{output_prefix}.hcr.bed " else ""
   Array[File] gvcf_records_not_opt = select_first([gvcf_records, []])
   Array[File] empty_array_of_files = []
   Array[File] annotation_intervals_or_empty = select_first([annotation_intervals, empty_array_of_files])
   Array[File] exome_and_annotations = flatten([[exome_intervals], annotation_intervals_or_empty])
+  Boolean defined_background = length(background_cram_files) > 0
+
   command <<<
       bash ~{monitoring_script} | tee monitoring.log >&2 &
       set -xeo pipefail
@@ -424,6 +439,30 @@ task UGPostProcessing{
         cp ~{write_lines(gvcf_records_not_opt)} gvcf_records.txt
       fi
 
+      foreground=~{sep=',' cram_files}
+      background=~{sep=',' background_cram_files}
+      cram_string="~{true='$foreground;$background' false='$foreground' defined_background}"
+
+      echo "Calculating approximate INDEL variant count"
+      ug_postproc \
+          --infile @called_records.txt \
+          --ref ~{ref} \
+          --outfile "~{output_prefix}.vcf.gz" \
+          --qual_filter ~{qual_filter} \
+          --count_indels --group_variants false |& tee indel.count.log
+
+      indel_count=$( grep indel_count indel.count.log | cut -d " " -f 4 )
+      echo "Approximate INDEL variant count: $indel_count"
+      if [ $indel_count -gt ~{indel_threshold_for_recalibration} ]
+      then
+        echo "INDEL variant count is too high, skipping post-processing"
+        recalibration_string=""
+      else 
+        echo "INDEL variant count is low, recalibrating VAF"
+        recalibration_string="--fix_allele_coverage --fix_allele_indels_only --fix_allele_crams $cram_string"
+      fi
+     
+
       echo 'Running UG post-processing...'
       ug_postproc \
         --infile @called_records.txt \
@@ -439,6 +478,7 @@ task UGPostProcessing{
         --filters_file filters.txt \
         --dbsnp ~{dbsnp} \
         ~{if show_bg_fields then "--consider_bg_fields" else ""} \
+        ~{if recalibrate_vaf then '$recalibration_string' else ""} \
         ~{extra_args}
 
       bcftools index -t "~{output_prefix}.vcf.gz"

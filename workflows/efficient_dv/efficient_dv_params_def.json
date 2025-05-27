@@ -195,6 +195,10 @@
         "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
         "optional": true
     },
+    "EfficientDV.recalibrate_vaf": {
+        "description": "Whether to recalculate the variant allele frequency on the PASS variants, improves over the naive VAF calculate of DeepVariant (somatic calling only)",
+        "optional": false
+    },
     "EfficientDV.ref_dbsnp": {
         "description": "DbSNP vcf for the annotation of known variants",
         "optional": false

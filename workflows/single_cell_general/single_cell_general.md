@@ -79,6 +79,11 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>SorterParams &mdash; Default: None</i><br />
         Parameters for Sorter task.  See input template
 </p>
+<p name="SingleCell.additional_rg">
+        <b>SingleCell.additional_rg</b><br />
+        <i>String? &mdash; Default: None</i><br />
+        Additional read group name for a third read, e.g. S1_L001_I1_001
+</p>
 <p name="SingleCell.downstream_analysis">
         <b>SingleCell.downstream_analysis</b><br />
         <i>String? &mdash; Default: None</i><br />
@@ -201,6 +206,11 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <b>SingleCell.output_insert_fastq</b><br />
         <i>File</i><br />
         The fastq with the insert portion of the read
+</p>
+<p name="SingleCell.output_additional_fastq">
+        <b>SingleCell.output_additional_fastq</b><br />
+        <i>File?</i><br />
+        The additional fastq, if an additional_rg was specified
 </p>
 <p name="SingleCell.report_html">
         <b>SingleCell.report_html</b><br />

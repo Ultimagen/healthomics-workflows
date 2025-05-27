@@ -177,7 +177,6 @@ task CollectQualityYieldMetrics {
             INPUT=~{input_bam} \
             R=~{references.ref_fasta} \
             OQ=true \
-            FLOW_MODE=true \
             OUTPUT=~{metrics_filename}
     >>>
 

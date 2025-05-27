@@ -3,9 +3,9 @@
     "SegDupAnalysis.input_cram_bam": "<File>.cram",
     "SegDupAnalysis.input_crai_bai": "<File>.cram.crai",
     "SegDupAnalysis.references": {
-        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "SegDupAnalysis.n_threads": 20,
     "SegDupAnalysis.cn_model": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_250205/model.tar.gz",
@@ -15,8 +15,9 @@
     "SegDupAnalysis.background_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/background_regions/hg38.bed.gz",
     "SegDupAnalysis.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx",
     "SegDupAnalysis.exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
-    "SegDupAnalysis.dbsnp": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
-    "SegDupAnalysis.dbsnp_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+    "SegDupAnalysis.dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+    "SegDupAnalysis.dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
     "SegDupAnalysis.preemptible_tries": 3,
+    "SegDupAnalysis.no_address": true,
     "SegDupAnalysis.cloud_provider_override": "aws"
 }

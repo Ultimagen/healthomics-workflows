@@ -35,6 +35,10 @@
         "description": "Parameters for the UA aligner. Mandatory if aligner is ua.",
         "optional": true
     },
+    "SingleCell.additional_rg": {
+        "description": "Additional read group name for a third read, e.g. S1_L001_I1_001",
+        "optional": true
+    },
     "SingleCell.barcode_rg": {
         "description": "Read group name for the barcode reads, e.g. S1_L001_R1_001",
         "optional": false

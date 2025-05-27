@@ -296,6 +296,7 @@ task IntervalListOfGenome {
     cat ~{ref_fai} | grep -v '[ME_-]' | awk '{print $1"\t"1"\t"$2"\t+\t."}' > modifai
     cat ~{ref_dict} modifai > genome.interval_list
   >>>
+
   runtime {
     preemptible: preemptible_tries
     cpu: "1"
@@ -953,6 +954,7 @@ task CopyFiles {
         Array[File] output_files = input_files
     }
 }
+
 # creates a bed file from a VCF file and expands if needed
 task VcfToIntervalListAndBed {
     input {
@@ -997,6 +999,43 @@ task VcfToIntervalListAndBed {
     output {
         File interval_list = "~{base_file_name}.interval_list"
         File bed = "~{base_file_name}.bed"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+# creates a bed file from a VCF file and expands if needed
+task BedToIntervalList {
+    input {
+        File monitoring_script
+        File input_file
+        File reference_dict
+        String base_file_name
+        String docker
+        Int disk_size = ceil(2*size(input_file, "GB")) + 5
+        Int preemptible_tries
+        Boolean no_address
+    }
+
+    command <<< 
+        set -eo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        gatk BedToIntervalList \
+            I=~{input_file} \
+            O=~{base_file_name}.interval_list \
+            SD=~{reference_dict}
+    >>>
+
+    runtime {
+        memory: "2 GB"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }
+
+    output {
+        File interval_list = "~{base_file_name}.interval_list"
         File monitoring_log = "monitoring.log"
     }
 }

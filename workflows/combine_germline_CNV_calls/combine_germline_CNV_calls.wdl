@@ -27,7 +27,7 @@ import "tasks/globals.wdl" as Globals
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.18.3" # !UnusedDeclaration
+        String pipeline_version = "1.19.1" # !UnusedDeclaration
 
         String base_file_name
 
@@ -44,7 +44,7 @@ workflow CombineGermlineCNVCalls {
         File reference_genome
         File reference_genome_index
         
-        File cnv_lcr_file
+        File? cnv_lcr_file
         
         Boolean? no_address_override
         Int? preemptible_tries_override
@@ -307,7 +307,7 @@ task ProcessCnvCalls  {
         File cnvpytor_cnvs_bed
         File jalign_del_candidates
         String base_file_name
-        File cnv_lcr_file
+        File? cnv_lcr_file
         File fasta_index
         Int? distance_threshold
         Int? deletions_length_cutoff
@@ -326,6 +326,7 @@ task ProcessCnvCalls  {
     Float additional_disk = 10
     Int disk_size = ceil(cnmops_cnvs_bed_size + cnvpytor_cnvs_bed_size + jalign_del_candidates_size + cnv_lcr_file_size + additional_disk)
 
+    String out_sample_cnvs_bed_file = if defined(cnv_lcr_file) then "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.UG-CNV-LCR_annotate.bed" else "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.bed"
      
     command <<<
         
@@ -337,7 +338,7 @@ task ProcessCnvCalls  {
             ~{"--jalign_written_cutoff " + jalign_written_cutoff} \
             ~{"--distance_threshold "+ distance_threshold} \
             ~{"--duplication_length_cutoff_for_cnmops_filter " + duplication_length_cutoff_for_cnmops_filter} \
-            --ug_cnv_lcr ~{cnv_lcr_file} \
+            ~{"--ug_cnv_lcr " + cnv_lcr_file} \
             --fasta_index ~{fasta_index} \
             --out_directory . \
             --sample_name ~{base_file_name}
@@ -354,7 +355,7 @@ task ProcessCnvCalls  {
 
     output
     {
-        File sample_cnvs_bed_file = "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.UG-CNV-LCR_annotate.bed"
+        File sample_cnvs_bed_file = "~{out_sample_cnvs_bed_file}"
         File sample_cnvs_vcf_file = "~{base_file_name}.cnv.vcf.gz"
         File sample_cnvs_vcf_index_file = "~{base_file_name}.cnv.vcf.gz.tbi"
     }

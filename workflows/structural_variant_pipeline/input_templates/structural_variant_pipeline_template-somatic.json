@@ -17,14 +17,14 @@
     "SVPipeline.max_reads_per_partition": 1500,
     "SVPipeline.ua_references": {
         "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/Homo_sapiens_assembly38.fasta.uai",
-        "ref_alt": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+        "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
         "v_aware_alignment_flag": false,
         "ua_extra_args": "--seed-score-ratio 0.5 --vector --huge --soft-clipping --realignment-tag re --mismatch-cost -6"
     },
     "SVPipeline.references": {
-        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "SVPipeline.reference_name": "38",
     "SVPipeline.run_ua": true,
@@ -36,6 +36,7 @@
     "SVPipeline.is_somatic": true,
     "SVPipeline.min_indel_sc_size_to_include": "20;0",
     "SVPipeline.min_mismatch_count_to_include": "5;0",
+    "SVPipeline.run_giraffe": false,
     "SVPipeline.input_tumor_crams": [
         "<cram>.cram"
     ],

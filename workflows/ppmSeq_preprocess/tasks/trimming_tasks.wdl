@@ -83,6 +83,8 @@ task Trimmer {
             ~{"--reference=" + cram_reference} \
             --cram true \
             --output ~{output_file_name} \
+            --trim-field MI \
+            --trim-field DS \
             ~{trimmer_extra_args}
         else  # bam extension
             ~{"tar -zxf "+cache_tarball}
@@ -109,9 +111,10 @@ task Trimmer {
             ~{"--reference=" + cram_reference} \
             --cram true \
             --output ~{output_file_name} \
+            --trim-field MI \
+            --trim-field DS \
             ~{trimmer_extra_args}
         fi
-
         
         OUT_CRAM_SUFFIX=~{output_file_name_suffix} 
         # If remove_small_files is set to true then remove trimmed ucrams under 500M in file size
@@ -121,12 +124,11 @@ task Trimmer {
         if [ ~{parameters.remove_small_files} = true ]; then
             find . -type f -size -500M -name "*${OUT_CRAM_SUFFIX}" | xargs -I {} rm {}
         fi
-
+        
         # To make sure an output cram was created, we check for any files ending in the specified suffix
         # The -type f ensures we only match regular files.
         # -maxdepth 1 ensures we only look in the current directory (optional).
-        find . -maxdepth 1 -type f -name "*${OUT_CRAM_SUFFIX}"
-        if ! find . -maxdepth 1 -type f -name "*${OUT_CRAM_SUFFIX}" | grep -q .; then
+        if ! find . -print -quit -maxdepth 1 -type f -name "*${OUT_CRAM_SUFFIX}" | grep -q . ; then
             echo "ERROR: No file found ending with '${OUT_CRAM_SUFFIX}', this indicates that no output cram was created, likely because all the reads did not match on Trimmer." >&2
             ls -ltr           
             exit 1

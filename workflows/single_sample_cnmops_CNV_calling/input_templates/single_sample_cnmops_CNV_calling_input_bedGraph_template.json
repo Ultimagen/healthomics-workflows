@@ -3,8 +3,8 @@
     "SingleSampleCnmopsCNVCalling.bed_graph": [
         "s3://<sample>.bedGraph"
     ],
-    "SingleSampleCnmopsCNVCalling.reference_genome": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-    "SingleSampleCnmopsCNVCalling.reference_genome_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+    "SingleSampleCnmopsCNVCalling.reference_genome": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+    "SingleSampleCnmopsCNVCalling.reference_genome_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
     "SingleSampleCnmopsCNVCalling.ref_seq_names": [
         "chr1",
         "chr2",

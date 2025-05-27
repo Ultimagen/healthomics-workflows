@@ -37,9 +37,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.0
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.2
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.0
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.2
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -214,6 +214,16 @@ REFLEN > 220 and vc.isFiltered()
 ```
 
 dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
+
+`ug_post_processing` can also be used to improve the VAF estimates of INDELs. This is recommended only run if the callset contains less than 30K indels. 
+To do this, append the following parameters
+
+```
+--fix_allele_coverage 
+--fix_allele_indels_only 
+--fix_allele_crams <tumor.cram>;<normal.cram>
+```
+
 
 ### Additional filtering steps recommended. 
 

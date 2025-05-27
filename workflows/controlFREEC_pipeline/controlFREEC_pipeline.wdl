@@ -31,7 +31,7 @@ import "tasks/qc_tasks.wdl" as UGQCTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.18.3" # !UnusedDeclaration
+        String pipeline_version = "1.19.1" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -74,6 +74,7 @@ workflow SomaticCNVCallingControlFREEC{
         Boolean bed_graph_output
         Boolean contamination_adjustment
         Float? contamination_fraction
+        Int? force_gc_content_normalization
         String input_format
         Int window
         File? chrLenFile_override
@@ -291,6 +292,11 @@ workflow SomaticCNVCallingControlFREEC{
             help: "a priori known value of tumor sample contamination by normal cells. Default: contamination=0",
             type: "Float",
             category: "param_optional"
+        }
+        force_gc_content_normalization: {
+            help: "Whether to run controlFREEC with force_gc_content_normalization option, recommended value set in the template",
+            type: "Int",
+            category: "param_advanced"
         }
         input_format: {
             help: "controlFREEC input format, recommended value set in the template",
@@ -669,6 +675,7 @@ workflow SomaticCNVCallingControlFREEC{
         contamination_fraction = contamination_fraction,
         ploidy = ploidy,
         gem_mappability_file = gem_mappability_file,
+        force_gc_content_normalization = force_gc_content_normalization,
         maxThreads = maxThreads,
         sex = sex,
         window =  window,
@@ -1055,11 +1062,11 @@ task runControlFREEC{
 
             File snp_file
             File snp_file_index
-
             Boolean high_sensitivity_mode
             String input_format
             Boolean bed_graph_output
             Boolean naive_normalization
+            Int? force_gc_content_normalization
             Boolean contamination_adjustment
             Float? contamination_fraction
             Int degree
@@ -1125,6 +1132,7 @@ task runControlFREEC{
             --degree ~{degree} \
             ~{"--sex " + sex} \
             ~{"--gemMappabilityFile " + gem_mappability_file} \
+            ~{"--forceGCcontentNormalization " + force_gc_content_normalization} \
             --sample_mateFile ~{tumor_bam_file} \
             --sample_mateCopyNumberFile ~{tumor_cpn} \
             --sample_miniPileupFile ~{tumor_mpileup} \

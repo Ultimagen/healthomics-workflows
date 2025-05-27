@@ -1,5 +1,5 @@
 {
-    "SomaticCNVCallingControlFREEC.base_file_name": "<sample_base_name",
+    "SomaticCNVCallingControlFREEC.base_file_name": "<sample_base_name>",
     "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": [
         "<tumor>.cram"
     ],
@@ -22,9 +22,9 @@
     "SomaticCNVCallingControlFREEC.interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
     "SomaticCNVCallingControlFREEC.genome_windows": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed",
     "SomaticCNVCallingControlFREEC.references": {
-        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "SomaticCNVCallingControlFREEC.mapq_override": 1,
     "SomaticCNVCallingControlFREEC.snp_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz",
@@ -41,5 +41,6 @@
     "SomaticCNVCallingControlFREEC.gem_mappability_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
     "SomaticCNVCallingControlFREEC.chrLenFile_override": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
     "SomaticCNVCallingControlFREEC.high_sensitivity_mode": true,
-    "SomaticCNVCallingControlFREEC.naive_normalization": true
+    "SomaticCNVCallingControlFREEC.naive_normalization": true,
+    "SomaticCNVCallingControlFREEC.force_gc_content_normalization": 1
 }

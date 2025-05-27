@@ -73,11 +73,6 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Int </i> &mdash; 
          The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals. <br /> 
 </p>
-<p name="SegDupAnalysis.DV.target_intervals">
-        <b>SegDupAnalysis.DV.target_intervals</b><br />
-        <i>File? </i> &mdash; 
-         Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used. <br /> 
-</p>
 <p name="SegDupAnalysis.DV.intervals_string">
         <b>SegDupAnalysis.DV.intervals_string</b><br />
         <i>String? </i> &mdash; 

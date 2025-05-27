@@ -5,9 +5,9 @@
     "SingleReadSNV.base_file_name": "<base_file_name>",
     "SingleReadSNV.somatic_mutations_list": [],
     "SingleReadSNV.references": {
-        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "SingleReadSNV.wgs_calling_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
     "SingleReadSNV.break_bands_at_multiples_of": 100000,

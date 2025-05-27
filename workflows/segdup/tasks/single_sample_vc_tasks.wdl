@@ -180,13 +180,9 @@ task CreateSECBlacklist {
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
 
-    source /opt/conda/etc/profile.d/conda.sh
-
-    conda activate genomics.py3
-
     bedtools intersect -a ~{input_gvcf} -b ~{blacklist_file} -header | uniq > /tmp.g.vcf
 
-    correct_systematic_errors.py \
+    correct_systematic_errors \
       --model ~{sep=' --model ' sec_models} \
       --gvcf /tmp.g.vcf \
       --relevant_coords ~{blacklist_file} \
@@ -236,15 +232,13 @@ task PrepareTrainingSet {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    source /opt/conda/etc/profile.d/conda.sh
-    conda activate genomics.py3
     
     if [ ~{have_sdf} = true ]
     then
       python -m tarfile -e ~{ref_sdf} ~{ref_fasta}.sdf
     fi
 
-    training_prep_pipeline.py \
+    training_prep_pipeline \
               --call_vcf ~{input_vcf} \
               ~{"--blacklist " + blacklist_file} \
               ~{"--base_vcf " + base_vcf} \
@@ -287,10 +281,8 @@ task TrainModel {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    source /opt/conda/etc/profile.d/conda.sh
-    conda activate genomics.py3
 
-    train_models_pipeline.py \
+    train_models_pipeline \
             --train_dfs ~{sep =" " train_data} \
             --test_dfs  ~{sep =" " test_data} \
             --output_file_prefix ~{base_file_name}.model \
@@ -333,10 +325,8 @@ task FilterVCF {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
-    source /opt/conda/etc/profile.d/conda.sh
-    conda activate genomics.py3
 
-    filter_variants_pipeline.py --input_file ~{input_vcf} \
+    filter_variants_pipeline --input_file ~{input_vcf} \
                                        ~{"--model_file " + input_model} \
                                        ~{true="--blacklist_cg_insertions" false="" filter_cg_insertions} \
                                        ~{"--blacklist " + blacklist_file} \

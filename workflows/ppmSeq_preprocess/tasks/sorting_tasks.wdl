@@ -109,6 +109,9 @@ task Demux {
             --mark-duplicates=~{sorter_params.mark_duplicates} \
             --output-group=~{output_group} \
             --output-path=~{output_path} \
+            ~{true="--mark-duplicates-ends-read-uncertainty=" false="" defined(sorter_params.mark_duplicates_ends_read_uncertainty)}~{sorter_params.mark_duplicates_ends_read_uncertainty} \
+            ~{true="--mark-duplicates-flow-use-clipped-location=" false="" defined(sorter_params.mark_duplicates_flow_use_clipped_location)}~{sorter_params.mark_duplicates_flow_use_clipped_location} \
+            ~{true="--mark-duplicates-flow-q-is-known-end=" false="" defined(sorter_params.mark_duplicates_flow_q_is_known_end)}~{sorter_params.mark_duplicates_flow_q_is_known_end} \
             ~{"--umi=" + sorter_params.umi_tag} \
             ~{align_flag} \
             $coverage_intervals_flag \

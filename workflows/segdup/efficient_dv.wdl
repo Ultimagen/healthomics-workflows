@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.18.3" # !UnusedDeclaration
+    String pipeline_version = "1.19.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -41,6 +41,7 @@ workflow EfficientDV {
     References references
 
     Boolean make_gvcf
+    Boolean recalibrate_vaf
 
     # Scatter interval list args
     Int num_shards = 40
@@ -153,12 +154,6 @@ workflow EfficientDV {
               "dummy_input_for_call_caching",
               "UGCallVariants.disk_size",
               "UGPostProcessing.disk_size",
-              "CreateSECBlacklist.disk_size",
-              "FilterVCF.input_model",
-              "FilterVCF.custom_annotations",
-              "FilterVCF.disk_size",
-              "FilterVCF.ref_fasta",
-              "FilterVCF.ref_fasta_idx",
               "MergeRealignedCrams.cache_tarball",
               "Globals.glob",
               "Sentieon.Globals.glob",
@@ -199,6 +194,10 @@ workflow EfficientDV {
     make_gvcf: {
       help: "Whether to generate a gvcf. Default: False",
       category: "param_required"
+    }
+    recalibrate_vaf: {
+      help: "Whether to recalculate the variant allele frequency on the PASS variants, improves over the naive VAF calculate of DeepVariant (somatic calling only)",
+      category: "param_advanced"
     }
     num_shards: {
       help: "Maximal number of intervals the genome is broken into when parallelizing the make_examples step",
@@ -629,12 +628,21 @@ workflow EfficientDV {
   }
 
   String flow_order_ = select_first([input_flow_order, ExtractSampleNameFlowOrder.flow_order])
-
+  Array[File] cram_files_for_post_processing = if recalibrate_vaf then cram_files else []
+  Array[File] cram_index_files_for_post_processing = if recalibrate_vaf then cram_index_files else []
+  Array[File] background_cram_files_for_post_processing = if  recalibrate_vaf then background_cram_files else []
+  Array[File] background_cram_index_files_for_post_processing = if recalibrate_vaf then background_cram_index_files else []
+  
   call UGDVTasks.UGPostProcessing {
     input:
       called_records = UGCallVariants.output_records,
+      cram_files = cram_files_for_post_processing,
+      cram_index_files = cram_index_files_for_post_processing,
+      background_cram_files = background_cram_files_for_post_processing,
+      background_cram_index_files = background_cram_index_files_for_post_processing,
       gvcf_records = gvcf_records,
       make_gvcf    = make_gvcf,
+      recalibrate_vaf = recalibrate_vaf,
       ref = references.ref_fasta,
       ref_index = references.ref_fasta_index,
       flow_order = flow_order_,

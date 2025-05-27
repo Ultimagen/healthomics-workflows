@@ -143,8 +143,12 @@
         "description": "Fai index of the fasta file",
         "optional": false
     },
+    "GermlineCNVPipeline.skip_figure_generation": {
+        "description": "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
+        "optional": true
+    },
     "GermlineCNVPipeline.ug_cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",
-        "optional": false
+        "optional": true
     }
 }

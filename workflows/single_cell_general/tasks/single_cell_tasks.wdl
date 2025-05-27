@@ -105,6 +105,7 @@ task FindInsertBarcodeFastq {
         String base_file_name
         String insert_rg
         String barcode_rg
+        String? additional_rg
 
         File monitoring_script
 
@@ -112,10 +113,11 @@ task FindInsertBarcodeFastq {
         Boolean no_address
     }
 
-    Int disk_size = round(3*size(input_fastq_list, "GB") + 3*size(sub_sumple_fastq_list, "GB") + 3*size(sorter_csv_stats_list, "GB") + 3*size(sorter_json_stats_list, "GB") + 20)
+    Int disk_size = round(1.5*size(input_fastq_list, "GB") + 3*size(sub_sumple_fastq_list, "GB") + 3*size(sorter_csv_stats_list, "GB") + 3*size(sorter_json_stats_list, "GB") + 20)
 
-    String output_insert_fastq = "~{base_file_name}_~{insert_rg}.fastq.gz"
-    String output_barcode_fastq = "~{base_file_name}_~{barcode_rg}.fastq.gz"
+    #String output_insert_fastq = "~{base_file_name}_~{insert_rg}.fastq.gz"
+    #String output_barcode_fastq = "~{base_file_name}_~{barcode_rg}.fastq.gz"
+    String additional_rg_override = "~{if defined(additional_rg) then additional_rg else ""}"
     String output_sub_sample_fastq = "~{base_file_name}_~{insert_rg}_sample.fastq.gz"
     String output_sorter_stats_csv = "~{base_file_name}_~{insert_rg}.csv"
     String output_sorter_stats_json = "~{base_file_name}_~{insert_rg}.json"
@@ -130,11 +132,26 @@ task FindInsertBarcodeFastq {
         import shutil
 
         input_fastq_list = "~{sep=',' input_fastq_list}".split(',')
-        for fastq in input_fastq_list:
+        insert_fastq = None
+        barcode_fastq = None
+        additional_fastq = None
+        # Writing a -1 into the additional fastq index file in case the additional read group is not defined
+        with open("additional_fastq_index.txt", "w") as f:
+                f.write(str(-1))
+
+        for fastq_idx, fastq in enumerate(input_fastq_list):
             if "~{insert_rg}" in fastq:
                 insert_fastq = fastq
+                with open("insert_fastq_index.txt", "w") as f:
+                    f.write(str(fastq_idx))
             elif "~{barcode_rg}" in fastq:
                 barcode_fastq = fastq
+                with open("barcode_fastq_index.txt", "w") as f:
+                    f.write(str(fastq_idx))
+            elif "~{additional_rg_override}" != "" and "~{additional_rg_override}" in fastq:
+                additional_fastq = fastq
+                with open("additional_fastq_index.txt", "w") as f:
+                    f.write(str(fastq_idx))
 
         sub_sumple_fastq_list = "~{sep=',' sub_sumple_fastq_list}".split(",")
         for fastq in sub_sumple_fastq_list:
@@ -160,14 +177,15 @@ task FindInsertBarcodeFastq {
 
         # copy files to new location
         print(f"Copying files to new location")
-        shutil.copy(insert_fastq, "~{output_insert_fastq}")
-        shutil.copy(barcode_fastq, "~{output_barcode_fastq}")
         shutil.copy(sub_sample_fastq, "~{output_sub_sample_fastq}")
         shutil.copy(sorter_stats_csv, "~{output_sorter_stats_csv}")
         shutil.copy(sorter_stats_json, "~{output_sorter_stats_json}")
 
-        print("[DEBUG] Insert fastq: ~{output_insert_fastq}")
-        print("[DEBUG] Barcode fastq: ~{output_barcode_fastq}")
+        print("[DEBUG] Insert fastq:",insert_fastq)
+        print("[DEBUG] Barcode fastq:", barcode_fastq)
+        if additional_fastq is not None:
+            print("[DEBUG] Additional fastq:", additional_fastq)
+        print("[DEBUG] Additional fastq: ", additional_fastq)
         print("[DEBUG] Sub sample fastq: ~{output_sub_sample_fastq}")
         print("[DEBUG] Sorter stats csv: ~{output_sorter_stats_csv}")
         print("[DEBUG] Sorter stats json: ~{output_sorter_stats_json}")
@@ -183,8 +201,9 @@ task FindInsertBarcodeFastq {
     }
 
     output {
-        File insert_fastq            = "~{output_insert_fastq}"
-        File barcode_fastq           = "~{output_barcode_fastq}"
+        Int insert_fastq_index            = read_int("insert_fastq_index.txt")
+        Int barcode_fastq_index           = read_int("barcode_fastq_index.txt")
+        Int additional_fastq_index = read_int("additional_fastq_index.txt")
         File insert_sub_sample_fastq = "~{output_sub_sample_fastq}"
         File insert_sorter_stats_csv = "~{output_sorter_stats_csv}"
         File insert_sorter_stats_json = "~{output_sorter_stats_json}"
@@ -423,3 +442,4 @@ task GatherStatistics {
         File monitoring_log="monitoring.log"
     }
 }
+

@@ -47,6 +47,10 @@
         "description": "dummy_input_for_call_caching",
         "optional": true
     },
+    "SomaticCNVCallingControlFREEC.force_gc_content_normalization": {
+        "description": "Whether to run controlFREEC with force_gc_content_normalization option, recommended value set in the template",
+        "optional": true
+    },
     "SomaticCNVCallingControlFREEC.gem_mappability_file": {
         "description": "Gem file holding mappablity biased regions. ",
         "optional": true

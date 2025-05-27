@@ -108,6 +108,11 @@ The steps of the pipeline are as following:
         <i>Array[File] &mdash; Default: []</i><br />
         Input CRAM index for the tumor (in case of matched T/N calling)
 </p>
+<p name="SVPipeline.giraffe_parameters">
+        <b>SVPipeline.giraffe_parameters</b><br />
+        <i>GiraffeReferences? &mdash; Default: None</i><br />
+        vg giraffe index files to improve haplotype interpretation using population graphs
+</p>
 <p name="SVPipeline.min_indel_sc_size_to_include">
         <b>SVPipeline.min_indel_sc_size_to_include</b><br />
         <i>String? &mdash; Default: None</i><br />
@@ -122,6 +127,11 @@ The steps of the pipeline are as following:
         <b>SVPipeline.blacklist_bed</b><br />
         <i>File? &mdash; Default: None</i><br />
         Gridss blacklist file
+</p>
+<p name="SVPipeline.run_giraffe">
+        <b>SVPipeline.run_giraffe</b><br />
+        <i>Boolean &mdash; Default: None</i><br />
+        Whether to run Giraffe haplotype aware alignment or not
 </p>
 <p name="SVPipeline.prefilter_query">
         <b>SVPipeline.prefilter_query</b><br />
@@ -249,12 +259,12 @@ The steps of the pipeline are as following:
 </p>
 <p name="SVPipeline.realigned_assembly">
         <b>SVPipeline.realigned_assembly</b><br />
-        <i>File?</i><br />
+        <i>File</i><br />
         Assembly output after UA realingment
 </p>
 <p name="SVPipeline.realigned_assembly_index">
         <b>SVPipeline.realigned_assembly_index</b><br />
-        <i>File?</i><br />
+        <i>File</i><br />
         Assembly output index after UA realingment
 </p>
 <p name="SVPipeline.converted_vcf">

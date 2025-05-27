@@ -8,7 +8,7 @@ task MrdDataAnalysis {
     Array[File]? matched_signatures_vcf
     Array[File]? control_signatures_vcf
     Array[File]? db_signatures_vcf
-    File coverage_csv
+    File coverage_bed
     MrdAnalysisParams mrd_analysis_params
     String basename
     File featuremap_df_file
@@ -24,7 +24,7 @@ task MrdDataAnalysis {
 
     generate_report \
       --intersected-featuremaps ~{sep=" " intersected_featuremaps_parquet} \
-      --coverage-csv ~{coverage_csv} \
+      --coverage-bed ~{coverage_bed} \
       ~{true="--matched-signatures-vcf " false="" defined(matched_signatures_vcf)}~{sep=" " matched_signatures_vcf} \
       ~{true="--control-signatures-vcf " false="" defined(control_signatures_vcf)}~{sep=" " control_signatures_vcf} \
       ~{true="--db-control-signatures-vcf " false="" defined(db_signatures_vcf)}~{sep=" " db_signatures_vcf} \
@@ -168,6 +168,8 @@ task FeatureMapIntersectWithSignatures {
   Boolean is_defined_matched_signatures = defined(matched_signatures)
   Boolean is_defined_control_signatures = defined(control_signatures)
   Boolean is_defined_db_signatures = defined(db_signatures)
+  Int tmp_cpus_featuremap_to_dataframe = round(memory_gb / 4)
+  Int cpus_featuremap_to_dataframe = if tmp_cpus_featuremap_to_dataframe < 1 then 1 else tmp_cpus_featuremap_to_dataframe
   command <<<
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -187,7 +189,7 @@ task FeatureMapIntersectWithSignatures {
       echo "******** 2/2 Converting to dataframes ********"
       # the next command is not multiprocessed because it uses pyfaidx which is not multiprocessing-safe
       find *.matched.intersection.vcf.gz | \
-        xargs -P1 -I% sh -c "featuremap_to_dataframe -i %"
+        xargs -P~{cpus_featuremap_to_dataframe} -I% sh -c "featuremap_to_dataframe -i %"
     fi
 
     if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_control_signatures} ]]
@@ -202,7 +204,7 @@ task FeatureMapIntersectWithSignatures {
         --signature_type control"
       echo "******** 2/2 Converting to dataframes ********"
       find *.control.intersection.vcf.gz | \
-        xargs -P1 -I% sh -c "featuremap_to_dataframe -i %"
+        xargs -P~{cpus_featuremap_to_dataframe} -I% sh -c "featuremap_to_dataframe -i %"
     fi
 
     if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_db_signatures} ]]
@@ -217,7 +219,7 @@ task FeatureMapIntersectWithSignatures {
         --signature_type db_control"
       echo "******** 2/2 Converting to dataframes ********"
       find *.db_control.intersection.vcf.gz | \
-        xargs -P1 -I% sh -c "featuremap_to_dataframe -i %"
+        xargs -P~{cpus_featuremap_to_dataframe} -I% sh -c "featuremap_to_dataframe -i %"
     fi
 
     echo "******** DONE ********"
@@ -472,59 +474,16 @@ task BedIntersectAndExclude {
     }
 }
 
-
-task ExtractCoverageOverVcfFiles {
-    # Task: ExtractCoverageOverVcfFiles
-    # Description:
-    #     This task extracts coverage metrics from a given CRAM file over specified loci provided in VCFs.
-    #     The loci from VCFs are combined into a BED file, merged, and then processed using GATK's DepthOfCoverage.
-    #     The main output is a CSV file containing per-locus coverage metrics.
-    #     The CRAM file is not localized.
-    
-    # Inputs:
-    #     vcf_files: Array of VCF files containing loci for coverage extraction.
-    #     input_cram_bam: Input CRAM/BAM file containing read alignments.
-    #     input_cram_bam_index: Index of respective CRAM/BAM file.
-    #     base_file_name: Base string used to name output files.
-    #     mapping_quality_threshold: Minimum mapping quality threshold for reads to be considered.
-    #     references: Reference related files - fasta, index, and dictionary.
-    #     docker: Docker image to use for task execution.
-    #     memory_gb: Amount of memory to allocate for the task.
-    #     cpus: Number of CPU cores to allocate for the task.
-    #     preemptibles: Number of preemption retries.
-    #     monitoring_script: Path to a script to monitor task execution.
-
-    # Outputs:
-    #     coverage_per_locus: CSV file containing per-locus coverage metrics.
-    #     coverage_summary: Summary of coverage metrics.
-    #     coverage_statistics: Statistics related to coverage.
-    #     interval_summary: Coverage metrics summarized over intervals.
-    #     interval_statistics: Statistics related to interval coverage.
+task MergeVcfsIntoBed {
     input {
       Array[File] vcf_files
-      File input_cram_bam
-      File input_cram_bam_index
-      String base_file_name
-      Int mapping_quality_threshold = 60  
-      References references
       String docker
-      Int memory_gb
+      Float disk_size
+      Float memory_gb = 2
       Int cpus = 1
       Int preemptibles
       File monitoring_script
     }
-
-    parameter_meta {
-      input_cram_bam: {
-        localization_optional: true
-      }
-    }
-
-    Int vcf_files_size = ceil(size(vcf_files, "GB"))
-    Int reference_size = ceil(size(references.ref_fasta, "GB"))
-    Int disk_size = ceil((2*vcf_files_size) + reference_size) + 30  # Sum of VCF and reference sizes, plus 10GB overhead
-    String output_format = "CSV"
-
     command <<<
       set -xeo pipefail
       bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -538,35 +497,77 @@ task ExtractCoverageOverVcfFiles {
       echo "Sorting and merging the combined BED..."
       sort -k1,1 -k2,2n combined_loci.bed | bedtools merge > merged_loci.bed
 
+    >>>
+
+    output {
+      File merged_loci_bed = "merged_loci.bed"
+    }
+
+    runtime {
+      preemptible: "~{preemptibles}"
+      cpu: "~{cpus}"
+      memory: "~{memory_gb} GB"
+      disks: "local-disk " + ceil(disk_size) + " HDD"
+      docker: docker
+    }
+}
+
+task ExtractCoverageOverVcfFiles {
+    # Task: ExtractCoverageOverVcfFiles
+    # Description:
+    #     This task extracts coverage metrics from a given CRAM file over specified loci provided in a bed file.
+    #     Coverage is collected with mosdepth.
+    #     The main output is a bed file containing per-locus coverage metrics.
+    
+    # Inputs:
+    #     merged_loci_bed: A bed file containing loci for coverage extraction.
+    #     input_cram_bam: Input CRAM/BAM file containing read alignments.
+    #     input_cram_bam_index: Index of respective CRAM/BAM file.
+    #     base_file_name: Base string used to name output files.
+    #     mapping_quality_threshold: Minimum mapping quality threshold for reads to be considered.
+    #     references: Reference related files - fasta, index, and dictionary.
+    #     docker: Docker image to use for task execution.
+    #     memory_gb: Amount of memory to allocate for the task.
+    #     cpus: Number of CPU cores to allocate for the task.
+    #     preemptibles: Number of preemption retries.
+    #     monitoring_script: Path to a script to monitor task execution.
+
+    # Outputs:
+    #     coverage_bed: A bed file containing coverage metrics for the specified loci.
+    #     coverage_bed_index: Index of the coverage bed file.
+    input {
+      File merged_loci_bed
+      File input_cram_bam
+      File input_cram_bam_index
+      String base_file_name
+      Int mapping_quality_threshold = 60  
+      References references
+      String docker
+      Int memory_gb
+      Int cpus = 1
+      Int preemptibles
+      File monitoring_script
+    }
+
+    Int merged_loci_bed_size = ceil(size(merged_loci_bed, "GB"))
+    Int reference_size = ceil(size(references.ref_fasta, "GB"))
+    Int input_cram_bam_size = ceil(size(input_cram_bam, "GB"))
+    Int disk_size = ceil((2*merged_loci_bed_size) + reference_size + input_cram_bam_size) + 30  # Bed and reference sizes, plus 10GB overhead
+
+    command <<<
+      set -xeo pipefail
+      bash ~{monitoring_script} | tee monitoring.log >&2 &
+
       echo "Extracting coverage from CRAM for the specified loci..."
-      gatk \
-        DepthOfCoverage \
-        -R ~{references.ref_fasta} \
-        -O ~{base_file_name}.coverage \
-        -I ~{input_cram_bam} \
-        --intervals merged_loci.bed \
-        --read-filter MappingQualityReadFilter --minimum-mapping-quality ~{mapping_quality_threshold} \
-        --output-format "~{output_format}" \
-        --java-options "-Xmx~{memory_gb-2}G -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10"
-
-      # The default output does not contain a prefix
-      mv "~{base_file_name}.coverage" "~{base_file_name}.coverage.csv"
-
-      echo "Editing csv output..."
-      # The default output format is chr1:1000 and we convert it to chr1,1000 
-      sed -i -e 's/Locus/Chrom,Pos/' -e 's/:/,/g' "~{base_file_name}.coverage.csv"
+      mosdepth --by ~{merged_loci_bed} -f ~{references.ref_fasta} -Q ~{mapping_quality_threshold} --fast-mode \
+      ~{base_file_name} ~{input_cram_bam}
 
       echo "Coverage extraction completed."
     >>>
 
     output {
-      File coverage_per_locus_csv = "~{base_file_name}.coverage.csv"
-      File sample_summary = "~{base_file_name}.coverage.sample_summary"
-      File sample_statistics = "~{base_file_name}.coverage.sample_statistics"
-      File sample_interval_summary = "~{base_file_name}.coverage.sample_interval_summary"
-      File sample_interval_statistics = "~{base_file_name}.coverage.sample_interval_statistics"
-      File sample_cumulative_coverage_proportions = "~{base_file_name}.coverage.sample_cumulative_coverage_proportions"
-      File sample_cumulative_coverage_counts = "~{base_file_name}.coverage.sample_cumulative_coverage_counts"
+      File coverage_bed = "~{base_file_name}.regions.bed.gz"
+      File coverage_bed_index = "~{base_file_name}.regions.bed.gz.csi"
     }
 
     runtime {

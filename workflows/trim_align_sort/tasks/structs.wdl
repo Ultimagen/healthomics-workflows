@@ -264,8 +264,11 @@ struct SorterParams {
   Boolean? aligned          # demux arg to mentioned if the data aligned. The default is true.
   String? output_group      # Define a custom read-group e.g. "majorRG-minorRG"  (instead of the default "majorRG"). majorRG is the value of the RG tag of each read. See sorter documentation for more details.
   String? output_path       # Define the output path for a custom read-group. Default is: {outputGroup}/{outputGroup} !NOTE! the path must include a subfolder
-  Float? downsample_frac # Downsample fraction (0.0-1.0) to be used in Demux
-  Int? downsample_seed  # Downsample seed to be used in Demux
+  Float? downsample_frac    # Downsample fraction (0.0-1.0) to be used in Demux
+  Int? downsample_seed      # Downsample seed to be used in Demux
+  Int? mark_duplicates_ends_read_uncertainty   # Number of bases of uncertainty in read ends position to use when marking duplicates
+  Boolean? mark_duplicates_flow_use_clipped_location  # If true, use the clipped location of the read to mark duplicates, otherwise add the softclip length to the alignment end position
+  Boolean? mark_duplicates_flow_q_is_known_end  # If true, the ends in quality trimmed reads are treated as known when marking duplicates. Otherwise, the ends are treated as unknown so any end position is matched.
   String? demux_extra_args
   String? sort_extra_args
   Int? memory_gb            # Override the default memory (in GB) used by sorter

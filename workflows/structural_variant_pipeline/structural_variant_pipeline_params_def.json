@@ -43,6 +43,10 @@
         "description": "memory override for germline_link_variants task",
         "optional": true
     },
+    "SVPipeline.giraffe_parameters": {
+        "description": "vg giraffe index files to improve haplotype interpretation using population graphs",
+        "optional": true
+    },
     "SVPipeline.gridss_metrics_interval": {
         "description": "Interval for collecting gridss metrics",
         "optional": true
@@ -145,6 +149,10 @@
     },
     "SVPipeline.repeat_mask_file": {
         "description": "gripss paramter: Repeat mask file. Note that the default value is in template",
+        "optional": true
+    },
+    "SVPipeline.run_giraffe": {
+        "description": "Whether to run Giraffe haplotype aware alignment or not",
         "optional": true
     },
     "SVPipeline.run_ua": {

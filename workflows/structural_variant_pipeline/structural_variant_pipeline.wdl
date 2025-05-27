@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.18.3" # !UnusedDeclaration
+        String pipeline_version = "1.19.1" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -50,6 +50,7 @@ workflow SVPipeline {
         Array[File] input_tumor_crams_indexes = []
         References references
         UaParameters ua_references
+        GiraffeReferences? giraffe_parameters
         File wgs_calling_interval_list
         Int min_base
         Int min_mapq
@@ -64,6 +65,7 @@ workflow SVPipeline {
         Boolean is_somatic
         String reference_name
         Boolean run_ua
+        Boolean run_giraffe
         String? prefilter_query
         
         String? gridss_metrics_interval
@@ -99,7 +101,7 @@ workflow SVPipeline {
         #@wv max_reads_per_partition > 0
         #@wv scatter_intervals_break > 0
         #@wv reference_name in {"38","19"}
-
+        #@wv run_giraffe -> defined(giraffe_parameters)
         # tumor + germline
         #@wv is_somatic -> defined(input_tumor_crams) and len(input_tumor_crams)>0
         #@wv is_somatic -> defined(input_tumor_crams_indexes) and len(input_tumor_crams_indexes)>0
@@ -133,7 +135,7 @@ workflow SVPipeline {
             "AlignWithUA.v_aware_vcf",
             "IdentifyVariants.input_crams",
             "IdentifyVariants.input_crams_indexes",
-            "Globals.glob",
+            "Glob.glob",
             "Sentieon.Globals.glob",
             "AnnotateVCF.Globals.glob",
             "SingleSampleQC.Globals.glob",
@@ -144,7 +146,13 @@ workflow SVPipeline {
             "AnnotateVariants.assembly_metrics",
             "AnnotateVariants.cpu_override",
             "AnnotateVariants.memory_override",
-            "AlignWithUA.memory_gb"
+            "AlignWithUA.memory_gb",
+            "ConvertToUbam.cache_tarball",
+            "ConvertToUbam.disk_size",
+            "AlignWithGiraffe.in_prefix_to_strip",
+            "SortGiraffeAlignment.disk_size",
+            "SortGiraffeAlignment.gitc_path",
+            "IndexGiraffeAlignment.disk_size"
             ]}
     }
     parameter_meta {
@@ -164,29 +172,34 @@ workflow SVPipeline {
         category: "optional"
         }
         input_tumor_crams: {
-        type: "File",
-        help: "Input CRAM file for the tumor (in case of matched T/N calling)",
-        category: "optional"
+            type: "File",
+            help: "Input CRAM file for the tumor (in case of matched T/N calling)",
+            category: "optional"
         }
         input_tumor_crams_indexes: {
-        type: "File",
-        help: "Input CRAM index for the tumor (in case of matched T/N calling)",
-        category: "optional"
+            type: "File",
+            help: "Input CRAM index for the tumor (in case of matched T/N calling)",
+            category: "optional"
         }
         references: {
-        type: "References",
-        help: "Reference files: fasta, dict and fai, recommended value set in the template",
-        category: "required"
+            type: "References",
+            help: "Reference files: fasta, dict and fai, recommended value set in the template",
+            category: "required"
         }
         ua_references: {
-        type: "UaParameters",
-        help: "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
-        category: "required"
+            type: "UaParameters",
+            help: "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
+            category: "required"
+        }
+        giraffe_parameters: {
+            type: "GiraffeReferences",
+            help: "vg giraffe index files to improve haplotype interpretation using population graphs",
+            category: "optional"
         }
         wgs_calling_interval_list: {
-        type: "File",
-        help: "interval list defining the region to perform variant calling on, recommended value set in the template",
-        category: "required"
+            type: "File",
+            help: "interval list defining the region to perform variant calling on, recommended value set in the template",
+            category: "required"
         }
         min_base: {
             type: "Int",
@@ -265,6 +278,12 @@ workflow SVPipeline {
             help: "Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not",
             category:"required"
         }
+        run_giraffe: {
+            type: "Boolean",
+            help: "Whether to run Giraffe haplotype aware alignment or not",
+            category:"optional"
+        }
+
         pon_sgl_file: {
             type: "File",
             help: "gripss paramter: Panel of normals for single end breakend (partially resolved) calls. Note that the default value is in template",
@@ -371,6 +390,16 @@ workflow SVPipeline {
             help: "Assembly output index after UA realingment",
             category: "output"
         }
+        giraffe_realigned_assembly: {
+            type: "File",
+            help: "Giraffe realigned assembly output",
+            category: "output"
+        }
+        giraffe_realigned_assembly_index: {
+            type: "File",
+            help: "Giraffe realigned assembly output index",
+            category: "output"
+        }
         converted_vcf: {
             type: "File",
             help: "Final VCF file in the region (non-breakend) format",
@@ -394,8 +423,8 @@ workflow SVPipeline {
     }
     Int preemptibles = select_first([preemptible_tries_override, 1])
 
-    call Globals.Globals as Globals
-    GlobalVariables global = Globals.global_dockers
+    call Globals.Globals as Glob
+    GlobalVariables global = Glob.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
@@ -489,35 +518,59 @@ workflow SVPipeline {
                 no_address = no_address
         }
 
-        call RevertLowMAPQUASecondaryAlignment {
+    }
+
+    if(run_giraffe){
+        call AlignmentTasks.ConvertCramOrBamToUBam as ConvertToUbam {
             input:
-                before_UA = MergeBams.output_bam,
-                before_UA_index = MergeBams.output_bam_index,
-                after_UA = AlignWithUA.ua_output_bam,
-                outptut_prefix = base_file_name +"_assembly_ua_realigned",
-                realign_mapq = realign_mapq,
-                gridss_docker = global.gridss_docker,
+                monitoring_script = global.monitoring_script, # !FileCoercion
+                input_file = MergeBams.output_bam,
+                base_file_name = base_file_name,
                 preemptible_tries = preemptibles,
-                monitoring_script = monitoring_script,
+                docker = global.ug_gatk_picard_docker,
                 no_address = no_address
         }
 
-        call LongHomopolymersAlignmnet {
+        call AlignmentTasks.SamToFastqAndGiraffeAndMba as AlignWithGiraffe {
             input:
-                input_bam = RevertLowMAPQUASecondaryAlignment.realigned_assembly,
-                input_bam_index = RevertLowMAPQUASecondaryAlignment.realigned_assembly_index,
-                output_bam_basename = base_file_name +"_assembly_ua_realigned_long_homopolymers_aligned",
-                references = references,
-                homopolymer_length = homopolymer_length,
-                gridss_docker = global.gridss_docker,
+                input_bam = ConvertToUbam.unmapped_bam,
+                output_bam_basename = base_file_name,
+                giraffe_references = select_first([giraffe_parameters]),
                 monitoring_script = monitoring_script,
                 preemptible_tries = preemptibles,
-                no_address = no_address
-
+                no_address = no_address,
+                docker = global.giraffe_docker
         }
     }
-    File assembly_file = select_first([LongHomopolymersAlignmnet.realigned_assembly, MergeBams.output_bam])
-    File assembly_file_index = select_first([LongHomopolymersAlignmnet.realigned_assembly_index, MergeBams.output_bam_index])
+
+    call ChooseBestAlignment {
+        input:
+            inputs = select_all([MergeBams.output_bam, AlignWithUA.ua_output_bam, AlignWithGiraffe.output_bam]),
+            tie_breaker_idx = 2, # index of giraffe alignment (if exists), might need smarter way to change
+            outptut_prefix = base_file_name +"_assembly_realigned",
+            realign_mapq = realign_mapq,
+            gridss_docker = global.gridss_docker,
+            preemptible_tries = preemptibles,
+            monitoring_script = monitoring_script,
+            no_address = no_address
+    }
+
+    call LongHomopolymersAlignment {
+        input:
+            input_bam = ChooseBestAlignment.realigned_assembly,
+            input_bam_index = ChooseBestAlignment.realigned_assembly_index,
+            output_bam_basename = base_file_name +"_assembly_realigned_long_homopolymers_aligned",
+            references = references,
+            homopolymer_length = homopolymer_length,
+            gridss_docker = global.gridss_docker,
+            monitoring_script = monitoring_script,
+            preemptible_tries = preemptibles,
+            no_address = no_address
+
+    }
+
+    File assembly_file = LongHomopolymersAlignment.realigned_assembly
+    File assembly_file_index = LongHomopolymersAlignment.realigned_assembly_index
 
     call IdentifyVariants {
         input:
@@ -664,7 +717,7 @@ workflow SVPipeline {
             input:
                 input_vcf = annotated_vcf,
                 input_vcf_index = annotated_vcf_index,
-                reference_name = reference_name,
+                references = references,
                 output_vcf_prefix = base_file_name,
                 gridss_docker = global.gridss_docker,
                 preemptible_tries = preemptibles,
@@ -704,7 +757,7 @@ workflow SVPipeline {
                 input_vcf_index = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index]),
                 output_vcf_prefix = base_file_name,
                 gridss_docker = global.gridss_docker,
-                reference_name = reference_name,
+                references = references,
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
                 no_address = no_address,
@@ -719,8 +772,8 @@ workflow SVPipeline {
         File output_vcf_index = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index])
         File assembly = MergeBams.output_bam
         File assembly_index = MergeBams.output_bam_index
-        File? realigned_assembly = LongHomopolymersAlignmnet.realigned_assembly
-        File? realigned_assembly_index = LongHomopolymersAlignmnet.realigned_assembly_index
+        File realigned_assembly = LongHomopolymersAlignment.realigned_assembly
+        File realigned_assembly_index = LongHomopolymersAlignment.realigned_assembly_index
         File? converted_vcf = ConvertVcfFormat.output_vcf
         File? converted_vcf_index = ConvertVcfFormat.output_vcf_index
     }
@@ -881,11 +934,10 @@ task CreateAssembly {
 }
 
 
-task RevertLowMAPQUASecondaryAlignment {
+task ChooseBestAlignment {
     input {
-        File before_UA
-        File before_UA_index
-        File after_UA
+        Array[File] inputs
+        Int tie_breaker_idx
         Int realign_mapq
         String outptut_prefix
         String gridss_docker
@@ -893,26 +945,36 @@ task RevertLowMAPQUASecondaryAlignment {
         File monitoring_script
         Boolean no_address
     }
-    Int disk_size = ceil(size(before_UA,"GB") + 4*size(after_UA,"GB"))+20
+    Int disk_size = ceil(3*size(inputs,"GB"))+20
+    Int cpus = 8
     command <<<
+        set -x 
         set -o pipefail
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        samtools sort ~{after_UA} -o ~{after_UA}_sorted.bam
-        samtools index ~{after_UA}_sorted.bam
+        # go over the list of inputs and samtools sort -n them (sort by query name)
+        # this is required by the choose_best_haplotype_realignment.py script
+        alignment_source_flag=""
+        for i in ~{sep=" " inputs}
+        do
+            output_file=${i%.bam}_sorted.bam
+            samtools sort -@~{cpus} -n ${i} -o ${output_file}
+            alignment_source_flag+=" --alignment_source ${output_file}"
+        done
 
-        python3 /opt/gridss/revert_sup_low_mapq_ua_alignment.py \
-            --before ~{before_UA} \
-            --after ~{after_UA}_sorted.bam \
+        python3 /opt/gridss/choose_best_haplotype_realignment.py \
+            ${alignment_source_flag} \
             --output ~{outptut_prefix}_unsorted.bam \
-            --min_mapping_quality ~{realign_mapq}
+            --min_mapping_quality ~{realign_mapq} \
+            --tie_breaker_idx ~{tie_breaker_idx} \
+            --overwrite_mapq 2,3,30
         samtools sort -o ~{outptut_prefix}.bam ~{outptut_prefix}_unsorted.bam
         samtools index ~{outptut_prefix}.bam
     >>>
     runtime {
-        memory: "8 GiB"
-        cpu: 1
+        memory: "16 GiB"
+        cpu: cpus
         disks: "local-disk " + disk_size + " HDD"
         docker: gridss_docker
         preemptible: preemptible_tries
@@ -925,7 +987,7 @@ task RevertLowMAPQUASecondaryAlignment {
     }
 }
 
-task LongHomopolymersAlignmnet {
+task LongHomopolymersAlignment {
         input {
             File input_bam
             File input_bam_index
@@ -1339,7 +1401,7 @@ task GermlineLinkVariants {
     input {
         File input_vcf
         File input_vcf_index
-        String reference_name
+        References references
         String output_vcf_prefix
         String gridss_docker
         File monitoring_script
@@ -1347,7 +1409,7 @@ task GermlineLinkVariants {
         Boolean no_address
         Int? memory_override
     }
-    Int disk_size = 4*ceil(size(input_vcf,"GB")) + 10
+    Int disk_size = 4*ceil(size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
         set -o pipefail
         set -e
@@ -1356,7 +1418,7 @@ task GermlineLinkVariants {
         Rscript /opt/gridss/link_breakpoints.R \
             --input ~{input_vcf} \
             --fulloutput ~{output_vcf_prefix}_linked.vcf \
-            --ref BSgenome.Hsapiens.UCSC.hg~{reference_name} \
+            --ref ~{references.ref_fasta} \
             --scriptdir /opt/gridss/
     >>>
     runtime {
@@ -1441,7 +1503,7 @@ task ConvertVcfFormat {
         File input_vcf
         File input_vcf_index
         String output_vcf_prefix
-        String reference_name
+        References references
         String gridss_docker
         File monitoring_script
         Int preemptible_tries
@@ -1453,16 +1515,16 @@ task ConvertVcfFormat {
     Int cpu = 8
     Int mem = select_first([memory_override, 64])
 
-    Int disk_size = ceil(2*size(input_vcf,"GB")) + 10
+    Int disk_size = ceil(2*size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
         set -o pipefail
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        Rscript /opt/gridss/convert_vcf_format.R \
+            Rscript /opt/gridss/convert_vcf_format.R \
             --input_vcf ~{input_vcf} \
             --output_vcf ~{output_vcf_prefix}.vcf \
-            --reference BSgenome.Hsapiens.UCSC.hg~{reference_name} \
+            --reference ~{references.ref_fasta} \
             --n_jobs ~{cpu}
 
     >>>

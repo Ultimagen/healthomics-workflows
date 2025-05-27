@@ -55,11 +55,6 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
         <i>Float </i> &mdash; 
          Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5 <br /> 
 </p>
-<p name="SingleSampleCnmopsCNVCalling.cnv_lcr_file">
-        <b>SingleSampleCnmopsCNVCalling.cnv_lcr_file</b><br />
-        <i>File </i> &mdash; 
-         UG-CNV-LCR bed file <br /> 
-</p>
 
 ### Required references
 <p name="SingleSampleCnmopsCNVCalling.reference_genome">
@@ -121,10 +116,20 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
         <i>Boolean? </i> &mdash; 
          whether to cap extremely high average coverage windows to 2*cohort's average coverage quantile 99.9% value <br /> 
 </p>
+<p name="SingleSampleCnmopsCNVCalling.cnv_lcr_file">
+        <b>SingleSampleCnmopsCNVCalling.cnv_lcr_file</b><br />
+        <i>File? </i> &mdash; 
+         UG-CNV-LCR bed file <br /> 
+</p>
 <p name="SingleSampleCnmopsCNVCalling.enable_moderate_amplifications_override">
         <b>SingleSampleCnmopsCNVCalling.enable_moderate_amplifications_override</b><br />
         <i>Boolean? </i> &mdash; 
          whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: False <br /> 
+</p>
+<p name="SingleSampleCnmopsCNVCalling.skip_figure_generation">
+        <b>SingleSampleCnmopsCNVCalling.skip_figure_generation</b><br />
+        <i>Boolean? </i> &mdash; 
+         Whether to skip figure generation. set true when using reference genome different than hg38.  Default is: False <br /> 
 </p>
 <p name="SingleSampleCnmopsCNVCalling.save_hdf_override">
         <b>SingleSampleCnmopsCNVCalling.save_hdf_override</b><br />

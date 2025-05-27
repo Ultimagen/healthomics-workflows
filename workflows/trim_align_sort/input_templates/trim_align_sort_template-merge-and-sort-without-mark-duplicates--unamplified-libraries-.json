@@ -5,17 +5,17 @@
     ],
     "TrimAlignSort.base_file_name": "<base_file_name>",
     "TrimAlignSort.ref_fastas_cram": [
-        "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
-        "s3://broad-references/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
         "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
         "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
         "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
     ],
     "TrimAlignSort.references": {
-        "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict"
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "TrimAlignSort.preemptible_tries": 1,
     "TrimAlignSort.no_address": true,

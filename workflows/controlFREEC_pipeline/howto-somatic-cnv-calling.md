@@ -113,6 +113,7 @@ generate_controlFREEC_config \
 	--chrFiles chrFiles_dir \
 	--degree 3 \
 	--gemMappabilityFile out100m2_hg38.gem \
+	--forceGCcontentNormalization 1 \
 	--sample_mateFile {tumor}.bam \
 	--sample_mateCopyNumberFile {tumor}.cpn \
 	--sample_miniPileupFile {tumor}.mpileup \

@@ -269,15 +269,17 @@ task FilterSampleCnvs {
         Array[String] sample_names
         Int min_cnv_length
         Float intersection_cutoff
-        File cnv_lcr_file
+        File? cnv_lcr_file
         File ref_genome_file
         File germline_coverge_rds
         String docker
+        Boolean skip_figure_generation
         File monitoring_script
         Boolean no_address
         Int preemptible_tries
     }
 
+    Boolean filter_lcr = defined(cnv_lcr_file)
     Float cohort_cnvs_csv_file_size = size(cohort_cnvs_csv, "GB")
     Float ref_genome_file_size = size(ref_genome_file, "GB")
     Float additional_disk = 25
@@ -305,29 +307,40 @@ task FilterSampleCnvs {
                 then grep "$sample_name" ~{cohort_cnvs_csv} > $sample_name.cnvs.csv ;
                 awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' $sample_name.cnvs.csv > $sample_name.cnvs.bed;
 
-                #filter CNVs
-                filter_sample_cnvs \
-                    --input_bed_file $sample_name.cnvs.bed \
-                    --intersection_cutoff ~{intersection_cutoff} \
-                    --cnv_lcr_file ~{cnv_lcr_file} \
-                    --min_cnv_length ~{min_cnv_length};
-                
-                #convert bed file to vcf
-                convert_cnv_results_to_vcf \
-                    --cnv_annotated_bed_file $sample_name.cnvs.annotate.bed \
-                    --fasta_index_file ~{ref_genome_file} \
-                    --sample_name $sample_name
+                if ~{filter_lcr}; then 
+                    #filter CNVs
+                    filter_sample_cnvs \
+                        --input_bed_file $sample_name.cnvs.bed \
+                        --intersection_cutoff ~{intersection_cutoff} \
+                        --cnv_lcr_file ~{cnv_lcr_file} \
+                        --min_cnv_length ~{min_cnv_length};
+                    
+                    #convert bed file to vcf
+                    convert_cnv_results_to_vcf \
+                        --cnv_annotated_bed_file $sample_name.cnvs.annotate.bed \
+                        --fasta_index_file ~{ref_genome_file} \
+                        --sample_name $sample_name
+                    
+                    #seperate duplications and deletions calls
+                    cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
+                    cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
+                else
+                    #seperate duplications and deletions calls
+                    cat $sample_name.cnvs.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
+                    cat $sample_name.cnvs.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
+                fi
                 
                 #generate figure for each sample
-                cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
-                cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
-
-                plot_cnv_results \
-                    --germline_coverage $sample_name.cov.bed \
-                    --duplication_cnv_calls $sample_name.cnvs.filter.DUP.bed \
-                    --deletion_cnv_calls $sample_name.cnvs.filter.DEL.bed \
-                    --sample_name $sample_name \
-                    --out_directory CNV_figures
+                if ~{skip_figure_generation}; then
+                    echo "skip figure generation"; 
+                else
+                    plot_cnv_results \
+                        --germline_coverage $sample_name.cov.bed \
+                        --duplication_cnv_calls $sample_name.cnvs.filter.DUP.bed \
+                        --deletion_cnv_calls $sample_name.cnvs.filter.DEL.bed \
+                        --sample_name $sample_name \
+                        --out_directory CNV_figures
+                fi
 
             else echo "$sample_name not found in ~{cohort_cnvs_csv}";
             fi
@@ -345,7 +358,8 @@ task FilterSampleCnvs {
     output {
         Array[File] csvs = glob("*.csv")
         Array[File] sample_cnvs_csv = glob(".cnvs.csv")
-        Array[File] sample_cnvs_bed = glob("*.cnvs.annotate.bed")
+        Array[File] sample_cnvs_bed = glob("*.cnvs.bed")
+        Array[File] sample_cnvs_annotated_bed = glob("*.cnvs.annotate.bed")
         Array[File] sample_cnvs_vcf = glob("*.cnv.vcf.gz")
         Array[File] sample_cnvs_vcf_index = glob("*.cnv.vcf.gz.tbi")
         Array[File] sample_cnvs_filtered_bed = glob("*.cnvs.filter.bed")

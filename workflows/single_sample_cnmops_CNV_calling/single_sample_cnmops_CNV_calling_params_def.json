@@ -21,7 +21,7 @@
     },
     "SingleSampleCnmopsCNVCalling.cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",
-        "optional": false
+        "optional": true
     },
     "SingleSampleCnmopsCNVCalling.cohort_reads_count_matrix": {
         "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template. can be created by cn.mops::getReadCountsFromBAM R function ",
@@ -101,6 +101,10 @@
     },
     "SingleSampleCnmopsCNVCalling.save_hdf_override": {
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.skip_figure_generation": {
+        "description": "Whether to skip figure generation. set true when using reference genome different than hg38.  Default is: False",
         "optional": true
     },
     "SingleSampleCnmopsCNVCalling.window_length": {

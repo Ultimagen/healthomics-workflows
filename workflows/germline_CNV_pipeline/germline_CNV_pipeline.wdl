@@ -31,7 +31,7 @@ import "tasks/globals.wdl" as Globals
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.18.3" # !UnusedDeclaration
+        String pipeline_version = "1.19.1" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -39,7 +39,7 @@ workflow GermlineCNVPipeline {
         File reference_genome
         File reference_genome_index
         Array[String] ref_seq_names
-        File ug_cnv_lcr_file
+        File? ug_cnv_lcr_file
 
         #cnmops params
         Int? cnmops_mapq_override
@@ -58,6 +58,7 @@ workflow GermlineCNVPipeline {
         Int? cnvpytor_window_length_override
         Int? cnvpytor_mapq_override
 
+        Boolean? skip_figure_generation
         Boolean? no_address_override
         Int? preemptible_tries_override
         File? monitoring_script_input
@@ -119,7 +120,7 @@ workflow GermlineCNVPipeline {
         ug_cnv_lcr_file: {
             help: "UG-CNV-LCR bed file",
             type: "File",
-            category: "input_required"
+            category: "input_optional"
         }
         cnmops_mapq_override: {
             help : "Reads mapping-quality cutoff for coverage aggregation used in cn.mops, default value is 1",
@@ -192,6 +193,11 @@ workflow GermlineCNVPipeline {
             type: "Int",
             category: "param_advanced"
         }
+        skip_figure_generation: {
+            help: "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
+            type: "Boolean",
+            category: "param_optional"
+        }
         cnmops_cnv_calls_bed: {
             help: "CNMOPS CNV calls in bed format",
             type: "File",
@@ -230,6 +236,7 @@ workflow GermlineCNVPipeline {
     Int cnvpytor_mapq = select_first([cnvpytor_mapq_override, 0])
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
     Boolean no_address = select_first([no_address_override, true ])
+    Boolean skip_figure_generation_value = select_first([skip_figure_generation, false])
     
     call Globals.Globals as Globals
       GlobalVariables global = Globals.global_dockers
@@ -253,7 +260,8 @@ workflow GermlineCNVPipeline {
         min_cnv_length = cnmops_min_cnv_length,
         intersection_cutoff = cnmops_intersection_cutoff,
         cnv_lcr_file = ug_cnv_lcr_file,
-        enable_moderate_amplifications_override = enable_moderate_amplifications
+        enable_moderate_amplifications_override = enable_moderate_amplifications,
+        skip_figure_generation = skip_figure_generation_value,
     }
     call SingleSampleCNVpytorCalling.SingleSampleCNVpytorCalling as CnvpytorCNVCalling{
         input:

@@ -45,7 +45,7 @@ Combine cn.mops and cnvpytor CNV calls for a single sample.
 ### Optional inputs
 <p name="CombineGermlineCNVCalls.cnv_lcr_file">
         <b>CombineGermlineCNVCalls.cnv_lcr_file</b><br />
-        <i>File </i> &mdash; 
+        <i>File? </i> &mdash; 
          UG-CNV-LCR bed file <br /> 
 </p>
 

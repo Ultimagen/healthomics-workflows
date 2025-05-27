@@ -123,10 +123,6 @@
         "description": "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
         "optional": true
     },
-    "SegDupAnalysis.DV.target_intervals": {
-        "description": "Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used.",
-        "optional": true
-    },
     "SegDupAnalysis.DV.ug_call_variants_extra_mem": {
         "description": "Extra memory for call_variants",
         "optional": true
@@ -203,6 +199,10 @@
         "description": "Number of threads to use",
         "optional": false
     },
+    "SegDupAnalysis.no_address": {
+        "description": "Start instances with no public IP address",
+        "optional": false
+    },
     "SegDupAnalysis.preemptible_tries": {
         "description": "Number of preemptible tries",
         "optional": true
@@ -212,7 +212,7 @@
         "optional": false
     },
     "SegDupAnalysis.segdup_regions": {
-        "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template",
+        "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template (BED file)",
         "optional": false
     }
 }

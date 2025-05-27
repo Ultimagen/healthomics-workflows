@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.18.3" # !UnusedDeclaration
+        String pipeline_version = "1.19.1" # !UnusedDeclaration
 
         String base_file_name
 
@@ -61,9 +61,10 @@ workflow SingleSampleCnmopsCNVCalling {
 
         Int min_cnv_length = 10000
         Float intersection_cutoff = 0.5
-        File cnv_lcr_file
+        File? cnv_lcr_file
         Boolean? enable_moderate_amplifications_override
 
+        Boolean? skip_figure_generation
         Boolean? save_hdf_override
         Boolean? save_csv_override
         Boolean? no_address_override
@@ -203,7 +204,12 @@ workflow SingleSampleCnmopsCNVCalling {
         cnv_lcr_file: {
             help: "UG-CNV-LCR bed file",
             type: "File",
-            category: "param_required"
+            category: "param_optional"
+        }
+        skip_figure_generation: {
+            help: "Whether to skip figure generation. set true when using reference genome different than hg38.  Default is: False",
+            type: "Boolean",
+            category: "param_optional"
         }
         save_hdf_override: {
             help: "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
@@ -292,6 +298,7 @@ workflow SingleSampleCnmopsCNVCalling {
     Boolean save_csv = select_first([save_csv_override , false])
     Boolean enable_moderate_amplifications = select_first([enable_moderate_amplifications_override, false])
     Boolean cap_coverage = select_first([cap_coverage_override, false])
+    Boolean skip_figure_generation_value = select_first([skip_figure_generation, false])
 
     call Globals.Globals as Globals
       GlobalVariables global = Globals.global_dockers
@@ -375,6 +382,7 @@ workflow SingleSampleCnmopsCNVCalling {
         min_cnv_length = min_cnv_length,
         intersection_cutoff = intersection_cutoff,
         cnv_lcr_file = cnv_lcr_file,
+        skip_figure_generation = skip_figure_generation_value,
         ref_genome_file = reference_genome_index,
         germline_coverge_rds = sample_reads_count_file,
         docker = global.ugbio_cnv_docker,

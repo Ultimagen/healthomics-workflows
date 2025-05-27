@@ -323,7 +323,7 @@ For germline mode, run GermlineLinkVariants (on the GRIDSS docker) using :
 Rscript /opt/gridss/link_breakpoints \
     --input  output_basename.ann.vcf.gz \
     --fulloutput output_basename_linked.vcf \
-    --ref BSgenome.Hsapiens.UCSC.hg38 \
+    --ref Homo_sapiens_assembly38.fasta \
     --scriptdir /opt/gridss/
 ```
 #### GRIPSS filtering for somatic runs:
@@ -373,3 +373,13 @@ java -jar gripss.jar \
 	-output_dir gripss_output
 ```
 
+
+#### Convert VCF format
+Run on the GRIDSS docker using :
+```
+Rscript /opt/gridss/convert_vcf_format.R \
+    --input_vcf output_basename_linked.vcf.bgz \
+    --output_vcf output_basename_linked_converted.vcf \
+    --reference Homo_sapiens_assembly38.fasta \
+    --n_jobs 8
+```

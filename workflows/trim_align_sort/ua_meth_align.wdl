@@ -38,12 +38,12 @@ workflow UAMethAlignment {
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
 
-
+    Int cpu_default = 40 
     if (defined(ua_meth_parameters)) {
         UaMethParameters ua_meth_parameters_ = select_first([ua_meth_parameters])
         File ua_index_c2t_ = ua_meth_parameters_.index_c2t
         File ua_index_g2a_ = ua_meth_parameters_.index_g2a
-        Int ua_meth_paramters_cpus = select_first([ua_meth_parameters_.cpus])
+        Int ua_meth_paramters_cpus = select_first([ua_meth_parameters_.cpus, cpu_default])
     } 
     if (!defined(ua_meth_parameters)) {
         call AlignTasks.BuildUaMethIndex {
@@ -58,8 +58,7 @@ workflow UAMethAlignment {
 
     File ua_index_c2t = select_first([ua_index_c2t_, BuildUaMethIndex.index_c2t])
     File ua_index_g2a = select_first([ua_index_g2a_, BuildUaMethIndex.index_g2a])
-
-    Int cpu_default = 40  
+ 
     Int cpu = select_first([ua_meth_paramters_cpus, cpu_default])
 
     call AlignTasks.AlignWithUAMeth {

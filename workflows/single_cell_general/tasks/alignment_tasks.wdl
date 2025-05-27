@@ -128,7 +128,7 @@ task ConvertCramOrBamToUBam {
     input {
         File monitoring_script
         File input_file
-        File cache_tarball
+        File? cache_tarball
         String base_file_name
         String docker
         Int disk_size = ceil((8 * size(input_file,"GB")) + size(cache_tarball,"GB") + 20)
@@ -157,7 +157,7 @@ task ConvertCramOrBamToUBam {
             sort_order_flag="--SO unsorted"
         fi
 
-        tar -zxf ~{cache_tarball}
+        ~{if defined(cache_tarball) then "tar -zxf "+ cache_tarball else ""}
 
         REF_CACHE=cache/%2s/%2s/ REF_PATH='.' samtools view -b -F 2048 -h ~{input_file} -o tmp.bam 
         java -Xmx11g -jar /usr/gitc/picard.jar RevertSam -I tmp.bam \
@@ -628,13 +628,14 @@ task SamToFastqAndGiraffeAndMba {
         # so account for the output size by multiplying the input size by 3.5.
         Int preemptible_tries
         String docker
+
     }
-    Int disk_size = ceil(4.5*size(input_bam,"GB") +
+    Int disk_size = ceil(4.5*size(input_bam,"GB") + 
         size(giraffe_references.references.ref_fasta,"GB") +
         size(giraffe_references.ref_gbz,"GB") +
         size(giraffe_references.ref_dist,"GB") +
         size(giraffe_references.ref_min,"GB") +
-        20)
+        80)
     Int threads = 16
     command <<<
         set -eo pipefail
@@ -661,14 +662,14 @@ task SamToFastqAndGiraffeAndMba {
 
         echo "Giraffe alignment complete."
 
-        vg surject \
-          -F ~{giraffe_references.ref_path_list} \
-          -x ~{giraffe_references.ref_gbz} \
-          -t ~{threads} \
-          --bam-output --gaf-input \
-          --sample ~{output_bam_basename} \
-          --prune-low-cplx \
-          ~{output_bam_basename}.gaf.gz > ~{output_bam_basename}.vg.unsorted.bam
+            vg surject \
+            -F ~{giraffe_references.ref_path_list} \
+            -x ~{giraffe_references.ref_gbz} \
+            -t ~{threads} \
+            --bam-output --gaf-input \
+            --sample ~{output_bam_basename} \
+            --prune-low-cplx \
+            ~{output_bam_basename}.gaf.gz > ~{output_bam_basename}.vg.unsorted.bam
         #| samtools sort -@ ~{threads} -n -O BAM -o ~{output_bam_basename}.vg.bam
         #/dev/stdin
 
@@ -677,13 +678,13 @@ task SamToFastqAndGiraffeAndMba {
         if [ ~{in_prefix_to_strip} != "" ]
         then
             # patch the SQ fields from the dict into a new header
-            samtools view -H ~{output_bam_basename}.vg.unsorted.bam | grep ^@HD > new_header.sam
-            grep ^@SQ ~{giraffe_references.references.ref_dict} | awk '{print $1 "\t" $2 "\t" $3}' >> new_header.sam
-            samtools view -H ~{output_bam_basename}.vg.unsorted.bam  | grep -v ^@HD | grep -v ^@SQ >> new_header.sam
+                samtools view -H ~{output_bam_basename}.vg.unsorted.bam | grep ^@HD > new_header.sam
+                grep ^@SQ ~{giraffe_references.references.ref_dict} | awk '{print $1 "\t" $2 "\t" $3}' >> new_header.sam
+                samtools view -H ~{output_bam_basename}.vg.unsorted.bam  | grep -v ^@HD | grep -v ^@SQ >> new_header.sam
 
-            cat <(cat new_header.sam) <(samtools view ~{output_bam_basename}.vg.unsorted.bam) | \
-                sed -e "s/~{in_prefix_to_strip}//g"  | \
-                samtools sort --threads ~{threads} -n -O BAM -o ~{output_bam_basename}.vg.bam
+                cat <(cat new_header.sam) <(samtools view ~{output_bam_basename}.vg.unsorted.bam) | \
+                    sed -e "s/~{in_prefix_to_strip}//g"  | \
+                    samtools sort --threads ~{threads} -n -O BAM -o ~{output_bam_basename}.vg.bam
         else
             samtools sort --threads ~{threads} ~{output_bam_basename}.vg.unsorted.bam -O BAM -o ~{output_bam_basename}.vg.bam
 
@@ -1134,11 +1135,14 @@ task StarAlignStats {
 
 task SortBam {
     input {
-    File input_bam 
-    Int disk_size = ceil(3*size(input_bam, "GB"))
-    String gitc_path
-    String docker
-    File monitoring_script
+        File input_bam 
+        Int disk_size = ceil(3*size(input_bam, "GB"))
+        String gitc_path
+        String docker
+        File monitoring_script
+        String sort_order="queryname"
+        Int preemptible_tries
+        Boolean no_address
     }
     String base_file_name = basename(input_bam, ".bam")
     command <<<
@@ -1147,17 +1151,49 @@ task SortBam {
         java -Xmx64G -jar ~{gitc_path}picard.jar SortSam \
             I=~{input_bam} \
             O=~{base_file_name}.sorted.bam \
-            SORT_ORDER=queryname
+            SORT_ORDER=~{sort_order}
     >>>
     runtime {
         cpu: "1"
         memory: "8 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+
     }
 
     output {
         File sorted_bam = "~{base_file_name}.sorted.bam"
+        File monitoring_log = "monitoring.log"
+    }
+
+}
+
+task IndexBam {
+    input {
+        File input_bam
+        Int disk_size = ceil(1.1*size(input_bam, "GB"))
+        String docker
+        File monitoring_script
+        Int preemptible_tries
+        Boolean no_address
+    }
+    command <<< 
+        set -eo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        samtools index ~{input_bam}
+    >>>  
+    runtime {
+        cpu: "1"
+        memory: "8 GB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }   
+    output {
+        File bam_index = "~{input_bam}.bai"
         File monitoring_log = "monitoring.log"
     }
 }

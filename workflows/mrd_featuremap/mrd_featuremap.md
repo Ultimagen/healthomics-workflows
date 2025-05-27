@@ -238,40 +238,15 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>Array[File]?</i><br />
         VCF file of the filtered db control signatures
 </p>
-<p name="MRDFeatureMap.coverage_per_locus_csv">
-        <b>MRDFeatureMap.coverage_per_locus_csv</b><br />
+<p name="MRDFeatureMap.coverage_bed">
+        <b>MRDFeatureMap.coverage_bed</b><br />
         <i>File</i><br />
-        CSV file of the coverage per locus across all signatures
+        Coverage bed file
 </p>
-<p name="MRDFeatureMap.sample_summary">
-        <b>MRDFeatureMap.sample_summary</b><br />
+<p name="MRDFeatureMap.coverage_bed_index">
+        <b>MRDFeatureMap.coverage_bed_index</b><br />
         <i>File</i><br />
-        Summary file of the coverage per sample
-</p>
-<p name="MRDFeatureMap.sample_statistics">
-        <b>MRDFeatureMap.sample_statistics</b><br />
-        <i>File</i><br />
-        Statistics file of the coverage per sample
-</p>
-<p name="MRDFeatureMap.sample_interval_summary">
-        <b>MRDFeatureMap.sample_interval_summary</b><br />
-        <i>File</i><br />
-        Summary file of the coverage per interval
-</p>
-<p name="MRDFeatureMap.sample_interval_statistics">
-        <b>MRDFeatureMap.sample_interval_statistics</b><br />
-        <i>File</i><br />
-        Statistics file of the coverage per interval
-</p>
-<p name="MRDFeatureMap.sample_cumulative_coverage_proportions">
-        <b>MRDFeatureMap.sample_cumulative_coverage_proportions</b><br />
-        <i>File</i><br />
-        Cumulative coverage proportions file of the coverage per sample
-</p>
-<p name="MRDFeatureMap.sample_cumulative_coverage_counts">
-        <b>MRDFeatureMap.sample_cumulative_coverage_counts</b><br />
-        <i>File</i><br />
-        Cumulative coverage counts file of the coverage per sample
+        Respective index
 </p>
 
 <hr />
