@@ -63,7 +63,7 @@ workflow Globals {
         "segdup_docker": "ultimagenomics/parascopy:1.1_da39450",
         "arriba_docker": "uhrigs/arriba:2.4.0",
         "starfusion_docker": "trinityctat/starfusion:1.13.0",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.10.1",
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.10.2",
         "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.10.1",
         "ugbio_vcflite_docker": "ultimagenomics/ugbio_vcflite:1.4.1",
         "ugbio_mrd_docker": "ultimagenomics/ugbio_mrd:1.10.1",
