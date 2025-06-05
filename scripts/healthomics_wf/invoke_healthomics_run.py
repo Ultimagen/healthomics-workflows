@@ -12,7 +12,7 @@ def _get_client(service_name, aws_region, aws_profile):
 
 
 def invoke_lambda(workflow_name, workflow_version, run_id, input_params_file, aws_region, aws_profile=None,
-                  long_run=False, cache_behavior=None):
+                  cache_behavior=None):
     # Read the JSON input from file
     with open(input_params_file, 'r') as f:
         input_params = json.load(f)
@@ -24,8 +24,6 @@ def invoke_lambda(workflow_name, workflow_version, run_id, input_params_file, aw
         "RunId": run_id,
         "InputParams": input_params
     }
-    if long_run:
-        payload.update({"LongRun": True})
     if cache_behavior:
         payload.update({"CacheBehavior": cache_behavior})
     # Create a Lambda client
@@ -50,7 +48,6 @@ if __name__ == "__main__":
     parser.add_argument("--workflow-version", required=True, help="Workflow version")
     parser.add_argument("--run-id", required=True, help="Run ID")
     parser.add_argument("--input-params-file", required=True, help="Path to the JSON file for InputParams")
-    parser.add_argument("--long-run", action='store_true', help="mark the run as long and run it under 'long' run group. By default will run under 'standard' run group")
     parser.add_argument("--cache-behavior", help="HealthOmics cache behavior")
     parser.add_argument("--aws-region", help="AWS region", default="us-east-1")
     parser.add_argument("--aws-profile", help="AWS CLI profile", required=False)
@@ -64,6 +61,5 @@ if __name__ == "__main__":
         input_params_file=args.input_params_file,
         aws_region=args.aws_region,
         aws_profile=args.aws_profile,
-        long_run=args.long_run,
         cache_behavior=args.cache_behavior
     )
