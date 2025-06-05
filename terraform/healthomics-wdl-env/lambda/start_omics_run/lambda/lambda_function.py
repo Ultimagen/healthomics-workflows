@@ -89,8 +89,8 @@ def lambda_handler(event, context):
     run_id = event['RunId']
     input_params = event['InputParams']
     run_name = event.get('RunName', extract_run_name_from_inputs(input_params, workflow_name))
-    is_long_run = event.get('LongRun', False)
-    run_group_id = os.environ['LONG_RUN_GROUP_ID'] if is_long_run else os.environ['STANDARD_RUN_GROUP_ID']
+    # is_long_run = event.get('LongRun', False)
+    # run_group_id = os.environ['LONG_RUN_GROUP_ID'] if is_long_run else os.environ['STANDARD_RUN_GROUP_ID']
     cache_behavior = event.get("CacheBehavior", "CACHE_ON_FAILURE")
 
     request_id = context.aws_request_id
@@ -117,7 +117,7 @@ def lambda_handler(event, context):
             "outputUri": output_s3_path,
             "tags": run_tags,
             "requestId": request_id,
-            "runGroupId": run_group_id,
+            # "runGroupId": run_group_id,
             # If the quota for maximum runs has been met, the earliest runs with REMOVE retention mode are deleted first
             "retentionMode": "REMOVE"
         }

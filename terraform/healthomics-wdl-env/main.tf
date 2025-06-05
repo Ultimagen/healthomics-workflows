@@ -29,10 +29,10 @@ module "omics_iam" {
   accessible_buckets_list = var.omics_accessible_buckets
 }
 
-module "omics" {
-  source      = "./health-omics"
-  custom_tags = var.custom_tags
-}
+# module "omics" {
+#   source      = "./health-omics"
+#   custom_tags = var.custom_tags
+# }
 
 module "dynamodb" {
   source = "./dynamodb"
@@ -45,10 +45,10 @@ module "start_omics_run_lambda" {
   project = var.project
   aws_account_id = data.aws_caller_identity.current.account_id
   omics_cache_bucket = module.omics_s3_buckets.omics_cache_bucket
-  omics_long_run_group_id = module.omics.long_run_group_id
+  # omics_long_run_group_id = module.omics.long_run_group_id
   omics_outputs_bucket = module.omics_s3_buckets.omics_outputs_bucket
   omics_role_arn = module.omics_iam.omics_role_arn
-  omics_standard_run_group_id = module.omics.standard_run_group_id
+  # omics_standard_run_group_id = module.omics.standard_run_group_id
   dynamodb_table = module.dynamodb.table.name
 }
 

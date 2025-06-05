@@ -14,13 +14,13 @@ output "omics_role_arn" {
   value = module.omics_iam.omics_role_arn
 }
 
-output "omics_standard_run_group" {
-  value = module.omics.standard_run_group_arn
-}
-
-output "omics_long_run_group" {
-  value = module.omics.long_run_group_arn
-}
+# output "omics_standard_run_group" {
+#   value = module.omics.standard_run_group_arn
+# }
+#
+# output "omics_long_run_group" {
+#   value = module.omics.long_run_group_arn
+# }
 
 output "dynamodb_table" {
   value = module.dynamodb.table.name
