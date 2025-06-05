@@ -88,6 +88,7 @@ resource "aws_iam_policy" "read_only_buckets_policy" {
 }
 
 resource "aws_iam_policy" "omics_policy" {
+  name   = "UltimagenOmicsCustom-policy-${var.aws_region}"
   policy = <<EOF
 {
     "Version": "2012-10-17",
