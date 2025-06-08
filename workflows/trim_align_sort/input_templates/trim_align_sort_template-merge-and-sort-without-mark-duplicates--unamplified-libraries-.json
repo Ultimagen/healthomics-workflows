@@ -28,7 +28,6 @@
     "TrimAlignSort.sorter_params": {
         "mark_duplicates": false,
         "aligned": true,
-        "output_path": "{outputGroup}/{outputGroup}{?_minorRG}",
         "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
     }
 }

@@ -34,6 +34,7 @@
     "SVPipeline.symbolic_vcf_format": true,
     "SVPipeline.num_shards": 50,
     "SVPipeline.is_somatic": false,
+    "SVPipeline.min_indel_sc_size_to_include": "10",
     "SVPipeline.min_mismatch_count_to_include": "5",
     "SVPipeline.run_giraffe": true,
     "SVPipeline.giraffe_parameters": {
