@@ -28,7 +28,7 @@ Log out and log back in for the change to take effect.
 #### Install Singularity
 Download and install the release package for your system from [Singularity releases](https://github.com/sylabs/singularity/releases/).
 
-For Ubuntu and **Singularity** version 4.3.1:
+For **Ubuntu** and **Singularity** version 4.3.1:
 ```shell
 hash wget 2> /dev/null || (sudo apt -qq update 2> /dev/null && sudo apt -qq install -y wget)
 ubuntu_codename=$(lsb_release -cs)
@@ -259,6 +259,7 @@ Some workflows include the `AlignWithUA` task, which uses the Ultima Aligner (`u
 ### `No space on device` with Singularity Backend
 If you see errors or failures after log lines like:
 > 2025-06-08 12:28:36.406 wdl.w:SomaticCNVCallingControlFREEC.download7.t:download-aws_s3_cp.singularity **INFO:    Converting SIF file to temporary sandbox...**
+
 it may mean that **Singularity** is using the `/tmp` directory for temporary files and is filling up your disk. This happens when **Singularity** converts container images (`.sif` files) to temporary sandboxes for execution. If several tasks run in parallel, this can quickly exhaust available space.
 
 **Solution:**  
