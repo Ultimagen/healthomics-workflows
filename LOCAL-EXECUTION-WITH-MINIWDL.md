@@ -197,6 +197,7 @@ The table below lists recommended resources for each workflow, based on the EC2 
 | controlFREEC_pipeline                     | 4      | 8            | -                | c5.xlarge         |
 | efficient_dv                              | 4      | 64           | NVIDIA A10G / 1  | g5.xlarge         |
 | germline_CNV_pipeline                     | 36     | 72           | -                | c5.9xlarge        |
+| hla_genotyping                            | 16     | 64           | -                | m5.4xlarge        |
 | mrd_featuremap                            | 4      | 8            | -                | c5.xlarge         |
 | ppmSeq_preprocess                         | 36     | 72           | -                | c5.9xlarge        |
 | segdup                                    | 4      | 64           | NVIDIA A10G / 1  | g5.xlarge         |
