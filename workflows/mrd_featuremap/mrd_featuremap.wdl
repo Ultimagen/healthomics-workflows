@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.19.3" # !UnusedDeclaration
+        String pipeline_version = "1.20.0" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -51,6 +51,8 @@ workflow MRDFeatureMap {
         String? bcftools_extra_args
         Array[File] include_regions
         Array[File] exclude_regions
+        # diluent germline vcfs
+        Array[File]? diluent_germline_vcfs
         # final-analysis-level filters
         MrdAnalysisParams mrd_analysis_params
         # for generating db control signatures
@@ -94,10 +96,11 @@ workflow MRDFeatureMap {
         #@wv suffix(cfdna_cram_bam) in {'.bam', '.cram'}
         #@wv suffix(cfdna_cram_bam_index) in {'.bai', '.crai'}
         #@wv suffix(include_regions) <= {'.bed', '.gz'}
-        #@wv suffix(exclude_regions) <= {'.bed', '.gz', '.vcf'}
+        #@wv suffix(exclude_regions) <= {'.bed', '.gz', '.vcf', '.vcf.gz'}
         #@wv suffix(snv_database) in {'.gz'}
-        #@wv suffix(prefix(snv_database)) in {'.vcf'}
+        #@wv suffix(prefix(snv_database)) in {'.vcf', '.vcf.gz'}
         #@wv suffix(featuremap_df_file) in {'.parquet'}
+        ##@wv defined(diluent_germline_vcfs) and len(diluent_germline_vcfs)>0 -> suffix(diluent_germline_vcfs) <= {'.vcf', '.vcf.gz'}
     }
 
   meta {
@@ -115,7 +118,10 @@ workflow MRDFeatureMap {
           "AnnotateVCF.Globals.glob",
           "SingleSampleQC.Globals.glob",
           "VariantCallingEvaluation.Globals.glob",
-          "MergeVcfsIntoBed.disk_size"
+          "MergeVcfsIntoBed.disk_size",
+          "PadDiluentVcf.disk_size",
+          "PadDiluentVcf.memory_gb",
+          "PadDiluentVcf.cpus"
       ]}
   }    
 
@@ -179,6 +185,11 @@ workflow MRDFeatureMap {
           help: "Genomic regions to exclude from the analysis, bed and vcf[.gz] files are accepted",
           type: "Array[File]",
           category: "ref_optional"
+      }
+      diluent_germline_vcfs: {
+          help: "Optional germline VCF files from diluent samples to pad and exclude from analysis",
+          type: "Array[File]",
+          category: "input_optional"
       }
       mrd_analysis_params: {
           help: "Parameters for the MRD analysis",
@@ -280,6 +291,7 @@ workflow MRDFeatureMap {
   Boolean defined_external_matched_signatures = defined(external_matched_signatures)
   Boolean defined_external_control_signatures = defined(external_control_signatures)
   Boolean defined_somatic_snv_database = defined(snv_database) && (select_first([n_synthetic_signatures]) > 0)
+  Boolean defined_diluent_germline_vcfs = defined(diluent_germline_vcfs)
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
   # Part 1 - Filter signatures
@@ -300,8 +312,23 @@ workflow MRDFeatureMap {
     }
   }  
   
+  # Process diluent germline VCFs if provided
+  if (defined_diluent_germline_vcfs) {
+    Array[File] diluent_vcfs = select_first([diluent_germline_vcfs])
+    scatter (vcf_path in diluent_vcfs) {
+      call UGMrdTasks.PadVcf as PadDiluentVcf {
+        input:
+          input_vcf = vcf_path,
+          pad_size = 2,
+          docker = global.ugbio_core_docker,
+          preemptible_tries = preemptibles,
+          monitoring_script = monitoring_script
+      }
+    }
+  }
+
   # for the external and db controls, exclude the regions from the matched signatures
-  Array[Array[File]] control_exclude_regions_array = select_all([exclude_regions, external_matched_signatures])
+  Array[Array[File]] control_exclude_regions_array = select_all([exclude_regions, external_matched_signatures, PadDiluentVcf.padded_bed])
   Array[File] control_exclude_regions = flatten(control_exclude_regions_array) 
   if (defined_external_control_signatures) {
     Array[File] external_control_signatures_array = select_first([external_control_signatures,])

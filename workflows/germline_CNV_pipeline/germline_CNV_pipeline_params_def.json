@@ -35,6 +35,10 @@
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
         "optional": true
     },
+    "GermlineCNVPipeline.CombineGermlineCNVCalls.cnvpytor_precent_gaps_threshold_override": {
+        "description": "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
+        "optional": true
+    },
     "GermlineCNVPipeline.CombineGermlineCNVCalls.deletions_length_cutoff_override": {
         "description": "Minimum length of deletions to be considered without jalign support. default=3000",
         "optional": true
@@ -99,8 +103,8 @@
         "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
         "optional": false
     },
-    "GermlineCNVPipeline.disable_moderate_amplifications": {
-        "description": "whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: True",
+    "GermlineCNVPipeline.disable_mod_cnv": {
+        "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
         "optional": true
     },
     "GermlineCNVPipeline.genome_windows": {

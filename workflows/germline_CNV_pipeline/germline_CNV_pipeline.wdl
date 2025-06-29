@@ -31,7 +31,7 @@ import "tasks/globals.wdl" as Globals
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.19.3" # !UnusedDeclaration
+        String pipeline_version = "1.20.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -52,7 +52,7 @@ workflow GermlineCNVPipeline {
         Int? cnmops_min_width_value_override
         Int? cnmops_min_cnv_length_override
         Float? cnmops_intersection_cutoff_override
-        Boolean? disable_moderate_amplifications
+        Boolean? disable_mod_cnv
 
         #cnvpytor params
         Int? cnvpytor_window_length_override
@@ -177,9 +177,9 @@ workflow GermlineCNVPipeline {
             type: "Float",
             category: "param_advanced"
         }
-        disable_moderate_amplifications:
+        disable_mod_cnv:
         {
-            help: "whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: True",
+            help: "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
             type: "Boolean",
             category: "param_advanced"
         }
@@ -231,7 +231,7 @@ workflow GermlineCNVPipeline {
     Int cnmops_min_width_value = select_first([cnmops_min_width_value_override, 2])
     Int cnmops_min_cnv_length = select_first([cnmops_min_cnv_length_override, 0])
     Float cnmops_intersection_cutoff = select_first([cnmops_intersection_cutoff_override, 0.5])
-    Boolean enable_moderate_amplifications = select_first([disable_moderate_amplifications, true])
+    Boolean enable_mod_cnv = select_first([disable_mod_cnv, true])
     Int cnvpytor_window_length = select_first([cnvpytor_window_length_override, 500])
     Int cnvpytor_mapq = select_first([cnvpytor_mapq_override, 0])
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
@@ -260,7 +260,7 @@ workflow GermlineCNVPipeline {
         min_cnv_length = cnmops_min_cnv_length,
         intersection_cutoff = cnmops_intersection_cutoff,
         cnv_lcr_file = ug_cnv_lcr_file,
-        enable_moderate_amplifications_override = enable_moderate_amplifications,
+        enable_mod_cnv_override = enable_mod_cnv,
         skip_figure_generation = skip_figure_generation_value,
     }
     call SingleSampleCNVpytorCalling.SingleSampleCNVpytorCalling as CnvpytorCNVCalling{
@@ -278,7 +278,7 @@ workflow GermlineCNVPipeline {
         input:
         base_file_name = base_file_name,
         cnmops_cnvs_bed = CnmopsCNVCalling.out_sample_cnvs_bed[0],
-        cnvpytor_cnvs_bed = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv,
+        cnvpytor_cnvs_tsv = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv,
         input_bam_file = input_bam_file,
         input_bam_file_index = input_bam_file_index,
         reference_genome = reference_genome,

@@ -31,7 +31,7 @@ import "tasks/qc_tasks.wdl" as UGQCTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.19.3" # !UnusedDeclaration
+        String pipeline_version = "1.20.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -858,7 +858,7 @@ task ConcatFilesBwBedgraphFiles{
         String docker
         File monitoring_script
     }
-    Int disk_size = ceil(2 * size(files,"GB") + 2)
+    Int disk_size = ceil(4 * size(files,"GB") + 2)
 
     command {
 bash ~{monitoring_script} | tee monitoring.log >&2 &

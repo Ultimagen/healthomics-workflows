@@ -19,7 +19,7 @@
     "ppmSeqPreprocess.no_address": true,
     "ppmSeqPreprocess.cpu": 32,
     "ppmSeqPreprocess.ua_parameters": {
-        "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/Homo_sapiens_assembly38.fasta.uai",
+        "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
         "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
         "ua_extra_args": "--seed-score-ratio 0.5 --vector --huge --soft-clipping",
         "v_aware_alignment_flag": false

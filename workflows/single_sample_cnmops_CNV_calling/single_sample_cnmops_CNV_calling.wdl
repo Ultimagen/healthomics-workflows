@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.19.3" # !UnusedDeclaration
+        String pipeline_version = "1.20.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -62,7 +62,7 @@ workflow SingleSampleCnmopsCNVCalling {
         Int min_cnv_length = 10000
         Float intersection_cutoff = 0.5
         File? cnv_lcr_file
-        Boolean? enable_moderate_amplifications_override
+        Boolean? enable_mod_cnv_override
 
         Boolean? skip_figure_generation
         Boolean? save_hdf_override
@@ -276,9 +276,9 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "Array[File]",
             category: "output"
         }
-        enable_moderate_amplifications_override:
+        enable_mod_cnv_override:
         {
-            help: "whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: False",
+            help: "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: False",
             type: "Boolean",
             category: "param_optional"
         }
@@ -296,7 +296,7 @@ workflow SingleSampleCnmopsCNVCalling {
     Boolean run_convert_bedGraph_to_Granges = defined(bed_graph)
     Boolean save_hdf = select_first([save_hdf_override , false])
     Boolean save_csv = select_first([save_csv_override , false])
-    Boolean enable_moderate_amplifications = select_first([enable_moderate_amplifications_override, false])
+    Boolean enable_mod_cnv = select_first([enable_mod_cnv_override, false])
     Boolean cap_coverage = select_first([cap_coverage_override, false])
     Boolean skip_figure_generation_value = select_first([skip_figure_generation, false])
 
@@ -367,7 +367,7 @@ workflow SingleSampleCnmopsCNVCalling {
         docker = global.ugbio_cnv_docker,
         save_hdf = save_hdf,
         save_csv = save_csv,
-        moderate_amplificiations = enable_moderate_amplifications,
+        mod_cnv = enable_mod_cnv,
         monitoring_script = monitoring_script,
         no_address = no_address,
         preemptible_tries = preemptible_tries,

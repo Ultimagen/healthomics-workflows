@@ -97,6 +97,11 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>Array[File]? </i> &mdash; 
          Optional signatures from other individuals to be used as controls in the MRD analysis <br /> 
 </p>
+<p name="MRDFeatureMap.diluent_germline_vcfs">
+        <b>MRDFeatureMap.diluent_germline_vcfs</b><br />
+        <i>Array[File]? </i> &mdash; 
+         Optional germline VCF files from diluent samples to pad and exclude from analysis <br /> 
+</p>
 <p name="MRDFeatureMap.snv_database">
         <b>MRDFeatureMap.snv_database</b><br />
         <i>File? </i> &mdash; 

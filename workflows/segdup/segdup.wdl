@@ -26,7 +26,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.19.3" # !UnusedDeclaration
+        String pipeline_version = "1.20.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -360,8 +360,8 @@ task CallCNV {
         set -ef pipefail
         set -x
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-        tar xvf ~{cn_model}
+        
+        tar --no-same-owner --no-same-permissions -xvf ~{cn_model}
         ls -l
         find . -name "*model*"
         

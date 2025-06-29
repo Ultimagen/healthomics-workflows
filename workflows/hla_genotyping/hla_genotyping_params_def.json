@@ -1,0 +1,38 @@
+{
+    "HLAGenotyping.base_file_name": {
+        "description": "Base file name for the output files (to be used as the prefix)",
+        "optional": false
+    },
+    "HLAGenotyping.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "HLAGenotyping.graphs_files_tar": {
+        "description": "HLA-LA graphs files tar",
+        "optional": true
+    },
+    "HLAGenotyping.input_cram_bam": {
+        "description": "Input CRAM or BAM file for annalysing HLA genotyping",
+        "optional": false
+    },
+    "HLAGenotyping.input_cram_bam_index": {
+        "description": "Input CRAM or BAM index file for annalysing HLA genotyping",
+        "optional": false
+    },
+    "HLAGenotyping.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "HLAGenotyping.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "HLAGenotyping.preemptible_tries_override": {
+        "description": "preemptible_tries_override",
+        "optional": true
+    },
+    "HLAGenotyping.references": {
+        "description": "Reference files: fasta, dict and fai, recommended value set in the template",
+        "optional": false
+    }
+}

@@ -56,7 +56,7 @@ struct BwaMethReferences {
 # UA alignment
 struct UaParameters {
   File? ua_index
-  File ref_alt
+  File? ref_alt
   String ua_extra_args
   Boolean v_aware_alignment_flag
   Int? cpus

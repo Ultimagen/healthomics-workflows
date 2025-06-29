@@ -32,8 +32,8 @@
     },
     "TrimAlignSort.aligner": "ua-meth",
     "TrimAlignSort.ua_meth_parameters": {
-        "index_g2a": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19.fa.uai.g2a",
-        "index_c2t": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19.fa.uai.c2t"
+        "index_g2a": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19_v45.uai.g2a",
+        "index_c2t": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19_v45.uai.c2t"
     },
     "TrimAlignSort.sorter_params": {
         "mark_duplicates": true,

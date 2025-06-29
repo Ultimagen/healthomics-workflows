@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.19.3" # !UnusedDeclaration
+        String pipeline_version = "1.20.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -761,8 +761,7 @@ workflow SVPipeline {
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
                 no_address = no_address,
-                memory_override = convert_vcf_format_memory_override,
-                cloud_provider_override = cloud_provider_override
+                memory_override = convert_vcf_format_memory_override
         }
     }
     output {
@@ -1509,9 +1508,8 @@ task ConvertVcfFormat {
         Int preemptible_tries
         Boolean no_address
         Int? memory_override
-        String? cloud_provider_override
     }
-    Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
+
     Int cpu = 8
     Int mem = select_first([memory_override, 64])
 
@@ -1521,11 +1519,13 @@ task ConvertVcfFormat {
         set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-            Rscript /opt/gridss/convert_vcf_format.R \
+        Rscript /opt/gridss/convert_vcf_format.R \
             --input_vcf ~{input_vcf} \
             --output_vcf ~{output_vcf_prefix}.vcf \
             --reference ~{references.ref_fasta} \
             --n_jobs ~{cpu}
+        bcftools view -Oz -o ~{output_vcf_prefix}.vcf.gz ~{output_vcf_prefix}.vcf.bgz
+        bcftools index -t ~{output_vcf_prefix}.vcf.gz
 
     >>>
     runtime {
@@ -1538,7 +1538,7 @@ task ConvertVcfFormat {
     }
     output {
         File monitoring_log = "monitoring.log"
-        File output_vcf = "~{output_vcf_prefix}.vcf.bgz"
-        File output_vcf_index = "~{output_vcf_prefix}.vcf.bgz.tbi"
+        File output_vcf = "~{output_vcf_prefix}.vcf.gz"
+        File output_vcf_index = "~{output_vcf_prefix}.vcf.gz.tbi"
     }
 }

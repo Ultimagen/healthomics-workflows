@@ -28,9 +28,9 @@ task ExtractSampleNameFlowOrder{
         String docker
         References references
         Boolean no_address
-        String? cloud_provider_override = "gcp"
+        String cloud_provider_override = "gcp"
     }
-    String cloud_provider = select_first([cloud_provider_override, 'gcp'])
+    String cloud_provider = cloud_provider_override
 
     parameter_meta {
         input_bam: {
@@ -293,7 +293,7 @@ task IntervalListOfGenome {
     set -e
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    cat ~{ref_fai} | grep -v '[ME_-]' | awk '{print $1"\t"1"\t"$2"\t+\t."}' > modifai
+    grep -v '[ME_-]' ~{ref_fai} | awk '{print $1"\t"1"\t"$2"\t+\t."}' > modifai
     cat ~{ref_dict} modifai > genome.interval_list
   >>>
 
@@ -584,15 +584,15 @@ task ConcatHtmls {
         cat htmls_files.txt
 
         i=1
-        i=1; for file in $(cat htmls_files.txt| sed "s/,/ /g"); do cp $file $i.html ;
+        i=1; for file in $(cat htmls_files.txt| sed "s/,/ /g"); do cp "$file" "$i.html" ;
         cat $i.html >> ~{base_file_name}_aggregated.html; rm $i.html ;i=$((i + 1)) ; done
 
         ls -lstr
         echo "**************** D O N E ****************"
 
         end=$(date +%s)
-        mins_elapsed=$(( ($end - $start) / 60))
-        secs_elapsed=$(( ($end - $start) % 60 ))
+        mins_elapsed=$(( (end - start) / 60))
+        secs_elapsed=$(( (end - start) % 60 ))
         if [ $secs_elapsed -lt 10 ]; then
             secs_elapsed=0$secs_elapsed
         fi

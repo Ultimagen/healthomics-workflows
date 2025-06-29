@@ -27,6 +27,7 @@
     "MRDFeatureMap.snv_database": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz",
     "MRDFeatureMap.n_synthetic_signatures": 5,
     "MRDFeatureMap.mapping_quality_threshold": 60,
+    "MRDFeatureMap.diluent_germline_vcfs": [],
     "MRDFeatureMap.external_matched_signatures": [
         "<external_matched_signatures>"
     ]
