@@ -97,6 +97,13 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <i>Boolean &mdash; Default: None</i><br />
         Raise and exception and fail the pipeline if an error is raised in the QC report
 </p>
+
+### Optional inputs
+<p name="SingleReadSNV.create_md5_checksum_outputs">
+        <b>SingleReadSNV.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
+</p>
 </details>
 
 
@@ -120,6 +127,11 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <b>SingleReadSNV.used_self_trained_model</b><br />
         <i>Boolean</i><br />
         Indicates whether a self-trained model was used for inference, otherwise a pre-trained model was used (if snv_qualities_assigned) or no model was used
+</p>
+<p name="SingleReadSNV.md5_checksums_json">
+        <b>SingleReadSNV.md5_checksums_json</b><br />
+        <i>File?</i><br />
+        json file that will contain md5 checksums for requested output files
 </p>
 <p name="SingleReadSNV.report_html">
         <b>SingleReadSNV.report_html</b><br />

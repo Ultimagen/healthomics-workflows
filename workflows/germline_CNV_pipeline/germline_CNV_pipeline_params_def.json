@@ -103,6 +103,10 @@
         "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
         "optional": false
     },
+    "GermlineCNVPipeline.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
     "GermlineCNVPipeline.disable_mod_cnv": {
         "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
         "optional": true

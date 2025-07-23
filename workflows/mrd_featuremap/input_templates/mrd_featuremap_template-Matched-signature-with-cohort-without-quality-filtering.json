@@ -28,6 +28,7 @@
     "MRDFeatureMap.n_synthetic_signatures": 5,
     "MRDFeatureMap.mapping_quality_threshold": 60,
     "MRDFeatureMap.diluent_germline_vcfs": [],
+    "MRDFeatureMap.create_md5_checksum_outputs": false,
     "MRDFeatureMap.external_matched_signatures": [
         "<external_matched_signatures>"
     ],

@@ -117,6 +117,11 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>Int? </i> &mdash; 
          Memory in GB to use for the coverage extraction task <br /> 
 </p>
+<p name="MRDFeatureMap.create_md5_checksum_outputs">
+        <b>MRDFeatureMap.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
+</p>
 <p name="MRDFeatureMap.FilterMatched.base_file_name">
         <b>MRDFeatureMap.FilterMatched.base_file_name</b><br />
         <i>String? </i> &mdash; 
@@ -252,6 +257,11 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <b>MRDFeatureMap.coverage_bed_index</b><br />
         <i>File</i><br />
         Respective index
+</p>
+<p name="MRDFeatureMap.md5_checksums_json">
+        <b>MRDFeatureMap.md5_checksums_json</b><br />
+        <i>File?</i><br />
+        json file that will contain md5 checksums for requested output files
 </p>
 
 <hr />

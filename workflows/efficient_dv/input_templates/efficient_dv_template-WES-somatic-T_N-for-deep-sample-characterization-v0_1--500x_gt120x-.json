@@ -9,6 +9,8 @@
     "EfficientDV.num_shards": 300,
     "EfficientDV.make_gvcf": false,
     "EfficientDV.recalibrate_vaf": true,
+    "EfficientDV.single_strand_filter": true,
+    "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
     "EfficientDV.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
@@ -35,7 +37,6 @@
     ],
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx",
     "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx.serialized.a10g",
-    "EfficientDV.single_strand_filter": false,
     "EfficientDV.keep_duplicates": false,
     "EfficientDV.add_ins_size_channel": false,
     "EfficientDV.min_fraction_hmer_indels": 0.02,

@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.20.0" # !UnusedDeclaration
+        String pipeline_version = "1.21.0" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -68,6 +68,8 @@ workflow MRDFeatureMap {
         # Used for running on other clouds (aws)
         String? cloud_provider_override
         File? monitoring_script_input
+
+        Boolean create_md5_checksum_outputs = false
 
         # When running on Terra, use workspace.name as this input to ensure that all tasks will only cache hit to runs in your
         # own workspace. This will prevent call caching from failing with "Cache Miss (10 failed copy attempts)". Outside of
@@ -121,7 +123,8 @@ workflow MRDFeatureMap {
           "MergeVcfsIntoBed.disk_size",
           "PadDiluentVcf.disk_size",
           "PadDiluentVcf.memory_gb",
-          "PadDiluentVcf.cpus"
+          "PadDiluentVcf.cpus",
+          "MergeMd5sToJson.output_json"
       ]}
   }    
 
@@ -206,11 +209,16 @@ workflow MRDFeatureMap {
           type: "Int",
           category: "input_optional"
       }
-        memory_extract_coverage_override: {
+      memory_extract_coverage_override: {
             help: "Memory in GB to use for the coverage extraction task",
             type: "Int",
             category: "input_optional"
-        }
+      }
+      create_md5_checksum_outputs: {
+           help: "Create md5 checksum for requested output files",
+           type: "Boolean",
+           category: "input_optional"
+      }
       references: {
           help: "Reference files: fasta, dict and fai, recommended value set in the template",
           type: "References",
@@ -281,6 +289,11 @@ workflow MRDFeatureMap {
         type: "File",
         category: "output"
       }
+      md5_checksums_json: {
+        help: "json file that will contain md5 checksums for requested output files",
+        type: "File",
+        category: "output"
+    }
   }
 
   Int preemptibles = select_first([preemptible_tries, 1])
@@ -448,12 +461,40 @@ workflow MRDFeatureMap {
       monitoring_script = monitoring_script  #!FileCoercion
   }
 
+    File features_dataframe_ = MrdDataAnalysis.features
+    File signatures_dataframe_ = MrdDataAnalysis.signatures
+    File report_html_ = MrdDataAnalysis.mrd_analysis_html
+    File tumor_fraction_h5_ = MrdDataAnalysis.tumor_fraction_h5
+
+    if (create_md5_checksum_outputs) {
+
+        Array[File] output_files = select_all(flatten([
+                                                      select_first([[features_dataframe_], []]),
+                                                      select_first([[signatures_dataframe_], []]),
+                                                      select_first([[report_html_], []]),
+                                                      select_first([[tumor_fraction_h5_], []]),
+                                                      ]))
+
+        scatter (file in output_files) {
+            call UGGeneralTasks.ComputeMd5 as compute_md5 {
+                input:
+                    input_file = file,
+                    docker = global.ubuntu_docker,
+            }
+        }
+
+        call UGGeneralTasks.MergeMd5sToJson {
+            input:
+                md5_files = compute_md5.checksum,
+                docker = global.ugbio_core_docker
+        }
+    }
   output {
     # MRD analysis results
-    File features_dataframe = MrdDataAnalysis.features
-    File signatures_dataframe = MrdDataAnalysis.signatures
-    File report_html = MrdDataAnalysis.mrd_analysis_html
-    File tumor_fraction_h5 = MrdDataAnalysis.tumor_fraction_h5
+    File features_dataframe = features_dataframe_
+    File signatures_dataframe = signatures_dataframe_
+    File report_html = report_html_
+    File tumor_fraction_h5 = tumor_fraction_h5_
     # Intersected featuremaps
     Array[File] intersected_featuremaps_parquet = FeatureMapIntersectWithSignatures.intersected_featuremaps_parquet
     Array[File] intersected_featuremaps = FeatureMapIntersectWithSignatures.intersected_featuremaps
@@ -464,6 +505,8 @@ workflow MRDFeatureMap {
     Array[File]? db_signatures_vcf = filtered_db_control_signatures
     # Coverage stats
     File coverage_bed = ExtractCoverageOverVcfFiles.coverage_bed
-    File coverage_bed_index = ExtractCoverageOverVcfFiles.coverage_bed_index  
+    File coverage_bed_index = ExtractCoverageOverVcfFiles.coverage_bed_index
+
+    File? md5_checksums_json = MergeMd5sToJson.md5_json
   }
 }

@@ -26,6 +26,7 @@ task UGMakeExamples{
     Float min_fraction_snps
     Float min_fraction_hmer_indels
     Float min_fraction_non_hmer_indels
+    Float min_fraction_single_strand_non_snps
     Int candidate_min_mapping_quality
     Int max_reads_per_partition
     Int assembly_min_base_quality
@@ -198,6 +199,7 @@ task UGMakeExamples{
         --cgp-min-fraction-snps ~{min_fraction_snps} \
         --cgp-min-fraction-hmer-indels ~{min_fraction_hmer_indels} \
         --cgp-min-fraction-non-hmer-indels ~{min_fraction_non_hmer_indels} \
+        --cgp-min-fraction-single-strand-non-snps ~{min_fraction_single_strand_non_snps} \
         --cgp-min-mapping-quality ~{candidate_min_mapping_quality} \
         --max-reads-per-region ~{max_reads_per_partition} \
         --assembly-min-base-quality ~{assembly_min_base_quality} \

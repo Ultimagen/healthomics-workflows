@@ -27,11 +27,12 @@ import "single_sample_cnmops_CNV_calling.wdl" as SingleSampleCnmopsCNVCalling
 import "single_sample_CNVpytor_calling.wdl" as SingleSampleCNVpytorCalling
 import "combine_germline_CNV_calls.wdl" as CombineGermlineCNVCalls
 import "tasks/globals.wdl" as Globals
+import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.20.0" # !UnusedDeclaration
+        String pipeline_version = "1.21.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -62,6 +63,7 @@ workflow GermlineCNVPipeline {
         Boolean? no_address_override
         Int? preemptible_tries_override
         File? monitoring_script_input
+        Boolean create_md5_checksum_outputs = false
 
         # winval validations
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
@@ -83,7 +85,8 @@ workflow GermlineCNVPipeline {
                 "no_address_override",
                 "preemptible_tries_override",
                 "Globals.glob",
-                "SingleSampleReadsCount.Globals.glob"
+                "SingleSampleReadsCount.Globals.glob",
+                "MergeMd5sToJson.output_json"
                 ]}
     }
     parameter_meta {
@@ -198,6 +201,11 @@ workflow GermlineCNVPipeline {
             type: "Boolean",
             category: "param_optional"
         }
+        create_md5_checksum_outputs: {
+           help: "Create md5 checksum for requested output files",
+           type: "Boolean",
+           category: "input_optional"
+        }
         cnmops_cnv_calls_bed: {
             help: "CNMOPS CNV calls in bed format",
             type: "File",
@@ -223,7 +231,11 @@ workflow GermlineCNVPipeline {
             type: "File",
             category: "output"
         }
-
+        md5_checksums_json: {
+            help: "json file that will contain md5 checksums for requested output files",
+            type: "File",
+            category: "output"
+        }
     }
     Int cnmops_mapq = select_first([cnmops_mapq_override, 1])
     Int cnmops_window_length = select_first([cnmops_window_length_override, 500])
@@ -285,12 +297,36 @@ workflow GermlineCNVPipeline {
         reference_genome_index = reference_genome_index,
         cnv_lcr_file = ug_cnv_lcr_file,
     }
+    File combined_cnv_calls_bed_vcf_ = CombineGermlineCNVCalls.out_sample_cnvs_vcf
+    File combined_cnv_calls_bed_vcf_index_ = CombineGermlineCNVCalls.out_sample_cnvs_vcf_index
+    if (create_md5_checksum_outputs) {
+        Array[File] output_files = select_all(flatten([
+                                                      select_first([[combined_cnv_calls_bed_vcf_], []]),
+                                                      select_first([[combined_cnv_calls_bed_vcf_index_], []]),
+                                                      ]))
+
+        scatter (file in output_files) {
+            call UGGeneralTasks.ComputeMd5 as compute_md5 {
+                input:
+                    input_file = file,
+                    docker = global.ubuntu_docker,
+            }
+        }
+
+        call UGGeneralTasks.MergeMd5sToJson {
+            input:
+                md5_files = compute_md5.checksum,
+                docker = global.ugbio_core_docker
+        }
+    }
     output {
         File cnmops_cnv_calls_bed = CnmopsCNVCalling.out_sample_cnvs_bed[0]
         File cnvpytor_cnv_calls_bed = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv
         File combined_cnv_calls_bed = CombineGermlineCNVCalls.out_sample_cnvs_bed
-        File combined_cnv_calls_bed_vcf = CombineGermlineCNVCalls.out_sample_cnvs_vcf
-        File combined_cnv_calls_bed_vcf_index = CombineGermlineCNVCalls.out_sample_cnvs_vcf_index
+        File combined_cnv_calls_bed_vcf = combined_cnv_calls_bed_vcf_
+        File combined_cnv_calls_bed_vcf_index = combined_cnv_calls_bed_vcf_index_
+
+        File? md5_checksums_json = MergeMd5sToJson.md5_json
     }
 }
 

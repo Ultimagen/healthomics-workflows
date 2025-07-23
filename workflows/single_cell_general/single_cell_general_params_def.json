@@ -11,6 +11,10 @@
         "description": "Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected.",
         "optional": true
     },
+    "SingleCell.TrimAlignSort.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
     "SingleCell.TrimAlignSort.star_align_extra_args": {
         "description": "Extra arguments for the STAR aligner.",
         "optional": true
@@ -50,6 +54,10 @@
     "SingleCell.cpu": {
         "description": "Number of CPUs to use (for Trimmer, conversion to fastq, and alignment tasks)",
         "optional": false
+    },
+    "SingleCell.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
     },
     "SingleCell.downstream_analysis": {
         "description": "Can be either star_solo, star, or undefined (default)",

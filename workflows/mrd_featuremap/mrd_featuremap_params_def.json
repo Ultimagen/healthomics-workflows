@@ -79,6 +79,10 @@
         "description": "cloud_provider_override",
         "optional": true
     },
+    "MRDFeatureMap.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
     "MRDFeatureMap.diluent_germline_vcfs": {
         "description": "Optional germline VCF files from diluent samples to pad and exclude from analysis",
         "optional": true

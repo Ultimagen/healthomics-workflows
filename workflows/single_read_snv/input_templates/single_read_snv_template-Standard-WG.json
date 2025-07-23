@@ -27,6 +27,7 @@
     "SingleReadSNV.min_coverage_to_train_model": 8.0,
     "SingleReadSNV.preemptible_tries": 1,
     "SingleReadSNV.raise_exceptions_in_report": false,
+    "SingleReadSNV.create_md5_checksum_outputs": false,
     "SingleReadSNV.categorical_features": {
         "ref": [
             "A",

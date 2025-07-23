@@ -1039,3 +1039,62 @@ task BedToIntervalList {
         File monitoring_log = "monitoring.log"
     }
 }
+
+task ComputeMd5 {
+    input {
+        File input_file
+        String docker
+    }
+    Int disk_size = ceil(size(input_file, "GB")) + 1
+    String out_file = basename(input_file) + ".checksum.md5"
+    command {
+        md5sum "~{input_file}" > "~{out_file}"
+    }
+
+    output {
+        File checksum = "~{out_file}"
+    }
+
+    runtime {
+        docker: docker
+        memory: "2 GB"
+        disks: "local-disk " + disk_size + " HDD"
+    }
+}
+
+task MergeMd5sToJson {
+    input {
+        Array[File] md5_files
+        String output_json = "md5_checksums.json"
+        String docker
+    }
+    Int disk_size = ceil(size(md5_files, "GB")) + 1
+    command <<<
+        ls ~{sep=' ' md5_files} > md5_files.txt
+        python <<CODE
+import json
+import os
+md5_dict = {}
+with open("md5_files.txt") as f:
+    for line in f:
+        fname = line.strip()
+        if not fname:
+            continue
+        with open(fname) as fh:
+            line = fh.read().strip()
+            if line:
+                md5, filename = line.split()
+                md5_dict[os.path.basename(filename)] = md5
+with open("~{output_json}", "w") as out_fh:
+    json.dump(md5_dict, out_fh, indent=2)
+CODE
+    >>>
+    output {
+        File md5_json = output_json
+    }
+    runtime {
+        docker: docker
+        memory: "2 GB"
+        disks: "local-disk " + disk_size + " HDD"
+    }
+}

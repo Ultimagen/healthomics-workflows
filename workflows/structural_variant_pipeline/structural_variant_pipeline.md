@@ -183,6 +183,13 @@ The steps of the pipeline are as following:
         <i>String? &mdash; Default: None</i><br />
         Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp
 </p>
+
+### Optional inputs
+<p name="SVPipeline.create_md5_checksum_outputs">
+        <b>SVPipeline.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
+</p>
 </details>
 
 
@@ -276,6 +283,11 @@ The steps of the pipeline are as following:
         <b>SVPipeline.converted_vcf_index</b><br />
         <i>File?</i><br />
         Final VCF index file in the region (non-breakend) format
+</p>
+<p name="SVPipeline.md5_checksums_json">
+        <b>SVPipeline.md5_checksums_json</b><br />
+        <i>File?</i><br />
+        json file that will contain md5 checksums for requested output files
 </p>
 
 <hr />

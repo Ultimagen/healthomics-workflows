@@ -65,6 +65,11 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>File? </i> &mdash; 
          UG-CNV-LCR bed file <br /> 
 </p>
+<p name="GermlineCNVPipeline.create_md5_checksum_outputs">
+        <b>GermlineCNVPipeline.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
+</p>
 <p name="GermlineCNVPipeline.CnmopsCNVCalling.input_bam_file">
         <b>GermlineCNVPipeline.CnmopsCNVCalling.input_bam_file</b><br />
         <i>File? </i> &mdash; 
@@ -150,6 +155,11 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <b>GermlineCNVPipeline.combined_cnv_calls_bed_vcf_index</b><br />
         <i>File</i><br />
         Index of the combined CNV calls in vcf format
+</p>
+<p name="GermlineCNVPipeline.md5_checksums_json">
+        <b>GermlineCNVPipeline.md5_checksums_json</b><br />
+        <i>File?</i><br />
+        json file that will contain md5 checksums for requested output files
 </p>
 
 <hr />

@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.20.0" # !UnusedDeclaration
+    String pipeline_version = "1.21.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -53,6 +53,7 @@ workflow EfficientDV {
     Float min_fraction_hmer_indels = 0.12
     Float min_fraction_non_hmer_indels = 0.06
     Float min_fraction_snps = 0.12
+    Float min_fraction_single_strand_non_snps = 0.15
     Int min_read_count_snps = 2
     Int min_read_count_hmer_indels = 2
     Int min_read_count_non_hmer_indels = 2
@@ -122,6 +123,7 @@ workflow EfficientDV {
    #@wv min_fraction_hmer_indels <= 1.1 and min_fraction_hmer_indels >= 0
    #@wv min_fraction_non_hmer_indels <= 1.1 and min_fraction_non_hmer_indels >= 0
    #@wv min_fraction_snps <= 1.1 and min_fraction_snps >= 0
+   #@wv min_fraction_single_strand_non_snps <= 1.1 and min_fraction_single_strand_non_snps >= 0
    #@mv min_read_count_snps >= 1
    #@mv min_read_count_hmer_indels >= 1
    #@mv min_read_count_non_hmer_indels >= 1
@@ -226,6 +228,10 @@ workflow EfficientDV {
     min_fraction_non_hmer_indels: {
       help: "Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant",
       category: "param_optional"
+    }
+    min_fraction_single_strand_non_snps: {
+      help: "In active region detection, in case single_strand_filter is set to true, keep only non snps candidates that have at least min_fraction_single_strand_non_snps fraction",
+      category: "param_advanced"
     }
     min_read_count_snps: {
       help: "Minimal number of reads, that support a snp, required to  generate a candidate variant",
@@ -576,6 +582,7 @@ workflow EfficientDV {
         make_gvcf = make_gvcf,
         p_error = p_error,
         single_strand_filter = single_strand_filter,
+        min_fraction_single_strand_non_snps = min_fraction_single_strand_non_snps,
         keep_duplicates = keep_duplicates,
         add_ins_size_channel = add_ins_size_channel,
         extra_args = ug_make_examples_extra_args,
@@ -691,7 +698,7 @@ workflow EfficientDV {
           af_ratio = select_first([allele_frequency_ratio]),
           final_vcf_base_name = base_file_name,
           monitoring_script = monitoring_script,
-          bcftools_docker =  global.bcftools_docker
+          ugbio_filtering_docker =  global.ugbio_filtering_docker
     } 
   }
 

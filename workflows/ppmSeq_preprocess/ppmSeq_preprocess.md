@@ -55,6 +55,11 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
         <i>String? </i> &mdash; 
          Extra arguments for ppmSeq analysis <br /> 
 </p>
+<p name="ppmSeqPreprocess.create_md5_checksum_outputs">
+        <b>ppmSeqPreprocess.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
+</p>
 <p name="ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters">
         <b>ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters</b><br />
         <i>UaMethParameters? </i> &mdash; 
@@ -79,6 +84,11 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
         <b>ppmSeqPreprocess.TrimAlignSort.star_align_gtf_override</b><br />
         <i>File? </i> &mdash; 
          GTF file to be used for STAR aligner. <br /> 
+</p>
+<p name="ppmSeqPreprocess.TrimAlignSort.create_md5_checksum_outputs">
+        <b>ppmSeqPreprocess.TrimAlignSort.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
 </p>
 </details>
 
@@ -143,6 +153,11 @@ This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, a
         <b>ppmSeqPreprocess.aggregated_metrics_json</b><br />
         <i>File</i><br />
         ppmSeq QC aggregated metrics json
+</p>
+<p name="ppmSeqPreprocess.md5_checksums_json">
+        <b>ppmSeqPreprocess.md5_checksums_json</b><br />
+        <i>File?</i><br />
+        json file that will contain md5 checksums for requested output files
 </p>
 
 <hr />

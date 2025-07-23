@@ -56,23 +56,21 @@ task ApplyAlleleFrequencyRatioFilter {
     Float af_ratio
     String final_vcf_base_name
     File monitoring_script
-    String bcftools_docker
+    String ugbio_filtering_docker
   }
   Int disk_size = ceil(3 * size(input_vcf, "GB") + 1 )
   String output_file = "~{final_vcf_base_name}.annotated.filt.afRatio.vcf.gz"
-  String tmp_file = "~{final_vcf_base_name}.tmp.vcf.gz"
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
  
     set -eo pipefail
- 
-    bcftools filter ~{input_vcf} -e 'FILTER!="RefCall" && (VARIANT_TYPE="snp" || VARIANT_TYPE="non-h-indel") && (AD[0:1]/DP)/(BG_AD[0:1]/BG_DP) < ~{af_ratio}' -s "LowAFRatioToBackground" -m "+" -Oz -o  ~{output_file}
-    bcftools index -t ~{output_file}
+    filter_low_af_ratio_to_background --af_ratio_threshold ~{af_ratio} --new_filter "LowAFRatioToBackground" ~{input_vcf} ~{output_file}
+    
    >>>
   runtime {
     memory: "4 GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
-    docker: bcftools_docker
+    docker: ugbio_filtering_docker
     noAddress: true
     maxRetries: 1
   }

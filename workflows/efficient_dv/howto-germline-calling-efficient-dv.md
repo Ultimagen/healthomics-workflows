@@ -38,15 +38,15 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.3
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.6
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.3
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.6
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:2.2.2
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:2.2.3
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:2.2.2
+337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:2.2.3
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.

@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.20.0" # !UnusedDeclaration
+        String pipeline_version = "1.21.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
@@ -67,6 +67,8 @@ workflow TrimAlignSort {
         # Used for running on other clouds (aws)
         File? monitoring_script_input
         String dummy_input_for_call_caching = ""
+
+        Boolean create_md5_checksum_outputs = false
 
 
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name or 'sample' in base_file_name)
@@ -147,7 +149,8 @@ workflow TrimAlignSort {
             "ConvertSorterStatsToH5.metric_mapping_file",
             "CreateReport.notebook_file_in",
             "CreateReport.top_metrics_file",
-            "Demux.mapq_override"
+            "Demux.mapq_override",
+            "MergeMd5sToJson.output_json"
         ]}
     }
 
@@ -226,6 +229,16 @@ workflow TrimAlignSort {
             help: "Number of cpus to be used for the tasks.",
             type: "Int",
             category: "input_required"
+        }
+        create_md5_checksum_outputs: {
+            help: "Create md5 checksum for requested output files",
+            type: "Boolean",
+            category: "input_optional"
+        }
+        md5_checksums_json: {
+            help: "json file that will contain md5 checksums for requested output files",
+            type: "File",
+            category: "output"
         }
         output_cram_bam: {
             help: "Output file after the pipeline is executed.",
@@ -650,6 +663,35 @@ workflow TrimAlignSort {
         Array[File] output_cram_bam_list_ = select_first([output_cram_bam_list_with_sorter_, output_cram_bam_list_without_sorter_])
     }
 
+    if (create_md5_checksum_outputs) {
+
+        Array[File] output_files = select_all(flatten([
+            # Single-file outputs
+            select_first([[output_cram_bam_], []]),
+            select_first([[output_cram_bam_index_], []]),
+            select_first([[fastq_file_], []]),
+            select_first([[sorter_stats_csv_], []]),
+            select_first([[sorter_stats_json_], []]),
+
+            select_first([output_cram_bam_list_, []]),
+            select_first([output_cram_bam_index_list_, []]),
+        ]))
+
+        scatter (file in output_files) {
+            call UGGeneralTasks.ComputeMd5 as compute_md5 {
+                input:
+                    input_file = file,
+                    docker = global.ubuntu_docker,
+            }
+        }
+
+        call UGGeneralTasks.MergeMd5sToJson {
+            input:
+                md5_files = compute_md5.checksum,
+                docker = global.ugbio_core_docker
+        }
+    }
+
     output {
         # single output mode outputs
         File? output_cram_bam               = output_cram_bam_
@@ -700,5 +742,8 @@ workflow TrimAlignSort {
         ## STAR outputs
         File? align_star_reads_per_gene_file    = StarAlignment.reads_per_gene_file
         File? align_star_stats                  = StarAlignment.star_stats
+
+        ## md5 checksums
+        File? md5_checksums_json = MergeMd5sToJson.md5_json
     }
 }
