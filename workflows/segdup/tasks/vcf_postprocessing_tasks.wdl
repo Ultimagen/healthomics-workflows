@@ -57,6 +57,7 @@ task ApplyAlleleFrequencyRatioFilter {
     String final_vcf_base_name
     File monitoring_script
     String ugbio_filtering_docker
+    Boolean no_address = true
   }
   Int disk_size = ceil(3 * size(input_vcf, "GB") + 1 )
   String output_file = "~{final_vcf_base_name}.annotated.filt.afRatio.vcf.gz"
@@ -71,7 +72,7 @@ task ApplyAlleleFrequencyRatioFilter {
     memory: "4 GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: ugbio_filtering_docker
-    noAddress: true
+    noAddress: no_address
     maxRetries: 1
   }
    output {
@@ -87,6 +88,7 @@ task RemoveRefCalls {
     String final_vcf_base_name
     File monitoring_script
     String bcftools_docker
+    Boolean no_address = true
   }
   Int disk_size = ceil(3 * size(input_vcf, "GB") + 1 )
   String output_file = "~{final_vcf_base_name}.annotated.filt.vcf.gz"
@@ -104,7 +106,7 @@ task RemoveRefCalls {
     memory: "4 GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: bcftools_docker
-    noAddress: true
+    noAddress: no_address
     maxRetries: 1
   }
    output {

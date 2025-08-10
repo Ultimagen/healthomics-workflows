@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.21.0" # !UnusedDeclaration
+    String pipeline_version = "1.22.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -112,6 +112,7 @@ workflow EfficientDV {
     Int call_variants_cpus = 8
     Int call_variants_threads = 8
     Int call_variants_uncompr_buf_size_gb = 1
+    Boolean? no_address_override
 
     # Used for running on other clouds (aws)
     String? cloud_provider_override
@@ -152,7 +153,6 @@ workflow EfficientDV {
           exclude: ["pipeline_version",
               "cloud_provider_override",
               "monitoring_script_input",
-              "no_address_override",
               "dummy_input_for_call_caching",
               "UGCallVariants.disk_size",
               "UGPostProcessing.disk_size",
@@ -389,6 +389,10 @@ workflow EfficientDV {
       help: "Number of preemptible tries",
       category: "param_advanced"
     }
+    no_address_override: {
+      help: "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
+      category: "param_advanced"
+    }
     call_variants_uncompr_buf_size_gb: {
       help: "Memory buffer allocated for each uncompression thread in calll_variants",
       category: "param_optional"
@@ -492,6 +496,7 @@ workflow EfficientDV {
   String cloud_provider = select_first([cloud_provider_override, 'gcp'])
   Float ug_make_examples_memory = select_first([ug_make_examples_memory_override, 4])
   Int ug_make_examples_cpus = select_first([ug_make_examples_cpus_override, 2])
+  Boolean no_address = select_first([no_address_override, true])
 
   call Globals.Globals as Globals
   GlobalVariables global = Globals.global_dockers
@@ -506,7 +511,7 @@ workflow EfficientDV {
         preemptible_tries = preemptible_tries,
         docker = global.ubuntu_docker,
         monitoring_script = monitoring_script,
-        no_address = true
+        no_address = no_address
     }
   }
 
@@ -520,7 +525,7 @@ workflow EfficientDV {
         preemptible_tries = preemptible_tries,
         docker = global.ubuntu_docker,
         monitoring_script = monitoring_script,
-        no_address = true
+        no_address = no_address
     }
   }
 
@@ -532,7 +537,7 @@ workflow EfficientDV {
       input:
         interval_list = interval_list,
         docker = global.ubuntu_docker,
-        no_address = true,
+        no_address = no_address,
         monitoring_script = monitoring_script
     }
 
@@ -540,7 +545,7 @@ workflow EfficientDV {
       input:
         fasta_index = references.ref_fasta_index,
         docker = global.ubuntu_docker,
-        no_address = true,
+        no_address = no_address,
         monitoring_script = monitoring_script
   }
 
@@ -551,7 +556,7 @@ workflow EfficientDV {
       break_bands_at_multiples_of = scatter_intervals_break,
       dummy_input_for_call_caching = dummy_input_for_call_caching,
       docker = global.broad_gatk_docker,
-      no_address = true,
+      no_address = no_address,
       monitoring_script = monitoring_script
   }
 
@@ -596,7 +601,8 @@ workflow EfficientDV {
         preemptible_tries = preemptible_tries,
         memory = ug_make_examples_memory,
         cpu = ug_make_examples_cpus,
-        cloud_provider = cloud_provider
+        cloud_provider = cloud_provider,
+        no_address = no_address
     }
   }
 
@@ -615,6 +621,7 @@ workflow EfficientDV {
       num_threads = call_variants_threads,
       monitoring_script = monitoring_script,
       call_variants_extra_mem = ug_call_variants_extra_mem,
+      no_address = no_address
   }
 
   if (make_gvcf){
@@ -666,7 +673,8 @@ workflow EfficientDV {
       dbsnp = ref_dbsnp,
       dbsnp_index = ref_dbsnp_index,
       extra_args = ug_post_processing_extra_args,
-      monitoring_script = monitoring_script
+      monitoring_script = monitoring_script,
+      no_address = no_address
   }
 
   if (output_realignment){
@@ -678,7 +686,7 @@ workflow EfficientDV {
         sample_name = "realigned",
         references = references,
         docker = global.broad_gatk_docker,
-        no_address = true,
+        no_address = no_address,
         cpus = 4,
         preemptible_tries = preemptible_tries
     }
@@ -698,7 +706,8 @@ workflow EfficientDV {
           af_ratio = select_first([allele_frequency_ratio]),
           final_vcf_base_name = base_file_name,
           monitoring_script = monitoring_script,
-          ugbio_filtering_docker =  global.ugbio_filtering_docker
+          ugbio_filtering_docker =  global.ugbio_filtering_docker,
+          no_address = no_address
     } 
   }
 
@@ -707,7 +716,8 @@ workflow EfficientDV {
           input_vcf = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf]),
           final_vcf_base_name = base_file_name,
           monitoring_script = monitoring_script,
-          bcftools_docker =  global.bcftools_docker
+          bcftools_docker =  global.bcftools_docker,
+          no_address = no_address
   }
 
   if (make_gvcf) {
@@ -724,7 +734,8 @@ workflow EfficientDV {
       output_prefix = output_prefix,
       ref = references.ref_fasta,
       docker = global.ug_make_examples_docker,
-      monitoring_script = monitoring_script
+      monitoring_script = monitoring_script,
+      no_address = no_address
   }
 
   if (output_realignment) {

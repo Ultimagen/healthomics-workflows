@@ -27,7 +27,7 @@ import "tasks/globals.wdl" as Globals
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.21.0" # !UnusedDeclaration
+        String pipeline_version = "1.22.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -37,6 +37,7 @@ workflow CombineGermlineCNVCalls {
         Int? distance_threshold_override
         Int? deletions_length_cutoff_override
         Int? jalign_written_cutoff_override
+        Int? jalign_min_mismatches_override
         Int? duplication_length_cutoff_for_cnmops_filter_override
 
         # jalign parameters
@@ -106,6 +107,11 @@ workflow CombineGermlineCNVCalls {
         }
         jalign_written_cutoff_override: {
             help: "Minimal number of supporting jaligned reads for deletions. default=1",
+            type: "Int",
+            category: "param_advanced"
+        }
+        jalign_min_mismatches_override: {
+            help: "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
             type: "Int",
             category: "param_advanced"
         }
@@ -183,6 +189,7 @@ workflow CombineGermlineCNVCalls {
     Int jalign_written_cutoff = select_first([jalign_written_cutoff_override,1])
     Int duplication_length_cutoff_for_cnmops_filter = select_first([duplication_length_cutoff_for_cnmops_filter_override,10000])
     Float cnvpytor_precent_gaps_threshold = select_first([cnvpytor_precent_gaps_threshold_override, 0])
+    Int jalign_min_mismatches = select_first([jalign_min_mismatches_override,1])
 
     call Globals.Globals as Globals
       GlobalVariables global = Globals.global_dockers
@@ -201,6 +208,7 @@ workflow CombineGermlineCNVCalls {
         input_bam_file_index = input_bam_file_index,
         reference_genome = reference_genome,
         reference_genome_index = reference_genome_index,
+        jalign_min_mismatches = jalign_min_mismatches,
         
         docker = global.ug_jalign_docker,
         monitoring_script = monitoring_script,
@@ -247,12 +255,14 @@ task RunJalignForDelCandidates {
         File reference_genome
         File reference_genome_index
 
+        Int jalign_min_mismatches
+
         String docker
         File monitoring_script
         Boolean no_address
         Int preemptible_tries
     }
-    Int cpu = 36
+    Int cpu = 48
     Float input_bam_file_size = size(input_bam_file, "GB")
     Float reference_fasta_file_size = size(reference_genome, "GB")
     Float additional_disk = 100
@@ -294,12 +304,14 @@ task RunJalignForDelCandidates {
             --ref_fasta ~{reference_genome} \
             --out_folder out_jalign \
             --sample_name ~{base_file_name} \
-            --num_jobs ~{cpu}
+            --min_mismatches ~{jalign_min_mismatches} \
+            --mode DEL \
+            --num_jobs ~{cpu} 
             
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: "64 GiB"
+        memory: "96 GiB"
         disks: "local-disk " + ceil(disk_size) + " LOCAL"
         docker: docker
         noAddress: no_address

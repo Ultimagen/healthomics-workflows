@@ -39,7 +39,7 @@ task ExtractSampleNameFlowOrder{
     }
 
     command <<<
-        set -e
+        set -ex
         set -o pipefail
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -48,7 +48,15 @@ task ExtractSampleNameFlowOrder{
         gatk GetSampleName  \
             -I ~{input_bam} \
             -R ~{references.ref_fasta} \
-            -O sample_name.txt
+            -O sample_name.tmp.txt
+        sort sample_name.tmp.txt | uniq > sample_name.txt
+
+        #if there is more than a single sample name, fail
+        if [[ $(wc -l < sample_name.txt) -ne 1 ]]
+        then
+            echo "Error: more than one sample name found in the input BAM file" >&2
+            exit 1
+        fi
 
         if [[ "~{cloud_provider}" == "aws" ]]
         then

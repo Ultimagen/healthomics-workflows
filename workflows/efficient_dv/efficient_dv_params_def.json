@@ -167,6 +167,10 @@
         "description": "monitoring_script_input",
         "optional": true
     },
+    "EfficientDV.no_address_override": {
+        "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
+        "optional": true
+    },
     "EfficientDV.num_shards": {
         "description": "Maximal number of intervals the genome is broken into when parallelizing the make_examples step",
         "optional": false

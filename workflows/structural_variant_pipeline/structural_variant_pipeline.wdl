@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.21.0" # !UnusedDeclaration
+        String pipeline_version = "1.22.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -846,8 +846,8 @@ task CreateAssembly {
     Int mem = select_first([memory_override,4])
 
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         # convert interval list to bed file
@@ -1036,8 +1036,8 @@ task LongHomopolymersAlignment {
         }
         Int disk_size = ceil(4*size(input_bam,"GB") + size(references.ref_fasta,"GB")) + 10
         command <<<
-            set -o pipefail
-            set -e
+            set -xeo pipefail
+
             bash ~{monitoring_script} | tee monitoring.log >&2 &
 
             python3 /opt/gridss/align_long_homopolymers.py \
@@ -1081,8 +1081,8 @@ task IdentifyVariants {
     Int disk_size = ceil((if defined(input_crams) then size(select_first([input_crams]), "GB") else 0) + 2*size(assembly,"GB") + size(references.ref_fasta,"GB")) + 20
     Int mem = 16
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         python3 <<CODE
@@ -1137,8 +1137,8 @@ task PreFilterCandidates {
     }
     Int disk_size = ceil(2*size(input_vcf,"GB")) + 3
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         bcftools view -Oz -i "~{filter_string}" ~{input_vcf} -o ~{output_vcf_prefix}.vcf.gz
         bcftools index -t ~{output_vcf_prefix}.vcf.gz
@@ -1179,8 +1179,8 @@ task CollectGridssMetrics{
     Int cpu = 2
 
     command{
-set -o pipefail
-set -e
+set -xeo pipefail
+
 bash ~{monitoring_script} | tee monitoring.log >&2 &
 mkdir -p ~{input_cram}.gridss.working
 java -Xmx~{java_mem}g -Xms~{java_mem}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.analysis.CollectGridssMetrics \
@@ -1446,8 +1446,8 @@ task GermlineLinkVariants {
     }
     Int disk_size = 4*ceil(size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         Rscript /opt/gridss/link_breakpoints.R \
@@ -1494,9 +1494,8 @@ task SomaticGripss {
     }
     Int disk_size = ceil(2*size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
+        set -xeo pipefail
 
-        set -o pipefail
-        set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         mkdir gripss_output
@@ -1551,8 +1550,8 @@ task ConvertVcfFormat {
 
     Int disk_size = ceil(2*size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+        
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         Rscript /opt/gridss/convert_vcf_format.R \

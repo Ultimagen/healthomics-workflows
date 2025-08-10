@@ -146,7 +146,7 @@ task Trimmer {
         
         OUT_CRAM_SUFFIX=~{output_file_name_suffix} 
         # If remove_small_files is set to true then remove trimmed ucrams under 500M in file size
-        if [ ~{parameters.remove_small_files} = true ]; then
+        if [ "~{parameters.remove_small_files}" = true ]; then
             find . -type f -size -500M -name "*${OUT_CRAM_SUFFIX}" | xargs -I {} rm {}
         fi
         

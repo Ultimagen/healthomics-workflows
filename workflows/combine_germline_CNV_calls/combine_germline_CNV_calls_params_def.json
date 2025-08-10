@@ -39,6 +39,10 @@
         "description": "Input sample BAI/CRAI index file",
         "optional": false
     },
+    "CombineGermlineCNVCalls.jalign_min_mismatches_override": {
+        "description": "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
+        "optional": true
+    },
     "CombineGermlineCNVCalls.jalign_written_cutoff_override": {
         "description": "Minimal number of supporting jaligned reads for deletions. default=1",
         "optional": true

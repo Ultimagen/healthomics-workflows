@@ -3,7 +3,7 @@ import "structs.wdl" as Structs
 
 
 task UGMakeExamples{
-  input {
+  input{
     Array[File] cram_files
     Array[File] cram_index_files
     File interval
@@ -49,6 +49,7 @@ task UGMakeExamples{
     Int cpu
     Int preemptible_tries
     String cloud_provider
+    Boolean no_address = true
   }
   # Estimate output_size that fits candidate generated parameters (assuming constant image size)
   #   More sensitive thresholds (such as used for somatic variant detection) yield more examples (images)
@@ -267,6 +268,7 @@ task UGMakeExamples{
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
     preemptible: preemptible_tries
+    noAddress: no_address
   }
   output {
     File monitoring_log = "monitoring.log"
@@ -298,6 +300,7 @@ task UGCallVariants{
     File monitoring_script
     Int disk_size = ceil(1.05*size(examples, 'GB') + 10)
     Int? call_variants_extra_mem
+    Boolean no_address = true
   }
   Int num_examples = length(examples)
   Int extra_mem = select_first([call_variants_extra_mem, 8])
@@ -354,6 +357,7 @@ task UGCallVariants{
     gpuCount: num_gpus
     acceleratorType : gpu_type
     acceleratorCount : num_gpus
+    noAddress: no_address
   }
 output {
     File monitoring_log = "monitoring.log"
@@ -407,7 +411,9 @@ task UGPostProcessing{
                          ceil(size(cram_files, "GB")) +
                          ceil(size(cram_index_files, "GB")) +
                          ceil(size(background_cram_index_files, "GB"))
+    Boolean no_address = true
   }
+
   Int indel_threshold_for_recalibration = 30000
 
   String gvcf_args = if make_gvcf then "--gvcf_outfile ~{output_prefix}.g.vcf.gz --nonvariant_site_tfrecord_path @gvcf_records.txt --hcr_bed_file ~{output_prefix}.hcr.bed " else ""
@@ -511,6 +517,7 @@ task UGPostProcessing{
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
+    noAddress: no_address
   }
   output {
     File monitoring_log = "monitoring.log"
@@ -536,6 +543,7 @@ task QCReport{
 
     Int disk_size = ceil(2 * size(input_vcf, "GB") +
                          size(ref, "GB") + 4)
+    Boolean no_address = true
   }
 
   command <<<
@@ -560,6 +568,7 @@ task QCReport{
     cpu: "1"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
+    noAddress: no_address
   }
   output {
     File monitoring_log = "monitoring.log"

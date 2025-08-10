@@ -14,16 +14,12 @@ struct GlobalVariables {
   String ua_docker
   String giraffe_docker
   String trimmer_docker
-  String fastqc_docker
   String star_docker
   String sorter_docker
-  String pigz_docker
   String gridss_docker
   String gripss_docker
   String single_cell_qc_docker
   String segdup_docker
-  String arriba_docker
-  String starfusion_docker
   String ugbio_core_docker
   String ugbio_cnv_docker
   String ugbio_vcflite_docker
@@ -51,19 +47,15 @@ workflow Globals {
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ref_cache_script": "s3://ultimagen-workflow-resources-us-east-1/scripts/seq_cache_populate.pl",
-        "ua_docker": "ultimagenomics/alignment:3.0.1",
+        "ua_docker": "ultimagenomics/alignment:3.0.3",
         "giraffe_docker": "ultimagenomics/giraffe:1.47.0",
-        "trimmer_docker": "ultimagenomics/trimmer:2.3.1",
-        "fastqc_docker": "quay.io/biocontainers/fastqc:0.11.9--0",
+        "trimmer_docker": "ultimagenomics/trimmer:2.3.3",
         "star_docker": "ultimagenomics/star:2.7.10a",
-        "sorter_docker": "ultimagenomics/sorter:1.4.2",
-        "pigz_docker": "nsheff/pigz:latest",
-        "gridss_docker": "ultimagenomics/gridss:b90d23b",
-        "gripss_docker": "ultimagenomics/gripss:ug_2.4.0_cb91bca",
+        "sorter_docker": "ultimagenomics/sorter:1.4.12",
+        "gridss_docker": "ultimagenomics/gridss:0c97dd1",
+        "gripss_docker": "ultimagenomics/gripss:ug_2.4.1_165b492",
         "single_cell_qc_docker": "ultimagenomics/ugbio_single_cell:1.12.0",
         "segdup_docker": "ultimagenomics/parascopy:1.1.1_adcc3c8",
-        "arriba_docker": "uhrigs/arriba:2.4.0",
-        "starfusion_docker": "trinityctat/starfusion:1.13.0",
         "ugbio_core_docker": "ultimagenomics/ugbio_core:1.12.0",
         "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.12.0",
         "ugbio_vcflite_docker": "ultimagenomics/ugbio_vcflite:1.12.0",
@@ -75,7 +67,7 @@ workflow Globals {
         "ugbio_freec_docker": "ultimagenomics/ugbio_freec:1.12.0",
         "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.12.0",
         "ugbio_comparison_docker": "ultimagenomics/ugbio_comparison:1.12.0",
-        "ug_jalign_docker": "ultimagenomics/jalign:1.0.0",
+        "ug_jalign_docker": "ultimagenomics/jalign:1.2.0",
         "mosdepth_docker": "quay.io/biocontainers/mosdepth:0.3.3--h37c5b7d_2"
 }
 }
