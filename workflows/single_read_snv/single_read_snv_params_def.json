@@ -15,6 +15,10 @@
         "description": "cloud_provider_override",
         "optional": true
     },
+    "SingleReadSNV.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
     "SingleReadSNV.featuremap_params": {
         "description": "FeatureMap parameters, recommended value set in the template.",
         "optional": false

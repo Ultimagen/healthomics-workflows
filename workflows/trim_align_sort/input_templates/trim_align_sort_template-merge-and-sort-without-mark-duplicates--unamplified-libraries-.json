@@ -20,6 +20,7 @@
     "TrimAlignSort.preemptible_tries": 1,
     "TrimAlignSort.no_address": true,
     "TrimAlignSort.cpu": 32,
+    "TrimAlignSort.create_md5_checksum_outputs": false,
     "TrimAlignSort.steps": {
         "trim": false,
         "align": false,
@@ -28,7 +29,6 @@
     "TrimAlignSort.sorter_params": {
         "mark_duplicates": false,
         "aligned": true,
-        "output_path": "{outputGroup}/{outputGroup}{?_minorRG}",
         "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
     }
 }

@@ -60,10 +60,11 @@ import "tasks/single_cell_tasks.wdl" as SingleCellTasks
 import "star_solo.wdl" as StarSoloWdl
 import "star_align_gene_count.wdl" as StarAlignWorkflow
 import "trim_align_sort.wdl" as TrimAlignSortSubWF
+import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.19.1" # !UnusedDeclaration
+        String pipeline_version = "1.22.0" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -98,6 +99,8 @@ workflow SingleCell {
         StarGenomeGenerateParams? genome_generate_params
         String? star_align_extra_args
         File? star_align_gtf_override
+
+        Boolean create_md5_checksum_outputs = false
 
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name or 'sample' in base_file_name)
         #@wv suffix(input_file) in {".bam", ".cram"}
@@ -156,7 +159,8 @@ workflow SingleCell {
                 "TrimAlignSort.StarAlignment.memory_gb",
                 "StarAlignment.memory_gb",
                 "SingleCell.StarAlignSubSample.memory_gb",
-                "qc_memory_gb"
+                "qc_memory_gb",
+                "MergeMd5sToJson.output_json"
             ]
         }
     }
@@ -263,6 +267,11 @@ workflow SingleCell {
             help: "Number of CPUs to use (for Trimmer, conversion to fastq, and alignment tasks)", 
             category: "param_required"
         }
+        create_md5_checksum_outputs: {
+           help: "Create md5 checksum for requested output files",
+           type: "Boolean",
+           category: "input_optional"
+        }
         output_barcodes_fastq: {
             type: "File",
             help: "The fastq with the barcodes portion of the read", 
@@ -343,11 +352,16 @@ workflow SingleCell {
             type: "File", 
             category: "output"
         }
+        md5_checksums_json: {
+            help: "json file that will contain md5 checksums for requested output files",
+            type: "File",
+            category: "output"
+        }
     }
 
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
-
+    
     call TrimAlignSortSubWF.TrimAlignSort {
         input:
             input_cram_bam_list     = [input_file],
@@ -435,6 +449,31 @@ workflow SingleCell {
         }
     }
 
+    File report_html_ = SingleCellQc.report
+    if (create_md5_checksum_outputs) {
+
+        Array[File] output_files = select_all(flatten([
+                                                      select_first([[barcode_fastq], []]),
+                                                      select_first([[insert_fastq], []]),
+                                                      select_first([[additional_fastq], []]),
+                                                      select_first([[report_html_], []]),
+                                                      ]))
+
+        scatter (file in output_files) {
+            call UGGeneralTasks.ComputeMd5 as compute_md5 {
+                input:
+                    input_file = file,
+                    docker = global.ubuntu_docker,
+            }
+        }
+
+        call UGGeneralTasks.MergeMd5sToJson {
+            input:
+                md5_files = compute_md5.checksum,
+                docker = global.ugbio_core_docker
+        }
+    }
+
     output {
         #TrimAlignSort outputs
         File? trimmer_stats_output          = TrimAlignSort.trimmer_stats
@@ -451,7 +490,7 @@ workflow SingleCell {
         File? output_additional_fastq       = additional_fastq
 
         # SingleCellQc outputs
-        File report_html                    = SingleCellQc.report
+        File report_html                    = report_html_
         File application_qc_h5          = SingleCellQc.h5
 
         # Star solo outputs
@@ -461,5 +500,7 @@ workflow SingleCell {
         File? star_bam                    = StarAlignSubSample.output_bam
         File? star_reads_per_gene_file    = StarAlignSubSample.reads_per_gene_file
         File? star_stats                  = StarAlignSubSample.star_stats
+
+        File? md5_checksums_json = MergeMd5sToJson.md5_json
     }
 }

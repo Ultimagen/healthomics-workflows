@@ -14,8 +14,8 @@ Combine cn.mops and cnvpytor CNV calls for a single sample.
         <i>File </i> &mdash; 
          cn.mops CNV calls in bed format <br /> 
 </p>
-<p name="CombineGermlineCNVCalls.cnvpytor_cnvs_bed">
-        <b>CombineGermlineCNVCalls.cnvpytor_cnvs_bed</b><br />
+<p name="CombineGermlineCNVCalls.cnvpytor_cnvs_tsv">
+        <b>CombineGermlineCNVCalls.cnvpytor_cnvs_tsv</b><br />
         <i>File </i> &mdash; 
          cnvpytor CNV calls in bed format <br /> 
 </p>

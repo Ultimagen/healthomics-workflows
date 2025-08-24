@@ -81,6 +81,11 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <i>SorterParams? </i> &mdash; 
          Parameters for the sorter task. Mandatory if sort step is selected. <br /> 
 </p>
+<p name="TrimAlignSort.create_md5_checksum_outputs">
+        <b>TrimAlignSort.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
+</p>
 </details>
 
 
@@ -259,6 +264,11 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <b>TrimAlignSort.align_star_stats</b><br />
         <i>File?</i><br />
         STAR stats file.
+</p>
+<p name="TrimAlignSort.md5_checksums_json">
+        <b>TrimAlignSort.md5_checksums_json</b><br />
+        <i>File?</i><br />
+        json file that will contain md5 checksums for requested output files
 </p>
 
 <hr />

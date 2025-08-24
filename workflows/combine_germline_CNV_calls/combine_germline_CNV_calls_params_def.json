@@ -11,9 +11,13 @@
         "description": "UG-CNV-LCR bed file",
         "optional": true
     },
-    "CombineGermlineCNVCalls.cnvpytor_cnvs_bed": {
+    "CombineGermlineCNVCalls.cnvpytor_cnvs_tsv": {
         "description": "cnvpytor CNV calls in bed format",
         "optional": false
+    },
+    "CombineGermlineCNVCalls.cnvpytor_precent_gaps_threshold_override": {
+        "description": "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
+        "optional": true
     },
     "CombineGermlineCNVCalls.deletions_length_cutoff_override": {
         "description": "Minimum length of deletions to be considered without jalign support. default=3000",
@@ -34,6 +38,10 @@
     "CombineGermlineCNVCalls.input_bam_file_index": {
         "description": "Input sample BAI/CRAI index file",
         "optional": false
+    },
+    "CombineGermlineCNVCalls.jalign_min_mismatches_override": {
+        "description": "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
+        "optional": true
     },
     "CombineGermlineCNVCalls.jalign_written_cutoff_override": {
         "description": "Minimal number of supporting jaligned reads for deletions. default=1",

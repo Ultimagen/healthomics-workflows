@@ -483,7 +483,7 @@ task AlignWithUA {
         File? cache_tarball
         String output_bam_basename
         File ua_index
-        File ref_alt
+        File? ref_alt
         Boolean use_v_aware_alignment
         File? v_aware_vcf
         String? extra_args
@@ -514,7 +514,7 @@ task AlignWithUA {
         --align true \
         --progress \
         --tp reference \
-        --alt=~{ref_alt} \
+        ~{"--alt=" + ref_alt} \
         --stat=~{output_bam_basename}.%s.json \
         --nthread max \
         ~{"--vcf="+ v_aware_vcf}  \
@@ -605,7 +605,6 @@ task AlignWithUAMeth {
         disks: "local-disk " + disk_size + " HDD"
         docker: ua_docker
         noAddress: no_address
-        maxRetries: 1
     }
 
     output {

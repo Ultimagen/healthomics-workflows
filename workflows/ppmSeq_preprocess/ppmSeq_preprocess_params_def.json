@@ -1,4 +1,8 @@
 {
+    "ppmSeqPreprocess.TrimAlignSort.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
     "ppmSeqPreprocess.TrimAlignSort.star_align_extra_args": {
         "description": "Extra arguments for the STAR aligner.",
         "optional": true
@@ -33,6 +37,10 @@
     },
     "ppmSeqPreprocess.cpu": {
         "description": "cpu",
+        "optional": true
+    },
+    "ppmSeqPreprocess.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
         "optional": true
     },
     "ppmSeqPreprocess.input_cram_bam_list": {

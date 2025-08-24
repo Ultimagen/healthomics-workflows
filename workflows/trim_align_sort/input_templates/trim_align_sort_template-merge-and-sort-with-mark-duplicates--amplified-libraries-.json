@@ -20,6 +20,7 @@
     "TrimAlignSort.preemptible_tries": 1,
     "TrimAlignSort.no_address": true,
     "TrimAlignSort.cpu": 32,
+    "TrimAlignSort.create_md5_checksum_outputs": false,
     "TrimAlignSort.steps": {
         "trim": false,
         "align": false,
@@ -29,7 +30,6 @@
         "mark_duplicates": true,
         "aligned": true,
         "mark_duplicates_ends_read_uncertainty": 0,
-        "output_path": "{outputGroup}/{outputGroup}{?_minorRG}",
         "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz",
         "demux_extra_args": "--mark-duplicates-all-RGs=true"
     }

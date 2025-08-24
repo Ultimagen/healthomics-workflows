@@ -19,7 +19,7 @@
     "ppmSeqPreprocess.no_address": true,
     "ppmSeqPreprocess.cpu": 32,
     "ppmSeqPreprocess.ua_parameters": {
-        "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/Homo_sapiens_assembly38.fasta.uai",
+        "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
         "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
         "ua_extra_args": "--seed-score-ratio 0.5 --vector --huge --soft-clipping",
         "v_aware_alignment_flag": false
@@ -28,7 +28,6 @@
         "mark_duplicates": true,
         "aligned": true,
         "mark_duplicates_ends_read_uncertainty": 0,
-        "output_path": "{outputGroup}/{outputGroup}{?_minorRG}",
         "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
     },
     "ppmSeqPreprocess.steps": {
@@ -36,6 +35,7 @@
         "align": true,
         "sort": true
     },
+    "ppmSeqPreprocess.create_md5_checksum_outputs": false,
     "ppmSeqPreprocess.adapter_version": "v1",
     "ppmSeqPreprocess.trimmer_parameters": {
         "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/ppmSeq_formats.json",

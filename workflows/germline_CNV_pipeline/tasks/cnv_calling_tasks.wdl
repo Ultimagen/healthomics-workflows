@@ -207,7 +207,7 @@ task RunCnmops {
         Int min_width_value
         Boolean save_hdf
         Boolean save_csv
-        Boolean moderate_amplificiations
+        Boolean mod_cnv
         String docker
         File monitoring_script
         Boolean no_address
@@ -240,7 +240,7 @@ task RunCnmops {
             -p ~{parallel} \
             ~{true="--save_hdf" false='' save_hdf} \
             ~{true="--save_csv" false='' save_csv} \
-            ~{true="--moderate_amplificiations" false='' moderate_amplificiations}
+            ~{true="--mod_cnv" false='' mod_cnv}
 
         touch cohort.cnmops_outputs.hdf5
     >>>

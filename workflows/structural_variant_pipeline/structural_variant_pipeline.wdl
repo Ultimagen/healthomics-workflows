@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.19.1" # !UnusedDeclaration
+        String pipeline_version = "1.22.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -91,6 +91,7 @@ workflow SVPipeline {
         Int scatter_intervals_break # Maximal resolution for scattering intervals
         String dummy_input_for_call_caching = ""
         File? monitoring_script_input
+        Boolean create_md5_checksum_outputs = false
 
         # Winval validations
         #@wv min_base >= 0
@@ -152,7 +153,8 @@ workflow SVPipeline {
             "AlignWithGiraffe.in_prefix_to_strip",
             "SortGiraffeAlignment.disk_size",
             "SortGiraffeAlignment.gitc_path",
-            "IndexGiraffeAlignment.disk_size"
+            "IndexGiraffeAlignment.disk_size",
+            "MergeMd5sToJson.output_json"
             ]}
     }
     parameter_meta {
@@ -359,6 +361,11 @@ workflow SVPipeline {
             help: "cpu override for annotate_variants task",
             category: "advanced"
         }
+        create_md5_checksum_outputs: {
+           help: "Create md5 checksum for requested output files",
+           type: "Boolean",
+           category: "input_optional"
+        }
         output_vcf: {
             type: "File",
             help: "Final VCF",
@@ -418,6 +425,11 @@ workflow SVPipeline {
         annotated_vcf_index_out: {
             type: "File",
             help: "Annotated VCF index file",
+            category: "output"
+        }
+        md5_checksums_json: {
+            help: "json file that will contain md5 checksums for requested output files",
+            type: "File",
             category: "output"
         }
     }
@@ -761,21 +773,44 @@ workflow SVPipeline {
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
                 no_address = no_address,
-                memory_override = convert_vcf_format_memory_override,
-                cloud_provider_override = cloud_provider_override
+                memory_override = convert_vcf_format_memory_override
+        }
+    }
+    File output_vcf_ = select_first([GermlineLinkVariants.linked_vcf, SomaticGripss.gripss_vcf])
+    File output_vcf_index_ = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index])
+    if (create_md5_checksum_outputs) {
+        Array[File] output_files = select_all(flatten([
+                                                      select_first([[output_vcf_], []]),
+                                                      select_first([[output_vcf_index_], []]),
+                                                      ]))
+
+        scatter (file in output_files) {
+            call UGGeneralTasks.ComputeMd5 as compute_md5 {
+                input:
+                    input_file = file,
+                    docker = global.ubuntu_docker,
+            }
+        }
+
+        call UGGeneralTasks.MergeMd5sToJson {
+            input:
+                md5_files = compute_md5.checksum,
+                docker = global.ugbio_core_docker
         }
     }
     output {
         File annotated_vcf_out = annotated_vcf
         File annotated_vcf_index_out = annotated_vcf_index
-        File output_vcf = select_first([GermlineLinkVariants.linked_vcf, SomaticGripss.gripss_vcf])
-        File output_vcf_index = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index])
+        File output_vcf = output_vcf_
+        File output_vcf_index = output_vcf_index_
         File assembly = MergeBams.output_bam
         File assembly_index = MergeBams.output_bam_index
         File realigned_assembly = LongHomopolymersAlignment.realigned_assembly
         File realigned_assembly_index = LongHomopolymersAlignment.realigned_assembly_index
         File? converted_vcf = ConvertVcfFormat.output_vcf
         File? converted_vcf_index = ConvertVcfFormat.output_vcf_index
+
+        File? md5_checksums_json = MergeMd5sToJson.md5_json
     }
 }
 
@@ -811,8 +846,8 @@ task CreateAssembly {
     Int mem = select_first([memory_override,4])
 
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         # convert interval list to bed file
@@ -1001,8 +1036,8 @@ task LongHomopolymersAlignment {
         }
         Int disk_size = ceil(4*size(input_bam,"GB") + size(references.ref_fasta,"GB")) + 10
         command <<<
-            set -o pipefail
-            set -e
+            set -xeo pipefail
+
             bash ~{monitoring_script} | tee monitoring.log >&2 &
 
             python3 /opt/gridss/align_long_homopolymers.py \
@@ -1046,8 +1081,8 @@ task IdentifyVariants {
     Int disk_size = ceil((if defined(input_crams) then size(select_first([input_crams]), "GB") else 0) + 2*size(assembly,"GB") + size(references.ref_fasta,"GB")) + 20
     Int mem = 16
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         python3 <<CODE
@@ -1102,8 +1137,8 @@ task PreFilterCandidates {
     }
     Int disk_size = ceil(2*size(input_vcf,"GB")) + 3
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         bcftools view -Oz -i "~{filter_string}" ~{input_vcf} -o ~{output_vcf_prefix}.vcf.gz
         bcftools index -t ~{output_vcf_prefix}.vcf.gz
@@ -1144,8 +1179,8 @@ task CollectGridssMetrics{
     Int cpu = 2
 
     command{
-set -o pipefail
-set -e
+set -xeo pipefail
+
 bash ~{monitoring_script} | tee monitoring.log >&2 &
 mkdir -p ~{input_cram}.gridss.working
 java -Xmx~{java_mem}g -Xms~{java_mem}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.analysis.CollectGridssMetrics \
@@ -1411,8 +1446,8 @@ task GermlineLinkVariants {
     }
     Int disk_size = 4*ceil(size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         Rscript /opt/gridss/link_breakpoints.R \
@@ -1459,9 +1494,8 @@ task SomaticGripss {
     }
     Int disk_size = ceil(2*size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
+        set -xeo pipefail
 
-        set -o pipefail
-        set -e
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         mkdir gripss_output
@@ -1509,23 +1543,24 @@ task ConvertVcfFormat {
         Int preemptible_tries
         Boolean no_address
         Int? memory_override
-        String? cloud_provider_override
     }
-    Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
+
     Int cpu = 8
     Int mem = select_first([memory_override, 64])
 
     Int disk_size = ceil(2*size(input_vcf,"GB") + size(references.ref_fasta,"GB")) + 10
     command <<<
-        set -o pipefail
-        set -e
+        set -xeo pipefail
+        
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-            Rscript /opt/gridss/convert_vcf_format.R \
+        Rscript /opt/gridss/convert_vcf_format.R \
             --input_vcf ~{input_vcf} \
             --output_vcf ~{output_vcf_prefix}.vcf \
             --reference ~{references.ref_fasta} \
             --n_jobs ~{cpu}
+        bcftools view -Oz -o ~{output_vcf_prefix}.vcf.gz ~{output_vcf_prefix}.vcf.bgz
+        bcftools index -t ~{output_vcf_prefix}.vcf.gz
 
     >>>
     runtime {
@@ -1538,7 +1573,7 @@ task ConvertVcfFormat {
     }
     output {
         File monitoring_log = "monitoring.log"
-        File output_vcf = "~{output_vcf_prefix}.vcf.bgz"
-        File output_vcf_index = "~{output_vcf_prefix}.vcf.bgz.tbi"
+        File output_vcf = "~{output_vcf_prefix}.vcf.gz"
+        File output_vcf_index = "~{output_vcf_prefix}.vcf.gz.tbi"
     }
 }

@@ -27,15 +27,17 @@ import "tasks/globals.wdl" as Globals
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.19.1" # !UnusedDeclaration
+        String pipeline_version = "1.22.0" # !UnusedDeclaration
 
         String base_file_name
 
         File cnmops_cnvs_bed
-        File cnvpytor_cnvs_bed
+        File cnvpytor_cnvs_tsv
+        Float? cnvpytor_precent_gaps_threshold_override
         Int? distance_threshold_override
         Int? deletions_length_cutoff_override
         Int? jalign_written_cutoff_override
+        Int? jalign_min_mismatches_override
         Int? duplication_length_cutoff_for_cnmops_filter_override
 
         # jalign parameters
@@ -83,10 +85,15 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "input_required"
         }
-        cnvpytor_cnvs_bed: {
+        cnvpytor_cnvs_tsv: {
             help: "cnvpytor CNV calls in bed format",
             type: "File",
             category: "input_required"
+        }
+        cnvpytor_precent_gaps_threshold_override: {
+            help: "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
+            type: "Float",
+            category: "param_advanced"
         }
         distance_threshold_override: {
             help: "Distance threshold for merging CNV calls. default=1500",
@@ -100,6 +107,11 @@ workflow CombineGermlineCNVCalls {
         }
         jalign_written_cutoff_override: {
             help: "Minimal number of supporting jaligned reads for deletions. default=1",
+            type: "Int",
+            category: "param_advanced"
+        }
+        jalign_min_mismatches_override: {
+            help: "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
             type: "Int",
             category: "param_advanced"
         }
@@ -176,6 +188,8 @@ workflow CombineGermlineCNVCalls {
     Int deletions_length_cutoff = select_first([deletions_length_cutoff_override,3000])
     Int jalign_written_cutoff = select_first([jalign_written_cutoff_override,1])
     Int duplication_length_cutoff_for_cnmops_filter = select_first([duplication_length_cutoff_for_cnmops_filter_override,10000])
+    Float cnvpytor_precent_gaps_threshold = select_first([cnvpytor_precent_gaps_threshold_override, 0])
+    Int jalign_min_mismatches = select_first([jalign_min_mismatches_override,1])
 
     call Globals.Globals as Globals
       GlobalVariables global = Globals.global_dockers
@@ -186,13 +200,15 @@ workflow CombineGermlineCNVCalls {
         input:
         base_file_name = base_file_name,
         cnmops_cnvs_bed = cnmops_cnvs_bed,
-        cnvpytor_cnvs_bed = cnvpytor_cnvs_bed,
+        cnvpytor_cnvs_tsv = cnvpytor_cnvs_tsv,
+        cnvpytor_precent_gaps_threshold = cnvpytor_precent_gaps_threshold,
         distance_threshold = distance_threshold,
         
         input_bam_file = input_bam_file,
         input_bam_file_index = input_bam_file_index,
         reference_genome = reference_genome,
         reference_genome_index = reference_genome_index,
+        jalign_min_mismatches = jalign_min_mismatches,
         
         docker = global.ug_jalign_docker,
         monitoring_script = monitoring_script,
@@ -202,7 +218,7 @@ workflow CombineGermlineCNVCalls {
     call ProcessCnvCalls  {
         input:
         cnmops_cnvs_bed = cnmops_cnvs_bed,
-        cnvpytor_cnvs_bed = cnvpytor_cnvs_bed,
+        cnvpytor_cnvs_tsv = cnvpytor_cnvs_tsv,
         jalign_del_candidates = RunJalignForDelCandidates.out_jalign_del_bed,
         base_file_name = base_file_name,
         distance_threshold = distance_threshold,
@@ -210,6 +226,7 @@ workflow CombineGermlineCNVCalls {
         jalign_written_cutoff = jalign_written_cutoff,
         duplication_length_cutoff_for_cnmops_filter = duplication_length_cutoff_for_cnmops_filter,
         cnv_lcr_file = cnv_lcr_file,
+        reference_fasta = reference_genome,
         fasta_index = reference_genome_index,
         docker = global.ugbio_cnv_docker,
         monitoring_script = monitoring_script,
@@ -229,7 +246,8 @@ task RunJalignForDelCandidates {
     input {
         String base_file_name
         File cnmops_cnvs_bed
-        File cnvpytor_cnvs_bed
+        File cnvpytor_cnvs_tsv
+        Float cnvpytor_precent_gaps_threshold
         Int distance_threshold
         
         File input_bam_file
@@ -237,12 +255,14 @@ task RunJalignForDelCandidates {
         File reference_genome
         File reference_genome_index
 
+        Int jalign_min_mismatches
+
         String docker
         File monitoring_script
         Boolean no_address
         Int preemptible_tries
     }
-    Int cpu = 36
+    Int cpu = 48
     Float input_bam_file_size = size(input_bam_file, "GB")
     Float reference_fasta_file_size = size(reference_genome, "GB")
     Float additional_disk = 100
@@ -262,7 +282,9 @@ task RunJalignForDelCandidates {
         #cnvpytor output format example: 
         #chr1    123468001       124437000       deletion,969000
         #chr1    124440001       124511500       deletion,16500,deletion,54000
-        cat ~{cnvpytor_cnvs_bed} | grep "deletion" | awk '{print $2"\t"$3"\t"$4"\t"$1","$5}' | \
+        cat ~{cnvpytor_cnvs_tsv} | grep "deletion" | awk '$(NF-1)<=~{cnvpytor_precent_gaps_threshold}' | \
+            cut -f1-3 | sed 's/:/\t/' | sed 's/-/\t/' | \
+             awk '{print $2"\t"$3"\t"$4"\t"$1","$5}' | \
             bedtools merge -c 4 -o distinct -d ~{distance_threshold} -i - \
             > ~{base_file_name}.cnvpytor.DEL.merged.bed
 
@@ -282,12 +304,14 @@ task RunJalignForDelCandidates {
             --ref_fasta ~{reference_genome} \
             --out_folder out_jalign \
             --sample_name ~{base_file_name} \
-            --num_jobs ~{cpu}
+            --min_mismatches ~{jalign_min_mismatches} \
+            --mode DEL \
+            --num_jobs ~{cpu} 
             
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: "64 GiB"
+        memory: "96 GiB"
         disks: "local-disk " + ceil(disk_size) + " LOCAL"
         docker: docker
         noAddress: no_address
@@ -304,10 +328,11 @@ task RunJalignForDelCandidates {
 task ProcessCnvCalls  {
     input {
         File cnmops_cnvs_bed
-        File cnvpytor_cnvs_bed
+        File cnvpytor_cnvs_tsv
         File jalign_del_candidates
         String base_file_name
         File? cnv_lcr_file
+        File reference_fasta
         File fasta_index
         Int? distance_threshold
         Int? deletions_length_cutoff
@@ -320,25 +345,26 @@ task ProcessCnvCalls  {
     }
     Int cpu = 36
     Float cnmops_cnvs_bed_size = size(cnmops_cnvs_bed, "GB")
-    Float cnvpytor_cnvs_bed_size = size(cnvpytor_cnvs_bed, "GB")
+    Float cnvpytor_cnvs_tsv_size = size(cnvpytor_cnvs_tsv, "GB")
     Float jalign_del_candidates_size = size(jalign_del_candidates, "GB")
     Float cnv_lcr_file_size = size(cnv_lcr_file, "GB")   
     Float additional_disk = 10
-    Int disk_size = ceil(cnmops_cnvs_bed_size + cnvpytor_cnvs_bed_size + jalign_del_candidates_size + cnv_lcr_file_size + additional_disk)
+    Int disk_size = ceil(cnmops_cnvs_bed_size + cnvpytor_cnvs_tsv_size + jalign_del_candidates_size + cnv_lcr_file_size + additional_disk)
 
-    String out_sample_cnvs_bed_file = if defined(cnv_lcr_file) then "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.UG-CNV-LCR_annotate.bed" else "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.bed"
-     
+    String out_sample_cnvs_bed_file = if defined(cnv_lcr_file) then "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.bed.annotate.bed" else "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.bed"
+
     command <<<
         
         combine_cnmops_cnvpytor_cnv_calls \
             --cnmops_cnv_calls ~{cnmops_cnvs_bed} \
-            --cnvpytor_cnv_calls ~{cnvpytor_cnvs_bed} \
+            --cnvpytor_cnv_calls ~{cnvpytor_cnvs_tsv} \
             --del_jalign_merged_results ~{jalign_del_candidates} \
             ~{"--deletions_length_cutoff " + deletions_length_cutoff} \
             ~{"--jalign_written_cutoff " + jalign_written_cutoff} \
             ~{"--distance_threshold "+ distance_threshold} \
             ~{"--duplication_length_cutoff_for_cnmops_filter " + duplication_length_cutoff_for_cnmops_filter} \
             ~{"--ug_cnv_lcr " + cnv_lcr_file} \
+            --ref_fasta ~{reference_fasta} \
             --fasta_index ~{fasta_index} \
             --out_directory . \
             --sample_name ~{base_file_name}

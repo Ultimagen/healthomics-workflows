@@ -20,13 +20,14 @@
     "TrimAlignSort.preemptible_tries": 1,
     "TrimAlignSort.no_address": true,
     "TrimAlignSort.cpu": 32,
+    "TrimAlignSort.create_md5_checksum_outputs": false,
     "TrimAlignSort.steps": {
         "trim": true,
         "align": true,
         "sort": true
     },
     "TrimAlignSort.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.6/public/trim_align_sort/trim-ILMN-adapters.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.15/public/trim_align_sort/trim-ILMN-adapters.json",
         "failure_read_group": "unmatched",
         "format": "trim ILMN adapters"
     },
@@ -37,7 +38,6 @@
         "mark_duplicates": true,
         "aligned": true,
         "mark_duplicates_ends_read_uncertainty": 0,
-        "output_path": "{outputGroup}/{outputGroup}{?_minorRG}",
         "demux_extra_args": "--cram-ignore-md5"
     }
 }

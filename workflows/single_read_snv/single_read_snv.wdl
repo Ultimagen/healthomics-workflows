@@ -41,7 +41,7 @@ input {
   File sorter_json_stats_file
   String base_file_name
   Array[File]? somatic_mutations_list
-  String pipeline_version = "1.19.1"
+  String pipeline_version = "1.22.0"
   References references
 
   File wgs_calling_interval_list  # TODO update this name to interval_list
@@ -70,6 +70,7 @@ input {
   # Used for running on other clouds (aws)
   File? monitoring_script_input
 
+  Boolean create_md5_checksum_outputs = false
   # winval validations
   #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
   #@wv not("test" in base_file_name or "train" in base_file_name)
@@ -115,7 +116,8 @@ meta {
         "InferenceSnvQualityRecalibrationModel.memory_gb",
         "InferenceSnvQualityRecalibrationModel.disk_size",
         "FeatureMap.Globals.glob",
-        "Globals.glob"
+        "Globals.glob",
+        "MergeMd5sToJson.output_json"
     ]}
 }    
 
@@ -175,6 +177,11 @@ parameter_meta {
         help: "Categorical features in SingleReadSNV model, list of feature names with allowed values per feature. Separate from single_read_snv_params due to technical reasons. The recommended value is set in the template.",
         category: "param_required"
     }
+    create_md5_checksum_outputs: {
+        help: "Create md5 checksum for requested output files",
+        type: "Boolean",
+        category: "input_optional"
+    }
     training_include_regions: {
         type: "Array[File]",
         help: "Genomic regions to include in the training set, the recommended value is set in the template",
@@ -233,6 +240,11 @@ parameter_meta {
     used_self_trained_model: {
         type: "Boolean",
         help: "Indicates whether a self-trained model was used for inference, otherwise a pre-trained model was used (if snv_qualities_assigned) or no model was used",
+        category: "output"
+    }
+    md5_checksums_json: {
+        help: "json file that will contain md5 checksums for requested output files",
+        type: "File",
         category: "output"
     }
     report_html: {
@@ -427,13 +439,40 @@ parameter_meta {
     }
   }
 
+    File featuremap_ = select_first([InferenceSnvQualityRecalibrationModel.featuremap_with_qual, FeatureMap.featuremap])
+    File featuremap_index_ = select_first([InferenceSnvQualityRecalibrationModel.featuremap_with_qual_index, FeatureMap.featuremap_index])
+    File? featuremap_df_file_ = TrainSnvQualityRecalibrationModel.featuremap_df_file
+
+    if (create_md5_checksum_outputs) {
+
+        Array[File] output_files = select_all(flatten([
+                                                      select_first([[featuremap_], []]),
+                                                      select_first([[featuremap_index_], []]),
+                                                      select_first([[featuremap_df_file_], []]),
+                                                      ]))
+
+        scatter (file in output_files) {
+            call UGGeneralTasks.ComputeMd5 as compute_md5 {
+                input:
+                    input_file = file,
+                    docker = global.ubuntu_docker,
+            }
+        }
+
+        call UGGeneralTasks.MergeMd5sToJson {
+            input:
+                md5_files = compute_md5.checksum,
+                docker = global.ugbio_core_docker
+        }
+    }
+
   output {
-    File featuremap = select_first([InferenceSnvQualityRecalibrationModel.featuremap_with_qual, FeatureMap.featuremap])
-    File featuremap_index = select_first([InferenceSnvQualityRecalibrationModel.featuremap_with_qual_index, FeatureMap.featuremap_index])
+    File featuremap = featuremap_
+    File featuremap_index = featuremap_index_
     Boolean snv_qualities_assigned = snv_qualities_can_be_assigned
     Boolean used_self_trained_model = snv_qualities_can_be_assigned && (!use_pre_trained_model)
     File? report_html = TrainSnvQualityRecalibrationModel.test_report_file_html
-    File? featuremap_df_file = TrainSnvQualityRecalibrationModel.featuremap_df_file
+    File? featuremap_df_file = featuremap_df_file_
     File? model_file = TrainSnvQualityRecalibrationModel.model_file  
     File? params_file = TrainSnvQualityRecalibrationModel.params_file
     File? test_set_mrd_simulation_dataframe = TrainSnvQualityRecalibrationModel.test_set_mrd_simulation_dataframe
@@ -442,6 +481,8 @@ parameter_meta {
 
     File? tp_training_regions_bed = CreateTpTrainingRegionsBed.merged_bed
     File? fp_training_regions_bed =  CreateFpTrainingRegionsBed.merged_bed
+
+    File? md5_checksums_json = MergeMd5sToJson.md5_json
    }
 }
 

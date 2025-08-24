@@ -47,6 +47,8 @@ task Trimmer {
     String minor_read_group_args = if defined(parameters.minor_read_group) then "--output-field rg:Z:~{parameters.minor_read_group}" else ""
     File? cram_reference = parameters.cram_reference
 
+    Boolean run_id_for_ri_tag = select_first([parameters.add_run_id_as_ri_tag, false])
+
 
     command <<<
         set -xeo pipefail
@@ -62,6 +64,27 @@ task Trimmer {
         # update the command according to the input file type (bam/cram)
         filename="~{input_cram_bam_list[0]}"
         extension="${filename##*.}"
+
+        # Extracting run id from header to save and pass to Trimmer to save in ri tag
+        # If there is more than one cram, the base_file_name will be used as the run id
+        if [[ ~{run_id_for_ri_tag} == true ]]; then
+            if [ "~{length(input_cram_bam_list)}" -ne 1 ]; then
+                echo "WARNING: input_cram_bam_list must contain exactly one file when extracting run id. Using base_file_name as run id instead!"
+                add_ri_tag_param="--output-field ri:Z:~{base_file_name}"
+            else
+                echo "Extracting run id from header"
+                # Getting exit code 141 if the "|| true" is not added, so we add it to avoid the task failure
+                samtools view -H ~{input_cram_bam_list[0]} | grep "^@RG" | \
+                    awk '{for (i=1;i<=NF;i++){if ($i ~/PU:/) {print substr($i,4,6)}}}' |  head -1 > "run_id.txt" || true
+                #echo "Looked for run id in header"
+                run_id=`cat run_id.txt`
+                echo "Run id to insert as ri tag: $run_id"
+                add_ri_tag_param="--output-field ri:Z:$run_id"
+            fi
+        else
+            add_ri_tag_param=""
+        fi
+
 
         # this next part has code duplication, the parameters are the same for both cram and bam, but the input is different, make sure to keep them in sync
         if [ "$extension" = "cram" ]; then
@@ -85,7 +108,8 @@ task Trimmer {
             --output ~{output_file_name} \
             --trim-field MI \
             --trim-field DS \
-            ~{trimmer_extra_args}
+            ${add_ri_tag_param} \
+            ~{trimmer_extra_args} 
         else  # bam extension
             ~{"tar -zxf "+cache_tarball}
 
@@ -113,6 +137,7 @@ task Trimmer {
             --output ~{output_file_name} \
             --trim-field MI \
             --trim-field DS \
+            ${add_ri_tag_param} \
             ~{trimmer_extra_args}
         fi
         
@@ -121,7 +146,7 @@ task Trimmer {
         
         OUT_CRAM_SUFFIX=~{output_file_name_suffix} 
         # If remove_small_files is set to true then remove trimmed ucrams under 500M in file size
-        if [ ~{parameters.remove_small_files} = true ]; then
+        if [ "~{parameters.remove_small_files}" = true ]; then
             find . -type f -size -500M -name "*${OUT_CRAM_SUFFIX}" | xargs -I {} rm {}
         fi
         

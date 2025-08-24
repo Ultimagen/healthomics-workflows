@@ -9,6 +9,8 @@
     "EfficientDV.num_shards": 50,
     "EfficientDV.make_gvcf": true,
     "EfficientDV.recalibrate_vaf": false,
+    "EfficientDV.single_strand_filter": true,
+    "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
     "EfficientDV.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
@@ -32,7 +34,6 @@
         70
     ],
     "EfficientDV.min_variant_quality_exome_hmer_indels": 20,
-    "EfficientDV.single_strand_filter": false,
     "EfficientDV.keep_duplicates": false,
     "EfficientDV.add_ins_size_channel": true,
     "EfficientDV.cloud_provider_override": "aws"

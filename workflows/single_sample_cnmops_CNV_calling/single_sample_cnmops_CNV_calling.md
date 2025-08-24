@@ -121,10 +121,10 @@ The pipeline calls CNVs for the given sample and filters them by length (>10,000
         <i>File? </i> &mdash; 
          UG-CNV-LCR bed file <br /> 
 </p>
-<p name="SingleSampleCnmopsCNVCalling.enable_moderate_amplifications_override">
-        <b>SingleSampleCnmopsCNVCalling.enable_moderate_amplifications_override</b><br />
+<p name="SingleSampleCnmopsCNVCalling.enable_mod_cnv_override">
+        <b>SingleSampleCnmopsCNVCalling.enable_mod_cnv_override</b><br />
         <i>Boolean? </i> &mdash; 
-         whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: False <br /> 
+         whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: False <br /> 
 </p>
 <p name="SingleSampleCnmopsCNVCalling.skip_figure_generation">
         <b>SingleSampleCnmopsCNVCalling.skip_figure_generation</b><br />

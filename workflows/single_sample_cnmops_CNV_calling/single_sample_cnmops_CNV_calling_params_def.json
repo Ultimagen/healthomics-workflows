@@ -27,8 +27,8 @@
         "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template. can be created by cn.mops::getReadCountsFromBAM R function ",
         "optional": false
     },
-    "SingleSampleCnmopsCNVCalling.enable_moderate_amplifications_override": {
-        "description": "whether to call moderate amplifications (Fold-Change>1.5 & < 2 will be tagged as CN2.5) Default is: False",
+    "SingleSampleCnmopsCNVCalling.enable_mod_cnv_override": {
+        "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: False",
         "optional": true
     },
     "SingleSampleCnmopsCNVCalling.genome_windows": {

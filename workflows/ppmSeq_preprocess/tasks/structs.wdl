@@ -56,7 +56,7 @@ struct BwaMethReferences {
 # UA alignment
 struct UaParameters {
   File? ua_index
-  File ref_alt
+  File? ref_alt
   String ua_extra_args
   Boolean v_aware_alignment_flag
   Int? cpus
@@ -133,6 +133,7 @@ struct TrimmerParameters {
   String? filename_prefix_sep       # default is set to "_", but this can be changed to "-" as in the case of ancient DNA trimmed output
   String? output_failed_file_name_suffix # Setting the name for the failed reads file. Default is "failed.cram", if this parameter is given will be <base_file_name>_<output_failed_file_name_suffix>
   Boolean? remove_small_files       # Allows to remove trimmed files below 1Gb in size
+  Boolean? add_run_id_as_ri_tag     # If true, will extract the run id from the input file and add it as a tag to the output reads.
 }
 
 struct ReferenceDbSnp {

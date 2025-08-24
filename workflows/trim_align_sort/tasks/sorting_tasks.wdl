@@ -36,7 +36,7 @@ task Demux {
 
     String demux_output_path = "demux_output/"
     String align_flag = if defined(sorter_params.aligned) then "--align=~{sorter_params.aligned}" else "--align=true"
-    String output_group = select_first([sorter_params.output_group, base_file_name])
+    String output_group = select_first([sorter_params.output_group, "~{base_file_name}{?_minorRG}"])
     String output_path = select_first([sorter_params.output_path, "{outputGroup}/{outputGroup}"])
     String reference_fasta_base = basename(reference_fasta)
 

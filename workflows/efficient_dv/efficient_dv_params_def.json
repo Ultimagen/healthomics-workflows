@@ -119,6 +119,10 @@
         "description": "Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant",
         "optional": true
     },
+    "EfficientDV.min_fraction_single_strand_non_snps": {
+        "description": "In active region detection, in case single_strand_filter is set to true, keep only non snps candidates that have at least min_fraction_single_strand_non_snps fraction",
+        "optional": false
+    },
     "EfficientDV.min_fraction_snps": {
         "description": "Minimal fraction of reads, that support a snp, required to  generate a candidate variant",
         "optional": true
@@ -161,6 +165,10 @@
     },
     "EfficientDV.monitoring_script_input": {
         "description": "monitoring_script_input",
+        "optional": true
+    },
+    "EfficientDV.no_address_override": {
+        "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
         "optional": true
     },
     "EfficientDV.num_shards": {

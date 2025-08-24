@@ -24,7 +24,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.19.1" # !UnusedDeclaration
+        String pipeline_version = "1.22.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -168,14 +168,32 @@ task RunCNVpytor {
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        run_cnvpytor --input_bam_cram_file ~{input_bam} \
-            --sample_name ~{sample_name} \
-            --ref_fasta ~{reference_fasta} \
-            --bin_size ~{window_size} \
-            --chr_list ~{sep=',' chr_list} \
-            --out_directory .
+        cnvpytor -root ~{sample_name}.pytor \
+            -rd ~{input_bam} \
+            -chrom ~{sep=' ' chr_list} \
+            -T ~{reference_fasta}
         
-        ls -lrta
+        cnvpytor -root ~{sample_name}.pytor \
+            -his ~{window_size}
+
+        cnvpytor -root ~{sample_name}.pytor \
+            -partition ~{window_size}
+        
+        cnvpytor -root ~{sample_name}.pytor \
+            -call ~{window_size} > ~{sample_name}.pytor.bin~{window_size}.CNVs.1based.tsv
+        
+        #making cnvpytor output coordinates 0-based
+        awk 'BEGIN {OFS="\t"}
+        {
+            split($2, coords, ":");
+            split(coords[2], range, "-");
+            start = range[1] - 1;
+            $2 = coords[1] ":" start "-" range[2];
+            print
+        }' ~{sample_name}.pytor.bin~{window_size}.CNVs.1based.tsv > ~{sample_name}.pytor.bin~{window_size}.CNVs.tsv
+        
+        # The following command is for debugging purposes only. it lists down the cnvpytor project content.
+        cnvpytor -root ~{sample_name}.pytor -ls
 
     >>>
     runtime {

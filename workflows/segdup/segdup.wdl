@@ -26,7 +26,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.19.1" # !UnusedDeclaration
+        String pipeline_version = "1.22.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -253,6 +253,7 @@ workflow SegDupAnalysis {
             min_fraction_non_hmer_indels = 0.05,
             min_fraction_hmer_indels = 0.05,
             min_variant_quality_exome_hmer_indels = 5,
+            min_fraction_single_strand_non_snps = 0.15,
             # Call variants args
             model_onnx = model_onnx,
             model_serialized = model_serialized,
@@ -360,8 +361,8 @@ task CallCNV {
         set -ef pipefail
         set -x
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-        tar xvf ~{cn_model}
+        
+        tar --no-same-owner --no-same-permissions -xvf ~{cn_model}
         ls -l
         find . -name "*model*"
         

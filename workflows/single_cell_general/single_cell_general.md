@@ -106,6 +106,11 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
 </p>
 
 ### Optional inputs
+<p name="SingleCell.create_md5_checksum_outputs">
+        <b>SingleCell.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
+</p>
 <p name="SingleCell.TrimAlignSort.aligner">
         <b>SingleCell.TrimAlignSort.aligner</b><br />
         <i>String? </i> &mdash; 
@@ -140,6 +145,11 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <b>SingleCell.TrimAlignSort.star_align_gtf_override</b><br />
         <i>File? </i> &mdash; 
          GTF file to be used for STAR aligner. <br /> 
+</p>
+<p name="SingleCell.TrimAlignSort.create_md5_checksum_outputs">
+        <b>SingleCell.TrimAlignSort.create_md5_checksum_outputs</b><br />
+        <i>Boolean </i> &mdash; 
+         Create md5 checksum for requested output files <br /> 
 </p>
 <p name="SingleCell.StarAlignSubSample.genome_generate_params">
         <b>SingleCell.StarAlignSubSample.genome_generate_params</b><br />
@@ -236,6 +246,11 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <b>SingleCell.star_stats</b><br />
         <i>File?</i><br />
         The Star output statistics
+</p>
+<p name="SingleCell.md5_checksums_json">
+        <b>SingleCell.md5_checksums_json</b><br />
+        <i>File?</i><br />
+        json file that will contain md5 checksums for requested output files
 </p>
 <p name="SingleCell.star_solo_outputs">
         <b>SingleCell.star_solo_outputs</b><br />

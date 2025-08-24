@@ -668,3 +668,57 @@ task AddAggregatedVariablesAndXgbScoreToPileupFeaturemap
     File pileup_xgb_file_index = "~{output_basename}.vcf.gz.tbi"
   }    
 }
+
+task PadVcf {
+  input {
+    File input_vcf
+    String docker
+    Int pad_size 
+    Int preemptible_tries
+    File monitoring_script
+    Int disk_size = ceil(3 * size(input_vcf, "GB") + 10)
+    Int memory_gb = 2
+    Int cpus = 1
+  }
+  String basename_vcf = basename(input_vcf, ".vcf.gz")
+  String basename_vcf2 = basename(basename_vcf, ".vcf")
+  
+  command <<<
+    set -xeo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+    
+    echo "Extract variants to bed format using bcftools query"
+    # Extract CHROM, POS0, END, REF, ALT and calculate the maximum length
+    bcftools query -f '%CHROM\t%POS0\t%END\t%REF\t%ALT\n' ~{input_vcf} | awk -F'\t' 'BEGIN{OFS="\t"}{
+        s=$2;
+        m=length($4);
+        n=split($5,a,",");
+        for(i=1;i<=n;i++) if(length(a[i])>m) m=length(a[i]);
+        print $1, s, s+m
+    }' | gzip > variants.bed.gz
+    
+    echo "Create a genome file for bedtools slop (chromosome sizes)"
+    # We'll extract this from the VCF header
+    bcftools view -h ~{input_vcf} | grep "^##contig" | \
+      sed 's/##contig=<ID=//;s/,length=/\t/;s/>//' > genome.txt
+    head genome.txt
+    
+    echo "Pad the bed file using bedtools slop"
+    zcat variants.bed.gz | bedtools slop -i stdin -g genome.txt -b ~{pad_size} | gzip > ~{basename_vcf2}.padded.bed.gz
+    
+    echo "Padded bed file created successfully"
+  >>>
+  
+  runtime {
+    preemptible: preemptible_tries
+    cpu: "~{cpus}"
+    memory: "~{memory_gb} GB"
+    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+  }
+  
+  output {
+    File monitoring_log = "monitoring.log"
+    File padded_bed = "~{basename_vcf2}.padded.bed.gz"
+  }
+}

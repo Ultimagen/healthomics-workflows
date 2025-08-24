@@ -27,12 +27,12 @@ version 1.0
 import "trim_align_sort.wdl" as TrimAlignSortSubWF
 import "tasks/ppmSeq_preprocess.wdl" as ppmSeqTasks
 import "tasks/globals.wdl" as Globals
-
+import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.19.1" # !UnusedDeclaration
+    String pipeline_version = "1.22.0" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -64,6 +64,7 @@ workflow ppmSeqPreprocess {
     File? monitoring_script_input
     String? cloud_provider_override
 
+    Boolean create_md5_checksum_outputs = false
 
     # winval validations
     # base_file_name
@@ -112,7 +113,8 @@ workflow ppmSeqPreprocess {
             "trimmer_histogram_extra",
             "trimmer_stats",
             "trimmer_failure_codes_csv",
-            "Demux.mapq_override"
+            "Demux.mapq_override",
+            "MergeMd5sToJson.output_json"
         ]}
   }
 
@@ -161,6 +163,11 @@ workflow ppmSeqPreprocess {
       help: "Sorter parameters",
       type: "SorterParams",
       category: "param_required"
+    }
+    create_md5_checksum_outputs: {
+       help: "Create md5 checksum for requested output files",
+       type: "Boolean",
+       category: "input_optional"
     }
     trimmer_histogram_csv_out: {
       help: "Trimmer histogram csv output",
@@ -237,7 +244,11 @@ workflow ppmSeqPreprocess {
       type: "File",
       category: "output"
     }
-
+    md5_checksums_json: {
+        help: "json file that will contain md5 checksums for requested output files",
+        type: "File",
+        category: "output"
+    }
 
   }
 
@@ -283,14 +294,39 @@ workflow ppmSeqPreprocess {
         monitoring_script =                   global.monitoring_script, # !FileCoercion
   }
 
+    File output_cram_bam_                 = select_first([TrimAlignSort.output_cram_bam])
+    File output_cram_bam_index_           = select_first([TrimAlignSort.output_cram_bam_index])
+    File report_html_                     = ppmSeqQC.report_html
+    if (create_md5_checksum_outputs) {
+
+        Array[File] output_files = select_all(flatten([
+                                                      select_first([[output_cram_bam_], []]),
+                                                      select_first([[output_cram_bam_index_], []]),
+                                                      select_first([[report_html_], []]),
+                                                      ]))
+
+        scatter (file in output_files) {
+            call UGGeneralTasks.ComputeMd5 as compute_md5 {
+                input:
+                    input_file = file,
+                    docker = global.ubuntu_docker,
+            }
+        }
+
+        call UGGeneralTasks.MergeMd5sToJson {
+            input:
+                md5_files = compute_md5.checksum,
+                docker = global.ugbio_core_docker
+        }
+    }
 output {
         File trimmer_histogram          = trimmer_histogram_csv_out
         File? trimmer_histogram_extra   = trimmer_histogram_csv_extra_out
         File trimmer_stats              = select_first([TrimAlignSort.trimmer_stats])
         File trimmer_failure_codes_csv  = trimmer_failure_codes
 
-        File output_cram_bam                = select_first([TrimAlignSort.output_cram_bam])
-        File output_cram_bam_index          = select_first([TrimAlignSort.output_cram_bam_index])
+        File output_cram_bam                = output_cram_bam_
+        File output_cram_bam_index          = output_cram_bam_index_
         File sorter_stats_csv               = sorter_stats_csv_out
         File sorter_stats_json              = sorter_stats_json_out
         File? unmatched_cram                = TrimAlignSort.unmatched_cram
@@ -299,8 +335,10 @@ output {
         File? bedgraph_mapq0                = TrimAlignSort.bedgraph_mapq0
         File? bedgraph_mapq1                = TrimAlignSort.bedgraph_mapq1
 
-        File report_html                = ppmSeqQC.report_html 
+        File report_html                = report_html_
         File application_qc_h5          = ppmSeqQC.aggregated_metrics_h5
         File aggregated_metrics_json    = ppmSeqQC.aggregated_metrics_json
+
+        File? md5_checksums_json = MergeMd5sToJson.md5_json
     }
 }

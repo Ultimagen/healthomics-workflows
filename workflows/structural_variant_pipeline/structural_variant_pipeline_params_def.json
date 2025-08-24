@@ -31,6 +31,10 @@
         "description": "memory override for create_assembly task",
         "optional": true
     },
+    "SVPipeline.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
     "SVPipeline.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
         "optional": true

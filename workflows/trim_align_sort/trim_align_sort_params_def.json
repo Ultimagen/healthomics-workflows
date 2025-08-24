@@ -11,6 +11,10 @@
         "description": "Number of cpus to be used for the tasks.",
         "optional": false
     },
+    "TrimAlignSort.create_md5_checksum_outputs": {
+        "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
     "TrimAlignSort.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
         "optional": true
