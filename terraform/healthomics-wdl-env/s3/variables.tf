@@ -71,6 +71,6 @@ variable "custom_tags" {
   type = map(string)
 }
 
-variable "cross_aws_account_id" {
-  type    = string
-}
+# variable "cross_aws_account_id" {
+#   type    = string
+# }

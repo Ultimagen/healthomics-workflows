@@ -11,7 +11,7 @@ module "omics_s3_buckets" {
   aws_region     = var.aws_region
   project        = var.project
   custom_tags    = var.custom_tags
-  cross_aws_account_id = var.cross_aws_account
+  # cross_aws_account_id = var.cross_aws_account
 }
 
 

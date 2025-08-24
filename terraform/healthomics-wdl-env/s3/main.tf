@@ -223,36 +223,36 @@ resource "aws_s3_bucket_lifecycle_configuration" "cache_buckets_lifecycle" {
   }
 }
 
-resource "aws_s3_bucket_policy" "allow_write_access_from_another_account" {
-  bucket = aws_s3_bucket.pipelines-input-bucket.id
-  policy = data.aws_iam_policy_document.allow_write_access_from_another_account.json
-}
-
-data "aws_iam_policy_document" "allow_write_access_from_another_account" {
-  statement {
-    principals {
-      type = "AWS"
-      identifiers = [var.cross_aws_account_id]
-    }
-
-    actions = [
-      "s3:GetObject",
-      "s3:GetObjectTagging",
-      "s3:PutObject",
-      "s3:ListBucket",
-      "s3:ListBucketMultipartUploads",
-      "s3:AbortMultipartUpload",
-      "s3:PutObjectVersionAcl",
-      "s3:DeleteObject",
-      "s3:PutObjectAcl",
-      "s3:ListMultipartUploadParts"
-
-    ]
-
-    resources = [
-      aws_s3_bucket.pipelines-input-bucket.arn,
-      "${aws_s3_bucket.pipelines-input-bucket.arn}/*",
-    ]
-  }
-}
+# resource "aws_s3_bucket_policy" "allow_write_access_from_another_account" {
+#   bucket = aws_s3_bucket.pipelines-input-bucket.id
+#   policy = data.aws_iam_policy_document.allow_write_access_from_another_account.json
+# }
+#
+# data "aws_iam_policy_document" "allow_write_access_from_another_account" {
+#   statement {
+#     principals {
+#       type = "AWS"
+#       identifiers = [var.cross_aws_account_id]
+#     }
+#
+#     actions = [
+#       "s3:GetObject",
+#       "s3:GetObjectTagging",
+#       "s3:PutObject",
+#       "s3:ListBucket",
+#       "s3:ListBucketMultipartUploads",
+#       "s3:AbortMultipartUpload",
+#       "s3:PutObjectVersionAcl",
+#       "s3:DeleteObject",
+#       "s3:PutObjectAcl",
+#       "s3:ListMultipartUploadParts"
+#
+#     ]
+#
+#     resources = [
+#       aws_s3_bucket.pipelines-input-bucket.arn,
+#       "${aws_s3_bucket.pipelines-input-bucket.arn}/*",
+#     ]
+#   }
+# }
 
