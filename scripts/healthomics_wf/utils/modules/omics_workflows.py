@@ -164,7 +164,7 @@ def _create_omics_workflow_version(main_wdl, omics_client, workflow_id, omics_wo
                 f"Wait for workflow {omics_workflow_name} version {workflow_version}, to become active"
             )
             time.sleep(5)
-            response = omics_client..get_workflow_version(workflowId=workflow_id,
+            response = omics_client.get_workflow_version(workflowId=workflow_id,
                                                               versionName=workflow_version,
                                                               type=OMICS_PRIVATE_TYPE)
             wf_status = response["status"]
