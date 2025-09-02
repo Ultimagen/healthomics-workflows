@@ -66,7 +66,7 @@ def get_workflow_metadata(client, wf_id):
     return response
 
 
-def extract_pipeline_version(wf_metadata):
+def extract_pipeline_version_from_tags(wf_metadata):
     if not wf_metadata.get('tags'):
         return ""
     return wf_metadata['tags'].get('pipeline_version')
@@ -214,12 +214,12 @@ if __name__ == "__main__":
     workflow_metadata = get_workflow_metadata(omics_client, workflow_id)
 
     json_to_file(f"{output_prefix}run_{run_id}_workflow_info.json", run)
-    pipeline_version = extract_pipeline_version(workflow_metadata)
+    workflow_version = run["workflowVersionName"] if "workflowVersionName" in run else extract_pipeline_version_from_tags(workflow_metadata)
 
-    logging.info(f"workflow version: {pipeline_version}")
+    logging.info(f"workflow version: {workflow_version}")
     workflow_version_file = adjust_file_name(f"{output_prefix}run_workflow_version.txt")
     with open(workflow_version_file, 'w') as file:
-        file.write(pipeline_version)
+        file.write(workflow_version)
 
     get_log_for_task(run_id, run, args.task_id, args.output_prefix, args.failed)
 
