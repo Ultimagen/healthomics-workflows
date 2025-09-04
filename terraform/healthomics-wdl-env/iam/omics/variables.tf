@@ -7,11 +7,6 @@ variable "project" {
   type = string
 }
 
-variable "aws_shared_account_id" {
-  description = "aws shared account ID"
-  type        = string
-}
-
 variable "aws_region" {
   description = "The AWS region where the module will be deployed."
   type        = string

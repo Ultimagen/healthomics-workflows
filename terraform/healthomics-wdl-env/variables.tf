@@ -1,7 +1,3 @@
-variable "aws_shared_account_id" {
-  description = "account ID of AWS account that will store the S3 reference data and ECR images"
-  type        = string
-}
 variable "aws_region" {
   description = "The AWS region where the modules will be deployed."
   type        = string

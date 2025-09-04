@@ -20,7 +20,6 @@ module "omics_iam" {
 
   aws_account_id           = data.aws_caller_identity.current.account_id
   project                  = var.project
-  aws_shared_account_id    = var.aws_shared_account_id
   aws_region               = var.aws_region
   omics_inputs_bucket      = module.omics_s3_buckets.omics_inputs_bucket
   omics_outputs_bucket     = module.omics_s3_buckets.omics_outputs_bucket

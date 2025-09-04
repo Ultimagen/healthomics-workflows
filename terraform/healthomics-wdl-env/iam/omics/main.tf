@@ -132,7 +132,6 @@ resource "aws_iam_policy" "omics_policy" {
             ],
             "Resource": [
                 "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/*",
-                "arn:aws:ecr:${var.aws_region}:${var.aws_shared_account_id}:repository/*"
             ]
         },
         {
