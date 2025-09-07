@@ -111,6 +111,7 @@ def lambda_handler(event, context):
         call_cache_id = get_run_cache(omics_client, workflow_name, cache_behavior, cache_s3_bucket, run_tags)
         start_run_args = {
             'workflowId': workflow_id,
+            'workflowVersionName': workflow_version,
             "name": run_id,
             "roleArn": role_arn,
             "parameters": input_params,
