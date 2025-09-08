@@ -51,7 +51,7 @@ workflow Globals {
         "giraffe_docker": "ultimagenomics/giraffe:1.47.0",
         "trimmer_docker": "ultimagenomics/trimmer:2.3.3",
         "star_docker": "ultimagenomics/star:2.7.10a",
-        "sorter_docker": "ultimagenomics/sorter:1.4.12",
+        "sorter_docker": "ultimagenomics/sorter:1.4.2",
         "gridss_docker": "ultimagenomics/gridss:0c97dd1",
         "gripss_docker": "ultimagenomics/gripss:ug_2.4.1_165b492",
         "single_cell_qc_docker": "ultimagenomics/ugbio_single_cell:1.12.0",

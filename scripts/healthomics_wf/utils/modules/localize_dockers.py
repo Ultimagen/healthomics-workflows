@@ -65,8 +65,11 @@ def get_ecr_login(ecr_client):
 
 
 def docker_login(username, password, registry):
-    login_cmd = f"docker login --username {username} --password {password} {registry}"
-    subprocess.run(login_cmd, shell=True, check=True)
+    login_cmd = f"docker login --username {username} --password-stdin {registry}"
+    proc = subprocess.Popen(login_cmd, shell=True, stdin=subprocess.PIPE)
+    proc.communicate(input=password.encode())
+    if proc.returncode != 0:
+        raise RuntimeError("Docker login failed")
 
 
 def list_ecr_images(ecr_client, repository_name):
