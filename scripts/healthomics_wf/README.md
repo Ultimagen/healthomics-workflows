@@ -29,7 +29,7 @@ The script accepts the following command line arguments:
 - `--aws-region`: AWS region for ECR images.
 - `--s3-bucket`: Bucket name to copy resources files to. This bucket must be accessed by the service role that will be used to run the workflow.
 ##### Optional Arguments
-- `--input-template`: Input template JSON file name to localize (optional). If empty, it will localize all input templates.
+- `--input-template`: Input template JSON file path to localize (optional). If empty, it will localize all input templates.
 - `--use-dynamodb`: Add this flag for storing the version workflow in dynamodb table (Relevant when omics environment was created using the terraform code that shared in this repository)
 - `--omics-workflow-name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
 - `--aws-profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.

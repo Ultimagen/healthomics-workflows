@@ -15,7 +15,6 @@ import logging
 log_format = "[%(levelname)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
 
-PIPELINE_VERSION_TAG = "pipeline_version"
 PARAMS_DEF_SUFFIX = "params_def.json"
 OMICS_WF_ACTIVE = "ACTIVE"
 OMICS_WF_DONE_STATUSES = [OMICS_WF_ACTIVE, "DELETED", "FAILED"]
@@ -27,6 +26,7 @@ OMICS_WORKFLOW_DDB_TABLE = "OmicsWorkflows"
 OMICS_DDB_VERSION_KEY = "version"
 OMICS_DDB_WORKFLOW_KEY = "workflow"
 OMICS_DDB_WORKFLOW_ID_KEY = "workflow_id"
+OMICS_DDB_VERSION_UUID_KEY = "workflow_version_uuid"
 
 
 def extract_pipeline_version(wdl_file_path):
@@ -70,20 +70,21 @@ def create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workfl
     workflow_version = extract_pipeline_version(f"{workflow_root}/{main_wdl}")
     workflow_id = None
     if use_dynamodb:
-        workflow_db_item = _get_workflow_from_dynamodb(workflow_version, omics_workflow_name, aws_region, aws_profile)
-        if workflow_db_item:
-            workflow_id = workflow_db_item[OMICS_DDB_WORKFLOW_ID_KEY]
-            logging.info(f"Workflow found in dynamodb, will use existing workflow_id: {workflow_id}")
+        workflow_version_db_item = _get_workflow_version_from_dynamodb(workflow_version, omics_workflow_name, aws_region, aws_profile)
+        if workflow_version_db_item:
+            workflow_id = workflow_version_db_item[OMICS_DDB_WORKFLOW_ID_KEY]
+            logging.info(f"Workflow {omics_workflow_name} version {workflow_version} already exist in dynamodb, will use existing workflow_id: {workflow_id}")
     if not workflow_id:
-        workflow_id = _create_workflow(aws_profile, aws_region, main_wdl, omics_workflow_name, workflow, workflow_root,
-                                       workflow_version)
+        workflow_id, workflow_version_uuid = _create_workflow_and_version(aws_profile, aws_region, main_wdl, omics_workflow_name, workflow, workflow_root,
+                                                   workflow_version)
         if use_dynamodb:
-            _write_workflow_in_dynamodb(workflow_id, workflow_version, omics_workflow_name, aws_region, aws_profile)
+            _write_workflow_version_in_dynamodb(workflow_id, workflow_version, workflow_version_uuid, omics_workflow_name, aws_region, aws_profile)
     return workflow_id
 
 
-def _create_workflow(aws_profile, aws_region, main_wdl, omics_workflow_name, workflow, workflow_root, workflow_version):
-    logging.info(f"Create omics workflow for {workflow}, version {workflow_version}, main wdl: {main_wdl}")
+def _create_workflow_and_version(aws_profile, aws_region, main_wdl, omics_workflow_name, workflow, workflow_root, workflow_version):
+
+    omics_client = _get_aws_client("omics", aws_region, aws_profile)
     params_def_file = Path(f"{workflow_root}/{workflow}_{PARAMS_DEF_SUFFIX}")
     with params_def_file.open(encoding="UTF-8") as source:
         wdl_params = json.load(source)
@@ -93,12 +94,26 @@ def _create_workflow(aws_profile, aws_region, main_wdl, omics_workflow_name, wor
         with open(zip_path, "rb") as f:
             zip_bytes = f.read()
 
-            omics_client = _get_aws_client("omics", aws_region, aws_profile)
-            workflow_id = _create_omics_workflow(main_wdl, omics_client, omics_workflow_name, wdl_params,
+    workflow_id = None
+    logging.debug(
+        f"Check if workflow {omics_workflow_name} exist"
+    )
+    response = omics_client.list_workflows(
+        type=OMICS_PRIVATE_TYPE,
+        name=omics_workflow_name,
+    )
+    if response["items"]:
+        logging.debug(f"existing workflows: {response['items']}")
+        workflow_id = response["items"][-1]["id"]
+    if not workflow_id:
+        logging.info(
+            f"Creating new healthomics workflow: {omics_workflow_name}, main wdl: {main_wdl}"
+        )
+        workflow_id = _create_omics_workflow(main_wdl, omics_client, omics_workflow_name, wdl_params,
                                                  workflow_version, zip_bytes)
-            # _create_omics_workflow_version(main_wdl, omics_client, workflow_id, omics_workflow_name, wdl_params,
-            #                                      workflow_version, zip_bytes)
-    return workflow_id
+    workflow_version_uuid = _create_omics_workflow_version(main_wdl, omics_client, workflow_id, omics_workflow_name, wdl_params,
+                                                 workflow_version, zip_bytes)
+    return workflow_id, workflow_version_uuid
 
 
 def _create_omics_workflow(main_wdl, omics_client, omics_workflow_name, wdl_params, workflow_version, zip_bytes):
@@ -109,10 +124,7 @@ def _create_omics_workflow(main_wdl, omics_client, omics_workflow_name, wdl_para
             definitionZip=zip_bytes,
             main=main_wdl,
             parameterTemplate=wdl_params,
-            storageType=WORKFLOW_STORAGE_TYPE,
-            tags={
-                PIPELINE_VERSION_TAG: workflow_version
-            }
+            storageType=WORKFLOW_STORAGE_TYPE
         )
         logging.debug(response)
         workflow_id = response["id"]
@@ -133,36 +145,39 @@ def _create_omics_workflow(main_wdl, omics_client, omics_workflow_name, wdl_para
     return workflow_id
 
 
-# def _create_omics_workflow_version(main_wdl, omics_client, workflow_id, omics_workflow_name, wdl_params, workflow_version, zip_bytes):
-#     try:
-#         response = omics_client.create_workflow_version(
-#             workflowId=workflow_id,
-#             versionName=workflow_version,
-#             definitionZip=zip_bytes,
-#             engine=WORKFLOW_ENGINE,
-#             main=main_wdl,
-#             parameterTemplate=wdl_params,
-#             storageType=WORKFLOW_STORAGE_TYPE,
-#             tags={
-#                 PIPELINE_VERSION_TAG: workflow_version
-#             }
-#         )
-#         logging.debug(response)
-#         version_arn = response["arn"]
-#         wf_status = response["status"]
-#         while wf_status not in OMICS_WF_DONE_STATUSES:
-#             time.sleep(5)
-#             response = omics_client.get_workflow(id=workflow_id)
-#             wf_status = response["status"]
-#         if wf_status != OMICS_WF_ACTIVE:
-#             logging.error(
-#                 f"{omics_workflow_name} omics workflow version '{workflow_version}' creation failed with msg: {response['statusMessage']}")
-#             exit(1)
-#         logging.info(f"{omics_workflow_name} omics workflow version '{workflow_version}' created successfully. arn: {version_arn}")
-#
-#     except ClientError as e:
-#         logging.error(e)
-#         exit(1)
+def _create_omics_workflow_version(main_wdl, omics_client, workflow_id, omics_workflow_name, wdl_params, workflow_version, zip_bytes):
+    try:
+        response = omics_client.create_workflow_version(
+            workflowId=workflow_id,
+            versionName=workflow_version,
+            definitionZip=zip_bytes,
+            engine=WORKFLOW_ENGINE,
+            main=main_wdl,
+            parameterTemplate=wdl_params,
+            storageType=WORKFLOW_STORAGE_TYPE
+        )
+        logging.debug(response)
+        workflow_version_uuid = response["uuid"]
+        wf_status = response["status"]
+        while wf_status not in OMICS_WF_DONE_STATUSES:
+            logging.debug(
+                f"Wait for workflow {omics_workflow_name} version {workflow_version}, to become active"
+            )
+            time.sleep(5)
+            response = omics_client.get_workflow_version(workflowId=workflow_id,
+                                                              versionName=workflow_version,
+                                                              type=OMICS_PRIVATE_TYPE)
+            wf_status = response["status"]
+        if wf_status != OMICS_WF_ACTIVE:
+            logging.error(
+                f"{omics_workflow_name} version {workflow_version} with msg: {response['statusMessage']}")
+            exit(1)
+        logging.info(f"{omics_workflow_name} version {workflow_version} created successfully. uuid: {workflow_version_uuid}")
+        return workflow_version_uuid
+
+    except ClientError as e:
+        logging.error(e)
+        exit(1)
 
 def _get_aws_resource(service_name, aws_region, aws_profile):
     if aws_profile:
@@ -176,16 +191,18 @@ def _get_aws_client(service_name, aws_region, aws_profile):
     return boto3.client(service_name, region_name=aws_region)
 
 
-def _write_workflow_in_dynamodb(workflow_id: str,
-                                version: str,
-                                workflow_name: str,
-                                aws_region: str,
-                                aws_profile: str = None):
+def _write_workflow_version_in_dynamodb(workflow_id: str,
+                                        version: str,
+                                        workflow_version_uuid: str,
+                                        workflow_name: str,
+                                        aws_region: str,
+                                        aws_profile: str = None):
     client = _get_aws_resource("dynamodb", aws_region, aws_profile)
     table = client.Table(OMICS_WORKFLOW_DDB_TABLE)
 
     db_item = {
         OMICS_DDB_VERSION_KEY: version,
+        OMICS_DDB_VERSION_UUID_KEY: workflow_version_uuid,
         OMICS_DDB_WORKFLOW_KEY: workflow_name,
         OMICS_DDB_WORKFLOW_ID_KEY: workflow_id
     }
@@ -197,7 +214,7 @@ def _write_workflow_in_dynamodb(workflow_id: str,
     return True
 
 
-def _get_workflow_from_dynamodb(version: str, workflow_name: str, aws_region: str, aws_profile: str = None):
+def _get_workflow_version_from_dynamodb(version: str, workflow_name: str, aws_region: str, aws_profile: str = None):
     client = _get_aws_resource("dynamodb", aws_region, aws_profile)
     table = client.Table(OMICS_WORKFLOW_DDB_TABLE)
     key = {OMICS_DDB_VERSION_KEY: version, OMICS_DDB_WORKFLOW_KEY: workflow_name}
