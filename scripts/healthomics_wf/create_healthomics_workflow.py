@@ -31,9 +31,11 @@ def localize_workflow(wf_root, aws_region, s3_bucket, aws_profile=None, input_te
     logging.info(f"workflow: {args.workflow} localization completed")
 
 
-def localize_and_create(workflow_folder, aws_region, s3_bucket, omics_workflow_name,
+def localize_and_create(workflow_folder, aws_region, s3_bucket, omics_workflow_name, workflow_root=None,
                         aws_profile=None, input_template=None, use_dynamodb=False):
-    workflow_root = f'{Path(__file__).resolve().parent.parent.parent}/workflows/{workflow_folder}'
+    if not workflow_root:
+        workflow_root = f"{Path(__file__).resolve().parent.parent.parent}/workflows"
+    workflow_root = f"{workflow_root}/{workflow_folder}"
     localize_workflow(workflow_root, aws_region, s3_bucket, aws_profile, input_template)
     create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workflow_folder, aws_profile, use_dynamodb)
 
@@ -46,6 +48,8 @@ if __name__ == "__main__":
                         help="bucket name to copy resources files to. This bucket must be accessed by the service "
                              "role that will be used to run the workflow.")
     parser.add_argument("--aws-region", help="AWS region")
+    parser.add_argument("--workflow-root", help="workflows root folder",
+                        required=False)
     parser.add_argument("--omics-workflow-name",
                         help="how to name the generated omics workflow, if empty will use 'workflow' arg",
                         required=False)
@@ -59,7 +63,8 @@ if __name__ == "__main__":
 
     workflow_name = args.omics_workflow_name or args.workflow
     localize_and_create(
-        workflow_folder=args.workflow, aws_region= args.aws_region, s3_bucket=args.s3_bucket,
+        workflow_folder=args.workflow, aws_region=args.aws_region, s3_bucket=args.s3_bucket,
+        workflow_root=args.workflow_root,
         omics_workflow_name=workflow_name, aws_profile=args.aws_profile,
         input_template=args.input_template, use_dynamodb=args.use_dynamodb
     )
