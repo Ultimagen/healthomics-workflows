@@ -1,0 +1,13 @@
+[project]
+name = "healthomics-wf"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.40.18",
+]
+
+# Explicitly list modules to package
+[tool.setuptools]
+py-modules = ["invoke_healthomics_run", "create_healthomics_workflow"]
