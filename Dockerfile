@@ -12,7 +12,7 @@ RUN apt-get update && \
     bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y docker-ce-cli && \
-    rm -rf /var/lib/apt/lists/* \
+    rm -rf /var/lib/apt/lists/*
 
 ARG OUT_DIR=/tmp/healthomics
 RUN mkdir -p $OUT_DIR
