@@ -25,3 +25,6 @@ RUN python -m build --outdir $OUT_DIR --wheel .
 
 
 RUN pip install ${OUT_DIR}/*.whl
+
+# Start Docker daemon on container start
+CMD ["dockerd-entrypoint.sh"]
