@@ -1,0 +1,21 @@
+[project]
+name = "healthomics-env"
+version = "0.1.0"
+dependencies = [
+    "boto3>=1.34.110",
+    "requests==2.32.2"
+]
+requires-python = ">= 3.12"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=8.2.1",
+]
+
+[tool.uv.workspace]
+members = ["scripts/healthomics_wf"]
