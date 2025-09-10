@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format=log_format)
 GLOBALS_WDL = "tasks/globals.wdl"
 
 
-def localize_workflow(wf_root, aws_region, s3_bucket, aws_profile=None, input_template=None):
+def localize_workflow(wf_root, aws_region, s3_bucket, dest_prefix=None, aws_profile=None, input_template=None):
     logging.info(f"Starting localize workflow: {args.workflow}")
 
     globals_wdl_file = f"{wf_root}/{GLOBALS_WDL}"
@@ -27,16 +27,16 @@ def localize_workflow(wf_root, aws_region, s3_bucket, aws_profile=None, input_te
 
     for input_file in files_to_localize_s3:
         logging.info(f"localizing {input_file}")
-        localize_s3_files(input_file, s3_bucket)
+        localize_s3_files(input_file, s3_bucket, dest_prefix)
     logging.info(f"workflow: {args.workflow} localization completed")
 
 
 def localize_and_create(workflow_folder, aws_region, s3_bucket, omics_workflow_name, workflow_root=None,
-                        aws_profile=None, input_template=None, use_dynamodb=False):
+                        dest_prefix=None, aws_profile=None, input_template=None, use_dynamodb=False):
     if not workflow_root:
         workflow_root = f"{Path(__file__).resolve().parent.parent.parent}/workflows"
     workflow_root = f"{workflow_root}/{workflow_folder}"
-    localize_workflow(workflow_root, aws_region, s3_bucket, aws_profile, input_template)
+    localize_workflow(workflow_root, aws_region, s3_bucket, dest_prefix, aws_profile, input_template)
     create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workflow_folder, aws_profile, use_dynamodb)
 
 
@@ -47,6 +47,8 @@ if __name__ == "__main__":
     parser.add_argument("--s3-bucket",
                         help="bucket name to copy resources files to. This bucket must be accessed by the service "
                              "role that will be used to run the workflow.")
+    parser.add_argument("--s3-prefix", help="S3 key prefix to place files under in the destination bucket (optional)",
+                        nargs='?', default=None)
     parser.add_argument("--aws-region", help="AWS region")
     parser.add_argument("--workflow-root", help="workflows root folder",
                         required=False)
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     workflow_name = args.omics_workflow_name or args.workflow
     localize_and_create(
         workflow_folder=args.workflow, aws_region=args.aws_region, s3_bucket=args.s3_bucket,
-        workflow_root=args.workflow_root,
+        workflow_root=args.workflow_root, dest_prefix=args.s3_prefix,
         omics_workflow_name=workflow_name, aws_profile=args.aws_profile,
         input_template=args.input_template, use_dynamodb=args.use_dynamodb
     )
