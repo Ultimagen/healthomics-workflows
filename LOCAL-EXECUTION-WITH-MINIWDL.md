@@ -191,21 +191,21 @@ Each workflow has different hardware requirements.
 
 The table below lists recommended resources for each workflow, based on the EC2 AWS instance type used for testing.
 
-| Workflow Name (Subdirectory)              | CPU(s) | Memory (GiB) | GPU Type / #     | EC2 Instance Type |
-|-------------------------------------------|--------|--------------|------------------|-------------------|
-| combine_germline_CNV_calls                | 36     | 72           | -                | c5.9xlarge        |
-| controlFREEC_pipeline                     | 4      | 8            | -                | c5.xlarge         |
-| efficient_dv                              | 4      | 64           | NVIDIA A10G / 1  | g5.xlarge         |
-| germline_CNV_pipeline                     | 36     | 72           | -                | c5.9xlarge        |
-| hla_genotyping                            | 16     | 64           | -                | m5.4xlarge        |
-| mrd_featuremap                            | 4      | 8            | -                | c5.xlarge         |
-| ppmSeq_preprocess                         | 36     | 72           | -                | c5.9xlarge        |
-| segdup                                    | 4      | 64           | NVIDIA A10G / 1  | g5.xlarge         |
-| single_cell_general                       | 36     | 72           | -                | c5.9xlarge        |
-| single_read_snv                           | 16     | 32           | -                | c5.4xlarge        |
-| single_sample_cnmops_CNV_calling          | 4      | 8            | -                | c5.xlarge         |
-| structural_variant_pipeline               | 48     | 192          | -                | c5.12xlarge       |
-| trim_align_sort                           | 36     | 72           | -                | c5.9xlarge        |
+| Workflow Name (Subdirectory)     |   CPU(s) |   Memory (GiB) | GPU Type / #    | EC2 Instance Type   |
+|:---------------------------------|---------:|---------------:|:----------------|:--------------------|
+| combine_germline_CNV_calls       |       36 |             72 | -               | c5.9xlarge          |
+| controlFREEC_pipeline            |        4 |              8 | -               | c5.xlarge           |
+| efficient_dv                     |        4 |             16 | NVIDIA A10G / 1 | g5.xlarge           |
+| germline_CNV_pipeline            |       36 |             72 | -               | c5.9xlarge          |
+| hla_genotyping                   |       16 |             64 | -               | m5.4xlarge          |
+| mrd_featuremap                   |        4 |              8 | -               | c5.xlarge           |
+| ppmSeq_preprocess                |       36 |             72 | -               | c5.9xlarge          |
+| segdup                           |        4 |             16 | NVIDIA A10G / 1 | g5.xlarge           |
+| single_cell_general              |       36 |             72 | -               | c5.9xlarge          |
+| single_read_snv                  |       16 |             32 | -               | c5.4xlarge          |
+| single_sample_cnmops_CNV_calling |        4 |              8 | -               | c5.xlarge           |
+| structural_variant_pipeline      |       48 |             96 | -               | c5.12xlarge         |
+| trim_align_sort                  |       36 |             72 | -               | c5.9xlarge          |
 
 ## Running Workflows
 1. Identify workflow and edit input
@@ -234,26 +234,6 @@ miniwdl run healthomics-workflows/workflows/single_read_snv/single_read_snv.wdl 
    - The `--dir` flag sets the output directory for MiniWDL workflow outputs and logs.<br>
      If you omit `--dir`, MiniWDL will create the output directory in your current working directory.
    - You can add `--verbose --debug` for more detailed logging and troubleshooting if needed.
-
-### FOR SINGULARITY AND UA WORKFLOWS ONLY - Run Workflows as Root
-
-Some workflows include the `AlignWithUA` task, which uses the Ultima Aligner (`ua`). The `ua` tool requires certain Linux capabilities that cannot be granted to containers when using **Singularity** as a backend. As a result, if you need to run a workflow containing `AlignWithUA` with the **Singularity** backend, you must run the workflow as the root user.
-
-**Instructions:**
-1. Identify the workflow and edit the input as described in [Running Workflows, step 1](#running-workflows).
-2. Switch to the root user, copy your MiniWDL configuration, and activate the virtual environment:
-   ```shell
-   sudo su
-   mkdir -p ~/.config
-   cp /home/<your-username>/.config/miniwdl.cfg ~/.config/miniwdl.cfg
-   source /home/<your-username>/miniwdl/bin/activate
-   ```
-   Replace `<your-username>` with your actual username.
-3. Run the workflow as described in [Running Workflows, step 3](#running-workflows).
-
-> [!NOTE]
-> Running workflows as root is only necessary when using **Singularity** with tasks that require the `ua` aligner. For all other cases, running as a regular user is recommended.<br>
-> When a task fails with a line like that in the log `ERROR ua shm.c:126: shmget(): Operation not permitted` and **Singularity** is used as the miniwdl backend, it means this procedure is required.
 
 ## Troubleshooting
 
