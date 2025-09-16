@@ -28,10 +28,11 @@ version 1.0
 import "tasks/globals.wdl" as Globals
 import "tasks/general_tasks.wdl" as UGGeneralTasks
 import "tasks/qc_tasks.wdl" as UGQCTasks
+import "tasks/pileup_tasks.wdl" as UGPileupTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.22.1" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -511,7 +512,7 @@ workflow SomaticCNVCallingControlFREEC{
         }
 
         scatter (interval in ScatterIntervalList.out){
-             call CreateMpileup as tumor_createMpileup_scatter {
+             call UGPileupTasks.CreateMpileup as tumor_createMpileup_scatter {
                 input:
                     input_bam_files = input_tumor_cram_bam_file,
                     input_bam_files_index = input_tumor_cram_bam_file_index,
@@ -529,7 +530,7 @@ workflow SomaticCNVCallingControlFREEC{
                     cloud_provider = cloud_provider_override
                 }
 
-                call CreateMpileup as normal_createMpileup_scatter{
+                call UGPileupTasks.CreateMpileup as normal_createMpileup_scatter{
                 input:
                     input_bam_files = input_normal_cram_bam_file,
                     input_bam_files_index = input_normal_cram_bam_file_index,
@@ -551,13 +552,13 @@ workflow SomaticCNVCallingControlFREEC{
             Array[File] tumor_pileup_files = tumor_createMpileup_scatter.out_pileup
             Array[File] normal_pileup_files = normal_createMpileup_scatter.out_pileup
 
-            call ConcatFiles as tumor_ConcatMpileupFiles{
+            call UGGeneralTasks.ConcatFiles as tumor_ConcatMpileupFiles{
                 input:
                     files = tumor_pileup_files,
                     out_file_name = basename(input_tumor_cram_bam_file[0])+"_minipileup.pileup",
                     docker = global.ubuntu_docker
             }
-            call ConcatFiles as normal_ConcatMpileupFiles{
+            call UGGeneralTasks.ConcatFiles as normal_ConcatMpileupFiles{
                 input:
                     files = normal_pileup_files,
                     out_file_name = basename(input_normal_cram_bam_file[0])+"_minipileup.pileup",
@@ -576,6 +577,7 @@ workflow SomaticCNVCallingControlFREEC{
                         input_cram_bam = tumor_bam_file.left,
                         input_cram_bam_index = tumor_bam_file.right,
                         reference_fasta = references.ref_fasta,
+                        reference_fasta_index = references.ref_fasta_index,
                         min_mapq = mapq,
                         region = region,
                         preemptible_tries = preemptible_tries,
@@ -604,6 +606,7 @@ workflow SomaticCNVCallingControlFREEC{
                         input_cram_bam = normal_bam_file.left,
                         input_cram_bam_index = normal_bam_file.right,
                         reference_fasta = references.ref_fasta,
+                        reference_fasta_index = references.ref_fasta_index,
                         min_mapq = mapq,
                         region = region,
                         preemptible_tries = preemptible_tries,
@@ -664,6 +667,7 @@ workflow SomaticCNVCallingControlFREEC{
         normal_mpileup = normal_pileup,
         normal_cpn = normal_cpn,
         reference_fasta = references.ref_fasta,
+        reference_fasta_index = references.ref_fasta_index,
         chrLenFile = chrLenFile,
         input_format = input_format,
         snp_file = snp_file,
@@ -741,111 +745,6 @@ workflow SomaticCNVCallingControlFREEC{
          File? FREEC_noraml_ratio_bedgraph = FREEC_noraml_ratio_bedgraph_maybe
          File? FREEC_normal_ratio = FREEC_normal_ratio_maybe
          File? FREEC_tumor_ratio = FREEC_tumor_ratio_maybe
-    }
-}
-task CreateMpileup {
-    input{
-
-        Array[File] input_bam_files
-        Array[File] input_bam_files_index
-        File reference_fasta
-        File reference_fai
-        File reference_dict
-        Int max_depth = 8000
-        Int min_MapQ
-        Int min_BaseQ = 0
-        File snp_file
-        File snp_file_index
-        File interval
-        String docker
-        Boolean no_address
-        Int preemptible_tries
-        File monitoring_script
-        String? cloud_provider
-    }
-    Int disk_size = ceil(size(reference_fasta,"GB") + size(snp_file,"GB") + 50)
-    String base_input_name = basename(input_bam_files[0])
-    Boolean is_aws = defined(cloud_provider)
-
-
-    parameter_meta {
-      input_bam_files: {
-          localization_optional: true
-      }
-    }
-
-command <<<
-        bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
-
-    # if ~{is_aws}
-    # then
-    #     inputs_string="~{sep=' ' input_bam_files}"
-    # else
-    echo "DEBUG start PrintReads $(date)"
-    # download only the region of interval
-    gatk --java-options "-Xms1G" PrintReads \
-        -I ~{sep=' -I ' input_bam_files} \
-        -O input.bam \
-        -L ~{interval} \
-        -R ~{reference_fasta}
-    inputs_string="input.bam"
-    echo "DEBUG end PrintReads $(date)"
-    # fi
-
-    echo "inputs_string:"
-    echo $inputs_string
-    echo "DEBUG start intersect snp_file with current interval $(date)"
-    # intersect snp_file with current interval
-    gatk IntervalListToBed -I ~{interval} -O interval.bed
-    bcftools view -R interval.bed -O z -o out.vcf.gz ~{snp_file}
-    tabix out.vcf.gz
-    echo "DEBUG end intersect snp_file with current interval $(date)"
-
-    echo "DEBUG start mpileup $(date)"
-    #caclulate mpileup for current interval
-    samtools mpileup -f ~{reference_fasta} \
-    -d ~{max_depth} \
-    -Q ~{min_BaseQ} \
-    -q ~{min_MapQ} \
-    -l out.vcf.gz \
-    $inputs_string \
-    >  ~{base_input_name}_minipileup.pileup
-    echo "DEBUG end mpileup $(date)"
-
-    >>>
-    runtime {
-        preemptible: preemptible_tries
-        memory: "2 GB"
-        disks: "local-disk " + ceil(disk_size) + " HDD"
-        docker: docker
-        noAddress: no_address
-        cpu:1
-    }
-    output {
-        File out_pileup = "~{base_input_name}_minipileup.pileup"
-        File monitoring_log = "monitoring.log"
-    }
-}
-
-task ConcatFiles{
-    input{
-        Array[File] files
-        String out_file_name
-        String docker
-    }
-    Int disk_size = ceil(2 * size(files,"GB") + 2)
-    command <<<
-        cat ~{sep=" " files} > ~{out_file_name}
-    >>>
-
-    runtime {
-        disks: "local-disk " + ceil(disk_size) + " HDD"
-        docker: docker
-        cpu:1
-    }
-    output{
-        File out_merged_file = "~{out_file_name}"
     }
 }
 
@@ -946,7 +845,7 @@ task BedGraphToCpn{
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -xeo pipefail
 
         ##unzip in case of zipped bedgraph
 
@@ -967,8 +866,8 @@ task BedGraphToCpn{
             fi
 
             ## fetch only relevant chromosomes from bedgraph
-            awk '{print $1"\t0\t"$2}' ~{genome_file} > ~{genome_file}.bed
-            bedtools intersect -a $file_basename.bedgraph -b ~{genome_file}.bed -wa > $file_basename.relevant_chrs.bedgraph
+            awk '{print $1"\t0\t"$2}' ~{genome_file} > genome_file.bed
+            bedtools intersect -a $file_basename.bedgraph -b genome_file.bed -wa > $file_basename.relevant_chrs.bedgraph
 
             bedtools map -g ~{genome_file} -a ~{genome_windows} -b $file_basename.relevant_chrs.bedgraph -c 4 -o mean | \
             awk '{if($4=="."){print $1"\t"$2"\t"$3"\t"0}else{print $1"\t"$2"\t"$3"\t"$4}}' | \
@@ -1018,6 +917,7 @@ task BedGraphToCpn{
         File input_cram_bam
         File input_cram_bam_index
         File reference_fasta
+        File reference_fasta_index
         Int min_mapq
         String region
         Int preemptible_tries
@@ -1058,6 +958,7 @@ task runControlFREEC{
             File normal_cpn
 
             File reference_fasta
+            File reference_fasta_index
             File chrLenFile
 
             File snp_file
@@ -1109,7 +1010,7 @@ task runControlFREEC{
         #split reference to file per chromosome
         mkdir chrFiles_dir
         cd chrFiles_dir
-        faidx -x ~{reference_fasta}
+        faidx -x ~{reference_fasta} --no-rebuild
         cd ../
 
         if ~{high_sensitivity_mode}

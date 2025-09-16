@@ -38,9 +38,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.6
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.8
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.6
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.8
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -152,10 +152,14 @@ Once the `ini` file is ready, call_variants can be invoked from within the docke
 call_variants --param params.ini
 ```
 
+#### Using a serialized engine file in call_variants
+
+TensorRT uses models stored in ONNX format. To reduce runtime overhead, it can use use a serialized TensorRT engine file (sometimes called a plan file).
+A serialized engine is optimized for a specific hardware and software configuration (e.g., GPU model, CUDA/cuDNN versions, TensorRT version). If you try to load it on a different configuration, it will fail with an error. When no serialized engine is available, call_variants will first build (serialize) the engine from the ONNX model and then run inference. The resulting serialized file can be saved and reused in subsequent runs on the same configuration.
 
 ### Running post_process:
 
-post_process uses the output of call_variants, `call_variants.tfrecord.gz`, and generates a vcf file. A typical post_process command from within the docker will look like:
+post_process uses the output of call_variants, `call_variants.tfrecord.gz`, and generates a vcf file. A typical post_process command from within the docker will look like (same docker as make_examples):
 ```
 ug_postproc \
   --infile call_variants.1.gz,call_variants.2.gz,... \
@@ -229,5 +233,6 @@ docker run -v <path mapping> <docker name> \
   --filetype dv --op image \
   --outfile debug.dvtools.vcf
 ```
+
 
 

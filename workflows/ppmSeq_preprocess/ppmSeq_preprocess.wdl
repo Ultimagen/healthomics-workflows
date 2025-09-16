@@ -32,7 +32,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.22.1" # !UnusedDeclaration
+    String pipeline_version = "1.23.0" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list

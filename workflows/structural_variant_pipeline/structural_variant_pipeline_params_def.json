@@ -151,6 +151,10 @@
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
         "optional": false
     },
+    "SVPipeline.rematching_memory_override": {
+        "description": "memory override for rematching task",
+        "optional": true
+    },
     "SVPipeline.repeat_mask_file": {
         "description": "gripss paramter: Repeat mask file. Note that the default value is in template",
         "optional": true

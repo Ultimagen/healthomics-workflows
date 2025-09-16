@@ -9,6 +9,7 @@
     "EfficientDV.num_shards": 50,
     "EfficientDV.make_gvcf": true,
     "EfficientDV.recalibrate_vaf": false,
+    "EfficientDV.is_somatic": false,
     "EfficientDV.single_strand_filter": true,
     "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
     "EfficientDV.references": {
@@ -28,6 +29,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
+    "EfficientDV.normalize_strand_bias": false,
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx",
     "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx.serialized.a10g",
     "EfficientDV.min_variant_quality_hmer_indels": 5,

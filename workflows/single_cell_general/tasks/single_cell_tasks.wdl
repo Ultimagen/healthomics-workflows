@@ -313,10 +313,10 @@ task GatherStatistics {
         echo "UMI-length: ~{umi_len}" >> ~{base_file_name}.stats.txt
         echo "Library-direction: ~{default="" library_direction}" >> ~{base_file_name}.stats.txt
 
-        echo "mkdir output_stats"
-        mkdir output_stats
-        cp  ~{gene_features_stats} ~{gene_summary_csv} ~{gene_umi_per_cell_sorted} output_stats/
-        cp ~{star_log_file} ~{barcode_file} ~{base_file_name}.stats.txt output_stats/
+        #echo "mkdir output_stats"
+        #mkdir output_stats
+        #cp  ~{gene_features_stats} ~{gene_summary_csv} ~{gene_umi_per_cell_sorted} output_stats/
+        #cp ~{star_log_file} ~{barcode_file} ~{base_file_name}.stats.txt output_stats/
         #tar -zcf ~{base_file_name}.tgz output_stats
 
         python <<CODE

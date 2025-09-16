@@ -206,6 +206,11 @@ The steps of the pipeline are as following:
         <i>Int? &mdash; Default: None</i><br />
          memory override for create_assembly task 
 </p>
+<p name="SVPipeline.rematching_memory_override">
+        <b>SVPipeline.rematching_memory_override</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+         memory override for rematching task 
+</p>
 <p name="SVPipeline.annotate_variants_cpu_override">
         <b>SVPipeline.annotate_variants_cpu_override</b><br />
         <i>Int? &mdash; Default: None</i><br />

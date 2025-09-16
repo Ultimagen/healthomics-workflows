@@ -26,7 +26,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.22.1" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -245,6 +245,7 @@ workflow SegDupAnalysis {
             cram_index_files = [PoolReads.remap_cram_index],
             references = references,
             make_gvcf = false,
+            is_somatic = false,
             recalibrate_vaf = false,
             num_shards = 3,
             cap_at_optimal_coverage = false,
@@ -254,6 +255,7 @@ workflow SegDupAnalysis {
             min_fraction_hmer_indels = 0.05,
             min_variant_quality_exome_hmer_indels = 5,
             min_fraction_single_strand_non_snps = 0.15,
+            normalize_strand_bias = false,
             # Call variants args
             model_onnx = model_onnx,
             model_serialized = model_serialized,

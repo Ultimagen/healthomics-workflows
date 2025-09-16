@@ -9,6 +9,7 @@
     "EfficientDV.num_shards": 100,
     "EfficientDV.make_gvcf": false,
     "EfficientDV.recalibrate_vaf": true,
+    "EfficientDV.is_somatic": true,
     "EfficientDV.single_strand_filter": true,
     "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
     "EfficientDV.references": {
@@ -29,6 +30,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
+    "EfficientDV.normalize_strand_bias": false,
     "EfficientDV.background_cram_files": [
         "<normal_cram_file>.cram"
     ],
@@ -47,12 +49,12 @@
     "EfficientDV.min_variant_quality_non_hmer_indels": 20,
     "EfficientDV.min_variant_quality_snps": 14,
     "EfficientDV.allele_frequency_ratio": 10,
-    "EfficientDV.show_bg_fields": true,
     "EfficientDV.optimal_coverages": [
         200,
         200
     ],
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,
+    "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
     "EfficientDV.cloud_provider_override": "aws"
 }

@@ -33,7 +33,7 @@ task CnmopsGetReadCountsFromBam{
         samtools view ~{input_bam_file} -O BAM -o ~{out_bam_filtered} -bq ~{mapq} -T ~{reference_genome}
         samtools index ~{out_bam_filtered}
 
-        Rscript --vanilla  /src/cnv/cnmops/get_reads_count_from_bam.R \
+        Rscript --vanilla  /home/ugbio/src/cnv/cnmops/get_reads_count_from_bam.R \
             -i ~{out_bam_filtered} \
             -refseq ~{sep="," ref_seq_names} \
             -wl ~{window_length} \
@@ -102,7 +102,7 @@ task ConvertBedGraphToGranges {
             cp $file_basename.bedgraph.mean ~{input_bedGraph_basename}.win.bedGraph
         fi            
 
-        Rscript --vanilla /src/cnv/cnmops/convert_bedGraph_to_Granges.R \
+        Rscript --vanilla /home/ugbio/src/cnv/cnmops/convert_bedGraph_to_Granges.R \
         -i ~{input_bedGraph_basename}.win.bedGraph \
         -sample_name ~{sample_name}
     >>>
@@ -140,7 +140,7 @@ task AddCountsToCohortMatrix {
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         set -eo pipefail
-        Rscript --vanilla /src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
+        Rscript --vanilla /home/ugbio/src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
             -cohort_rc ~{cohort_reads_count_matrix} \
             -sample_rc ~{sample_reads_count} \
             ~{true="--save_hdf" false='' save_hdf}
@@ -178,8 +178,9 @@ task CreateCohortReadsCountMatrix {
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         set -eo pipefail
-        Rscript --vanilla /src/cnv/cnmops/create_reads_count_cohort_matrix.R \
-            -samples_read_count_files_list ~{write_lines(sample_reads_count_files)} \
+        echo "~{sep="\n" sample_reads_count_files}" >> samples_list.txt
+        Rscript --vanilla /home/ugbio/src/cnv/cnmops/create_reads_count_cohort_matrix.R \
+            -samples_read_count_files_list samples_list.txt \
             ~{true="--save_csv" false='' save_csv} \
             ~{true="--save_hdf" false='' save_hdf}
     >>>
@@ -227,14 +228,14 @@ task RunCnmops {
         touch .estimate_gender
         touch chrX_mean_coverage_distribution.png
 
-        Rscript --vanilla /src/cnv/cnmops/normalize_reads_count.R \
+        Rscript --vanilla /home/ugbio/src/cnv/cnmops/normalize_reads_count.R \
              --cohort_reads_count_file ~{merged_cohort_reads_count_matrix} \
              ~{"--ploidy " + ploidy} \
              ~{"--chrX_name " + chrX_name} \
              ~{"--chrY_name " + chrY_name} \
              ~{true="--cap_coverage" false="" cap_coverage}
 
-        Rscript --vanilla /src/cnv/cnmops/cnv_calling_using_cnmops.R \
+        Rscript --vanilla /home/ugbio/src/cnv/cnmops/cnv_calling_using_cnmops.R \
             -cohort_rc cohort_reads_count.norm.rds \
             -minWidth ~{min_width_value} \
             -p ~{parallel} \

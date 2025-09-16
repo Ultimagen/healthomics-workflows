@@ -938,7 +938,7 @@ task GetMeanCoverageFromSorterStats {
         cpu: "1"
     }
     output {
-        Int mean_coverage = read_int("~{output_file}")
+        Float mean_coverage = read_float("~{output_file}")
         File monitoring_log = "monitoring.log"
     }
   }
@@ -1071,6 +1071,13 @@ task ComputeMd5 {
 }
 
 task MergeMd5sToJson {
+    parameter_meta {
+        output_json: {
+            help: "Output JSON file name containing the md5 checksums.",
+            type: "String",
+            category: "input_required"
+        }
+    }
     input {
         Array[File] md5_files
         String output_json = "md5_checksums.json"
@@ -1104,5 +1111,26 @@ CODE
         docker: docker
         memory: "2 GB"
         disks: "local-disk " + disk_size + " HDD"
+    }
+}
+
+task ConcatFiles{
+    input{
+        Array[File] files
+        String out_file_name
+        String docker
+    }
+    Int disk_size = ceil(2 * size(files,"GB") + 2)
+    command <<<
+        cat ~{sep=" " files} > ~{out_file_name}
+    >>>
+
+    runtime {
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+        cpu:1
+    }
+    output{
+        File out_merged_file = "~{out_file_name}"
     }
 }

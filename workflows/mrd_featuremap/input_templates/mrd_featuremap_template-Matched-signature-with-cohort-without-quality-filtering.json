@@ -5,6 +5,7 @@
     "MRDFeatureMap.cfdna_cram_bam": "<cfdna_cram_bam>.cram",
     "MRDFeatureMap.cfdna_cram_bam_index": "<cfdna_cram_bam>.cram.crai",
     "MRDFeatureMap.featuremap_df_file": "<featuremap_df_file>.parquet",
+    "MRDFeatureMap.srsnv_metadata_json": "<srsnv_metadata_json>.json",
     "MRDFeatureMap.bcftools_extra_args": "-f PASS --type snps -m2 -M2",
     "MRDFeatureMap.include_regions": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
@@ -16,7 +17,7 @@
     ],
     "MRDFeatureMap.mrd_analysis_params": {
         "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
-        "read_filter_query": "qual>60"
+        "read_filter_query": "filt>0 and snvq>60"
     },
     "MRDFeatureMap.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
@@ -26,7 +27,7 @@
     "MRDFeatureMap.preemptible_tries": 1,
     "MRDFeatureMap.snv_database": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz",
     "MRDFeatureMap.n_synthetic_signatures": 5,
-    "MRDFeatureMap.mapping_quality_threshold": 60,
+    "MRDFeatureMap.mapping_quality_threshold": 0,
     "MRDFeatureMap.diluent_germline_vcfs": [],
     "MRDFeatureMap.create_md5_checksum_outputs": false,
     "MRDFeatureMap.external_matched_signatures": [

@@ -1,6 +1,6 @@
 {
     "SegDupAnalysis.DV.allele_frequency_ratio": {
-        "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
+        "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
         "optional": true
     },
     "SegDupAnalysis.DV.annotation_intervals": {
@@ -45,6 +45,14 @@
     },
     "SegDupAnalysis.DV.germline_vcf": {
         "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.h_indel_allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.h_indel_vaf_to_pass": {
+        "description": "Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio",
         "optional": true
     },
     "SegDupAnalysis.DV.hard_qual_filter": {
@@ -124,7 +132,11 @@
         "optional": true
     },
     "SegDupAnalysis.DV.show_bg_fields": {
-        "description": "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
+        "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.strand_bias_normalization_thresholds": {
+        "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
         "optional": true
     },
     "SegDupAnalysis.DV.ug_call_variants_extra_mem": {

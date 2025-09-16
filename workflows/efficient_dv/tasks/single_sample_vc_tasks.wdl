@@ -180,11 +180,11 @@ task CreateSECBlacklist {
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
 
-    bedtools intersect -a ~{input_gvcf} -b ~{blacklist_file} -header | uniq > /tmp.g.vcf
+    bedtools intersect -a ~{input_gvcf} -b ~{blacklist_file} -header | uniq > tmp.g.vcf
 
     correct_systematic_errors \
       --model ~{sep=' --model ' sec_models} \
-      --gvcf /tmp.g.vcf \
+      --gvcf tmp.g.vcf \
       --relevant_coords ~{blacklist_file} \
       --novel_detection_only \
       --output_file ~{output_blacklist_path}

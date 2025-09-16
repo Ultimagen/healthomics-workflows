@@ -26,6 +26,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Boolean </i> &mdash; 
          Whether to generate a gvcf. Default: False <br /> 
 </p>
+<p name="EfficientDV.is_somatic">
+        <b>EfficientDV.is_somatic</b><br />
+        <i>Boolean </i> &mdash; 
+         Enable somatic calling mode, which enables somatic-specific post-processing options <br /> 
+</p>
 
 ### Required references
 <p name="EfficientDV.references">
@@ -67,6 +72,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 </p>
 
 ### Optional parameters
+<p name="EfficientDV.show_bg_fields">
+        <b>EfficientDV.show_bg_fields</b><br />
+        <i>Boolean </i> &mdash; 
+         Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling. <br /> 
+</p>
 <p name="EfficientDV.scatter_intervals_break">
         <b>EfficientDV.scatter_intervals_break</b><br />
         <i>Int </i> &mdash; 
@@ -200,12 +210,17 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.allele_frequency_ratio">
         <b>EfficientDV.allele_frequency_ratio</b><br />
         <i>Float? </i> &mdash; 
-         Minimal ratio between the allele frequency in tumor and normal, for vcf filtering <br /> 
+         Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering <br /> 
 </p>
-<p name="EfficientDV.show_bg_fields">
-        <b>EfficientDV.show_bg_fields</b><br />
-        <i>Boolean </i> &mdash; 
-         Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling) <br /> 
+<p name="EfficientDV.h_indel_vaf_to_pass">
+        <b>EfficientDV.h_indel_vaf_to_pass</b><br />
+        <i>Float? </i> &mdash; 
+         Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio <br /> 
+</p>
+<p name="EfficientDV.h_indel_allele_frequency_ratio">
+        <b>EfficientDV.h_indel_allele_frequency_ratio</b><br />
+        <i>Float? </i> &mdash; 
+         Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering <br /> 
 </p>
 <p name="EfficientDV.ug_post_processing_extra_args">
         <b>EfficientDV.ug_post_processing_extra_args</b><br />

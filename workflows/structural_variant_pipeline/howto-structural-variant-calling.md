@@ -27,13 +27,21 @@ The following files are publicly available:
 The following file is required as input for UA realignment:
     
     gs://concordanz/hg38/UA/Homo_sapiens_assembly38.fasta.uai
+or 
+
+    s3://ultimagen-workflow-resources-us-east-1/hg38/UA/Homo_sapiens_assembly38.fasta.uai
+
+### Pipeline steps 
 
 #### Generate scattered intervals to run SV calling on a single interval
 
 hg38 interval file can be downloaded from: 
-```
-gs://concordanz/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list
-```
+
+    gs://concordanz/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list
+or
+
+    s3://ultimagen-workflow-resources-us-east-1/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list
+
 Assembly is run on a small interval in the genome determined by an input bed file. This can be used to scatter the genome into small intervals, and then parallelize the workflow across these intervals. A convenient tool to generate scattered intervals is picard IntervalListTools. A typical command to scatter intervals provided below. Note that the input to this command is Picard's interval_list format, and not the simple bed format:
 
 ```
@@ -53,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/haplotype:ebbe0bd
+ultimagenomics/make_examples:3.1.8
 ```
 
 Generate interval bed : 
@@ -73,12 +81,13 @@ tool \
 	--min-base 0 \
 	--min-mapq 5 \
 	--min-feature-length '20;0' \
+    --min-mismatch-count '5;0' \
 	--max-num-haps 10 \
 	--max-reads-per-region 1500 \
 	--prog \
 	--interval-nreads 10000 \
 	--sv \
-	--single-strand-filter 	
+    --realigned-sam
 
 samtools view -bS output_basename_assembly_hap_out.sam > output_basename_assembly_hap_out.bam
 samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_hap_out_sorted.bam
@@ -98,12 +107,14 @@ tool \
 	--min-base 0 \
 	--min-mapq 5 \
 	--min-feature-length '10' \
+    --min-mismatch-count '5' \
 	--max-num-haps 10 \
 	--max-reads-per-region 1500 \
 	--prog \
 	--interval-nreads 10000 \
 	--sv \
-	--single-strand-filter
+    --realigned-sam
+
 samtools view -bS output_basename_assembly_hap_out.sam > output_basename_assembly_hap_out.bam
 samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_hap_out_sorted.bam
 samtools index output_basename_assembly_hap_out_sorted.bam
@@ -121,11 +132,14 @@ tool \
 	--min-base 0 \
 	--min-mapq 5 \
 	--min-feature-length '10' \
+    --min-mismatch-count '5' \
 	--max-num-haps 10 \
 	--max-reads-per-region 1500 \
 	--prog \
 	--interval-nreads 10000 \
-	--sv
+	--sv \
+    --realigned-sam
+    
 samtools view -bS output_basename_assembly_hap_out.sam > output_basename_assembly_hap_out.bam
 samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_hap_out_sorted.bam
 samtools index output_basename_assembly_hap_out_sorted.bam
@@ -136,9 +150,9 @@ samtools index output_basename_assembly_hap_out_sorted.bam
 UA Docker:
 
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ua:master_c553451
+ultimagenomics/ua:3.0.1
 ```
-UA realignment command: (Realignment is done on a merged bam consisting of a merge of all the BAMs produced in the scattered assembly)
+UA realignment command: (realignment is done on a merged bam consisting of a merge of all the BAMs produced in the scattered assembly)
 ```
 samtools view -h -@ 40 output_basename_assembly_hap_out_sorted.bam | \
 /ua/ua \
@@ -152,32 +166,95 @@ samtools view -h -@ 40 output_basename_assembly_hap_out_sorted.bam | \
     --sam-input - \
     --sam-output - \
     --seed-score-ratio 0.5 --vector --huge --soft-clipping --realignment-tag re --mismatch-cost -6 | \
-samtools view -@ 40 -o output_basename_assembly_file_ua_aligned.bam -
 
+samtools view -@ 40 -o output_basename_assembly_file_ua_aligned.bam -
 samtools sort output_basename_assembly_file_ua_aligned.bam -o output_basename_assembly_file_ua_aligned_sorted.bam 
 samtools index output_basename_assembly_file_ua_aligned_sorted.bam
 ```
+#### Choose better alignment of the haplotype (on GRIDSS docker):
 
-GRIDSS Docker :
+Docker:
+```
+ultimagenomics/gridss:b90d23b
+```
 
-UG modifications to the GRIDSS pipeline are here:
+Run: 
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/gridss:c0113ac
-```
-Reverting secondary low MAPQ alignments (on GRIDSS docker):
-
-```
-python3 /opt/gridss/revert_sup_low_mapq_ua_alignment.py
-	--before output_basename_merged_assembly.bam \
-	--after output_basename_assembly_file_ua_aligned.bam_sorted.bam \
-	--output output_basename_assembly_ua_realigned_unsorted.bam \
-	--min_mapping_quality 60
+python3 /opt/gridss/choose_best_haplotype_realignment.py \
+    --alignment_source merged_assembly.bam \
+    --alignment_source output_basename_assembly_ua_realigned_unsorted.bam \
+  	--output output_basename_assembly_ua_realigned_unsorted.bam \
+    --min_mapping_quality 60 
 
 samtools sort -o output_basename_assembly_ua_realigned.bam output_basename_assembly_ua_realigned_unsorted.bam
 samtools index output_basename_assembly_ua_realigned.bam 
 ```
 
-##### GRIDSS Identify Variants
+#### Fix alignment artifacts on homopolymers
+
+Docker:
+
+    ultimagenomics/gridss:b90d23b
+
+```
+    python3 /opt/gridss/align_long_homopolymers.py \
+        --input output_basename_assembly_ua_realigned.bam \
+        --output long_homopolymer_realigned.assembly.bam \
+        --reference Homo_sapiens_assembly38.fasta \
+        --homopolymer_length 10
+```
+
+#### Match reads to the haplotypes. 
+
+For the whole genome run it is best to run this process scattered over genomic intervals as described in the assembly section
+
+Docker: 
+
+    ultimagenomics/rematcher:main_b41b06a
+
+```
+    sv_rematch -b interval.bed \
+    -j 2 -t -a \
+    ~{"-l <dependent of somatic/germline>"} \
+    ~{"-s <dependent of somatic/germline>"} \
+    -m 5 \
+    <input_crams> \
+    long_homopolymer_realigned.assembly.bam \
+    Homo_sapiens_assembly38.fasta \
+    rematched_hap.txt
+```
+
+* Germline SV calling: 
+- `<input_crams>` - germline.cram
+- `-l` - `'10'`
+- `-s` - `'5'`
+
+* Somatic Tumor-only SV calling: 
+`<input_crams>` - tumor.cram
+- `-l` - `'10'`
+- `-s` - `'5'`
+
+* Somatic T/N 
+`<input_crams>` - tumor.cram;normal.cram
+- `-l` - `'20;0'`
+- `-s` - `'5;0'`
+
+This step will produce a set of TSV files with haplotype that is a best match for each read. 
+To add these results to the assembly BAM as required by the GRIDSS downstream tools, run the following:
+
+Concatenate all TSV files here: `all_read_haplotype_assignments.tsv` then: 
+
+```
+sv_rematch -M all_read_haplotype_assignments.tsv \
+    long_homopolymer_realigned.assembly.bam \
+    Homo_sapiens_assembly38.fasta \
+    assembly.support.bam
+```
+
+Index the `assembly.support.bam` file
+
+
+#### GRIDSS Identify Variants
 
 The gridss.config file we used was:
 
@@ -207,7 +284,7 @@ java -Xmx10g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.Ide
     SAMPLE_NAMES=~{germline_sample_name} \
     O={output_basename}.vcf \
     BLACKLIST=ENCFF356LFX.bed \
-    ASSEMBLY=output_basename_assembly_ua_realigned.bam \ 
+    ASSEMBLY=assembly.support.bam \ 
     C=gridss.config
 
 bcftools view ~{output_basename}.vcf -Oz ~{output_basename}.vcf.gz
@@ -221,7 +298,7 @@ java -Xmx10g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.Ide
     SAMPLE_NAMES=~{tumor_sample_name} \
     O=~{output_basename}.vcf \
     BLACKLIST=ENCFF356LFX.bed \
-    ASSEMBLY=output_basename_assembly_ua_realigned.bam \ 
+    ASSEMBLY=assembly.support.bam \ 
     C=gridss.config
 
 bcftools view ~{output_basename}.vcf -Oz ~{output_basename}.vcf.gz
@@ -235,7 +312,7 @@ java -Xmx10g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.Ide
     SAMPLE_NAMES=~{germline_sample_name} \
     O=output_basename.vcf \
     BLACKLIST=ENCFF356LFX.bed \
-    ASSEMBLY=output_basename_assembly_ua_realigned.bam \ 
+    ASSEMBLY=assembly.support.bam \ 
     C=gridss.config
 
 bcftools view ~{output_basename}.vcf -Oz ~{output_basename}.vcf.gz
@@ -281,7 +358,7 @@ java -Xmx10g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.Ann
     I=input_partial_tumor.bam \
     I=input_partial_germline.bam \
     BLACKLIST=ENCFF356LFX.bed \
-    ASSEMBLY=~{output_basename_assembly}_partial_ua_realigned.bam \
+    ASSEMBLY=assembly.support.bam \
     C=gridss.config \
     OUTPUT_VCF=~{output_basename}.ann.vcf
 ```
@@ -294,7 +371,7 @@ java -Xmx10g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.Ann
     R=Homo_sapiens_assembly38.fasta \
     I=input_partial_tumor.bam \
     BLACKLIST=ENCFF356LFX.bed \
-    ASSEMBLY=~{output_basename_assembly}_partial_ua_realigned.bam \
+    ASSEMBLY=assembly.support.bam \
     C=gridss.config \
     OUTPUT_VCF=~{output_basename}.ann.vcf
 ```
@@ -308,7 +385,7 @@ java -Xmx10g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.Ann
     R=Homo_sapiens_assembly38.fasta \
     I=input_partial_germline.bam \
     BLACKLIST=ENCFF356LFX.bed \
-    ASSEMBLY=~{output_basename_assembly}_partial_ua_realigned.bam \
+    ASSEMBLY=assembly.support.bam \
     C=gridss.config \
     OUTPUT_VCF=output_basename.ann.vcf
 
@@ -336,7 +413,7 @@ gsutil -m cp -r gs://concordanz/sv/gripss/ .
 
 GRIPSS docker: (run on a merge of the vcfs produced in scatter by AnnotateVariants above)
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/gripss:58cba04b7b
+ultimagenomics/gripss:58cba04b7b
 ```
 
 T/N GRIPSS:
@@ -375,6 +452,9 @@ java -jar gripss.jar \
 
 
 #### Convert VCF format
+
+This step converts GRIDSS-like VCF (each SV represented by the two breakpoint records) to MANTA-like VCF (each SV represented by a single interval record)
+
 Run on the GRIDSS docker using :
 ```
 Rscript /opt/gridss/convert_vcf_format.R \

@@ -37,21 +37,27 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.6
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.8
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.6
+337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.8 (public)
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
 us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:2.2.3
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:2.2.3
+337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:2.2.3 (public)
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
 
 call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
 
+3. There are some [optional filtering steps](#additional-filtering-steps-recommended) that are implemented in the docker: 
+```
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ugbio_filtering:1.14.0
+or
+337532070941.dkr.ecr.us-east-1.amazonaws.com/ugbio_filtering:1.14.0 (public)
+```
 
 ## Workflow details
 
@@ -161,10 +167,15 @@ Once the `ini` file is ready, call_variants can be invoked from within the docke
 call_variants --param params.ini --fp16
 ```
 
+#### Using a serialized engine file in call_variants
+
+TensorRT uses models stored in ONNX format. To reduce runtime overhead, it can use use a serialized TensorRT engine file (sometimes called a plan file).
+A serialized engine is optimized for a specific hardware and software configuration (e.g., GPU model, CUDA/cuDNN versions, TensorRT version). If you try to load it on a different configuration, it will fail with an error. When no serialized engine is available, call_variants will first build (serialize) the engine from the ONNX model and then run inference. The resulting serialized file can be saved and reused in subsequent runs on the same configuration.
+
 
 ### Running post_process:
 
-post_process uses the output of call_variants, `call_variants.tfrecord.gz`, and generates a vcf file. A typical post_process command from within the docker will look like:
+post_process uses the output of call_variants, `call_variants.tfrecord.gz`, and generates a vcf file. A typical post_process command from within the docker will look like (same docker as make_examples):
 ```
 ug_postproc \
   --infile call_variants.1.gz,call_variants.2.gz,... \
@@ -225,15 +236,19 @@ To do this, append the following parameters
 ```
 
 
-### Additional filtering steps recommended. 
+### Additional filtering steps recommended
+
 
 We recommend applying an additional post-processes filter. The filter is applied to the allele-frequency ratio between tumor and normal. It filters out loci with germline variants that changed allele-frequency in the tumor, as the model was not trained to filter them, making this inconsistent with some other somatic calling pipelines.
+
+Specifically, the command below filters out any SNV or Non-homopolymer indel variants where the ratio of allele frequency between the tumor and the normal variant is below 10.
 
 The process to applying this filter is:
 
 ```
-bcftools filter input.vcf.gz -e '(VARIANT_TYPE="snp" || VARIANT_TYPE="non-h-indel") && (AD[0:1]/DP)/(BG_AD[0:1]/BG_DP) < 10' -s "LowAFRatioToBackground" -m "+" -Oz -o  output.vcf.gz
-bcftools index -t output.vcf.gz
+  filter_low_af_ratio_to_background --af_ratio_threshold 10 \
+                                    --new_filter "LowAFRatioToBackground"  \
+                                    <input_vcf> <output_vcf>
 ```
 
 ## More applications
@@ -275,10 +290,21 @@ Calling from deep whole exome sequencing, at a coverage of 500x for tumor and at
   --cgp-min-fraction-non-hmer-indels 0.02 \
   --optimal-coverages "500;120" \
   --max-reads-per-region 6500 \
-  --prioritize-alt-supporting-reads
+  --prioritize-alt-supporting-reads \
+  --normalize-strand-bias \
+  --strand-bias-threshold-to-normalize 0.1,0.35
 ```
 Also, make sure you read variants only in exomic intervals.
 2. To the call_variants model:
 ```
 gs://concordanz/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx
 ```
+
+3. We recommend the following additional parameters to the [optional filtering steps](#additional-filtering-steps-recommended): 
+```
+      --af_ratio_threshold_h_indels 2 \
+      --tumor_vaf_threshold_h_indels 0.15
+```
+
+
+This addition filters out homopolymer indels where the ratio of allele frequency is below 2 and the tumor VAF of the variant is below 0.15.  

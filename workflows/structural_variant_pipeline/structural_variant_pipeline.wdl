@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.22.1" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -82,6 +82,7 @@ workflow SVPipeline {
         Boolean no_address = true
         Int? preemptible_tries_override
         Int? create_assembly_memory_override
+        Int? rematching_memory_override
         Int? annotate_variants_cpu_override
         Int? annotate_variants_memory_override
         Int? convert_vcf_format_memory_override
@@ -341,6 +342,11 @@ workflow SVPipeline {
             help: "memory override for create_assembly task",
             category: "advanced"
         }
+        rematching_memory_override: {
+            type: "Int",
+            help: "memory override for rematching task",
+            category: "advanced"
+        }
         annotate_variants_memory_override: {
             type: "Int",
             help: "memory override for annotate_variants task",
@@ -581,8 +587,47 @@ workflow SVPipeline {
 
     }
 
-    File assembly_file = LongHomopolymersAlignment.realigned_assembly
-    File assembly_file_index = LongHomopolymersAlignment.realigned_assembly_index
+    scatter (interval in ScatterIntervalList.out) {
+        call MatchReadsToHaplotypes {
+            input: 
+                germline_reads = input_germline_crams,
+                germline_reads_indexes = input_germline_crams_indexes,
+                tumor_reads = input_tumor_crams,
+                tumor_reads_indexes = input_tumor_crams_indexes,
+                assembly_bam = LongHomopolymersAlignment.realigned_assembly,
+                assembly_bam_index = LongHomopolymersAlignment.realigned_assembly_index,
+                base_file_name = base_file_name,
+                is_somatic = is_somatic,
+                min_indel_sc_size_to_include = min_indel_sc_size_to_include,
+                min_mismatch_count_to_include = min_mismatch_count_to_include,
+                min_mapq = min_mapq,
+                number_of_shards = ScatterIntervalList.interval_count,
+                rematching_interval = interval,
+                reference = references,
+                docker = global.rematching_docker,
+                preemptible_tries = preemptibles,
+                monitoring_script = monitoring_script,
+                no_address = no_address,
+                cloud_provider_override = cloud_provider_override,
+                memory_override = rematching_memory_override
+        }
+    }
+
+    call MergeMatchedReads {
+        input:
+            assembly_bam = LongHomopolymersAlignment.realigned_assembly,
+            assembly_bam_index = LongHomopolymersAlignment.realigned_assembly_index,
+            matched_reads_files = MatchReadsToHaplotypes.read_haplotype_assignment,
+            base_file_name = base_file_name,
+            reference = references,
+            docker = global.rematching_docker,
+            monitoring_script = monitoring_script,
+            preemptible_tries = preemptibles,
+            no_address = no_address 
+    }
+
+    File assembly_file = MergeMatchedReads.updated_assembly
+    File assembly_file_index = MergeMatchedReads.updated_assembly_index
 
     call IdentifyVariants {
         input:
@@ -776,14 +821,12 @@ workflow SVPipeline {
                 memory_override = convert_vcf_format_memory_override
         }
     }
+
     File output_vcf_ = select_first([GermlineLinkVariants.linked_vcf, SomaticGripss.gripss_vcf])
     File output_vcf_index_ = select_first([GermlineLinkVariants.linked_vcf_index, SomaticGripss.gripss_vcf_index])
+    
     if (create_md5_checksum_outputs) {
-        Array[File] output_files = select_all(flatten([
-                                                      select_first([[output_vcf_], []]),
-                                                      select_first([[output_vcf_index_], []]),
-                                                      ]))
-
+        Array[File] output_files = [output_vcf_, output_vcf_index_]
         scatter (file in output_files) {
             call UGGeneralTasks.ComputeMd5 as compute_md5 {
                 input:
@@ -805,8 +848,8 @@ workflow SVPipeline {
         File output_vcf_index = output_vcf_index_
         File assembly = MergeBams.output_bam
         File assembly_index = MergeBams.output_bam_index
-        File realigned_assembly = LongHomopolymersAlignment.realigned_assembly
-        File realigned_assembly_index = LongHomopolymersAlignment.realigned_assembly_index
+        File realigned_assembly = assembly_file
+        File realigned_assembly_index = assembly_file_index
         File? converted_vcf = ConvertVcfFormat.output_vcf
         File? converted_vcf_index = ConvertVcfFormat.output_vcf_index
 
@@ -1060,6 +1103,166 @@ task LongHomopolymersAlignment {
             File realigned_assembly = "~{output_bam_basename}.bam"
             File realigned_assembly_index = "~{output_bam_basename}.bam.bai"
         }
+}
+task MatchReadsToHaplotypes {
+    input {
+        References reference
+        File assembly_bam
+        File assembly_bam_index
+        Array[File] tumor_reads
+        Array[File] tumor_reads_indexes
+        Array[File] germline_reads
+        Array[File] germline_reads_indexes
+        Boolean is_somatic
+        String? min_indel_sc_size_to_include
+        String? min_mismatch_count_to_include
+        Int min_mapq
+        File rematching_interval
+        File monitoring_script
+        String base_file_name
+        Int number_of_shards
+        String docker
+        String? cloud_provider_override
+        Int preemptible_tries
+        Int? memory_override
+        Boolean no_address
+    }
+
+    Int disk_size = 3*ceil(size(germline_reads,"GB")/number_of_shards +
+                    (size(tumor_reads, "GB")/number_of_shards)  +
+                       size(reference.ref_fasta,"GB") + 10)
+    Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
+    Boolean defined_germline = if(length(germline_reads)>0) then true else false
+    Int mem = select_first([memory_override,4])
+
+    command <<<
+        set -o pipefail
+        set -ex
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        # convert interval list to bed file
+        gatk IntervalListToBed -I ~{rematching_interval} -O interval.bed
+
+        if ~{is_aws}
+        then
+            tumor=~{sep=',' tumor_reads}
+            germline=~{sep=',' germline_reads}
+
+            if ~{is_somatic}
+            then
+                input_string="~{true='$tumor;$germline' false='$tumor' defined_germline}"
+            else
+                input_string=$germline
+            fi
+
+            echo 'Input strings are:'
+            echo $input_string
+
+            sv_rematch -b interval.bed \
+            -j 2 -t -a \
+            -l '~{min_indel_sc_size_to_include}' \
+            -s '~{min_mismatch_count_to_include}' \
+            -m ~{min_mapq} \
+            $input_string \
+            ~{assembly_bam} \
+            ~{reference.ref_fasta} \
+            ~{base_file_name}_rematched_hap.txt
+
+        else
+            if ~{defined_germline}
+            then
+                gatk --java-options "-Xms2G" PrintReads \
+                -I ~{sep=' -I ' germline_reads} \
+                -O input_germline.cram \
+                -L ~{rematching_interval} \
+                -R ~{reference.ref_fasta}
+
+                samtools index input_germline.cram
+            fi
+
+            if ~{is_somatic}
+            then
+                gatk --java-options "-Xms2G" PrintReads \
+                -I ~{sep=' -I ' tumor_reads} \
+                -O input_tumor.cram \
+                -L ~{rematching_interval} \
+                -R ~{reference.ref_fasta}
+
+                samtools index input_tumor.cram
+            fi
+
+            sv_rematch -b interval.bed \
+            -j 2 -t -a \
+            ~{"-l '" + min_indel_sc_size_to_include + "'"} \
+            ~{"-s '" + min_mismatch_count_to_include + "'"} \
+            -m ~{min_mapq} \
+            ~{if is_somatic then (if defined_germline then "input_tumor.cram\\;input_germline.cram" else "input_tumor.cram") else "input_germline.cram"} \
+            ~{assembly_bam} \
+            ~{reference.ref_fasta} \
+            ~{base_file_name}_rematched_hap.txt
+        fi
+    >>>
+
+    parameter_meta {
+      tumor_reads: {
+          localization_optional: true
+      }
+      germline_reads: {
+          localization_optional: true
+      }
+    }
+    runtime {
+        memory: mem + " GiB"
+        cpu: 2
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }
+    output {
+        File monitoring_log = "monitoring.log"
+        File read_haplotype_assignment = "~{base_file_name}_rematched_hap.txt"
+    }
+}
+
+task MergeMatchedReads { 
+    input {
+        Array[File] matched_reads_files
+        File assembly_bam
+        File assembly_bam_index
+        References reference
+        String base_file_name
+        File monitoring_script
+        String docker
+        Int preemptible_tries
+        Boolean no_address
+    }
+    Int disk_size = ceil(2*size(matched_reads_files,"GB") + 2*size(assembly_bam,"GB")) + 10
+    command <<< 
+        set -o pipefail
+        set -ex
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        cat ~{sep=' ' matched_reads_files} > all_matches.txt
+        sv_rematch -M all_matches.txt \
+            ~{assembly_bam} \
+            ~{reference.ref_fasta} \
+            ~{base_file_name}_assembly.support.bam
+        samtools index ~{base_file_name}_assembly.support.bam
+    >>> 
+    runtime {
+        memory: "16 GiB"
+        cpu: 1
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }   
+    output {
+        File monitoring_log = "monitoring.log"
+        File updated_assembly = "~{base_file_name}_assembly.support.bam"
+        File updated_assembly_index = "~{base_file_name}_assembly.support.bam.bai"
+    }
 }
 
 task IdentifyVariants {

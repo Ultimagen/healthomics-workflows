@@ -12,6 +12,7 @@ task MrdDataAnalysis {
     MrdAnalysisParams mrd_analysis_params
     String basename
     File featuremap_df_file
+    File srsnv_metadata_json
     String docker
     Float disk_size
     Int memory_gb
@@ -32,7 +33,9 @@ task MrdDataAnalysis {
       --output-basename "~{basename}" \
       --signature-filter-query "~{mrd_analysis_params.signature_filter_query}" \
       --read-filter-query "~{mrd_analysis_params.read_filter_query}" \
-      --featuremap-file "~{featuremap_df_file}"
+      ~{true="--tumor-sample " false="" defined(mrd_analysis_params.tumor_sample)}~{mrd_analysis_params.tumor_sample} \
+      --featuremap-file "~{featuremap_df_file}" \
+      --srsnv-metadata-json "~{srsnv_metadata_json}"
 
   >>>
   runtime {
@@ -48,59 +51,6 @@ task MrdDataAnalysis {
     File signatures = "~{basename}.signatures.parquet"
     File mrd_analysis_html = "~{basename}.mrd_data_analysis.html"
     File tumor_fraction_h5 = "~{basename}.tumor_fraction.h5"
-  }
-}
-
-task SelectMRDQualitySNVs {
-  input {
-    String docker
-    String? base_file_name
-    File monitoring_script
-    File input_vcf
-    String? jexl_variant_selectors_for_mrd_snvs
-    String output_suffix = ".mrd_quality_snvs.vcf.gz"
-    Array[File]? exclude_regions
-    Array[File]? exclude_regions_index
-    Array[File]? include_regions
-    Array[File]? include_regions_index
-    Int preemptible_tries
-    Float disk_size
-    Int memory_gb
-    Int cpus
-  }
-  String base_file_name_ = select_first([base_file_name, basename(input_vcf)])
-  String output_file_name = base_file_name_ + output_suffix
-  command <<<
-    set -xeuo pipefail
-    bash ~{monitoring_script} | tee monitoring.log >&2 &
-    source ~/.bashrc
-    conda activate genomics.py3
-
-    bcftools index -t ~{input_vcf}
-    gatk \
-        SelectVariants -V ~{input_vcf} \
-        -O ~{output_file_name} \
-        -select "~{jexl_variant_selectors_for_mrd_snvs}" \
-        ~{true="-L " false="" defined(include_regions)}~{sep=" -L " include_regions} \
-        ~{true="-XL " false="" defined(exclude_regions)}~{sep=" -XL " exclude_regions} \
-        --interval-set-rule INTERSECTION \
-        --create-output-variant-index \
-        --java-options "-Xmx~{memory_gb-2}G -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10" \
-  >>>
-
-  runtime {
-    preemptible: preemptible_tries
-    docker: docker
-    cpu: cpus
-	  memory: "~{memory_gb} GB"
-    disks: "local-disk " + ceil(disk_size) + " HDD"
-    maxRetries: 1
-  }
-
-  output {
-    File monitoring_log = "monitoring.log"
-    File output_vcf = "~{output_file_name}"
-    File output_vcf_index = "~{output_file_name}.tbi"
   }
 }
 
@@ -129,10 +79,6 @@ task GenerateControlSignaturesFromDatabase {
       --n_synthetic_signatures ~{n_synthetic_signatures} \
       --ref_fasta ~{ref_fasta} \
       --output_dir ./
-
-    echo "********** Converting control signatures to dataframe **********"
-    find syn*.vcf.gz | \
-      xargs -P~{cpus} -I% sh -c "featuremap_to_dataframe -i %"
     echo "********** DONE **********"
 
   >>>
@@ -147,18 +93,21 @@ task GenerateControlSignaturesFromDatabase {
     File monitoring_log = "monitoring.log"
     Array[File] db_signatures = glob("syn*.vcf.gz")
     Array[File] db_signatures_indices = glob("syn*.vcf.gz.tbi")
-    Array[File] db_signatures_parquet = glob("*.parquet")
   }
 }
-
 
 task FeatureMapIntersectWithSignatures {
   input {
     File featuremap
     File featuremap_index
     Array[File]? matched_signatures
+    Array[File]? matched_signatures_indexes
     Array[File]? control_signatures
+    Array[File]? control_signatures_indexes
     Array[File]? db_signatures
+    Array[File]? matched_signatures_indices
+    Array[File]? control_signatures_indices
+    Array[File]? db_signatures_indices
     String docker
     Float disk_size
     Int memory_gb
@@ -179,48 +128,59 @@ task FeatureMapIntersectWithSignatures {
     if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_matched_signatures} ]]
     then
         echo "******** Processing matched signatures ********"
-        echo "******** 1/2 Run intersections ********"
-        echo ~{sep=" " matched_signatures} | tr " " $"\n" | sort | uniq | \
-          xargs -P~{cpus} -I% sh -c \
-          "intersect_featuremap_with_signature \
-          --featuremap ~{featuremap} \
-          --signature % \
-          --signature_type matched"
-      echo "******** 2/2 Converting to dataframes ********"
-      # the next command is not multiprocessed because it uses pyfaidx which is not multiprocessing-safe
-      find *.matched.intersection.vcf.gz | \
-        xargs -P~{cpus_featuremap_to_dataframe} -I% sh -c "featuremap_to_dataframe -i %"
+        echo "******** Run intersections ********"
+        for signature in ~{sep=" " matched_signatures}
+        do
+          featuremap_base=$(basename ~{featuremap})
+          signature_base=$(basename "$signature")
+          signature_type="matched"
+          output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
+          bcftools isec -n=2 -w1 ~{featuremap} "$signature" -Oz -o "$output_vcf" && bcftools index -t "$output_vcf"
+        done
     fi
 
     if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_control_signatures} ]]
     then
-      echo "******** Processing control signatures ********"
-      echo "******** 1/2 Run intersections ********"
-      echo ~{sep=" " control_signatures} | tr " " $"\n" | sort | uniq | \
-        xargs -P~{cpus} -I% sh -c \
-        "intersect_featuremap_with_signature \
-        --featuremap ~{featuremap} \
-        --signature % \
-        --signature_type control"
-      echo "******** 2/2 Converting to dataframes ********"
-      find *.control.intersection.vcf.gz | \
-        xargs -P~{cpus_featuremap_to_dataframe} -I% sh -c "featuremap_to_dataframe -i %"
+        echo "******** Processing control signatures ********"
+        echo "******** Run intersections ********"
+        for signature in ~{sep=" " control_signatures}
+        do
+          featuremap_base=$(basename ~{featuremap})
+          signature_base=$(basename "$signature")
+          signature_type="control"
+          output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
+          bcftools isec -n=2 -w1 ~{featuremap} "$signature" -Oz -o "$output_vcf" && bcftools index -t "$output_vcf"
+        done
     fi
 
     if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_db_signatures} ]]
     then
-      echo "******** Processing db control signatures ********"
-      echo "******** 1/2 Run intersections ********"
-      echo ~{sep=" " db_signatures} | tr " " $"\n" | sort | uniq | \
-        xargs -P~{cpus} -I% sh -c \
-        "intersect_featuremap_with_signature \
-        --featuremap ~{featuremap} \
-        --signature % \
-        --signature_type db_control"
-      echo "******** 2/2 Converting to dataframes ********"
-      find *.db_control.intersection.vcf.gz | \
-        xargs -P~{cpus_featuremap_to_dataframe} -I% sh -c "featuremap_to_dataframe -i %"
+        echo "******** Processing db control signatures ********"
+        echo "******** Run intersections ********"
+        for signature in ~{sep=" " db_signatures}
+        do
+          featuremap_base=$(basename ~{featuremap})
+          signature_base=$(basename "$signature")
+          signature_type="db_control"
+          output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
+          bcftools isec -n=2 -w1 ~{featuremap} "$signature" -Oz -o "$output_vcf" && bcftools index -t "$output_vcf"
+        done
     fi
+
+    echo "******** 2/2 Converting to dataframes ********"
+    find *.intersection.vcf.gz | \
+    for signature_vcf in $(cat) 
+      do
+        # check if vcf is empty
+        number_of_lines=$(bcftools view "$signature_vcf" -H | wc -l)
+        if [[ $number_of_lines -eq 0 ]]; then
+          echo "Skipping empty VCF: $signature_vcf"
+          continue
+        fi
+        output_parquet="${signature_vcf%.vcf.gz}.parquet"
+        echo "Converting $signature_vcf to dataframe: $output_parquet"
+        featuremap_to_dataframe --in "$signature_vcf" --out "$output_parquet" --jobs ~{cpus_featuremap_to_dataframe} --drop-format AD GT
+      done
 
     echo "******** DONE ********"
   >>>
@@ -238,204 +198,6 @@ task FeatureMapIntersectWithSignatures {
     Array[File] intersected_featuremaps_parquet = glob("*.parquet")
   }
 }
-
-
-task TrainSnvQualityRecalibrationModel {
-  input {
-    String basename
-    File sorter_json_stats_file
-    File hom_snv_featuremap
-    File hom_snv_featuremap_index
-    File singleton_snv_featuremap
-    File singleton_snv_featuremap_index
-    SingleReadSNVParams single_read_snv_params
-    Map[String, Array[String]] categorical_features
-    File hom_snv_regions_bed
-    File single_substitution_regions_bed
-    References references
-    String flow_order
-    Boolean raise_exceptions_in_report
-    File monitoring_script
-    String docker
-    String? pipeline_version
-    Int preemptible_tries
-    Int cpus = 1
-    Float memory_gb = 16
-    Float disk_size = ceil(size(hom_snv_featuremap, "GB") + size(singleton_snv_featuremap, "GB")+ size(references.ref_fasta, "GB") + 30)
-  }
-  Boolean random_split = single_read_snv_params.split_folds_by=="random"
-  command <<<
-    set -xeuo pipefail
-    bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-    start_task=$(date +%s)
-    echo "***************************** Create parameters json file *****************************"
-    
-
-    # Create a json file with parameters for the model
-    python <<CODE
-    import json
-    
-    with open("~{write_json(single_read_snv_params)}", "r") as f1, open("~{write_json(categorical_features)}", "r") as f2, open("single_read_snv_params.json", "w") as f3: 
-      data1 = json.load(f1)
-      data2 = json.load(f2)
-      if isinstance(data2, list):  # this is how write_json works in Cromwell - "[{'left': 'ref', 'right': ['A', 'C', 'G', 'T']}, ...]"
-        data1["categorical_features"] = {entry["left"]: entry["right"] for entry in data2}
-      else:  # this is how write_json works in Omics - "{'ref': ['A', 'C', 'G', 'T'], ...}"
-        data1["categorical_features"] = data2
-      if len("~{pipeline_version}") > 0:
-        data1["pipeline_version"] = "~{pipeline_version}"
-      data1["docker"] = "~{docker}"
-      ppmSeq_adapter_version = "~{single_read_snv_params.ppmSeq_adapter_version}"
-      if len(ppmSeq_adapter_version) > 0:
-        data1["ppmSeq_adapter_version"] = ppmSeq_adapter_version
-      json.dump(data1, f3, indent=4)
-    CODE
-    echo "DEBUG - single_read_snv_params.json file:"
-    cat single_read_snv_params.json
-
-    echo "***************************** Running Train Snv Quality Recalibration Model *****************************"
-    srsnv_training \
-    --hom_snv_featuremap ~{hom_snv_featuremap} \
-    --single_substitution_featuremap ~{singleton_snv_featuremap} \
-    --dataset_params_json_path single_read_snv_params.json \
-    --flow_order "~{flow_order}" \
-    --reference_fasta "~{references.ref_fasta}" \
-    --reference_dict "~{references.ref_dict}" \
-    --cram_stats_file "~{sorter_json_stats_file}" \
-    --hom_snv_regions "~{hom_snv_regions_bed}" \
-    --single_sub_regions "~{single_substitution_regions_bed}" \
-    ~{true="--raise_exceptions_in_report" false="" raise_exceptions_in_report} \
-    --output "$PWD" \
-    --basename "~{basename}"
-    
-    end=$(date +%s)
-    mins_elapsed=$(( (end - start_task) / 60 ))
-    secs_elapsed=$(( (end - start_task) % 60 ))
-    if [ $secs_elapsed -lt 10 ]; then
-      secs_elapsed=0$secs_elapsed
-    fi
-    echo "Run time: $mins_elapsed:$secs_elapsed"
-
-    ls -ltr
-
-  >>>
-  runtime {
-    preemptible: "~{preemptible_tries}"
-    cpu: "~{cpus}"
-    memory: "~{memory_gb} GB"
-    disks: "local-disk " + ceil(disk_size) + " HDD"
-    docker: docker
-  }
-  output{
-    File monitoring_log = "monitoring.log"
-    File model_file = "~{basename}.model.joblib"
-    File featuremap_df_file = "~{basename}.featuremap_df.parquet"
-    File params_file = "~{basename}.params.json"
-    File test_set_mrd_simulation_dataframe = "~{basename}.test.df_mrd_simulation.parquet"
-    File test_set_statistics_h5 = "~{basename}.single_read_snv.applicationQC.h5"
-    File test_set_statistics_json = "~{basename}.test.statistics.json"
-    File test_report_file_html = "~{basename}.test_report.html"
-  }
-}
-
-
-task InferenceSnvQualityRecalibrationModel {
-  input {
-    File model_file
-    File featuremap
-    File featuremap_index
-    String output_file
-    File monitoring_script
-    String docker
-    Int preemptible_tries
-    Int cpus = 8
-    Float memory_gb = 8
-    Float disk_size = ceil(3 * size(featuremap, "GB") + 30)
-  }
-
-  command <<<
-    bash ~{monitoring_script} | tee monitoring.log >&2 &
-    set -eo pipefail
-
-    echo "***************************** Running Inference Snv Quality Recalibration Model *****************************"
-    start_task=$(date +%s)
-
-    srsnv_inference \
-    --featuremap_path "~{featuremap}" \
-    --model_joblib_path "~{model_file}" \
-    --output_path "~{output_file}" \
-    --process_number ~{cpus}
-
-    end=$(date +%s)
-    mins_elapsed=$(( (end - start_task) / 60 ))
-    secs_elapsed=$(( (end - start_task) % 60 ))
-    if [ $secs_elapsed -lt 10 ]; then
-      secs_elapsed=0$secs_elapsed
-    fi
-    echo "Run time: $mins_elapsed:$secs_elapsed"
-  >>>
-  runtime {
-    preemptible: "~{preemptible_tries}"
-    cpu: "~{cpus}"
-    memory: "~{memory_gb} GB"
-    disks: "local-disk " + ceil(disk_size) + " HDD"
-    docker: docker
-  }
-  output {
-    File monitoring_log = "monitoring.log"
-    File featuremap_with_qual = "~{output_file}"
-    File featuremap_with_qual_index = "~{output_file}.tbi"
-  }
-}
-
-
-task CreateHomSnvFeatureMap {
-  input {
-      File featuremap
-      File featuremap_index
-      File? sorter_json_stats_file
-      String base_file_name
-      Float min_af
-      Int min_coverage
-      Float disk_size = ceil(size(featuremap, "GB") * 2 + 20)
-      Float memory_gb = 2
-      Int cpus = 1
-      String docker
-      Int preemptibles
-      File monitoring_script
-    }
-
-  String hom_snv_vcf = "~{base_file_name}.hom_snv.vcf.gz"
-
-  command <<<
-    set -eo pipefail
-    bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-    create_hom_snv_featuremap \
-      --featuremap ~{featuremap} \
-      ~{true="--sorter_stats_json " false="" defined(sorter_json_stats_file)} ~{sorter_json_stats_file} \
-      --hom_snv_featuremap ~{hom_snv_vcf} \
-      --requested_min_coverage ~{min_coverage} \
-      --min_af ~{min_af} 
-
-  >>>
-
-  runtime {
-    preemptible: "~{preemptibles}"
-    cpu: "~{cpus}"
-    memory: "~{memory_gb} GB"
-    disks: "local-disk " + ceil(disk_size) + " HDD"
-    docker: docker
-  }
-  output{
-    File monitoring_log = "monitoring.log"
-    File hom_snv_featuremap = "~{hom_snv_vcf}"
-    File hom_snv_featuremap_index = "~{hom_snv_vcf}.tbi"
-  }
-
-}
- 
 
 task BedIntersectAndExclude {
     input {
@@ -485,7 +247,7 @@ task MergeVcfsIntoBed {
       File monitoring_script
     }
     command <<<
-      set -xeo pipefail
+      set -xe
       bash ~{monitoring_script} | tee monitoring.log >&2 &
 
       echo "Combining all the VCF loci into one BED file..."
@@ -540,7 +302,7 @@ task ExtractCoverageOverVcfFiles {
       File input_cram_bam
       File input_cram_bam_index
       String base_file_name
-      Int mapping_quality_threshold = 60  
+      Int mapping_quality_threshold = 0 
       References references
       String docker
       Int memory_gb
@@ -577,52 +339,6 @@ task ExtractCoverageOverVcfFiles {
       disks: "local-disk " + ceil(disk_size) + " HDD"
       docker: docker
     }
-}
-
-task PileupFeatureMapInterval {
-  input {
-    File featuremap
-    File featuremap_index
-    String output_vcf_file_name
-    File interval_list
-    Int disk_size
-    Int memory_gb
-    Int cpus
-    Int preemptibles
-    Int? min_qual
-    String? sample_name
-    String? qual_agg_func
-    File monitoring_script
-    String docker
-  }
-
-  command <<<
-    set -eo pipefail
-    bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-    echo "********** Pileups featuremap into a single locus per entry **********"
-    pileup_featuremap \
-      --featuremap ~{featuremap} \
-      --interval_list ~{interval_list} \
-      --output_vcf "~{output_vcf_file_name}.vcf.gz" \
-      ~{true="--min_qual " false="" defined(min_qual)}~{min_qual} \
-      ~{true="--sample_name " false="" defined(sample_name)}~{sample_name} \
-      ~{true="--qual_agg_func " false="" defined(qual_agg_func)}~{qual_agg_func}\
-  >>>
-
-  runtime {
-    preemptible: "~{preemptibles}"
-    cpu: "~{cpus}"
-    memory: "~{memory_gb} GB"
-    disks: "local-disk " + ceil(disk_size) + " HDD"
-    docker: docker
-  }
-
-  output {
-    File monitoring_log = "monitoring.log"
-    File pileup_file = "~{output_vcf_file_name}.vcf.gz"
-    File pileup_file_index = "~{output_vcf_file_name}.vcf.gz.tbi"
-  }
 }
 
 task AddAggregatedVariablesAndXgbScoreToPileupFeaturemap
@@ -672,6 +388,7 @@ task AddAggregatedVariablesAndXgbScoreToPileupFeaturemap
 task PadVcf {
   input {
     File input_vcf
+    File ref_fai
     String docker
     Int pad_size 
     Int preemptible_tries
@@ -698,9 +415,8 @@ task PadVcf {
     }' | gzip > variants.bed.gz
     
     echo "Create a genome file for bedtools slop (chromosome sizes)"
-    # We'll extract this from the VCF header
-    bcftools view -h ~{input_vcf} | grep "^##contig" | \
-      sed 's/##contig=<ID=//;s/,length=/\t/;s/>//' > genome.txt
+    # extract genome file from ref_fasta_index (.fai)
+    cut -f1,2 ~{ref_fai} > genome.txt
     head genome.txt
     
     echo "Pad the bed file using bedtools slop"

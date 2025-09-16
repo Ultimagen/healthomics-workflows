@@ -81,25 +81,25 @@ bedtools map \
 	> {sample_name}.win.bedGraph
 
 
-Rscript --vanilla /src/cnv/cnmops/convert_bedGraph_to_Granges.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/convert_bedGraph_to_Granges.R \
 	-i {sample_name}.win.bedGraph \
 	-sample_name {sample_name}
 ```
 
 ### cn.mops: Add sample coverage profile to the cohort
 ```
-Rscript --vanilla /src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
 	-cohort_rc HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds \
 	-sample_rc {sample_name}.ReadCounts.rds
 ```
 
 #### cn.mops: Run cn.mops to call CNVs
 ```
-Rscript --vanilla /src/cnv/cnmops/normalize_reads_count.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/normalize_reads_count.R \
 	--cohort_reads_count_file merged_cohort_reads_count.rds \
     --ploidy HapMap2_65samples_cohort_v2.0.plus_female.ploidy
 	
-Rscript --vanilla /src/cnv/cnmops/cnv_calling_using_cnmops.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/cnv_calling_using_cnmops.R \
 	-cohort_rc cohort_reads_count.norm.rds \
 	-minWidth 1000 \
 	--save_csv

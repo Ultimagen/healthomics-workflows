@@ -1,631 +1,424 @@
-# Single Read SNV (SRSNV) pipeline
+<div style="font-size: 250%; font-weight: bold; text-align: center;">
+Single Read SNV (SRSNV) pipeline (v1.23.0)
+</div>
 
-## Table of Contents
-- [Single Read SNV (SRSNV) pipeline](#single-read-snv-srsnv-pipeline)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Naming convention](#naming-convention)
-  - [Reference data files](#reference-data-files)
-    - [hg38 reference genome](#hg38-reference-genome)
-    - [Interval list - region in which FeatureMap is generated](#interval-list---region-in-which-featuremap-is-generated)
-    - [Model training bed and vcf files](#model-training-bed-and-vcf-files)
-      - [Regions used for TP training data](#regions-used-for-tp-training-data)
-      - [Regions used for FP training data](#regions-used-for-fp-training-data)
-  - [Variables](#variables)
-    - [Input files and names](#input-files-and-names)
-    - [Main outputs](#main-outputs)
-    - [Intermediate/advanced outputs](#intermediateadvanced-outputs)
-  - [Running the SRSNV pipline without the WDL](#running-the-srsnv-pipline-without-the-wdl)
-    - [Fetching dockers](#fetching-dockers)
-    - [Manual installation](#manual-installation)
-      - [GATK and Picard](#gatk-and-picard)
-      - [ugbio-utils repository](#ugbio-utils-repository)
-    - [Pipeline structure](#pipeline-structure)
-    - [Featuremap](#featuremap)
-      - [Split IntervalList](#split-intervallist)
-        - [Output files:](#output-files)
-      - [Create FeatureMap:](#create-featuremap)
-        - [Output files:](#output-files-1)
-      - [Annotate FeatureMap:](#annotate-featuremap)
-        - [Output files:](#output-files-2)
-      - [Merge FeatureMap parts](#merge-featuremap-parts)
-        - [Output files:](#output-files-3)
-      - [Generate a FeatureMap of single substitutions:](#generate-a-featuremap-of-single-substitutions)
-        - [Output files:](#output-files-4)
-    - [CreateHomSnvFeatureMap](#createhomsnvfeaturemap)
-        - [Output files:](#output-files-5)
-    - [BedIntersectAndExclude](#bedintersectandexclude)
-        - [Output files:](#output-files-6)
-    - [TrainSnvQualityRecalibrationModel](#trainsnvqualityrecalibrationmodel)
-        - [Output files:](#output-files-7)
-    - [InferenceSnvQualityRecalibrationModel](#inferencesnvqualityrecalibrationmodel)
-        - [Output files:](#output-files-8)
-  - [Detailed explanation of keys output files](#detailed-explanation-of-keys-output-files)
-    - [output\_featuremap](#output_featuremap)
-    - [featuremap\_df\_file](#featuremap_df_file)
-    - [Model joblib file](#model-joblib-file)
-  - [Model training features and filter](#model-training-features-and-filter)
-  - [Details of ML model Cross-Validation scheme](#details-of-ml-model-cross-validation-scheme)
-    - [Training with train/test split](#training-with-traintest-split)
-    - [Training with k-fold CV](#training-with-k-fold-cv)
-  - [References](#references)
+<div style="font-size: 150%; font-weight: bold; text-align: left;">
+Table of Contents
+</div>
 
+- [Introduction](#introduction)
+  - [SNV denoising and quality recalibration](#snv-denoising-and-quality-recalibration)
+  - [Training set preparation](#training-set-preparation)
+  - [Data filtering](#data-filtering)
+    - [Genomic region filters](#genomic-region-filters)
+    - [Alignment filters](#alignment-filters)
+    - [Quality filters](#quality-filters)
+  - [List of FeatureMap fields](#list-of-featuremap-fields)
+- [Variables (WDL inputs/outputs)](#variables-wdl-inputsoutputs)
+  - [Primary inputs](#primary-inputs)
+  - [Model / training control inputs](#model--training-control-inputs)
+  - [Key outputs](#key-outputs)
+- [Pipeline overview](#pipeline-overview)
+  - [FeatureMap generation with snvfind](#featuremap-generation-with-snvfind)
+  - [Coverage gate and model decision](#coverage-gate-and-model-decision)
+  - [Preparing training datasets](#preparing-training-datasets)
+  - [Model training (srsnv\_training)](#model-training-srsnv_training)
+  - [Inference (snvqual)](#inference-snvqual)
+  - [Reporting (srsnv\_report)](#reporting-srsnv_report)
+- [Manual execution (outside WDL)](#manual-execution-outside-wdl)
+  - [Environment / dockers](#environment--dockers)
+  - [Step-by-step commands](#step-by-step-commands)
+- [FeatureMap content \& quality scores](#featuremap-content--quality-scores)
+- [Training feature set \& filters](#training-feature-set--filters)
+  - [single\_read\_snv\_params JSON example (updated)](#single_read_snv_params-json-example-updated)
+  - [Explanation of important parameters](#explanation-of-important-parameters)
+- [Cross-validation scheme](#cross-validation-scheme)
+  - [Train/test split (num\_CV\_folds=1)](#traintest-split-num_cv_folds1)
+  - [K-fold CV (num\_CV\_folds\>=2)](#k-fold-cv-num_cv_folds2)
+- [Model files](#model-files)
+- [When qualities are NOT assigned](#when-qualities-are-not-assigned)
 
 ## Introduction
-This document describes the UG Single Read SNV (SRSNV) calling pipeline, which is a tool for assessing the quality of individual base substitutions, denoted SNVs for convenience, compared to the reference genome. Each SNV reported from a CRAM file is reported in a custom VCF file denoted as FeatureMap, using the gatk FlowFeatureMapper tool. The FeatureMap is a VCF file that contains a record for each SNV in each read, so that multiple entries per locus are possible, with additional information about the SNV and about the read encoded as INFO fields. Additionally, a machine learning model is trained on these features to assign an SNV quality score, saved as the QUAL field of each SNV in the FeatureMap. 
 
-SNVQ is a more precise quality metric than BQ, calculated per alt rather than aggregated across the three options. BQ, the standard substitution quality metric, measures the likelihood of any ALT at a given locus, which is inherently lossy. SNVQ, on the other hand, measures the likelihood of each ALT at a given locus, which is more precise.
+### SNV denoising and quality recalibration
+The Single Read SNV (SRSNV) pipeline is a read-centric de-noising framework, developed to overcome the limitations of traditional locus-centric variant calling, particularly in scenarios where rare mutations may be supported by only a single read. These rare mutations need to be distinguished from artefactual SNVs, which can derive from sequencing, library or alignment errors. To achieve this, we employed a supervised machine learning model trained to classify actual SNVs (labelled True or TP) from noise (False or FP). First, a comprehensive dataset capturing every candidate SNV is generated, along with a rich suite of annotations that describe sequencing quality, local sequence motifs, fragment-specific features, and locus-specific information. Randomly selected bases in the data matching the reference genome are collected and annotated as True, while low VAF (≤5%) SNVs in high-coverage (≥20×) regions (SNVs with low support, indicating they are likely to be artifacts) are annotated as False SNVs. Using these curated sets, we train an XGBoost classifier to robustly distinguish between true and artifactual SNVs. Once trained, the classifier assigns a calibrated quality score to each SNV in the input CRAM, providing a precise estimate of the residual error rate. To avoid overfitting, an ensemble of models (3) are trained on different sets of chromosomes and applied using a cross-validation scheme. 
 
-The SRSNV pipeline is composed of the following stages:
-1. Featuremap is created (potentially done in parallel over genomic intervals and merged) using gatk FlowFeatureMapper
-2. Featuremap is annotated with additional features (e.g. softclip length, reference context, etc.) 
-3. Training the ML model on the annotated FeatureMap:
-  
-    a. FeatureMap is split into two groups - SNV supporting homozygous SNVs used as TP, and SNV supported by 1 read only in a high coverage locus used as FP
-  
-    b. ML classifier model trained, by default XGBoost is used
-  
-    c. Predicted probabilities from model are calibrated to an SNV quality score (estimated residual SNV rate)
-4. Applying the model to all the entries, creating the final output FeatureMap with SNVQ values
+We now provide detailed information on the denoising procedure outlined below.
 
-This documents describes the pipeline, its inputs and outputs, and how to run it. 
+### Training set preparation
+First, all the SNVs in the input data (CRAM file) are exported to a vcf file denoted a FeatureMap (f1), where multiple annotation for every read supporting each SNV are collected. Additionally, a random sample of bases is collected and exported in the same format to a separate file (f2). Then, a series of filters is applied to each file, as detailed below, leaving in only high quality data. Finally, the randomly sample bases in f2 are filtered for bases matching the reference genome, which and annotated as True, and the SNVs in f1 are filtered for low VAF (≤5%) and high-coverage (≥20×) and annotated as False. 
 
+### Data filtering
+The filtering cascade described above incorporates both **hard** and **soft** filters. **Hard filters** remove SNVs entirely from the output VCF file. **Soft filters**, by contrast, retain SNVs in the VCF and assign them a quality score, but annotate them as filtered (FORMAT/FILT=0). Downstream analyses should therefore treat soft-filtered SNVs with caution. The effects of all filters on the randomly sampled bases are summarized in an output metadata file to support quality control (QC) and normalization. The default filters are described below.
 
-## Naming convention
-Arguments annotated with curly brackets below indicate an internal variable name, e.g. {ref_fasta} indicates the 
-reference fasta file and {input_cram_bam} indicates the input CRAM (or BAM) file.
+#### Genomic region filters
+Training data was filtered for SNVs included in the Ultima Genomics High Confidence Region in chromosomes 1-22. The UG high-confidence region (HCR) covers >99% of the GIAB v4.2.1 HCR and excludes genomic areas where UG performance is consistently of lower confidence, such as regions of low complexity (see [ug_hcr.md](https://github.com/Ultimagen/healthomics-workflows/blob/main/docs/ug_hcr.md)). Homopolymer regions of length >7 bp are also excluded. Additionally, SNVs represented in dbsnp or in gnomAD with AF>0.001 were excluded to avoid risk of germline contamination introducing labeling noise.
 
-For a list of input separated by spaces, {sep=" " include_regions} is used.
+#### Alignment filters
+Only reads with a mapping quality of 60 (maximal value in the aligner) are used in the model training set. From these reads, all SNVs with respect to the reference genome, where the adjacent bases (5) from the respective SNV match the reference genome, are extracted to a separate VCF file. The adjacent base filter is intended to avoid calling compound homopolymer errors as SNVs. For example, consider the following read: \
+`REF : ACCGT (1A 2C 1G 1T)` \
+`READ: ACGTT (1A 1C 1G 2T)` \
+The difference from the reference can be interpreted as either two homopolymer (hmer) errors (2->1C & 1->2T) or as two SNVs (C->G & G->T). While the former is significantly more prevalent in Ultima Genomics data, the latter is generally preferred by most aligners, including the Ultima Aligner. To avoid these alignment errors being interpreted as true SNVs, the adjacent base filter is applied. Additionally, this filter is applied as a hard filter by default, leaving those mismatches out of the FeatureMap vcf, as they otherwise account for the majority of entries and bloat the file size.
 
-
-## Reference data files
-
-### hg38 reference genome
-{ref_fasta}: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
-
-{ref_fasta_fai}: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
-
-{ref_dict}: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
-
-or 
-
-{ref_fasta}: s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
-
-{ref_fasta_fai}: s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
-
-{ref_dict}: s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict
-
-### Interval list - region in which FeatureMap is generated
-{interval_list}: gs://concordanz/hg38/wgs_calling_regions.without_encode_blacklist.interval_list
-
-or
-
-{interval_list}: s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.interval_list
-
-### Model training bed and vcf files
-
-SNVs are collected and annotated in as either ground truth True Positives (TP) or False Positives (FP), and the SRSNV model is then trained to distinguish between the two. Genomic regions used for training data collection can be specified for TP and FP separately, allowing for some flexibility in application. By default both models are limited to the UG HCR and hmers of length 7 or more are discarded. Additionally, a curated subset of the PCAWG mutation database is excluded to allow an evalutation of the results over these regions, often used to demonstrate the error rate in a human WG sample [Cheng 2022]. Additionally, common population variants from the dbsnp and gnomAD databases are excluded from the FP training set, to avoid misidentified germline variants or contamination reads from skewing the ground truth data.
-
-Genomic region filtering can be modified by the user (e.g. by excluding a specific chromosome) or effectively disabled by removing the exclude regions and setting the include regions to span the entire genome, e.g. gs://concordanz/hg38/wgs_calling_regions.hg38.bed or s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38.bed.
-
-#### Regions used for TP training data
-
-{include_regions_tp}:
-- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr_autosomal.bed
-
-or
-
-- s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr_autosomal.bed
-
-{exclude_regions_tp}:
-- gs://concordanz/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
-- gs://concordanz/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
-
-or
-
-- s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
-- s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
-
-#### Regions used for FP training data
-
-{include_regions_fp}:
-- gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed
-
-or
-
-- s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
-
-{exclude_regions_fp}:
-- gs://concordanz/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
-- gs://concordanz/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
-- gs://concordanz/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz
-- gs://concordanz/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz
-
-or
-
-- s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.chr1-22XY.bed
-- s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz
-- s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz
-- s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz
-
-***Note 1 - for cfDNA samples from cancer patients, it is recommended to add the somatic mutation vcf (signature) to the fp exclude regions to avoid true cancer mutations present in the cfDNA being used as FP training examples***
-
-***Note 2 - you can add any bed or vcf.gz file with loci of interest to exclude from model training***
-
-***Note 3 - some files appear in two lists***
+#### Quality filters
+Reads with a low base calling scores (BCSQ<40) are soft-filtered and not included in the training set. Additionally, reads with high edit distances (Levenshtein) with respect to the reference genome (EDIST≥10) are excluded. Lastly, entries where the alt allele create a long homopolymer (>7) are excluded. For example, this SNV would be soft-filtered: \
+`REF : CTTTTGTTTTA` \
+`READ: CTTTTTTTTTA` \
+Because the ALT allele is contained in a 9T homopolymer. Note that the equivalent filter for reference homopolymers is applied as a genomic region filter.
 
 
-## Variables
+### List of FeatureMap fields
+Multiple values are reported in the FeatureMap output, comprised of the following types:
+1. Variant features in INFO. These describe the variant itself regardless of sample and specific reads. Example - the reference base preceding the variant.
+2. Sample features in FORMAT, Number=1/A (see below). These describe features that are specific to a given sample, but do not describe specific reads. Example - read depth.
+3. Read features in FORMAT, Number=. (see below). These describe features that are specific to every read supporting the alt, given as lists that are all the same size within a reported variant. Example - read length. Can contain values copied from CRAM tags.
 
-### Input files and names
-* {input_cram_bam}: input cram file
-* {input_cram_bam_index}: index of input cram file
-* {sorter_json_stats_file}: json file with UG cram statistics generated jointly, same basename with a json extension
-* {base_file_name}: the base file name of the output files and plot titles
+Below is a detailed table describing the various fields, as also described in the header of every output FeatureMap vcf.
 
-### Main outputs
-* {output_featuremap}: FeatureMap vcf.gz file with all the annotations and SNVQ values, and a respective .tbi index file
-* {model_file}: the ML model(s) and metadata required for inference, saved with joblib
-* {params_file}: the ML model parameters file saved as json
-* {test_set_statistics_h5}: statistics of the test set used for model evaluation, saved as h5
-* {test_report_file_html}: html report of the test set used for model evaluation
+| Name        | Legacy (<V1.23.0) equivalent  | Where   | Number*| Type    | Description                                                                                            |
+|-------------|-------------------------------|---------|--------|---------|--------------------------------------------------------------------------------------------------------|
+| X_PREV1     | prev_1                        | INFO    | 1      | String  | Reference base at position POS-1 {A,C,G,T}**                                                           |
+| X_NEXT1     | next_1                        | INFO    | 1      | String  | Reference base at position POS+1 {A,C,G,T}**                                                           |
+| X_PREV2     | prev_2                        | INFO    | 1      | String  | Reference base at position POS-2 {A,C,G,T}**                                                           |
+| X_NEXT2     | next_2                        | INFO    | 1      | String  | Reference base at position POS+2 {A,C,G,T}**                                                           |
+| X_PREV3     | prev_3                        | INFO    | 1      | String  | Reference base at position POS-3 {A,C,G,T}**                                                           |
+| X_NEXT3     | next_3                        | INFO    | 1      | String  | Reference base at position POS+3 {A,C,G,T}**                                                           |
+| X_HMER_REF  | hmer_context_ref              | INFO    | 1      | Integer | Homopolymer context in the ref allele (up to length 20)                                                |
+| X_HMER_ALT  | hmer_context_alt              | INFO    | 1      | Integer | Homopolymer context in the alt allele (up to length 20)                                                |
+| DP          | X_READ_COUNT                  | FORMAT  | 1      | Integer | Number of reads containing this location                                                               |
+| DP_FILT     | X_FILTERED_COUNT              | FORMAT  | 1      | Integer | Number of reads containing this location that pass the adjacent base filter                            |
+| DP_MAPQ60   |                               | FORMAT  | 1      | Integer | Number of reads with mapping quality ≥ 60                                                              |
+| RAW_VAF     |                               | FORMAT  | 1      | Float   | Raw VAF := N_alt_reads/N_total_reads                                                                   |
+| VAF         |                               | FORMAT  | 1      | Float   | VAF := N_alt_reads/(N_ref_reads+N_alt_reads)                                                           |
+| AD          |                               | FORMAT  | A      | Integer | Number of reads supporting the reference allele in locus                                               |
+| AD_A        |                               | FORMAT  | 1      | Integer | Number of reads supporting the base A in locus                                                         |
+| AD_C        |                               | FORMAT  | 1      | Integer | Number of reads supporting the base C in locus                                                         |
+| AD_G        |                               | FORMAT  | 1      | Integer | Number of reads supporting the base G in locus                                                         |
+| AD_T        |                               | FORMAT  | 1      | Integer | Number of reads supporting the base T in locus                                                         |
+| AD_DEL      |                               | FORMAT  | 1      | Integer | Number of reads supporting a deletion in locus                                                         |
+| AD_INS      |                               | FORMAT  | 1      | Integer | Number of reads supporting an adjacent insertion in locus                                              |
+| BCSQ        | X_SCORE                       | FORMAT  | .      | Integer | Base calling error likelihood in calling the SNV, in Phred scale                                       |
+| BCSQCSS     |                               | FORMAT  | .      | Integer | Cycle Skip Size when computing base calling error likelihood                                           |
+| RL          | X_LENGTH                      | FORMAT  | .      | Integer | Read length (post adapter trimming)                                                                    |
+| INDEX       | X_INDEX                       | FORMAT  | .      | Integer | Position in the read of the SNV relative to read start                                                 |
+| RN          | X_RN                          | FORMAT  | .      | String  | Query (read) name                                                                                      |
+| DUP         | is_duplicate                  | FORMAT  | .      | Integer | Is the read a duplicate, interpreted from CRAM flag                                                    |
+| REV         | is_forward                    | FORMAT  | .      | Integer | Is the read mapped to the reverse strand, interpreted from CRAM flag                                   |
+| SCST        | ~max_softclip_length          | FORMAT  | .      | Integer | Softclip length in the start of the read (synthesis direction)                                         |
+| SCED        | ~max_softclip_length          | FORMAT  | .      | Integer | Softclip length in the end of the read (synthesis direction)                                           |
+| MAPQ        | X_MAPQ                        | FORMAT  | .      | Integer | Read mapping quality                                                                                   |
+| EDIST       | X_EDIST                       | FORMAT  | .      | Integer | Read Levenshtein edit distance from the reference                                                      |
+| HAMDIST     | X_FC1                         | FORMAT  | .      | Integer | Hamming distance (SNVs only, disregarding indels) from the reference                                   |
+| HAMDIST_FILT| X_FC2                         | FORMAT  | .      | Integer | Filtered Hamming distance (SNVs passing adjacent base filter)                                          |
+| SMQ_BEFORE  | X_SMQ_LEFT_MEAN               | FORMAT  | .      | Integer | Mean quality of 20 bases before the locus                                                              |
+| SMQ_AFTER   | X_SMQ_RIGHT_MEAN              | FORMAT  | .      | Integer | Mean quality of 20 bases after the locus                                                               |
+| ADJ_REF_DIFF|                               | FORMAT  | .      | Integer | The 5 adjacent bases to the locus do not fully match reference genome (if 0 the SNV passes)            |
+| tm          | tm                            | FORMAT  | .      | String  | Trimming reasons {A,AQ,AQZ,AZ,Q,QZ,Z}                                                                  |
+| a3          | a3                            | FORMAT  | .      | Integer | Start position in input of segment "A-tailing and native adapter"                                      |
+| rq          | rq                            | FORMAT  | .      | Float   | Read quality (copied from CRAM tag)                                                                    |
+| st          | st                            | FORMAT  | .      | String  | Name of pattern matched in segment "Start_loop" {MIXED,MINUS,PLUS,UNDETERMINED} (copied from CRAM tag) |
+| et          | et                            | FORMAT  | .      | String  | Name of pattern matched in segment "End_loop" {MIXED,MINUS,PLUS,UNDETERMINED} (copied from CRAM tag)   |
+| MI          |                               | FORMAT  | .      | String  | MI (copied from CRAM tag)                                                                              |
+| DS          |                               | FORMAT  | .      | Integer | DS (copied from CRAM tag)                                                                              |
+| FILT        |                               | FORMAT  | .      | Integer | Pre-filter status for SNV reads (1=pass, 0=fail)                                                       |
+| FILT_BITMAP |                               | FORMAT  | .      | String  | Filter bitmaps                                                                                         |
+| MQUAL       | ML_QUAL                       | FORMAT  | .      | Float   | SingleReadSNV model inferred raw Phred scaled quality                                                  |
+| SNVQ        | QUAL                          | FORMAT  | .      | Float   | SingleReadSNV model inferred Phred scaled quality, recalibrated to SNVQ                                |
 
-### Intermediate/advanced outputs
-* {featuremap}: FeatureMap vcf.gz file with a respective .tbi index file
-* {annotated_featuremap}: FeatureMap vcf.gz file with additional annotations and a respective .tbi index file
-* {single_substitutions_featuremap}: FeatureMap vcf.gz file of single substitutions with a respective .tbi index file
-* {hom_snv_featuremap}: FeatureMap vcf.gz file of homozygous SNVs with a respective .tbi index file
-* {training_regions_tp}/{training_regions_fp} - TP/FP bed files with the intersected and excluded regions to train the model
+  \* Number according to the VCF format, 1="single value", .="multiple values", A="One value per ALT allele". In the FeatureMap output, by convention all the "." values are lists of the same length corresponding to the read supporting the reported SNV.  
+  ** For categorical values, the list of allowed values is given in curly brackets.
 
+## Variables (WDL inputs/outputs)
+Naming convention - Curly braces denote variable names as passed to / produced by the WDL (e.g. `{featuremap}`, `{model_files}`, `{srsnv_metadata_json}`).
 
-## Running the SRSNV pipline without the WDL
-It is possible to run the same code as in the SingleReadSNV workflow (https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/single_read_snv/single_read_snv.wdl) without using the WDL. This section details the required steps and installation methods, lifted from the code in the WDL tasks. Readers fluent in the WDL language might prefer to use the code in the WDL itself and the various imported tasks in https://github.com/Ultimagen/healthomics-workflows/tree/main/workflows/single_read_snv/tasks, to ensure the exact same code runs in either case. 
-Running the pipeline is possible either using the dockers (recommended), or by installing the required environments manually, as detailed below. 
+### Primary inputs
+- `{input_cram_bam}`, `{input_cram_bam_index}`
+- `{sorter_json_stats_file}` (provides coverage & total aligned bases)
+- `{base_file_name}`
+- `{references.ref_fasta}`, `{references.ref_fasta_index}`, `{references.ref_dict}`
+- `{featuremap_params}` (controls `snvfind` emission thresholds / context)
+- `{training_regions_interval_list}` (+ its index)
+- `{min_coverage_to_train_model}`
 
-### Fetching dockers
-The docker required in this workflow are:
-- ug_gatk_picard_docker
-- broad_gatk_docker
-- ugbio_srsnv_docker
-- ugbio_featuremap_docker
-- ugbio_vcflite_docker
-- gitc_docker
-Pull each docker according to the latest version referred to in https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/single_read_snv/tasks/globals.wdl
+### Model / training control inputs
+- `{single_read_snv_params}` (sampling sizes, filters, CV config)
+- `{features}` (ordered list of feature names used in training)
+- `{xgboost_params_file}` (model hyperparameters)
+- Optional: `{pre_trained_model_files}`, `{pre_trained_srsnv_metadata_json}`
 
-### Manual installation
+### Key outputs
+- Output FeatureMap: `{featuremap}` + `{featuremap_index}`
+- Random sample FeatureMap: `{featuremap_random_sample}`, `{featuremap_random_sample_index}`, `{downsampling_rate}`
+- Training datasets (if self-trained):
+  - `{raw_filtered_featuremap_parquet}`, `{raw_featuremap_stats}`
+  - `{random_sample_filtered_featuremap_parquet}`, `{random_sample_featuremap_stats}`
+  - `{featuremap_df}` (combined labeled dataset with folds & predictions)
+- Model files: `{model_files}` (array), `{srsnv_metadata_json}`
+- Report & QC: `{report_html}`, `{application_qc_h5}`
+- Flags: `{snv_qualities_assigned}`, `{used_self_trained_model}`
 
-#### GATK and Picard
-For code running in "broad_gatk_docker", GATK can be downloaded or built according to the instructions on https://github.com/broadinstitute/gatk
-Using a built jar file, denoted {gatk_jar}, running java with a prescribed memory is recommended, e.g.
-{gatk}="java -Xms4g -jar {gatk_jar}"
-For 4GB of memory.
+## Pipeline overview
 
-For code running in "ug_gatk_picard_docker", refer to the UG gatk fork https://github.com/Ultimagen/gatk instead, and proceed using the same instructions.
-
-For code running in "gitc_docker", follow the same instructions in https://github.com/broadinstitute/picard
-
-#### ugbio-utils repository
-ugbio-utils
-1. Clone the https://github.com/Ultimagen/ugbio-utils repository
-2. Install the environment using uv according to the repository instructions
-3. To run code relying on the "ugbio_featuremap_docker", run "uv sync --package ugbio_featuremap" before code execution
-4. To run code relying on the "ugbio_srsnv_docker", run "uv sync --package ugbio_srsnv" before code execution
-5. To run code relying on the "vcflite_docker", run "uv sync --package ugbio_vcflite" before code execution
-
-
-### Pipeline structure
-The SRSNV pipeline includes 4 modules:
-1. FeatureMap - create featuremap from cram file, along with single substitution featuremap (FP)
-2. BedIntersectAndExclude - intersect include and exclude regions, run for TP and FP each
-3. TrainSnvQualityRecalibrationModel - training of ML model 
-4. InferenceSnvQualityRecalibrationModel - inference on the featuremap (stage 1), using the ML model (stage 3).
-
-### Featuremap
-
-The Featuremap stage includes the following stages:
-1. (optional) Split IntervalList 
-2. Create FeatureMap
-3. Annotate FeatureMap
-4. Merge FeatureMap parts
-
-#### Split IntervalList
-Using gatk IntervalListTools, the interval list is split into smaller intervals, to allow parallel processing on so called "shards".
-Docker = broad_gatk_docker
+### FeatureMap generation with snvfind
+`snvfind` emits:
+- Full raw FeatureMap: `{base}.raw.featuremap.vcf.gz`
+- Downsampled FeatureMap (random): `{base}.random_sample.featuremap.vcf.gz`
+A precise `downsampling_rate` is computed as:
 ```
-{gatk} \
-  IntervalListTools \
-  SCATTER_COUNT=50 \
-  SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
-  UNIQUE=true \
-  SORT=true \
-  BREAK_BANDS_AT_MULTIPLES_OF=10000 \
-  INPUT={interval_list} \
-  OUTPUT=out
+random_sample_size / total_aligned_bases
 ```
+(derived from sorter stats). This enables consistent positive sampling sizes independent of coverage.
 
-*Recommended hardware - 1 CPU, 2GB RAM*
+### Coverage gate and model decision
+If mean coverage `< {min_coverage_to_train_model}`:
+- If a pre-trained model (metadata + models) is provided → use it.
+- Else → emit raw FeatureMap without SNVQ (flag `{snv_qualities_assigned}=false`).
 
-***Note - a scatter count of 50 is used, but can be changed according to the desired number of parallel tasks.***
+### Preparing training datasets
+`PrepareFeatureMapForTraining`:
+- Restricts to `{training_regions_interval_list}`
+- Converts VCF → parquet (`featuremap_to_dataframe`)
+- Applies sequential filters:
+  - Coverage floor: `DP >= min_coverage_filter`
+  - Coverage ceiling: `DP <= mean_coverage * max_coverage_factor`
+  - Optional `pre_filters` (from `single_read_snv_params`)
+  - Additional label filters (e.g. VAF, REF≠ALT) depending on positive/negative set construction
+- Downsamples to target sizes (`tp_train_set_size`, `fp_train_set_size`)
+- Produces stats JSON per filtered set
 
-##### Output files:
-  out/\*/\*.interval_list - the split interval lists
+Labeling:
+- “Positive” dataset = random sample filtered parquet
+- “Negative” dataset = raw filtered parquet
+(Stats for both sets are passed to training for auditability.)
 
+### Model training (srsnv_training)
+Command consumes:
+- `--positive`, `--negative` parquet files + per-set stats
+- Training regions (for metadata)
+- Feature list (ordering preserved)
+- K-fold CV (`num_CV_folds`) with chromosome-based fold assignment (preferred)
+Outputs:
+- `*.model_fold_{i}.json`
+- `{base}.srsnv_metadata.json` (fold mapping, features, params, coverage, filters)
+- `{base}.featuremap_df.parquet` (includes fold_id, train/test predictions)
 
-#### Create FeatureMap:
-The gatk FlowFeatureMapper tool is used to create the FeatureMap, a file that contains a record for each SNV in each read, along with additional information about the SNV or the read saved in the INFO field. Since each entry represents a single substitution with respect to the reference genome in a specific read, multiple entries per locus are possible, and a specific read can appear multiple times for multiple SNVs. 
+### Inference (snvqual)
+`snvqual` loads `srsnv_metadata.json` plus model fold JSON files; assigns SNVQ into QUAL for each record:
+- Chromosome → model fold (if fold-defined)
+- Chromosomes excluded from training → average predictions across folds
+Outputs final `{featuremap}`.
 
-For each interval_list file used, whether the full interval list or one of the shards (split interval lists), the following command is run. Note that the second command is needed when running in parallel across many shards to avoid duplication of entries around the interval edges: 
-Docker = ug_gatk_picard_docker
+### Reporting (srsnv_report)
+Generates:
+- `{base}.report.html`
+- `{base}.single_read_snv.applicationQC.h5`
+
+## Manual execution (outside WDL)
+
+### Environment / dockers
+Pull (matching versions referenced in globals):
+- `featuremap_docker` (snvfind + snvqual)
+- `ugbio_featuremap_docker` (featuremap_to_dataframe, filter_featuremap)
+- `ugbio_srsnv_docker` (srsnv_training, srsnv_report)
+
+### Step-by-step commands
+Variable names mirror WDL inputs; example corresponds to ppmSeq template. See [wdls/input_templates/single_read_snv_template.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/single_read_snv/input_templates/single_read_snv_template-ppmSeq.json) for full filenames, only base names are used below for clarity.
 ```
-{gatk} \
-  FlowFeatureMapper -I {input_cram_bam} -O tmp.vcf.gz -R {ref_fasta}  \
-  --intervals {interval_list} \
-  --snv-identical-bases 5 \
-  --snv-identical-bases-after 5 \
-  --min-score 0 \
-  --limit-score 10 \
-  --read-filter MappingQualityReadFilter --minimum-mapping-quality 60 \
-  --flow-use-t0-tag --flow-fill-empty-bins-value 0.0001 --surrounding-median-quality-size 20  \
-  --copy-attr tm --copy-attr a3 --copy-attr rq --copy-attr st --copy-attr et \
-  --copy-attr as --copy-attr ts --copy-attr ae --copy-attr te --copy-attr s3 --copy-attr s2
+# Set base name & inputs
+BASE=sample
+CRAM=input.cram
+CRAM_INDEX=input.cram.crai
+SORTER_STATS=sorter_stats.json
+REF=Homo_sapiens_assembly38.fasta
+TRAINING_REGIONS=ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz
+TRAINING_REGIONS_INDEX=${TRAINING_REGIONS}.tbi
+XGBOOST_PARAMS=xgboost_model_params.json
+BED=wgs_calling_regions.without_encode_blacklist.hg38.bed   # featuremap_params.bed_file
 
-{gatk} \
-  VariantFiltration \
-  -V tmp.vcf.gz \
-  -O {featuremap} \
-  -R {ref_fasta}  \
-  --intervals {interval_list}
+# single_read_snv_params (ppmSeq template)
+TP_TRAIN_SET_SIZE=1500000
+FP_TRAIN_SET_SIZE=1500000
+TP_OVERHEAD=10.0              # tp_train_set_size_sampling_overhead
+MAX_VAF_FOR_FP=0.05
+MIN_COV_FILTER=20             # min_coverage_filter
+MAX_COV_FACTOR=2.0            # max_coverage_factor
+RANDOM_SEED=0
+NUM_FOLDS=3                   # num_CV_folds
 
+# Derived random sample size (ceil(tp_train_set_size * overhead))
+RANDOM_SAMPLE_SIZE=$(( TP_TRAIN_SET_SIZE * 10 ))  # 15000000
 
-java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms~{memory_gb-2}g -jar ~{gitc_path}GATK_ultima.jar  \
-    FlowFeatureMapper \
-    -I "~{input_cram_bam}" \
-    -O tmp.vcf.gz \
-    -R "~{references.ref_fasta}"  \
-    --intervals "~{interval_list}" \
-    --snv-identical-bases ~{featuremap_params.snv_identical_bases} \
-    --snv-identical-bases-after ~{featuremap_params.snv_identical_bases_after} \
-    --min-score ~{featuremap_params.min_score} \
-    --limit-score ~{featuremap_params.limit_score} \
-    --read-filter MappingQualityReadFilter --minimum-mapping-quality ~{featuremap_params.min_mapq} \
-    ~{featuremap_params.extra_args} 
+# 1. Compute downsampling rate from sorter stats
+TOTAL_ALIGNED_BASES=$(jq -re '.total_aligned_bases // .total_bases // error("missing total_aligned_bases")' "$SORTER_STATS")
+DOWNSAMPLING_RATE=$(awk -v num=$RANDOM_SAMPLE_SIZE -v den=$TOTAL_ALIGNED_BASES 'BEGIN{printf "%.12f", num/den}')
+echo "Downsampling rate: $DOWNSAMPLING_RATE"
 
-  echo "***************************** Filtering on region *****************************"
-  java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms~{memory_gb-2}g -jar ~{gitc_path}GATK_ultima.jar  \
-    VariantFiltration \
-    -V tmp.vcf.gz \
-    -O "~{output_basename}.vcf.gz" \
-    -R "~{references.ref_fasta}"  \
-    --intervals "~{interval_list}"
-```
+# (Optional) Mean coverage (if available in stats) used for dynamic coverage ceiling
+MEAN_COVERAGE=$(jq -re '.mean_coverage // empty' "$SORTER_STATS")
+if [ -n "$MEAN_COVERAGE" ]; then
+  COVERAGE_CEIL=$(awk -v m=$MEAN_COVERAGE -v f=$MAX_COV_FACTOR 'BEGIN{c=m*f; printf "%d", (c==int(c)?c:int(c)+1)}')
+else
+  # Fallback if mean coverage not present (example only)
+  COVERAGE_CEIL=$(( MIN_COV_FILTER * 30 ))
+fi
+echo "Coverage ceiling: $COVERAGE_CEIL"
 
-*Recommended hardware - 1 CPU, 2GB RAM*
+# 2. snvfind (raw + random sample)
+# FeatureMap params (ppmSeq): min_mapq=60 padding=5 score_limit=100 exclude_nan_scores=true include_dup_reads=true
+# surrounding_quality_size=20 reference_context_size=3 keep_supplementary=false
+# cram_tags_to_copy joined by commas below
+CRAM_TAGS="tm:Z:A:AQ:AQZ:AZ:Q:QZ:Z,a3:i,rq:f,st:Z:MIXED:MINUS:PLUS:UNDETERMINED,et:Z:MIXED:MINUS:PLUS:UNDETERMINED,MI:Z,DS:i"
 
-***Note 1 - {interval_list} is either the full interval list or one of the split interval lists***
+snvfind "$CRAM" "$REF" \
+  -o ${BASE}.raw.featuremap.vcf.gz \
+  -f ${BASE}.random_sample.featuremap.vcf.gz,${DOWNSAMPLING_RATE} \
+  -v \
+  -p 5 -L 100 -n -d -Q 20 -r 3 -m 60 -c "$CRAM_TAGS" -b "$BED"
 
-***Note 2 - the last line (--copy-attr as[...]) is only required for Native Duplex data***
+bcftools index -t ${BASE}.raw.featuremap.vcf.gz
+bcftools index -t ${BASE}.random_sample.featuremap.vcf.gz
 
-***Note 3 - A minimum mapping quality of 60 is used, but can be changed according to the desired mapping quality threshold***
+# 3. Prepare RAW (negative / FP labeling set)
+#   a) Restrict to training regions
+bcftools view ${BASE}.raw.featuremap.vcf.gz -T "$TRAINING_REGIONS" -Oz -o ${BASE}.raw.training_regions.vcf.gz
+bcftools index -t ${BASE}.raw.training_regions.vcf.gz
 
-##### Output files:
-  {featuremap}: FeatureMap vcf.gz file with a respective .tbi index file
+#   b) Convert to parquet
+featuremap_to_dataframe \
+  --input ${BASE}.raw.training_regions.vcf.gz \
+  --output ${BASE}.raw.training_regions.parquet \
+  --drop-format GT AD
 
-#### Annotate FeatureMap:
-After creating the FeatureMap file, additional annotations are added to the INFO field of each entry. This is done per shard. The following command is run:
-Docker = ugbio_featuremap_docker
-```
-annotate_featuremap \
-  -i {featuremap} \
-  -o {annotated_featuremap} \
-  --ref_fasta {ref_fasta} \
-  --flow_order TGCA \
-  --motif_length_to_annotate 3 \
-  --max_hmer_length 20 \
-  --ppmSeq_adapter_version "ppmSeq" 
-```
+#   c) Filter + label (RAW_VAF <= MAX_VAF_FOR_FP) + downsample to FP_TRAIN_SET_SIZE
+filter_featuremap \
+  --in  ${BASE}.raw.training_regions.parquet \
+  --out ${BASE}.raw.filtered.parquet \
+  --stats ${BASE}.raw.stats.json \
+  --filter name=coverage_ge_min:field=DP:op=ge:value=${MIN_COV_FILTER}:type=region \
+  --filter name=coverage_le_max:field=DP:op=le:value=${COVERAGE_CEIL}:type=region \
+  --filter name=vaf_le_threshold:field=RAW_VAF:op=le:value=${MAX_VAF_FOR_FP}:type=label \
+  --filter name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=quality \
+  --filter name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality \
+  --filter name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality \
+  --filter name=edist_le_10:field=EDIST:op=lt:value=10:type=quality \
+  --filter name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality \
+  --downsample random:${FP_TRAIN_SET_SIZE}:${RANDOM_SEED}
 
-*Recommended hardware - 1 CPU, 4GB RAM*
+# 4. Prepare RANDOM SAMPLE (positive / TP labeling set)
+#   a) Restrict to training regions
+bcftools view ${BASE}.random_sample.featuremap.vcf.gz -T "$TRAINING_REGIONS" -Oz -o ${BASE}.rs.training_regions.vcf.gz
+bcftools index -t ${BASE}.rs.training_regions.vcf.gz
 
-***Note - the "ppmSeq_adapter_version" is required for ppmSeq data, remove it when running on non-ppmSeq data.***
+#   b) Convert to parquet
+featuremap_to_dataframe \
+  --input ${BASE}.rs.training_regions.vcf.gz \
+  --output ${BASE}.rs.training_regions.parquet \
+  --drop-format GT AD
 
-##### Output files:
-  {annotated_featuremap}: FeatureMap vcf.gz file with additional annotations and a respective .tbi index file
+#   c) Filter + label (REF == ALT) + downsample to TP_TRAIN_SET_SIZE
+filter_featuremap \
+  --in  ${BASE}.rs.training_regions.parquet \
+  --out ${BASE}.rs.filtered.parquet \
+  --stats ${BASE}.rs.stats.json \
+  --filter name=coverage_ge_min:field=DP:op=ge:value=${MIN_COV_FILTER}:type=region \
+  --filter name=coverage_le_max:field=DP:op=le:value=${COVERAGE_CEIL}:type=region \
+  --filter name=ref_eq_alt:field=REF:op=eq:value_field=ALT:type=label \
+  --filter name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=quality \
+  --filter name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality \
+  --filter name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality \
+  --filter name=edist_le_10:field=EDIST:op=lt:value=10:type=quality \
+  --filter name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality \
+  --downsample random:${TP_TRAIN_SET_SIZE}:${RANDOM_SEED}
 
-#### Merge FeatureMap parts
-Only relevant if the interval list was split into shards in the previous stages.
-Docker = ugbio_featuremap_docker
-```
-bcftools concat --threads {cpus} -a -Oz -o {annotated_featuremap} {sep=" " featuremap_parts}
-bcftools index -t {annotated_featuremap}
-```
+# 5. Train (NUM_FOLDS=3 per ppmSeq template)
+FEATURES="REF:ALT:X_PREV1:X_NEXT1:X_PREV2:X_NEXT2:X_PREV3:X_NEXT3:X_HMER_REF:X_HMER_ALT:BCSQ:BCSQCSS:RL:INDEX:REV:SCST:SCED:SMQ_BEFORE:SMQ_AFTER:tm:rq:st:et:EDIST:HAMDIST:HAMDIST_FILT"
 
-*Recommended hardware - 4 CPU, 4GB RAM*
-
-***Note 1 - {featuremap_parts} is the list of annotated FeatureMap parts***
-
-***Note 2 - {cpus} is the number of cpus to use for merging***
-
-##### Output files:
-  {annotated_featuremap}: FeatureMap vcf.gz file with additional annotations and a respective .tbi index file
-
-#### Generate a FeatureMap of single substitutions:
-Ae explained in the opening section, SNV supported by 1 read only in a high coverage locus used as FP in the model training data. To find positions where only one substitution is observed in the FeatureMap, and create a FeatureMap of these positions, this command is used:
-Docker = ugbio_vcflite_docker
-```
-vcflite import --vcf-in {annotated_featuremap}
-vcflite query --group-by "chrom, pos" --having "COUNT(*) = 1" --vcf-out {single_substitutions_featuremap}
-tabix -p vcf {single_substitutions_featuremap}
-```
-
-Filtering positions by coverage is done in the TrainSnvQualityRecalibrationModel stage when sampling FeatureMap entries.
-
-*Recommended hardware - 1 CPU, 4GB RAM*
-
-##### Output files:
-  {single_substitutions_featuremap}: FeatureMap vcf.gz file of single substitutions with a respective .tbi index file
-
-### CreateHomSnvFeatureMap
-
-As explained in the opening section, SNV supporting homozygous SNVs are used as TP in the model training data. To find positions where only homozygous substitutions are observed in the FeatureMap, and create a FeatureMap of these positions, this command is used:
-Docker = ugbio_srsnv_docker
-```
-create_hom_snv_featuremap \
-  --featuremap {annotated_featuremap} \
-  --sorter_stats_json {sorter_json_stats_file} \
-  --hom_snv_featuremap {hom_snv_featuremap} \
-  --requested_min_coverage 20 \
-  --min_af 0.7
-```
-*Recommended hardware - 1 CPU, 2GB RAM*
-
-{requested_min_coverage} Is the minimum coverage requested for locus to be propagated to the output. If the median coverage is lower than this value, the median coverage (deduced from the {sorter_json_stats_file}) will be used as the minimum coverage instead. 
-{min_af} is the minimum allele frequency required to consider a locus for hom SNV filtering. The default is chosen as 0.7 and not higher because some SNVs are pre-filtered from the FeatureMap due to MAPQ<60 or due to adjacent hmers.
-
-##### Output files:
-  {hom_snv_featuremap}: FeatureMap vcf.gz file of homozygous SNVs with a respective .tbi index file
-
-
-### BedIntersectAndExclude
-Prepare regions for training and inference by intersecting and excluding regions of interest. One region for FP entries and one region for TP entries are created. Note that these two commands can run in parallel.
-Docker = ugbio_srsnv_docker
-```
-intersect_bed_regions \
-  --include-regions {sep=" " include_regions_fp} \
-  --exclude-regions {sep=" " exclude_regions_fp} \
-  --output-bed {training_regions_fp}
-```
-*Recommended hardware - 1 CPU, 8GB RAM*
-
-##### Output files:
-  {training_regions_tp}, {training_regions_fp} - bed files with the intersected and excluded regions
-
-
-### TrainSnvQualityRecalibrationModel
-This code trains the ML model on the annotated FeatureMap, and produces a report and a model file. 
-Docker = ugbio_srsnv_docker
-```
-# Create a json file with parameters for the model
 srsnv_training \
-  --hom_snv_featuremap {hom_snv_featuremap} \
-  --single_substitution_featuremap {single_substitutions_featuremap} \
-  --dataset_params_json_path {single_read_snv_params} \
-  --flow_order "TGCA" \
-  --reference_fasta "~{references.ref_fasta}" \
-  --reference_dict "~{references.ref_dict}" \
-  --cram_stats_file "~{sorter_json_stats_file}" \
-  --hom_snv_regions "~{hom_snv_regions_bed}" \
-  --single_sub_regions "~{single_substitution_regions_bed}" \
-  --output "$PWD" \
-  --basename "~{basename}"
-```
-*Recommended hardware - 1 CPU, 16GB RAM*
+  --positive ${BASE}.rs.filtered.parquet \
+  --negative ${BASE}.raw.filtered.parquet \
+  --stats-positive ${BASE}.rs.stats.json \
+  --stats-negative ${BASE}.raw.stats.json \
+  --training-regions $TRAINING_REGIONS \
+  --k-folds ${NUM_FOLDS} \
+  --model-params $XGBOOST_PARAMS \
+  --features $FEATURES \
+  --basename $BASE \
+  --output . \
+  --random-seed ${RANDOM_SEED} \
+  --verbose
 
-##### Output files:
-  The training code produces a model and parameters file to be used downstream, the data used, and a report. {test_report_file_html} and {test_set_statistics_h5} can be used to QC the model results, and the model files are used for inference.
+# 6. Inference
+mkdir -p model_files
+cp ${BASE}.model_fold_*.json model_files/
+cp ${BASE}.srsnv_metadata.json model_files/srsnv_metadata.json
 
-  - {model_file}: "{base_file_name}.model.joblib"
-  - {params_file}: "{base_file_name}.params.json"
-  - {featuremap_df_file}: "{base_file_name}.featuremap_df.parquet"    
-  - {test_set_statistics_h5}: "{base_file_name}.test.statistics.h5"
-  - {test_set_statistics_json}: "{base_file_name}.test.statistics.json"
-  - {test_report_file_notebook}: "{base_file_name}.test_report.ipynb"
-  - {test_report_file_html}: "{base_file_name}.test_report.html"
+snvqual ${BASE}.raw.featuremap.vcf.gz ${BASE}.featuremap.vcf.gz model_files/srsnv_metadata.json -v
+bcftools index -t ${BASE}.featuremap.vcf.gz
 
-
-### InferenceSnvQualityRecalibrationModel
-This code applies the ML model to the annotated FeatureMap, and produces a FeatureMap with SNVQ values.
-Docker = ugbio_srsnv_docker
-```
-srsnv_inference \
---featuremap_path "{annotated_featuremap}" \
---model_joblib_path "{model_file}" \
---output_path "{output_featuremap}" \
---process_number {cpus}
+# 7. Report
+srsnv_report \
+  --featuremap-df ${BASE}.featuremap_df.parquet \
+  --srsnv-metadata model_files/srsnv_metadata.json \
+  --report-path . \
+  --basename ${BASE} \
+  --verbose
 ```
 
-*Recommended hardware - 10 CPU, 8GB RAM*
+## FeatureMap content & quality scores
+Each record = one read-level substitution. QUAL = calibrated SNVQ (expected error rate phred-scaled). Multiple identical REF/ALT entries at same locus are normal (different reads).
 
-***Note - {cpus} is the number of cpus to use***
+## Training feature set & filters
+Features are supplied as ordered list (`features` input). Categorical ordering must match training-time ordering.
 
-##### Output files:
-  {output_featuremap}: FeatureMap vcf.gz file with all the annotations and SNVQ values, and a respective .tbi index file
-
-
-## Detailed explanation of keys output files
-
-### output_featuremap
-The FeatureMap is a VCF file that contains a record for each SNV in each read, so that multiple entries per locus are possible, with additional information about the SNV and about the read encoded as INFO fields. Additionally, a machine learning model is trained on these features to assign an SNVQ quality score, saved as the QUAL field of each SNV in the FeatureMap. This value indicates the predicted aggregate error rate, the rate of calling false SNVs in individual reads, when filtering for a given threshold. For example, setting a QUAL60 threshold is expected to yield a 1ppm SNV error rate.
-
-Note that unlike standard vcf files, in a FeatureMap file multiple entries per locus with the same ref and alt are possible and indeed, common. 
-
-### featuremap_df_file
-- chrom: object, Chromosome (SNV coordinates)
-- pos: int64, Position (SNV coordinates)
-- ref: category, Reference base
-- alt: category, Alt base
-- qual: float64, SNVQ 
-- filter: object, PASS for high quality, PreFiltered for SNVs not meeting the assigned pre_filter criteria, LowQual for SNVQ<40
-- X_CIGAR: object, CIGAR string of the read, propagated from the input cram file
-- X_EDIST: int64, Reference edit distance of the read from the reference, propagated from the input CRAM file
-- X_FC1: int64, Edit distance of the read counting only SNVs
-- X_FC2: int64, Edit distance of the read counting only SNVs that pass the adjacent base filter
-- X_READ_COUNT: int64, Number of reads containing this locus (coverage)
-- X_FILTERED_COUNT: int64, Number of reads containing this locus that agree with reference and pass the adjacent base filter
-- X_FLAGS: int64, FLAGS propagated from the CRAM file
-- X_INDEX: int64, Ordinal index, from start of the read, where the feature was found
-- X_LENGTH: int64, Read length after adapter trimming
-- X_MAPQ: int64, Mapping quality of the read, propagated from the input cram file
-- X_RN: object, The name of the read, propagated from the input cram file
-- X_SCORE: float64, Base calling quality, the likelihood of the SNV being a base calling error, evaluated from the read quality, Phred scaled
-- X_SMQ_LEFT: int64, Median quality of N bases to the left of the feature
-- X_SMQ_LEFT_MEAN: int64, Mean quality of N bases to the left of the feature
-- X_SMQ_RIGHT: int64, Median quality of N bases to the right of the feature
-- X_SMQ_RIGHT_MEAN: int64, Mean quality of N bases to the right of the feature
-- rq: float64, read quality (lower is better), propagated from the input CRAM file
-- st: int64, "MIXED" if ppmSeq tag in the start of the read called the read as mixed, named "strand_ratio_category_start" in ppmSeq_legacy_v5
-- et: int64, "MIXED" if ppmSeq tag in the end of the read called the read as mixed, named "strand_ratio_category_end" in ppmSeq_legacy_v5
-- tm: object, UG trimming tag - "A" indicates 3' adapter was trimmed, Q and/or Z indicate quality trimming, propagated from the CRAM file
-- is_forward: bool, interpreted from X_FLAGS
-- is_duplicate: bool, interpreted from X_FLAGS
-- max_softclip_length: int64, maximal softclip length in either end of the read
-- prev_1: category, reference base 1bp before the SNV
-- next_1: category, reference base 1bp after the SNV
-- prev_2: category, reference base 2bp before the SNV
-- next_2: category, reference base 2bp after the SNV
-- prev_3: category, reference base 3bp before the SNV
-- next_3: category, reference base 3bp after the SNV
-- hmer_context_ref: int64, Length of homopolymer the base is contained, in the reference allele
-- hmer_context_alt: int64, Length of homopolymer the base is contained, in the alt allele (with the called base)
-- is_cycle_skip: bool, is the SNV a cycle skip
-- fold_id: int64, The Cross-Validation fold the SNV was contained in, used to match the correct model to use for inference
-- label: bool, 0 for False SNVs (unique in locus), 1 for True SNVs (supporting germline variants)
-- ML_prob_1_test: float64, Raw probability of the classifier for the SNV to be true, before calibration
-- ML_prob_0_test: float64, Raw probability of the classifier for the SNV to be false, before calibration
-- ML_qual_1_test: float64, Phred score of the classifier for the SNV to be true, before calibration
-- ML_qual_0_test: float64, Phred score of the classifier for the SNV to be false, before calibration
-- ML_prob_1_train: float64, same as above, score for the SNV when it was used in the training set, some values might be missing if SNV was not used for training
-- ML_prob_0_train: float64, same as above, score for the SNV when it was used in the training set, some values might be missing if SNV was not used for training
-- ML_qual_1_train: float64, same as above, score for the SNV when it was used in the training set, some values might be missing if SNV was not used for training
-- ML_qual_0_train: float64, same as above, score for the SNV when it was used in the training set, some values might be missing if SNV was not used for training
-- ML_prediction_1_train: int64, same as above, score for the SNV when it was used in the training set, some values might be missing if SNV was not used for training
-- ML_prediction_0_train: int64, same as above, score for the SNV when it was used in the training set, some values might be missing if SNV was not used for training
-
-### Model joblib file
-A dictionary that contains all components needed to run inference on a FeatureMap. Contains 3 keys: 
-* "models" - a list of {num_CV_folds} models, one per fold. 
-* "params" - a dictionary of all training parameters. Noteworthy parameters include
-  - "chroms_to_folds" - a mapping of chromosome values to the corresponding `fold_id` values. Needed to decide which of the k-fold models is used for each SNV. Equalsl None when {split_folds_by}=="random".
-  - "categorical_features_dict" - dictionary of all categorical variables and the corresponding category values. Note that the order of the category values is important: the same order should be used during inference as was used during training. 
-* "quality_interpolation_function" - a function that maps `ML_qual_1` values (model outputs) to `qual` values. 
-
-
-## Model training features and filter
-
-Parameters for the srsnv_training command described in TrainSnvQualityRecalibrationModel are given as a json file referred to as {single_read_snv_params} with the values below. Notice the comments inline.
+### single_read_snv_params JSON example (updated)
 ```json
 {
-  "ppmSeq_adapter_version": "v1",
-  "SingleReadSNV.categorical_features": {
-    "st": ["MIXED", "MINUS", "PLUS", "END_UNREACHED", "UNDETERMINED"],  # (for ppmSeq_legacy_v5 adapters change key to "strand_ratio_category_start", for non-ppmSeq remove)
-    "et": ["MIXED", "MINUS", "PLUS", "END_UNREACHED", "UNDETERMINED"],  # (for ppmSeq_legacy_v5 adapters change key to "strand_ratio_category_end", for non-ppmSeq remove)
-    "ref": ["A", "C", "G", "T"],
-    "alt": ["A", "C", "G", "T"],
-    "next_1": ["A", "C", "G", "T"],
-    "next_2": ["A", "C", "G", "T"],
-    "next_3": ["A", "C", "G", "T"],
-    "prev_1": ["A", "C", "G", "T"],
-    "prev_2": ["A", "C", "G", "T"],
-    "prev_3": ["A", "C", "G", "T"]
-  },
-  "numerical_features": [
-    "X_SCORE",
-    "X_EDIST",
-    "X_LENGTH",
-    "X_INDEX",
-    "X_FC1",
-    "rq",
-    "max_softclip_length",
-    "hmer_context_ref",
-    "hmer_context_alt"
+  "tp_train_set_size": 3000000,
+  "tp_train_set_size_sampling_overhead": 1.05,
+  "fp_train_set_size": 3000000,
+  "max_vaf_for_fp": 0.05,
+  "min_coverage_filter": 20,
+  "max_coverage_factor": 10.0,
+  "pre_filters": [
+    "name=vaf_defined:field=RAW_VAF:op=ge:value=0:type=region"
   ],
-  "boolean_features": [
-    "is_cycle_skip",
-    "is_forward"
-  ],
-  "balanced_sampling_info_fields": [
-    "trinuc_context_with_alt",
-    "is_forward"
-  ],
-  "pre_filter": "(X_SCORE>4) && (X_EDIST<10)",
   "random_seed": 0,
-  "num_CV_folds": 5,
-  "split_folds_by": "chrom",
-  "train_set_size": 3000000,
-  "test_set_size": 0
+  "num_CV_folds": 5
 }
 ```
 
-Explanation of key features:
-* {pre_filter} - cutoff criteria for SNVs to be included in the model
-* {numerical_features} - numerical features used for training the model:
-  - "X_SCORE" (Sequencing error likelihood)
-  - "X_EDIST" (Levenshtein distance between the read and reference)
-  - "X_FC1" (Number of SNVs in the read)
-  - "X_LENGTH" (Read length)
-  - "X_INDEX" (Index of the SNV in the read)
-  - "rq" (Read quality)
-  - "max_softclip_length" (Maximum softclip length)
-  - "hmer_context_ref" (homopolymer length in the reference allele)
-  - "hmer_context_alt" (homopolymer length in the alternative allele)
-* {categorical_features} - categorical features used for training the model:
-  - "is_cycle_skip", (Is the SNV a cycle skip)
-  - "is_forward", (Is the read aligned to the forward strand, required to interpret reference related features)
-  - "ref", (Reference base)
-  - "alt", (Alternative base)
-  - "next_1", (Reference base after the SNV)
-  - "next_2", (Reference base 2bp after the SNV)
-  - "next_3", (Reference base 3bp after the SNV)
-  - "prev_1", (Reference base before the SNV)
-  - "prev_2", (Reference base 2bp before the SNV)
-  - "prev_3" (Reference base 3bp before the SNV)
-  - "st" or "strand_ratio_category_start" (ppmSeq read category measured in the read start)
-  - "et" or "strand_ratio_category_end" (ppmSeq read category measured in the read end)
+### Explanation of important parameters
+- `tp_train_set_size`, `fp_train_set_size`: target counts after filtering & downsampling
+- `tp_train_set_size_sampling_overhead`: inflates random sample rate so enough positives survive filtering
+- `max_vaf_for_fp`: VAF threshold used in labeling filters (legacy FP concept folded into new labeling logic)
+- `max_coverage_factor`: coverage ceiling = mean_coverage * factor
+- `min_coverage_filter`: floor for reliable labeling
+- `pre_filters`: extra reusable filters (same syntax as used in WDL)
+- `num_CV_folds`: ≥2 enables chromosome-based CV (preferred)
 
-  ***Note - the last two are only required for ppmSeq data***
-* {num_CV_folds} - Number of Cross-Validation folds to use. 
-* {split_folds_by} - when using k-fold Cross-Validation, method by which SNVs are assigned `fold_id` values. Two methods are possible: "chrom" and "random". 
-  
-  ***Note - See section [Details of ML model Cross-Validation scheme](#details-of-ml-model-cross-validation-scheme) below for more details on Cross-Validation scheme and parameter values.***
+## Cross-validation scheme
+(Logic unchanged from legacy; terminology updated.)
 
+### Train/test split (num_CV_folds=1)
+All SNVs use single model; `fold_id = -1` (train) or `0` (test) inside `featuremap_df`.
 
-## Details of ML model Cross-Validation scheme
-The ML model can be trained either by employing a test/train split, or by employing a k-fold Cross-Validation (CV) scheme. 
-* Train/test split is appropriate when inference is done on SNVs in regions that are excluded from the ML model training set. 
-* CV should be used for use-cases that require `qual` values for SNVs in regions that are included in the training set. A common example is when `qual` values are required for all SNVs in the FeatureMap. 
+### K-fold CV (num_CV_folds>=2)
+Chromosomes partitioned into ~balanced groups → `fold_id` per group.
+Excluded chroms (e.g. X/Y/MT if configured) get `nan` and are inferred by averaging all folds.
 
-This section describes how `fold_id` values are assigned in each case, and how `fold_id` values are treated during inference. 
+## Model files
+- `*.model_fold_X.json`: one JSON per fold (XGBoost serialized parameters)
+- `*.srsnv_metadata.json`:
+  - feature ordering
+  - fold → chromosome map
+  - filtering & sampling metadata
+  - coverage statistics
+- `*.featuremap_df.parquet`: includes:
+  - raw & calibrated probabilities
+  - fold assignments
+  - per-fold train/test predictions
 
-### Training with train/test split
-When {num_CV_folds}==1, train/test split is employed. To avoid data leakage from training to test set, SNVs are split into a train and test set by position: {train_set_size}+{test_set_size} SNVs are chosen at random and sorted by position. Then the first {train_set_size} SNVs are assigned to the train set, and the remaining {test_set_size} SNVs are assigned to the test set. 
-
-In the featuremap_df_file, SNVs belonging to the training set are assigned a `fold_id` value of -1, and SNVs belonging to the test set are assigned a `fold_id` value of 0. A single model is trained on the training set. During inference, this model is used for all SNVs. 
-
-### Training with k-fold CV
-When {num_CV_folds} >= 2, CV is employed. Data is split into {num_CV_folds} folds in one of two methods: by chromosome (preferred method), or randomly. 
-* When {split_folds_by}=="chrom", SNVs are split into folds by chromosome. This is the preferred method, as it makes sure that there is no data leakage from training to validation/inference. Chromosomes are divided into {num_CV_folds} groups of approximately equal size (measured in bases). All chromosomes of the same group are assinged the same `fold_id` value in the featuremap_df_file. 
-
-  Chromosomes X, Y, M are excluded from training. SNVs in these chromosomes are assigned a `fold_id` value of `nan`. 
-* When {split_folds_by}=="random", all SNVs are assigned random `fold_id` values in the featuremap_df_file (between 0 and {num_CV_folds}-1). 
-
-{num_CV_folds} models are trained, one per fold: model `i` is trained on all SNVs whose `fold_id` values are numerical (not `nan`) and not equal to `i`. Then, train and test model predictions are evaluated:
-* Test values in the featuremap_df_file (e.g., ML_prob_0_test, ML_prob_1_test, ML_qual_1_test, etc.) are obtained by evaluating model `i` on all SNVs whose `fold_id` value is `i`, and evaluating all models on SNVs whose `fold_id` value is `nan` (model predictions are then averaged). 
-* Train values in the featuremap_df_file (e.g., ML_prob_0_train, ML_prob_1_train, ML_qual_1_train, etc.) are obtained by evaluating all models except model `i` on all SNVs whose `fold_id` value is `i` (model predictions are then averaged). SNVs whose `fold_id` value is `nan` are not assigned train values. 
-
-During inference, each SNV is evaluated using the model(s) of the appropriate fold_id. 
-* When {split_folds_by}=="chrom", an SNV is assigned a `fold_id` value by its chromosome, and the corresponding model is used. Chromosomes excluded from training (`fold_id` is `nan`) are evaluated by averaging the predictions of all {num_CV_folds} models. 
-* When {split_folds_by}=="random", all SNVs are evaluated by averaging the predictions of all models.
-
----
-
-## References
-Cheng, Alexandre Pellan, et al. "Whole genome error-corrected sequencing for sensitive circulating tumor DNA cancer monitoring." bioRxiv (2022): 2022-11.
+## When qualities are NOT assigned
+`snv_qualities_assigned=false` if:
+- Coverage < `{min_coverage_to_train_model}` AND no pre-trained model supplied.
+In that case the output VCF = raw FeatureMap (no model is applied).

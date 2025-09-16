@@ -634,6 +634,8 @@ task CreateReportSingleSampleQC {
 
         # python notebook args
         File input_h5_file
+        #String notebook_file_in= "/home/ugbio/src/core/ugbio_core/reports/single_sample_qc_create_html_report.ipynb"
+        #String top_metrics_file = "/home/ugbio/src/core/ugbio_core/reports/top_metrics_for_tbl.csv"
         String notebook_file_in= "/src/core/ugbio_core/reports/single_sample_qc_create_html_report.ipynb"
         String top_metrics_file = "/src/core/ugbio_core/reports/top_metrics_for_tbl.csv"
     }   

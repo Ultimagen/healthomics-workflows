@@ -9,7 +9,8 @@
     "EfficientDV.num_shards": 300,
     "EfficientDV.make_gvcf": false,
     "EfficientDV.recalibrate_vaf": true,
-    "EfficientDV.single_strand_filter": true,
+    "EfficientDV.is_somatic": true,
+    "EfficientDV.single_strand_filter": false,
     "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
     "EfficientDV.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
@@ -29,6 +30,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.target_intervals": "<targeted_exome>.interval_list",
+    "EfficientDV.normalize_strand_bias": true,
     "EfficientDV.background_cram_files": [
         "<normal_bam_file>.cram"
     ],
@@ -47,14 +49,20 @@
     "EfficientDV.min_variant_quality_non_hmer_indels": 10,
     "EfficientDV.min_variant_quality_snps": 10,
     "EfficientDV.allele_frequency_ratio": 10,
-    "EfficientDV.show_bg_fields": true,
+    "EfficientDV.h_indel_vaf_to_pass": 0.15,
+    "EfficientDV.h_indel_allele_frequency_ratio": 2,
     "EfficientDV.optimal_coverages": [
         500,
         120
     ],
     "EfficientDV.prioritize_alt_supporting_reads": true,
+    "EfficientDV.strand_bias_normalization_thresholds": [
+        0.1,
+        0.35
+    ],
     "EfficientDV.max_reads_per_partition": 6500,
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,
+    "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
     "EfficientDV.cloud_provider_override": "aws"
 }

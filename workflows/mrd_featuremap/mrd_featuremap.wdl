@@ -34,12 +34,13 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.22.1" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
         File cfdna_featuremap_index
         File featuremap_df_file
+        File srsnv_metadata_json
         # for coverage collection with gatk DepthOfCoverage (cfDNA sample)
         File cfdna_cram_bam
         File cfdna_cram_bam_index
@@ -94,7 +95,7 @@ workflow MRDFeatureMap {
         #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
 
         # input suffixes
-        #@wv prefix(cfdna_cram_bam_index) == cfdna_cram_bam
+        #@wv prefix(basename(cfdna_cram_bam_index)) == basename(cfdna_cram_bam)
         #@wv suffix(cfdna_cram_bam) in {'.bam', '.cram'}
         #@wv suffix(cfdna_cram_bam_index) in {'.bai', '.crai'}
         #@wv suffix(include_regions) <= {'.bed', '.gz'}
@@ -149,6 +150,11 @@ workflow MRDFeatureMap {
           type: "File",
           category: "input_required"
       }
+      srsnv_metadata_json: {
+          help: "Metadata json file output by the SingleReadSNV pipeline",
+          type: "File",
+          category: "input_required"
+      }
       cfdna_cram_bam: {
           help: "CRAM or BAM file of cfDNA sample, must be equal to the input used for the SingleReadSNV pipeline that generated cfdna_featuremap",
           type: "File",
@@ -160,7 +166,7 @@ workflow MRDFeatureMap {
           category: "input_required"
       }
       mapping_quality_threshold: {
-          help: "Mapping quality threshold for reads to be included in the coverage analysis, corresponding to the value used to filter the srsnv output",
+          help: "Mapping quality threshold for reads to be included in the coverage analysis, default 0 as srsnv mapq filtering is included in srsnv_metadata_json",
           type: "Int",
           category: "input_required"
       }
@@ -308,23 +314,6 @@ workflow MRDFeatureMap {
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
   # Part 1 - Filter signatures
-  if (defined_external_matched_signatures) {
-    Array[File] all_matched_signatures = select_first([external_matched_signatures,])
-    # Filter the matched signatures over the genomic regions bed file + apply filters
-    scatter (i in range(length(all_matched_signatures))) {
-      call UGGeneralTasks.FilterVcfWithBcftools as FilterMatched {
-        input:
-          input_vcf = all_matched_signatures[i],
-          docker = global.bcftools_docker,
-          bcftools_extra_args = bcftools_extra_args,  
-          exclude_regions = exclude_regions,
-          include_regions = include_regions,
-          preemptible_tries = preemptibles,
-          monitoring_script = monitoring_script, #!FileCoercion
-      }
-    }
-  }  
-  
   # Process diluent germline VCFs if provided
   if (defined_diluent_germline_vcfs) {
     Array[File] diluent_vcfs = select_first([diluent_germline_vcfs])
@@ -332,6 +321,7 @@ workflow MRDFeatureMap {
       call UGMrdTasks.PadVcf as PadDiluentVcf {
         input:
           input_vcf = vcf_path,
+          ref_fai = references.ref_fasta_index,
           pad_size = 2,
           docker = global.ugbio_core_docker,
           preemptible_tries = preemptibles,
@@ -340,6 +330,25 @@ workflow MRDFeatureMap {
     }
   }
 
+  if (defined_external_matched_signatures) {
+    Array[File] all_matched_signatures = select_first([external_matched_signatures,])
+    Array[Array[File]] matched_exclude_regions_array = select_all([exclude_regions, PadDiluentVcf.padded_bed])
+    Array[File] matched_exclude_regions = flatten(matched_exclude_regions_array)
+    # Filter the matched signatures over the genomic regions bed file + apply filters
+    scatter (i in range(length(all_matched_signatures))) {
+      call UGGeneralTasks.FilterVcfWithBcftools as FilterMatched {
+        input:
+          input_vcf = all_matched_signatures[i],
+          docker = global.bcftools_docker,
+          bcftools_extra_args = bcftools_extra_args,  
+          exclude_regions = matched_exclude_regions,
+          include_regions = include_regions,
+          preemptible_tries = preemptibles,
+          monitoring_script = monitoring_script, #!FileCoercion
+      }
+    }
+  }  
+  
   # for the external and db controls, exclude the regions from the matched signatures
   Array[Array[File]] control_exclude_regions_array = select_all([exclude_regions, external_matched_signatures, PadDiluentVcf.padded_bed])
   Array[File] control_exclude_regions = flatten(control_exclude_regions_array) 
@@ -434,8 +443,13 @@ workflow MRDFeatureMap {
       featuremap = cfdna_featuremap,
       featuremap_index = cfdna_featuremap_index,
       matched_signatures = FilterMatched.output_vcf,
+      matched_signatures_indexes = FilterMatched.output_vcf_index,
       control_signatures = FilterControlSignatures.output_vcf,
+      control_signatures_indexes = FilterControlSignatures.output_vcf_index,
       db_signatures = GenerateControlSignaturesFromDatabase.db_signatures,
+      matched_signatures_indices = FilterMatched.output_vcf_index,
+      control_signatures_indices = FilterControlSignatures.output_vcf_index,
+      db_signatures_indices = GenerateControlSignaturesFromDatabase.db_signatures_indices,
       docker = global.ugbio_mrd_docker,
       disk_size = 2 * featuremap_size + 30,
       memory_gb = memory_FeatureMapIntersectWithSignatures,
@@ -454,6 +468,7 @@ workflow MRDFeatureMap {
       mrd_analysis_params = mrd_analysis_params,
       basename = base_file_name,
       featuremap_df_file = featuremap_df_file,
+      srsnv_metadata_json = srsnv_metadata_json,
       docker = global.ugbio_mrd_docker,
       disk_size = 3 * featuremap_size + 30,
       memory_gb = memory_extract_coverage,

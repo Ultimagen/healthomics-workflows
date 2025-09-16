@@ -112,7 +112,7 @@
         "optional": false
     },
     "MRDFeatureMap.mapping_quality_threshold": {
-        "description": "Mapping quality threshold for reads to be included in the coverage analysis, corresponding to the value used to filter the srsnv output",
+        "description": "Mapping quality threshold for reads to be included in the coverage analysis, default 0 as srsnv mapq filtering is included in srsnv_metadata_json",
         "optional": false
     },
     "MRDFeatureMap.memory_extract_coverage_override": {
@@ -146,5 +146,9 @@
     "MRDFeatureMap.snv_database": {
         "description": "Somatic mutation database to use for generating control signatures",
         "optional": true
+    },
+    "MRDFeatureMap.srsnv_metadata_json": {
+        "description": "Metadata json file output by the SingleReadSNV pipeline",
+        "optional": false
     }
 }

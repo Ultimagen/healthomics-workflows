@@ -56,7 +56,7 @@ if you would like to manually install the enviorment for UG-germline-CNV-calling
 samtools view {input_bam_file} -O BAM -o {out_bam_filtered} -bq 1 -T Homo_sapiens_assembly38.fasta
 samtools index {out_bam_filtered}
 
-Rscript --vanilla  /src/cnv/cnmops/get_reads_count_from_bam.R \
+Rscript --vanilla  /home/ugbio/src/cnv/cnmops/get_reads_count_from_bam.R \
 	-i {out_bam_filtered} \
 	-refseq [
 		"chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11",\
@@ -79,24 +79,24 @@ bedtools map \
 	> {sample_name}.win.bedGraph
 
 
-Rscript --vanilla /src/cnv/cnmops/convert_bedGraph_to_Granges.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/convert_bedGraph_to_Granges.R \
 	-i {sample_name}.win.bedGraph \
 	-sample_name {sample_name}
 ```
 
 ### Add sample coverage profile to the cohort
 ```
-Rscript --vanilla /src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
 	-cohort_rc HapMap2_210samples_cohort.ReadsCount.rds\
 	-sample_rc {sample_name}.ReadCounts.rds\
 ```
 
 #### Run cn.mops to call CNVs
 ```
-Rscript --vanilla /src/cnv/cnmops/normalize_reads_count.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/normalize_reads_count.R \
 	--cohort_reads_count_file merged_cohort_reads_count.rds
 	
-Rscript --vanilla /src/cnv/cnmops/cnv_calling_using_cnmops.R \
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/cnv_calling_using_cnmops.R \
 	-cohort_rc cohort_reads_count.norm.rds \
 	-minWidth 1000 \
 	--save_csv

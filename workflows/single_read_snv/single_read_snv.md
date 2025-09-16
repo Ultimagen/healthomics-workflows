@@ -26,35 +26,25 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
 </p>
 
 ### Required parameters
-<p name="SingleReadSNV.wgs_calling_interval_list">
-        <b>SingleReadSNV.wgs_calling_interval_list</b><br />
-        <i>File </i> &mdash; 
-         interval list defining the region to perform variant calling on, recommended value set in the template <br /> 
-</p>
-<p name="SingleReadSNV.break_bands_at_multiples_of">
-        <b>SingleReadSNV.break_bands_at_multiples_of</b><br />
-        <i>Int </i> &mdash; 
-         Break wgs_calling_interval_list bands at multiples of this number, recommended value set in the template <br /> 
-</p>
 <p name="SingleReadSNV.featuremap_params">
         <b>SingleReadSNV.featuremap_params</b><br />
         <i>FeatureMapParams </i> &mdash; 
          FeatureMap parameters, recommended value set in the template. <br /> 
 </p>
-<p name="SingleReadSNV.single_read_snv_params">
-        <b>SingleReadSNV.single_read_snv_params</b><br />
-        <i>SingleReadSNVParams </i> &mdash; 
-         SingleReadSNV parameters, recommended value set in the template. <br /> 
+<p name="SingleReadSNV.features">
+        <b>SingleReadSNV.features</b><br />
+        <i>Array[String] </i> &mdash; 
+         Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template. <br /> 
 </p>
-<p name="SingleReadSNV.categorical_features">
-        <b>SingleReadSNV.categorical_features</b><br />
-        <i>Map[String,Array[String]] </i> &mdash; 
-         Categorical features in SingleReadSNV model, list of feature names with allowed values per feature. Separate from single_read_snv_params due to technical reasons. The recommended value is set in the template. <br /> 
-</p>
-<p name="SingleReadSNV.training_include_regions">
-        <b>SingleReadSNV.training_include_regions</b><br />
-        <i>Array[File] </i> &mdash; 
+<p name="SingleReadSNV.training_regions_interval_list">
+        <b>SingleReadSNV.training_regions_interval_list</b><br />
+        <i>File </i> &mdash; 
          Genomic regions to include in the training set, the recommended value is set in the template <br /> 
+</p>
+<p name="SingleReadSNV.xgboost_params_file">
+        <b>SingleReadSNV.xgboost_params_file</b><br />
+        <i>File </i> &mdash; 
+         XGBoost parameters file for training the SNV quality model, recommended value set in the template. <br /> 
 </p>
 <p name="SingleReadSNV.min_coverage_to_train_model">
         <b>SingleReadSNV.min_coverage_to_train_model</b><br />
@@ -72,25 +62,20 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
 ### Optional inputs
 <details>
 <summary> Show/Hide </summary>
-<p name="SingleReadSNV.somatic_mutations_list">
-        <b>SingleReadSNV.somatic_mutations_list</b><br />
-        <i>Array[File]? &mdash; Default: None</i><br />
-        Somatic mutations to be excluded from FP training set, will be appended to the fp_training_exclude_regions optional
+<p name="SingleReadSNV.training_regions_interval_list_index">
+        <b>SingleReadSNV.training_regions_interval_list_index</b><br />
+        <i>File &mdash; Default: None</i><br />
+        Index for genomic regions to exclude from the training set, the recommended value is set in the template
 </p>
-<p name="SingleReadSNV.tp_training_exclude_regions">
-        <b>SingleReadSNV.tp_training_exclude_regions</b><br />
+<p name="SingleReadSNV.pre_trained_model_files">
+        <b>SingleReadSNV.pre_trained_model_files</b><br />
         <i>Array[File]? &mdash; Default: None</i><br />
-        Genomic regions to exclude from the training set TP examples, the recommended value is set in the template
+        Pre-trained ML model json files, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
 </p>
-<p name="SingleReadSNV.fp_training_exclude_regions">
-        <b>SingleReadSNV.fp_training_exclude_regions</b><br />
-        <i>Array[File]? &mdash; Default: None</i><br />
-        Genomic regions to exclude from the training set FP examples, the recommended value is set in the template
-</p>
-<p name="SingleReadSNV.pre_trained_model_file">
-        <b>SingleReadSNV.pre_trained_model_file</b><br />
+<p name="SingleReadSNV.pre_trained_srsnv_metadata_json">
+        <b>SingleReadSNV.pre_trained_srsnv_metadata_json</b><br />
         <i>File? &mdash; Default: None</i><br />
-        Pre-trained ML model file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
+        Pre-trained SNV quality model metadata json file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
 </p>
 <p name="SingleReadSNV.raise_exceptions_in_report">
         <b>SingleReadSNV.raise_exceptions_in_report</b><br />
@@ -103,6 +88,13 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <b>SingleReadSNV.create_md5_checksum_outputs</b><br />
         <i>Boolean </i> &mdash; 
          Create md5 checksum for requested output files <br /> 
+</p>
+
+### Optional parameters
+<p name="SingleReadSNV.single_read_snv_params">
+        <b>SingleReadSNV.single_read_snv_params</b><br />
+        <i>SingleReadSNVParams? </i> &mdash; 
+         SingleReadSNV parameters, recommended value set in the template. <br /> 
 </p>
 </details>
 
@@ -117,6 +109,21 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <b>SingleReadSNV.featuremap_index</b><br />
         <i>File</i><br />
         FeatureMap VCF index file
+</p>
+<p name="SingleReadSNV.featuremap_random_sample">
+        <b>SingleReadSNV.featuremap_random_sample</b><br />
+        <i>File?</i><br />
+        Downsampled FeatureMap VCF file for training
+</p>
+<p name="SingleReadSNV.featuremap_random_sample_index">
+        <b>SingleReadSNV.featuremap_random_sample_index</b><br />
+        <i>File?</i><br />
+        Downsampled FeatureMap VCF index file
+</p>
+<p name="SingleReadSNV.downsampling_rate">
+        <b>SingleReadSNV.downsampling_rate</b><br />
+        <i>Float</i><br />
+        The downsampling rate used to create the random sample featuremap
 </p>
 <p name="SingleReadSNV.snv_qualities_assigned">
         <b>SingleReadSNV.snv_qualities_assigned</b><br />
@@ -133,50 +140,50 @@ Single Read SNV Quality Recalibration workflow (single_read_snv wdl) assigns acc
         <i>File?</i><br />
         json file that will contain md5 checksums for requested output files
 </p>
-<p name="SingleReadSNV.report_html">
-        <b>SingleReadSNV.report_html</b><br />
+<p name="SingleReadSNV.raw_filtered_featuremap_parquet">
+        <b>SingleReadSNV.raw_filtered_featuremap_parquet</b><br />
         <i>File?</i><br />
-        SRSNV QC report html file
+        Filtered parquet dataframe of raw featuremap for training
 </p>
-<p name="SingleReadSNV.featuremap_df_file">
-        <b>SingleReadSNV.featuremap_df_file</b><br />
+<p name="SingleReadSNV.raw_featuremap_stats">
+        <b>SingleReadSNV.raw_featuremap_stats</b><br />
         <i>File?</i><br />
-        FeatureMap DataFrame with X matrix (features), y (labels) and qual, in parquet format
+        Statistics for raw featuremap filtering
 </p>
-<p name="SingleReadSNV.model_file">
-        <b>SingleReadSNV.model_file</b><br />
+<p name="SingleReadSNV.random_sample_filtered_featuremap_parquet">
+        <b>SingleReadSNV.random_sample_filtered_featuremap_parquet</b><br />
         <i>File?</i><br />
-        ML model file, saved with joblib
+        Filtered parquet dataframe of random sample featuremap for training
 </p>
-<p name="SingleReadSNV.params_file">
-        <b>SingleReadSNV.params_file</b><br />
+<p name="SingleReadSNV.random_sample_featuremap_stats">
+        <b>SingleReadSNV.random_sample_featuremap_stats</b><br />
         <i>File?</i><br />
-        ML model parameters json file
+        Statistics for random sample featuremap filtering
 </p>
-<p name="SingleReadSNV.test_set_mrd_simulation_dataframe">
-        <b>SingleReadSNV.test_set_mrd_simulation_dataframe</b><br />
+<p name="SingleReadSNV.featuremap_df">
+        <b>SingleReadSNV.featuremap_df</b><br />
         <i>File?</i><br />
-        ML model test set MRD simulation DataFrame, parquet format
+        Parquet file with model data, including features and labels
 </p>
 <p name="SingleReadSNV.application_qc_h5">
         <b>SingleReadSNV.application_qc_h5</b><br />
         <i>File?</i><br />
         Application QC statistics h5 file
 </p>
-<p name="SingleReadSNV.aggregated_metrics_json">
-        <b>SingleReadSNV.aggregated_metrics_json</b><br />
+<p name="SingleReadSNV.report_html">
+        <b>SingleReadSNV.report_html</b><br />
         <i>File?</i><br />
-        ML model aggregated metrics json file
+        SRSNV QC report html file
 </p>
-<p name="SingleReadSNV.tp_training_regions_bed">
-        <b>SingleReadSNV.tp_training_regions_bed</b><br />
+<p name="SingleReadSNV.srsnv_metadata_json">
+        <b>SingleReadSNV.srsnv_metadata_json</b><br />
         <i>File?</i><br />
-        ML model training set TP regions bed file
+        Metadata JSON file for the SNV quality model, containing information about the model, features, and training parameters
 </p>
-<p name="SingleReadSNV.fp_training_regions_bed">
-        <b>SingleReadSNV.fp_training_regions_bed</b><br />
-        <i>File?</i><br />
-        ML model training set FP regions bed file
+<p name="SingleReadSNV.model_files">
+        <b>SingleReadSNV.model_files</b><br />
+        <i>Array[File]?</i><br />
+        Array of model files, each file should be used for a specific set of chromosome
 </p>
 
 <hr />

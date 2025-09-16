@@ -4,7 +4,7 @@
         "optional": false
     },
     "EfficientDV.allele_frequency_ratio": {
-        "description": "Minimal ratio between the allele frequency in tumor and normal, for vcf filtering",
+        "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
         "optional": true
     },
     "EfficientDV.annotation_intervals": {
@@ -79,6 +79,14 @@
         "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
         "optional": true
     },
+    "EfficientDV.h_indel_allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering",
+        "optional": true
+    },
+    "EfficientDV.h_indel_vaf_to_pass": {
+        "description": "Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio",
+        "optional": true
+    },
     "EfficientDV.hard_qual_filter": {
         "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
         "optional": true
@@ -90,6 +98,10 @@
     "EfficientDV.intervals_string": {
         "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
         "optional": true
+    },
+    "EfficientDV.is_somatic": {
+        "description": "Enable somatic calling mode, which enables somatic-specific post-processing options",
+        "optional": false
     },
     "EfficientDV.keep_duplicates": {
         "description": "Keep duplicated reads in the images. Do not use in high depth samples (e.g. WES).",
@@ -171,6 +183,10 @@
         "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
         "optional": true
     },
+    "EfficientDV.normalize_strand_bias": {
+        "description": "Whether to normalize the strand bias in the images. This is useful for WES calling, where target enrichment may introduce strand bias between alleles.",
+        "optional": false
+    },
     "EfficientDV.num_shards": {
         "description": "Maximal number of intervals the genome is broken into when parallelizing the make_examples step",
         "optional": false
@@ -224,12 +240,16 @@
         "optional": true
     },
     "EfficientDV.show_bg_fields": {
-        "description": "Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling)",
+        "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
         "optional": true
     },
     "EfficientDV.single_strand_filter": {
         "description": "Whether to filter out non snp candidates that are on a single strand. Reduces the number of candidates and hence the cost. Most useful for somatic calling.",
         "optional": false
+    },
+    "EfficientDV.strand_bias_normalization_thresholds": {
+        "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
     },
     "EfficientDV.target_intervals": {
         "description": "Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used.",

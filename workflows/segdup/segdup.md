@@ -68,6 +68,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 </p>
 
 ### Optional parameters
+<p name="SegDupAnalysis.DV.show_bg_fields">
+        <b>SegDupAnalysis.DV.show_bg_fields</b><br />
+        <i>Boolean </i> &mdash; 
+         Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling. <br /> 
+</p>
 <p name="SegDupAnalysis.DV.scatter_intervals_break">
         <b>SegDupAnalysis.DV.scatter_intervals_break</b><br />
         <i>Int </i> &mdash; 
@@ -176,12 +181,17 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.allele_frequency_ratio">
         <b>SegDupAnalysis.DV.allele_frequency_ratio</b><br />
         <i>Float? </i> &mdash; 
-         Minimal ratio between the allele frequency in tumor and normal, for vcf filtering <br /> 
+         Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering <br /> 
 </p>
-<p name="SegDupAnalysis.DV.show_bg_fields">
-        <b>SegDupAnalysis.DV.show_bg_fields</b><br />
-        <i>Boolean </i> &mdash; 
-         Show background statistics BG_AD, BG_SB in the output VCF (relevant for somatic calling) <br /> 
+<p name="SegDupAnalysis.DV.h_indel_vaf_to_pass">
+        <b>SegDupAnalysis.DV.h_indel_vaf_to_pass</b><br />
+        <i>Float? </i> &mdash; 
+         Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio <br /> 
+</p>
+<p name="SegDupAnalysis.DV.h_indel_allele_frequency_ratio">
+        <b>SegDupAnalysis.DV.h_indel_allele_frequency_ratio</b><br />
+        <i>Float? </i> &mdash; 
+         Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering <br /> 
 </p>
 <p name="SegDupAnalysis.DV.ug_post_processing_extra_args">
         <b>SegDupAnalysis.DV.ug_post_processing_extra_args</b><br />

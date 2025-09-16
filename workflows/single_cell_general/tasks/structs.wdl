@@ -141,33 +141,39 @@ struct ReferenceDbSnp {
     File ref_dbsnp_index
 }
 
-struct FeatureMapParams {
-  Int min_mapq
-  Int snv_identical_bases
-  Int snv_identical_bases_after
-  Int min_score
-  Int limit_score
-  String extra_args
-  Int max_hmer_length
-  Int motif_length_to_annotate
+struct FeatureMapParams { 
+  # snvfind parameters
+  Int? min_mapq                     # -q minimum mapping quality. defaults to 20
+  Int? padding_size                 # -p padding size. defaults to 5
+  Int? score_limit                  # -L score limit
+  Int? max_score_to_emit            # -X max score to emit
+  Int? min_score_to_emit            # -N min score to emit
+  Boolean? exclude_nan_scores       # -n exclude nan scores
+  Boolean? include_dup_reads        # -d include dup reads
+  Boolean? keep_supplementary       # -k keep supplementary alignments
+  Int? surrounding_quality_size     # -Q surrounding median and mean quality size. defaults to pad
+  Int? reference_context_size       # -r reference context size, defualts to 3
+  Array[String]? cram_tags_to_copy  # -c list of attributes to copy from sam to vcf
+  String? attributes_prefix         # -C prefix for copied attributes
+  File? bed_file                    # -b bed file containing ranges to process
 }
 
 struct SingleReadSNVParams {
-    Array[String] numerical_features
-    Array[String] boolean_features
-    Array[String] balanced_sampling_info_fields
-    Int train_set_size
-    Int test_set_size
-    String pre_filter
+    Int tp_train_set_size
+    Int fp_train_set_size
+    Float tp_train_set_size_sampling_overhead
     Int random_seed
     Int num_CV_folds
-    String split_folds_by
-    String ppmSeq_adapter_version
+    Int min_coverage_filter
+    Float max_coverage_factor
+    Float max_vaf_for_fp  # Maximum VAF for false positive filtering
+    Array[String] pre_filters  # Pre-filter configuration in format "name=X:field=Y:op=Z:value=W:type=T"
 }
 
 struct MrdAnalysisParams {
   String signature_filter_query
   String read_filter_query
+  String? tumor_sample # Optional, used to specify the tumor sample name in singature vcf
 }
 
 struct StarsoloBamParams {

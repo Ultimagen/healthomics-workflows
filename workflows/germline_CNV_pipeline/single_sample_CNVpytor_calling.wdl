@@ -24,7 +24,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.22.1" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file

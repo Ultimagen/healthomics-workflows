@@ -3,14 +3,6 @@
         "description": "Base file name for output files. The output files will be named [base_file_name].with_ml_qual.vcf.gz",
         "optional": false
     },
-    "SingleReadSNV.break_bands_at_multiples_of": {
-        "description": "Break wgs_calling_interval_list bands at multiples of this number, recommended value set in the template",
-        "optional": false
-    },
-    "SingleReadSNV.categorical_features": {
-        "description": "Categorical features in SingleReadSNV model, list of feature names with allowed values per feature. Separate from single_read_snv_params due to technical reasons. The recommended value is set in the template.",
-        "optional": false
-    },
     "SingleReadSNV.cloud_provider_override": {
         "description": "cloud_provider_override",
         "optional": true
@@ -27,9 +19,9 @@
         "description": "featuremap_scatter_count_override",
         "optional": true
     },
-    "SingleReadSNV.fp_training_exclude_regions": {
-        "description": "Genomic regions to exclude from the training set FP examples, the recommended value is set in the template",
-        "optional": true
+    "SingleReadSNV.features": {
+        "description": "Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template.",
+        "optional": false
     },
     "SingleReadSNV.input_cram_bam": {
         "description": "Input CRAM or BAM file",
@@ -51,8 +43,12 @@
         "description": "no_address_override",
         "optional": true
     },
-    "SingleReadSNV.pre_trained_model_file": {
-        "description": "Pre-trained ML model file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
+    "SingleReadSNV.pre_trained_model_files": {
+        "description": "Pre-trained ML model json files, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
+        "optional": true
+    },
+    "SingleReadSNV.pre_trained_srsnv_metadata_json": {
+        "description": "Pre-trained SNV quality model metadata json file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
         "optional": true
     },
     "SingleReadSNV.preemptible_tries": {
@@ -73,26 +69,22 @@
     },
     "SingleReadSNV.single_read_snv_params": {
         "description": "SingleReadSNV parameters, recommended value set in the template.",
-        "optional": false
-    },
-    "SingleReadSNV.somatic_mutations_list": {
-        "description": "Somatic mutations to be excluded from FP training set, will be appended to the fp_training_exclude_regions optional",
         "optional": true
     },
     "SingleReadSNV.sorter_json_stats_file": {
         "description": "Sorter json stats file provided by the Ultima Genomics pipeline (same base name as the input cram/bam file with a json extension)",
         "optional": false
     },
-    "SingleReadSNV.tp_training_exclude_regions": {
-        "description": "Genomic regions to exclude from the training set TP examples, the recommended value is set in the template",
-        "optional": true
-    },
-    "SingleReadSNV.training_include_regions": {
+    "SingleReadSNV.training_regions_interval_list": {
         "description": "Genomic regions to include in the training set, the recommended value is set in the template",
         "optional": false
     },
-    "SingleReadSNV.wgs_calling_interval_list": {
-        "description": "interval list defining the region to perform variant calling on, recommended value set in the template",
+    "SingleReadSNV.training_regions_interval_list_index": {
+        "description": "Index for genomic regions to exclude from the training set, the recommended value is set in the template",
+        "optional": true
+    },
+    "SingleReadSNV.xgboost_params_file": {
+        "description": "XGBoost parameters file for training the SNV quality model, recommended value set in the template.",
         "optional": false
     }
 }

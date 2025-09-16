@@ -20,7 +20,7 @@ task ApplyQualFilters {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    set -eo pipefail
+    set -xeo pipefail
 
     java -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Xms10000m \
     -jar ~{gitc_path}/GATK_ultima.jar VariantFiltration \
@@ -54,6 +54,8 @@ task ApplyAlleleFrequencyRatioFilter {
   input{
     File input_vcf
     Float af_ratio
+    Float? h_indel_vaf_to_pass
+    Float? h_indel_vaf_ratio_to_pass
     String final_vcf_base_name
     File monitoring_script
     String ugbio_filtering_docker
@@ -64,8 +66,12 @@ task ApplyAlleleFrequencyRatioFilter {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
  
-    set -eo pipefail
-    filter_low_af_ratio_to_background --af_ratio_threshold ~{af_ratio} --new_filter "LowAFRatioToBackground" ~{input_vcf} ~{output_file}
+    set -xeo pipefail
+    filter_low_af_ratio_to_background --af_ratio_threshold ~{af_ratio} \
+                                      --new_filter "LowAFRatioToBackground"  \
+                                      ~{"--af_ratio_threshold_h_indels " + h_indel_vaf_ratio_to_pass} \
+                                      ~{"--tumor_vaf_threshold_h_indels " + h_indel_vaf_to_pass} \
+                                      ~{input_vcf} ~{output_file}
     
    >>>
   runtime {
@@ -96,7 +102,7 @@ task RemoveRefCalls {
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    set -eo pipefail
+    set -xeo pipefail
 
     bcftools view -i 'FILTER!="RefCall"' ~{input_vcf} -Oz -o ~{output_file}
     bcftools index -t ~{output_file}
@@ -133,7 +139,7 @@ task CalibrateBridgingSnvs {
       bash ~{monitoring_script} | tee monitoring.log >&2 &
       source ~/.bashrc
       conda activate genomics.py3
-      set -eo pipefail
+      set -xeo pipefail
       
       python /VariantCalling/ugvc calibrate_bridging_snvs \
       --vcf ~{input_vcf} \

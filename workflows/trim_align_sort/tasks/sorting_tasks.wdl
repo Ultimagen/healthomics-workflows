@@ -230,6 +230,7 @@ task Sorter {
             --output-dir=~{sorter_out_dir} \
             --nthreads ~{cpu} \
             --timestamp=~{timestamp} \
+            --min-thread-parallelism=1 \
             ~{if defined(sorter_params.single_cell_cbc_classifier) then "--cell-barcode-filter-classifier" else ""} ~{default="" sorter_params.single_cell_cbc_classifier} \
             ~{default="" sorter_params.sort_extra_args} \
             --progress
