@@ -11,3 +11,5 @@ RUN python -m build --outdir $OUT_DIR --wheel .
 
 
 RUN pip install ${OUT_DIR}/*.whl
+
+ENTRYPOINT ["python", "-m", "invoke_healthomics_run"]
