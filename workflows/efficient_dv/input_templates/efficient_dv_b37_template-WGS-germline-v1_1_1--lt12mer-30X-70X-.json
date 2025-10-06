@@ -1,0 +1,42 @@
+{
+    "EfficientDV.base_file_name": "<base_file_name>",
+    "EfficientDV.cram_files": [
+        "<cram_file>.cram"
+    ],
+    "EfficientDV.cram_index_files": [
+        "<cram_file>.cram.crai"
+    ],
+    "EfficientDV.num_shards": 50,
+    "EfficientDV.make_gvcf": true,
+    "EfficientDV.recalibrate_vaf": false,
+    "EfficientDV.is_somatic": false,
+    "EfficientDV.single_strand_filter": true,
+    "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
+    "EfficientDV.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.dict"
+    },
+    "EfficientDV.normalize_strand_bias": false,
+    "EfficientDV.preemptible_tries": 2,
+    "EfficientDV.ref_dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.dbsnp138.vcf",
+    "EfficientDV.ref_dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.dbsnp138.vcf.idx",
+    "EfficientDV.cap_at_optimal_coverage": false,
+    "EfficientDV.exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg19/annotation_intervals/exome.twist.hg19.sort.bed",
+    "EfficientDV.annotation_intervals": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/annotation_intervals/LCR-hg19_tab_no_chr.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/annotation_intervals/mappability.hg19.0_tab_no_chr.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/annotation_intervals/hmers_7_and_higher_hg19_no_chr.sort.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/UG-High-Confidence-Regions/v2.1.1/ug_hcr_hg19_no_chr.bed"
+    ],
+    "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/wgs_calling_regions.v1.interval_list",
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/v1.1.1/ultima_deep_variant_v1.1.1.ckpt-780000.onnx",
+    "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/v1.1.1/ultima_deep_variant_v1.1.1.ckpt-780000.onnx.serialized.a10g",
+    "EfficientDV.optimal_coverages": [
+        70
+    ],
+    "EfficientDV.min_variant_quality_exome_hmer_indels": 20,
+    "EfficientDV.keep_duplicates": false,
+    "EfficientDV.add_ins_size_channel": true,
+    "EfficientDV.cloud_provider_override": "aws"
+}
