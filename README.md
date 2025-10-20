@@ -6,7 +6,7 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 2. [Terraform Modules for Environment Setup](#Terraform-Modules-for-Environment-Setup)
 3. [Deploying Private Workflow](#Deploying-Private-Workflow)
 4. [Running Private Workflow](#Running-Private-Workflow)
-5. [Deploying & Running Private workflow (manual)](Deploying-and-Running-Private-workflow-(manual))
+5. [Deploying & Running Private workflow (manual)](#Deploying-and-Running-Private-workflow-(manual))
 6. [Support Tools](#Support-Tools)
 ## Introduction
 
