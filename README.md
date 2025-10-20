@@ -6,7 +6,8 @@ UltimaGenomics repository for workflows compatible with AWS HealthOmics
 2. [Terraform Modules for Environment Setup](#Terraform-Modules-for-Environment-Setup)
 3. [Deploying Private Workflow](#Deploying-Private-Workflow)
 4. [Running Private Workflow](#Running-Private-Workflow)
-5. [Support Tools](#Support-Tools)
+5. [Deploying & Running Private workflow (manual)](Deploying-and-Running-Private-workflow-(manual))
+6. [Support Tools](#Support-Tools)
 ## Introduction
 
 1.	Ultima Genomics offers pipelines as Ready2Run workflows on AWS HealthOmics. Ready2Run workflows enable you to run these pipelines on AWS HealthOmics by simply bringing your data. For more flexibility such as the use of larger file sizes or changing the reference genome, you can convert Ready2Run workflows to private workflows by following the steps in this repository. Once the Ready2Run workflow is converted to a private workflow, the cost to run the workflow will now be based on the compute and run storage used during the private workflow.
@@ -39,10 +40,19 @@ Key features:
 Refer to the [terraform/healthomics-wdl-env/README.md](terraform/healthomics-wdl-env/README.md) for detailed usage instructions and module configuration options.
 
 ## Deploying Private Workflow
-### To localize workflow resources and create a private workflow in AWS HealthOmics you can:
+### To localize workflow resources and create a private workflow in AWS HealthOmics:
 - [use this script](scripts/healthomics_wf/create_healthomics_workflow.py) that localizes the necessary resources and create a private workflow on AWS HealthOmics. After running it your workflow [is ready to run](#running-private-workflow).
-- Alternatively, follow the steps below to do it manually:
-#### To localize workflow resources to create a private workflow in AWS HealthOmics, follow the steps below:
+- Alternatively, follow [this section](#Deploying-Private-workflow-(manual-way)) to do it manually.
+
+## Running Private Workflow
+In case you chose to build your environment with the healthomics-wdl-env terraform module, and you've deployed the workflow by running the script, you can run your workflow easily using [this script](scripts/healthomics_wf/invoke_healthomics_run.py) that invokes the StartOmicsRun lambda.
+
+Alternatively, follow [this section](#Running-Private-workflow-(manual-way)) to do it manually.
+
+## Deploying and Running Private workflow (manual)
+### Deploying Private workflow (manual way)
+
+To localize workflow resources to create a private workflow in AWS HealthOmics, follow the steps below:
 i. Pre requisites: 
 1. Ultima Genomics workflows uses several ECR containers, they are listed under each workflow tasks\globals.wdl.
 
@@ -90,10 +100,7 @@ ii. From the console:
     c. Follow the instructions on the console to create your workflow.
        - Define "Main workflow definition file path" as <workflow_name>.wdl file
 
-## Running Private Workflow
-In case you chose to build your environment with the healthomics-wdl-env terraform module, and you've deployed the workflow by running the script, you can run your workflow easily using [this script](scripts/healthomics_wf/invoke_healthomics_run.py) that invokes the StartOmicsRun lambda.
-
-Alternatively, follow the steps below to do it manually:
+### Running Private workflow (manual way)
 #### Run your workflow by following one of the two options below:
    
 i. From the CLI:
