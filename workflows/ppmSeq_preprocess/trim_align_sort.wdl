@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.23.1" # !UnusedDeclaration
+        String pipeline_version = "1.23.2" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
