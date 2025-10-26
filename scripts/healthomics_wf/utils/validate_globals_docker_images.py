@@ -37,10 +37,13 @@ def validate_docker_images(workflows_dir: Path) -> None:
 def get_globals_docker_images(workflows_dir: Path) -> set:
     logger.debug("Make sure global wdls are all the same")
     all_globals_wdls = glob(str(workflows_dir / "*" / GLOBALS_REL_PATH))
-    assert len(set([file_md5(global_file) for global_file in all_globals_wdls])) == 1, "Not all globals file are the same"
-    logger.debug("Get docker images from globals.wdl")
-    docker_images_dict, _ = parse_wdl_for_images(all_globals_wdls[0])
-    docker_images = set(docker_images_dict.values())
+    logger.debug("Get docker images from globals.wdl of all workflows")
+    all_docker_images_dict = {}
+    for wf_global in all_globals_wdls:
+        wf_images_dict, _ = parse_wdl_for_images(wf_global)
+        logger.debug(f"Images found in {wf_global}: {wf_images_dict}")
+        all_docker_images_dict.update(wf_images_dict)
+    docker_images = set(all_docker_images_dict.values())
     logger.debug(f"Images found: {docker_images}")
     return docker_images
 
