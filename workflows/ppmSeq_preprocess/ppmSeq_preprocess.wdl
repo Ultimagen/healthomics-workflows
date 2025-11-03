@@ -32,7 +32,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.23.2" # !UnusedDeclaration
+    String pipeline_version = "1.23.0" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -94,7 +94,7 @@ workflow ppmSeqPreprocess {
   }
 
   meta {
-    description: "This workflow takes untrimmed ppmSeq sequencing data, trims, aligns and sorts, and generates a QC report"
+    description: "The ppmSeq Preprocess pipeline is designed to process untrimmed ppmSeq sequencing data through a complete preprocessing workflow including adapter trimming, alignment to reference genome, sorting, duplicate marking, and QC report generation. This analysis is generally done on the UG sequencer, this pipeline is intended for cases where it did not happen or was improperly configured. For more details on ppmSeq, see https://www.ultimagenomics.com/products/ppmseq-tm/ and https://www.biorxiv.org/content/10.1101/2025.08.11.669689v1. \n\nThe following input templates are available for different input data: \n\n1) `ppmSeq_preprocess_template-ppmSeq.json` | Use this template for ppmSeq data. The input CRAM file should NOT be trimmed. If it contains the ppmSeq tags (e.g. st, et), it was trimmed. \n\n2) `ppmSeq_preprocess_template-ppmSeq_legacy_v5.json` | Use this template for LEGACY v5 ppmSeq data. This is an older version of the ppmSeq adapters, generally not available since 2024. The input CRAM file should NOT be trimmed. If it contains the ppmSeq tags (e.g. as, ts), it was trimmed. \n\n3) `ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming.json` | Use this template only for the case where the UG native adapters were trimmed, but not the ppmSeq adapters and loop. This generally happens if the application_type is configured to be 'native' instead of 'ppmSeq', can be verified by the presence of an 'a3' tag in some reads but the absence of ppmSeq tags (e.g. st, et). "
     author: "Ultima Genomics"
         WDL_AID: { exclude: [
             "pipeline_version",

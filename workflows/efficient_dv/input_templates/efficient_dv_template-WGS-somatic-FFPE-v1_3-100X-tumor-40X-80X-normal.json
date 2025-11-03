@@ -7,9 +7,9 @@
         "<cram_file>.cram.crai"
     ],
     "EfficientDV.num_shards": 50,
-    "EfficientDV.make_gvcf": true,
-    "EfficientDV.recalibrate_vaf": false,
-    "EfficientDV.is_somatic": false,
+    "EfficientDV.make_gvcf": false,
+    "EfficientDV.recalibrate_vaf": true,
+    "EfficientDV.is_somatic": true,
     "EfficientDV.single_strand_filter": true,
     "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
     "EfficientDV.references": {
@@ -30,16 +30,28 @@
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
     "EfficientDV.normalize_strand_bias": false,
-    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx",
-    "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx.serialized.a10g",
-    "EfficientDV.min_variant_quality_hmer_indels": 5,
-    "EfficientDV.min_variant_quality_exome_hmer_indels": 7,
-    "EfficientDV.min_variant_quality_non_hmer_indels": 0,
-    "EfficientDV.min_variant_quality_snps": 0,
-    "EfficientDV.optimal_coverages": [
-        50
+    "EfficientDV.background_cram_files": [
+        "<normal_cram_file>.cram"
     ],
-    "EfficientDV.keep_duplicates": true,
+    "EfficientDV.background_cram_index_files": [
+        "<normal_cram_file>.cram.crai"
+    ],
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wgs-ffpe-model-v1.3.ckpt-890000.onnx",
+    "EfficientDV.keep_duplicates": false,
     "EfficientDV.add_ins_size_channel": true,
+    "EfficientDV.ug_make_examples_extra_args": "--channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality,soft_clips",
+    "EfficientDV.min_fraction_hmer_indels": 0.03,
+    "EfficientDV.min_fraction_non_hmer_indels": 0.03,
+    "EfficientDV.min_fraction_snps": 0.03,
+    "EfficientDV.min_variant_quality_hmer_indels": 10,
+    "EfficientDV.min_variant_quality_exome_hmer_indels": 10,
+    "EfficientDV.min_variant_quality_non_hmer_indels": 10,
+    "EfficientDV.min_variant_quality_snps": 10,
+    "EfficientDV.allele_frequency_ratio": 10,
+    "EfficientDV.optimal_coverages": [
+        100,
+        80
+    ],
+    "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.cloud_provider_override": "aws"
 }

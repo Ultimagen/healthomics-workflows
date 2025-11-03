@@ -35,13 +35,13 @@
     "SingleCell.barcode_rg": "S1_L001_R1_001",
     "SingleCell.insert_rg": "S1_L001_R2_001",
     "SingleCell.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.25/public/single_cell/10x-BDB-flex.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/single_cell/10x-BDB-flex.json",
         "format": "10x BDB flex",
         "failure_read_group": "unmatched",
         "extra_args": "--compare \"rq<=1.0\" --histogram=%1.histogram.csv --failure-field=fm:Z:cram  --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %5%4%3",
         "add_run_id_as_ri_tag": true,
         "pattern_files": [
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.25/public/single_cell/10x-737K-fixed-rna-profiling.csv"
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/single_cell/10x-737K-fixed-rna-profiling.csv"
         ],
         "memory_gb": 128
     },

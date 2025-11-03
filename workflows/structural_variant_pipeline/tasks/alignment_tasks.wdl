@@ -402,7 +402,7 @@ task BuildUaIndex{
         ua \
             --build \
             --ref ~{references.ref_fasta} \
-            --seed 20,200,5 \
+            --seed 20 \
             --index ~{output_file} \
             --progress
 
@@ -449,7 +449,7 @@ task BuildUaMethIndex {
         --methylation \
         --build \
         --ref ~{references.ref_fasta} \
-        --seed 20,200,5 \
+        --seed 20 \
         --index ~{output_file} \
         --progress
 

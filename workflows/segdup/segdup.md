@@ -153,6 +153,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>File? </i> &mdash; 
          Germline vcf file in order to generate haplotypes that incorporate germline variants <br /> 
 </p>
+<p name="SegDupAnalysis.DV.optimization_level">
+        <b>SegDupAnalysis.DV.optimization_level</b><br />
+        <i>Int? </i> &mdash; 
+         Optimization level for TensorRT engine in call_variants <br /> 
+</p>
 <p name="SegDupAnalysis.DV.output_call_variants_tfrecords">
         <b>SegDupAnalysis.DV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash; 

@@ -70,5 +70,6 @@ workflow UAAlignment {
     output {
         Array[File] ua_output_json = AlignWithUA.ua_output_json
         File ua_output_bam         = AlignWithUA.ua_output_bam
+        File? ua_index_build       = BuildUaIndex.ua_index
     }
 }

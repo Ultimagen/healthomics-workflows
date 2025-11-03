@@ -25,6 +25,7 @@ Table of Contents
   - [Model training (srsnv\_training)](#model-training-srsnv_training)
   - [Inference (snvqual)](#inference-snvqual)
   - [Reporting (srsnv\_report)](#reporting-srsnv_report)
+- [Template descriptions](#template-descriptions)
 - [Manual execution (outside WDL)](#manual-execution-outside-wdl)
   - [Environment / dockers](#environment--dockers)
   - [Step-by-step commands](#step-by-step-commands)
@@ -47,6 +48,8 @@ We now provide detailed information on the denoising procedure outlined below.
 
 ### Training set preparation
 First, all the SNVs in the input data (CRAM file) are exported to a vcf file denoted a FeatureMap (f1), where multiple annotation for every read supporting each SNV are collected. Additionally, a random sample of bases is collected and exported in the same format to a separate file (f2). Then, a series of filters is applied to each file, as detailed below, leaving in only high quality data. Finally, the randomly sample bases in f2 are filtered for bases matching the reference genome, which and annotated as True, and the SNVs in f1 are filtered for low VAF (≤5%) and high-coverage (≥20×) and annotated as False. 
+
+The randomly sampled data can be sampled so that it follows a provided distribution of trinucleotide+alt motifs (see https://cancer.sanger.ac.uk/signatures/sbs/ for example of this kind of distribution). By default, the trinucleotide distribution of the reference genome inside the UG HCR is provided as input, with a uniform distribution across the 3 alts (e.g. ACG->AAG,ACG->AGG,ACG->ATG all have the same probability). 
 
 ### Data filtering
 The filtering cascade described above incorporates both **hard** and **soft** filters. **Hard filters** remove SNVs entirely from the output VCF file. **Soft filters**, by contrast, retain SNVs in the VCF and assign them a quality score, but annotate them as filtered (FORMAT/FILT=0). Downstream analyses should therefore treat soft-filtered SNVs with caution. The effects of all filters on the randomly sampled bases are summarized in an output metadata file to support quality control (QC) and normalization. The default filters are described below.
@@ -124,9 +127,26 @@ Below is a detailed table describing the various fields, as also described in th
 | FILT_BITMAP |                               | FORMAT  | .      | String  | Filter bitmaps                                                                                         |
 | MQUAL       | ML_QUAL                       | FORMAT  | .      | Float   | SingleReadSNV model inferred raw Phred scaled quality                                                  |
 | SNVQ        | QUAL                          | FORMAT  | .      | Float   | SingleReadSNV model inferred Phred scaled quality, recalibrated to SNVQ                                |
+| sd          |                               | FORMAT  | .      | Integer  | Matching distance of "Start_loop" ***                                |
+| ed          |                               | FORMAT  | .      | Integer  | Matching distance of "End_loop" ***                                |
+| l1          |                               | FORMAT  | .      | Integer  | Length of insertion before "Start_loop" ***                                |
+| l2          |                               | FORMAT  | .      | Integer  | Length "Start_loop" ***                                |
+| l3          |                               | FORMAT  | .      | Integer  | Length "Stem_start" ***                                |
+| l4          |                               | FORMAT  | .      | Integer  | Length of insert ***                                |
+| l5          |                               | FORMAT  | .      | Integer  | Length of "Stem_end" ***                                |
+| l6          |                               | FORMAT  | .      | Integer  | Length of "End_loop" ***                                |
+| l7          |                               | FORMAT  | .      | Integer  | Length of adapter following "End_loop" ***                                |
+| q2          |                               | FORMAT  | .      | Integer  | Average quality of "Start_loop" ***                                |
+| q3          |                               | FORMAT  | .      | Integer  | Average quality of "Stem_start" ***                                |
+| q4          |                               | FORMAT  | .      | Integer  | Average quality of insert ***                                |
+| q5          |                               | FORMAT  | .      | Integer  | Average quality of "Stem_end" ***                                |
+| q6          |                               | FORMAT  | .      | Integer  | Average quality of "End_loop" ***                                |
 
-  \* Number according to the VCF format, 1="single value", .="multiple values", A="One value per ALT allele". In the FeatureMap output, by convention all the "." values are lists of the same length corresponding to the read supporting the reported SNV.  
+  `* Number according to the VCF format, 1="single value", .="multiple values", A="One value per ALT allele". In the FeatureMap output, by convention all the "." values are lists of the same length corresponding to the read supporting the reported SNV.  
+  
   ** For categorical values, the list of allowed values is given in curly brackets.
+
+  *** This tag is generated by the Trimmer software running on the UG tool (length=length of segment, distance=distance of matched sequence from expected sequence, quality=average quality of segment), only available in CRAM files produced by UG SWPKG1.9+. In older data this tag does not exist and will result in a missing value in all the entries, and will not affect model performance.
 
 ## Variables (WDL inputs/outputs)
 Naming convention - Curly braces denote variable names as passed to / produced by the WDL (e.g. `{featuremap}`, `{model_files}`, `{srsnv_metadata_json}`).
@@ -138,7 +158,9 @@ Naming convention - Curly braces denote variable names as passed to / produced b
 - `{references.ref_fasta}`, `{references.ref_fasta_index}`, `{references.ref_dict}`
 - `{featuremap_params}` (controls `snvfind` emission thresholds / context)
 - `{training_regions_interval_list}` (+ its index)
+- `{ref_trinuc_freq}` trinucleotide distribution to sample the random bases by
 - `{min_coverage_to_train_model}`
+- Optional: `{random_sample_trinuc_freq}` (trinucleotide frequency distribution for random sampling)
 
 ### Model / training control inputs
 - `{single_read_snv_params}` (sampling sizes, filters, CV config)
@@ -149,6 +171,7 @@ Naming convention - Curly braces denote variable names as passed to / produced b
 ### Key outputs
 - Output FeatureMap: `{featuremap}` + `{featuremap_index}`
 - Random sample FeatureMap: `{featuremap_random_sample}`, `{featuremap_random_sample_index}`, `{downsampling_rate}`
+- Optional: `{random_sample_trinuc_freq_stats}` (actual trinucleotide frequencies in random sample, if trinucleotide-aware sampling was used)
 - Training datasets (if self-trained):
   - `{raw_filtered_featuremap_parquet}`, `{raw_featuremap_stats}`
   - `{random_sample_filtered_featuremap_parquet}`, `{random_sample_featuremap_stats}`
@@ -162,12 +185,14 @@ Naming convention - Curly braces denote variable names as passed to / produced b
 ### FeatureMap generation with snvfind
 `snvfind` emits:
 - Full raw FeatureMap: `{base}.raw.featuremap.vcf.gz`
-- Downsampled FeatureMap (random): `{base}.random_sample.featuremap.vcf.gz`
+- Randomly sampled bases FeatureMap: `{base}.random_sample.featuremap.vcf.gz`
 A precise `downsampling_rate` is computed as:
 ```
 random_sample_size / total_aligned_bases
 ```
 (derived from sorter stats). This enables consistent positive sampling sizes independent of coverage.
+
+**Trinucleotide-aware sampling**: If `{random_sample_trinuc_freq}` is provided (CSV file with trinucleotide frequencies), the random sample will be drawn according to the specified trinucleotide distribution rather than uniformly. By default, the trinucleotide distribution of the reference genome is used, to create a training set that is representative of the WGS data. The actual trinucleotide frequencies achieved in the random sample are saved to `{random_sample_trinuc_freq_stats}`.
 
 ### Coverage gate and model decision
 If mean coverage `< {min_coverage_to_train_model}`:
@@ -186,14 +211,18 @@ If mean coverage `< {min_coverage_to_train_model}`:
 - Downsamples to target sizes (`tp_train_set_size`, `fp_train_set_size`)
 - Produces stats JSON per filtered set
 
-Labeling:
-- “Positive” dataset = random sample filtered parquet
-- “Negative” dataset = raw filtered parquet
-(Stats for both sets are passed to training for auditability.)
+Labeling strategy:
+- **Positive dataset**: Random sample filtered for REF == ALT (bases matching reference)
+- **Negative datasets**: Raw featuremap filtered for low VAF (≤5%)
+- Stats for both sets are passed to training for auditability
 
 ### Model training (srsnv_training)
 Command consumes:
-- `--positive`, `--negative` parquet files + per-set stats
+- `--positive` parquet file (random sample, REF==ALT)
+- `--negative` parquet file (raw featuremap, low VAF)
+- `--stats-positive`: statistics from positive filtering
+- `--stats-negative`: statistics from random sample negative filtering (REF≠ALT, low VAF)
+- `--stats-featuremap`: statistics from raw featuremap filtering
 - Training regions (for metadata)
 - Feature list (ordering preserved)
 - K-fold CV (`num_CV_folds`) with chromosome-based fold assignment (preferred)
@@ -213,17 +242,28 @@ Generates:
 - `{base}.report.html`
 - `{base}.single_read_snv.applicationQC.h5`
 
+## Template descriptions
+
+The following input templates are available for different kinds of input data:
+
+| Template File | Description |
+|---------------|-------------|
+| `single_read_snv_template-ppmSeq.json` | Use this template for ppmSeq data. The input CRAM file should be trimmed, aligned and sorted, and contain the ppmSeq tags (e.g. st, et). |
+| `single_read_snv_template-ppmSeq_legacy_v5.json` | Use this template for LEGACY v5 ppmSeq data. This is an older version of the ppmSeq adapters, generally not available since 2024. The input CRAM file should be trimmed, aligned and sorted, and contain the ppmSeq tags (e.g. as, ts). |
+| `single_read_snv_template-Standard-WG.json` | Use this template for any non-ppmSeq data. |
+
 ## Manual execution (outside WDL)
 
 ### Environment / dockers
-Pull (matching versions referenced in globals):
+Pull (matching versions referenced in workflows/single_read_snv/tasks/globals.wdl in this repository):
 - `featuremap_docker` (snvfind + snvqual)
 - `ugbio_featuremap_docker` (featuremap_to_dataframe, filter_featuremap)
 - `ugbio_srsnv_docker` (srsnv_training, srsnv_report)
 
+
 ### Step-by-step commands
-Variable names mirror WDL inputs; example corresponds to ppmSeq template. See [wdls/input_templates/single_read_snv_template.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/single_read_snv/input_templates/single_read_snv_template-ppmSeq.json) for full filenames, only base names are used below for clarity.
-```
+Variable names mirror WDL inputs; example corresponds to ppmSeq template. See [wdls/input_templates/single_read_snv_template-ppmSeq.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/single_read_snv/input_templates/single_read_snv_template-ppmSeq.json) for full filenames, only base names are used below for clarity.
+```bash
 # Set base name & inputs
 BASE=sample
 CRAM=input.cram
@@ -233,7 +273,8 @@ REF=Homo_sapiens_assembly38.fasta
 TRAINING_REGIONS=ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz
 TRAINING_REGIONS_INDEX=${TRAINING_REGIONS}.tbi
 XGBOOST_PARAMS=xgboost_model_params.json
-BED=wgs_calling_regions.without_encode_blacklist.hg38.bed   # featuremap_params.bed_file
+BED=wgs_calling_regions.without_encode_blacklist.hg38.bed
+TRINUC_FREQ=ref_trinuc_freq.csv  # Optional: reference genome trinucleotide frequency file for random sampling
 
 # single_read_snv_params (ppmSeq template)
 TP_TRAIN_SET_SIZE=1500000
@@ -253,32 +294,36 @@ TOTAL_ALIGNED_BASES=$(jq -re '.total_aligned_bases // .total_bases // error("mis
 DOWNSAMPLING_RATE=$(awk -v num=$RANDOM_SAMPLE_SIZE -v den=$TOTAL_ALIGNED_BASES 'BEGIN{printf "%.12f", num/den}')
 echo "Downsampling rate: $DOWNSAMPLING_RATE"
 
-# (Optional) Mean coverage (if available in stats) used for dynamic coverage ceiling
-MEAN_COVERAGE=$(jq -re '.mean_coverage // empty' "$SORTER_STATS")
-if [ -n "$MEAN_COVERAGE" ]; then
-  COVERAGE_CEIL=$(awk -v m=$MEAN_COVERAGE -v f=$MAX_COV_FACTOR 'BEGIN{c=m*f; printf "%d", (c==int(c)?c:int(c)+1)}')
-else
-  # Fallback if mean coverage not present (example only)
-  COVERAGE_CEIL=$(( MIN_COV_FILTER * 30 ))
-fi
+# Mean coverage extraction
+# run inside ugbio_srsnv docker
+MEAN_COVERAGE_FILE=${BASE}.mean_coverage.txt
+sorter_stats_to_mean_coverage \
+  --sorter-stats-json "$SORTER_STATS" \
+  --output-file "$MEAN_COVERAGE_FILE"
+
+MEAN_COVERAGE=$(cat "$MEAN_COVERAGE_FILE")
+echo "Mean coverage: $MEAN_COVERAGE"
+COVERAGE_CEIL=$(printf "%.0f" "$(echo "$MEAN_COVERAGE * $MAX_COV_FACTOR" | bc -l)")
 echo "Coverage ceiling: $COVERAGE_CEIL"
 
 # 2. snvfind (raw + random sample)
 # FeatureMap params (ppmSeq): min_mapq=60 padding=5 score_limit=100 exclude_nan_scores=true include_dup_reads=true
 # surrounding_quality_size=20 reference_context_size=3 keep_supplementary=false
 # cram_tags_to_copy joined by commas below
-CRAM_TAGS="tm:Z:A:AQ:AQZ:AZ:Q:QZ:Z,a3:i,rq:f,st:Z:MIXED:MINUS:PLUS:UNDETERMINED,et:Z:MIXED:MINUS:PLUS:UNDETERMINED,MI:Z,DS:i"
+CRAM_TAGS="tm:Z:A:AQ:AQZ:AZ:Q:QZ:Z,a3:i,rq:f,st:Z:MIXED:MINUS:PLUS:UNDETERMINED,et:Z:MIXED:MINUS:PLUS:UNDETERMINED,MI:Z,DS:i,sd:i,ed:i,l1:i,l2:i,l3:i,l4:i,l5:i,l6:i,l7:i,q2:i,q3:i,q4:i,q5:i,q6:i"
 
 snvfind "$CRAM" "$REF" \
   -o ${BASE}.raw.featuremap.vcf.gz \
-  -f ${BASE}.random_sample.featuremap.vcf.gz,${DOWNSAMPLING_RATE} \
+  -f ${BASE}.random_sample.featuremap.vcf.gz,${DOWNSAMPLING_RATE}${TRINUC_FREQ} \
   -v \
   -p 5 -L 100 -n -d -Q 20 -r 3 -m 60 -c "$CRAM_TAGS" -b "$BED"
 
 bcftools index -t ${BASE}.raw.featuremap.vcf.gz
 bcftools index -t ${BASE}.random_sample.featuremap.vcf.gz
 
-# 3. Prepare RAW (negative / FP labeling set)
+
+
+# 3. Prepare RAW (negative / FP labeling set from raw featuremap)
 #   a) Restrict to training regions
 bcftools view ${BASE}.raw.featuremap.vcf.gz -T "$TRAINING_REGIONS" -Oz -o ${BASE}.raw.training_regions.vcf.gz
 bcftools index -t ${BASE}.raw.training_regions.vcf.gz
@@ -287,7 +332,7 @@ bcftools index -t ${BASE}.raw.training_regions.vcf.gz
 featuremap_to_dataframe \
   --input ${BASE}.raw.training_regions.vcf.gz \
   --output ${BASE}.raw.training_regions.parquet \
-  --drop-format GT AD
+  --drop-format GT AD X_TCM
 
 #   c) Filter + label (RAW_VAF <= MAX_VAF_FOR_FP) + downsample to FP_TRAIN_SET_SIZE
 filter_featuremap \
@@ -296,12 +341,12 @@ filter_featuremap \
   --stats ${BASE}.raw.stats.json \
   --filter name=coverage_ge_min:field=DP:op=ge:value=${MIN_COV_FILTER}:type=region \
   --filter name=coverage_le_max:field=DP:op=le:value=${COVERAGE_CEIL}:type=region \
-  --filter name=vaf_le_threshold:field=RAW_VAF:op=le:value=${MAX_VAF_FOR_FP}:type=label \
   --filter name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=quality \
   --filter name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality \
   --filter name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality \
   --filter name=edist_le_10:field=EDIST:op=lt:value=10:type=quality \
   --filter name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality \
+  --filter name=low_vaf:field=RAW_VAF:op=le:value=${MAX_VAF_FOR_FP}:type=label \
   --downsample random:${FP_TRAIN_SET_SIZE}:${RANDOM_SEED}
 
 # 4. Prepare RANDOM SAMPLE (positive / TP labeling set)
@@ -313,7 +358,7 @@ bcftools index -t ${BASE}.rs.training_regions.vcf.gz
 featuremap_to_dataframe \
   --input ${BASE}.rs.training_regions.vcf.gz \
   --output ${BASE}.rs.training_regions.parquet \
-  --drop-format GT AD
+  --drop-format GT AD X_TCM
 
 #   c) Filter + label (REF == ALT) + downsample to TP_TRAIN_SET_SIZE
 filter_featuremap \
@@ -322,22 +367,40 @@ filter_featuremap \
   --stats ${BASE}.rs.stats.json \
   --filter name=coverage_ge_min:field=DP:op=ge:value=${MIN_COV_FILTER}:type=region \
   --filter name=coverage_le_max:field=DP:op=le:value=${COVERAGE_CEIL}:type=region \
-  --filter name=ref_eq_alt:field=REF:op=eq:value_field=ALT:type=label \
   --filter name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=quality \
   --filter name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality \
   --filter name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality \
   --filter name=edist_le_10:field=EDIST:op=lt:value=10:type=quality \
   --filter name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality \
+  --filter name=ref_eq_alt:field=REF:op=eq:value_field=ALT:type=label \
+  --downsample random:${TP_TRAIN_SET_SIZE}:${RANDOM_SEED}
+
+#   d) Filter + negative label (RAW_VAF <= MAX_VAF_FOR_FP) + downsample to TP_TRAIN_SET_SIZE
+filter_featuremap \
+  --in  ${BASE}.rs.training_regions.parquet \
+  --out ${BASE}.rs_neg.filtered.parquet \
+  --stats ${BASE}.rs_neg.stats.json \
+  --filter name=coverage_ge_min:field=DP:op=ge:value=${MIN_COV_FILTER}:type=region \
+  --filter name=coverage_le_max:field=DP:op=le:value=${COVERAGE_CEIL}:type=region \
+  --filter name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=quality \
+  --filter name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality \
+  --filter name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality \
+  --filter name=edist_le_10:field=EDIST:op=lt:value=10:type=quality \
+  --filter name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality \
+  --filter name=ref_ne_alt:field=REF:op=ne:value_field=ALT:type=label \
+  --filter name=low_vaf:field=RAW_VAF:op=le:value=${MAX_VAF_FOR_FP}:type=label \
   --downsample random:${TP_TRAIN_SET_SIZE}:${RANDOM_SEED}
 
 # 5. Train (NUM_FOLDS=3 per ppmSeq template)
-FEATURES="REF:ALT:X_PREV1:X_NEXT1:X_PREV2:X_NEXT2:X_PREV3:X_NEXT3:X_HMER_REF:X_HMER_ALT:BCSQ:BCSQCSS:RL:INDEX:REV:SCST:SCED:SMQ_BEFORE:SMQ_AFTER:tm:rq:st:et:EDIST:HAMDIST:HAMDIST_FILT"
+FEATURES="REF:ALT:X_PREV1:X_NEXT1:X_PREV2:X_NEXT2:X_PREV3:X_NEXT3:X_HMER_REF:X_HMER_ALT:BCSQ:BCSQCSS:RL:INDEX:REV:SCST:SCED:SMQ_BEFORE:SMQ_AFTER:tm:rq:st:et:EDIST:HAMDIST:HAMDIST_FILT:l1,l2,l3,l4,l5,l6,l7,q2,q3,q4,q5,q6"
 
 srsnv_training \
   --positive ${BASE}.rs.filtered.parquet \
   --negative ${BASE}.raw.filtered.parquet \
   --stats-positive ${BASE}.rs.stats.json \
-  --stats-negative ${BASE}.raw.stats.json \
+  --stats-negative ${BASE}.rs_neg.stats.json \
+  --stats-featuremap ${BASE}.raw.stats.json \
+  --mean-coverage ${MEAN_COVERAGE} \
   --training-regions $TRAINING_REGIONS \
   --k-folds ${NUM_FOLDS} \
   --model-params $XGBOOST_PARAMS \

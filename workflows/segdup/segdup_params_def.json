@@ -107,6 +107,10 @@
         "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
         "optional": true
     },
+    "SegDupAnalysis.DV.optimization_level": {
+        "description": "Optimization level for TensorRT engine in call_variants",
+        "optional": true
+    },
     "SegDupAnalysis.DV.output_call_variants_tfrecords": {
         "description": "Output tfrecords from call_variants",
         "optional": true

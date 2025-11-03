@@ -25,7 +25,7 @@ workflow UAMethAlignment {
     input {
         Array[File] input_files
         String base_file_name
-        UaMethParameters? ua_meth_parameters
+        UaMethParameters ua_meth_parameters
         File cache_tarball
         References? references
         Boolean UaMethIntensiveMode = false  # If false, map against the three-letter C2T index, otherwise  map against both C2T and G2A indexes.
@@ -39,13 +39,12 @@ workflow UAMethAlignment {
     GlobalVariables global = Globals.global_dockers
 
     Int cpu_default = 40 
-    if (defined(ua_meth_parameters)) {
-        UaMethParameters ua_meth_parameters_ = select_first([ua_meth_parameters])
-        File ua_index_c2t_ = ua_meth_parameters_.index_c2t
-        File ua_index_g2a_ = ua_meth_parameters_.index_g2a
-        Int ua_meth_paramters_cpus = select_first([ua_meth_parameters_.cpus, cpu_default])
+    if (defined(ua_meth_parameters.index_c2t)) {
+        File ua_index_c2t_ = select_first([ua_meth_parameters.index_c2t])
+        File ua_index_g2a_ = select_first([ua_meth_parameters.index_g2a])
+        
     } 
-    if (!defined(ua_meth_parameters)) {
+    if (!defined(ua_meth_parameters.index_c2t)) {
         call AlignTasks.BuildUaMethIndex {
             input :
                 references          = select_first([references]),
@@ -58,8 +57,8 @@ workflow UAMethAlignment {
 
     File ua_index_c2t = select_first([ua_index_c2t_, BuildUaMethIndex.index_c2t])
     File ua_index_g2a = select_first([ua_index_g2a_, BuildUaMethIndex.index_g2a])
- 
-    Int cpu = select_first([ua_meth_paramters_cpus, cpu_default])
+
+    Int cpu = select_first([ua_meth_parameters.cpus, cpu_default])
 
     call AlignTasks.AlignWithUAMeth {
         input :
@@ -78,5 +77,7 @@ workflow UAMethAlignment {
     output {
         Array[File] ua_output_json = AlignWithUAMeth.ua_output_json
         File ua_output_bam         = AlignWithUAMeth.ua_output_bam
+        File? ua_index_c2t_build   = BuildUaMethIndex.index_c2t
+        File? ua_index_g2a_build   = BuildUaMethIndex.index_g2a
     }
 }

@@ -320,6 +320,7 @@ task ConvertToFastq {
         String? samtools_extra_args
         String output_format = "fastq"  # cram/sam/fastq supported, recommended not to change in this task
         File? reference_fasta # when input is CRAM, adding a reference file imporve performance
+        File? reference_fasta_index
 
         Int cpu
         File monitoring_script

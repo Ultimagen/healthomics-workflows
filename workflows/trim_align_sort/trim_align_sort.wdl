@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.23.2" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
@@ -96,10 +96,10 @@ workflow TrimAlignSort {
         ## UA
         #@wv 'align' in steps and steps['align'] and aligner == "ua" -> defined(ua_parameters)
         #@wv 'align' in steps and steps['align'] and aligner == "ua" and 'ua_index' in ua_parameters -> suffix(ua_parameters['ua_index']) == '.uai'
-        #@wv 'align' in steps and steps['align'] and aligner == "ua" -> suffix(ua_parameters['ref_alt']) == '.alt'
+        #@wv 'align' in steps and steps['align'] and aligner == "ua" and 'ref_alt' in ua_parameters -> suffix(ua_parameters['ref_alt']) == '.alt'
         ## UA-meth
-        #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) -> suffix(ua_meth_parameters['index_g2a']) == '.g2a'
-        #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) -> suffix(ua_meth_parameters['index_c2t']) == '.c2t'
+        #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) and 'index_g2a' in ua_meth_parameters -> suffix(ua_meth_parameters['index_g2a']) == '.g2a'
+        #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) and 'index_c2t' in ua_meth_parameters -> suffix(ua_meth_parameters['index_c2t']) == '.c2t'
         ## STAR
         #@wv 'align' in steps and steps['align'] and aligner == "star" -> defined(star_genome) or defined(star_genome_generate_params)
         #@wv 'align' in steps and steps['align'] and aligner == "star" and defined(star_genome) -> suffix(star_genome) == '.zip'
@@ -412,6 +412,21 @@ workflow TrimAlignSort {
         }
         downsampling_seed: {
             help: "Seed used for downsampling (if downsampling_frac is set).",
+            type: "File",
+            category: "output"
+        }
+        ua_index_build: {
+            help: "UA index files if UA alignment is used and index is built as part of the workflow.",
+            type: "File",
+            category: "output"
+        }
+        ua_index_c2t_build: {
+            help: "UA-meth index C2T files if UA-meth alignment is used and index is built as part of the workflow.",
+            type: "File",
+            category: "output"
+        }
+        ua_index_g2a_build: {
+            help: "UA-meth index G2A files if UA-meth alignment is used and index is built as part of the workflow.",
             type: "File",
             category: "output"
         }
@@ -738,6 +753,9 @@ workflow TrimAlignSort {
 
         ## UA outputs
         Array[File]? ua_stats_jsons             = UAAlignment.ua_output_json
+        File? ua_index_build                    = UAAlignment.ua_index_build
+        File? ua_index_c2t_build                = UAMethAlignment.ua_index_c2t_build
+        File? ua_index_g2a_build                = UAMethAlignment.ua_index_g2a_build
 
         ## STAR outputs
         File? align_star_reads_per_gene_file    = StarAlignment.reads_per_gene_file

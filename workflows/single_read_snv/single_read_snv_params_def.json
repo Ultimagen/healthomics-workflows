@@ -31,6 +31,10 @@
         "description": "Input CRAM or BAM index file",
         "optional": false
     },
+    "SingleReadSNV.mean_coverage": {
+        "description": "(Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file.",
+        "optional": true
+    },
     "SingleReadSNV.min_coverage_to_train_model": {
         "description": "Minimum coverage to train the ML model, needed as label assignment (true/false SNV) is unreliable at low coverages, the recommended value is set in the template",
         "optional": false
@@ -55,12 +59,16 @@
         "description": "preemptible_tries",
         "optional": true
     },
-    "SingleReadSNV.process_featuremap_memory_gb_override": {
-        "description": "process_featuremap_memory_gb_override",
+    "SingleReadSNV.prepare_featuremap_for_training_gb": {
+        "description": "prepare_featuremap_for_training_gb",
         "optional": true
     },
     "SingleReadSNV.raise_exceptions_in_report": {
         "description": "Raise and exception and fail the pipeline if an error is raised in the QC report",
+        "optional": true
+    },
+    "SingleReadSNV.random_sample_trinuc_freq": {
+        "description": "(Optional) CSV or TSV file with trinucleotide frequencies for the random sample. If provided, the random sample featuremap will be sampled according to the given trinucleotide frequency. If not provided, sampling is uniform.",
         "optional": true
     },
     "SingleReadSNV.references": {
@@ -72,8 +80,12 @@
         "optional": true
     },
     "SingleReadSNV.sorter_json_stats_file": {
-        "description": "Sorter json stats file provided by the Ultima Genomics pipeline (same base name as the input cram/bam file with a json extension)",
-        "optional": false
+        "description": "(Optional) Sorter json stats file. Provide EITHER this file OR both mean_coverage and total_aligned_bases.",
+        "optional": true
+    },
+    "SingleReadSNV.total_aligned_bases": {
+        "description": "(Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file.",
+        "optional": true
     },
     "SingleReadSNV.training_regions_interval_list": {
         "description": "Genomic regions to include in the training set, the recommended value is set in the template",

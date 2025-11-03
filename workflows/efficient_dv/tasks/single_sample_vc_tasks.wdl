@@ -235,7 +235,7 @@ task PrepareTrainingSet {
     
     if [ ~{have_sdf} = true ]
     then
-      python -m tarfile -e ~{ref_sdf} ~{ref_fasta}.sdf
+      python -m tarfile -e ~{ref_sdf} _reference.sdf
     fi
 
     training_prep_pipeline \
@@ -244,6 +244,7 @@ task PrepareTrainingSet {
               ~{"--base_vcf " + base_vcf} \
               ~{"--hcr " + hcr} \
               ~{"--reference " + ref_fasta} \
+              "--reference_sdf _reference.sdf" \
               --contigs_to_read ~{sep=" " train_and_test_chromosomes} \
               --contig_for_test ~{test_chromosome} \
               ~{true="--custom_annotations " false="" defined(custom_annotations)} ~{sep=" --custom_annotations " custom_annotations} \

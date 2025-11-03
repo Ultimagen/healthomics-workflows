@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.23.2" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -750,7 +750,8 @@ workflow SVPipeline {
                 cloud_provider_override = cloud_provider_override,
                 preemptible_tries = preemptibles,
                 monitoring_script = monitoring_script,
-                no_address = no_address
+                no_address = no_address,
+                memory_override = annotate_variants_memory_override
             }
     }
 
@@ -1462,15 +1463,14 @@ task AnnotateVariants {
             size(assembly,"GB")/number_of_shards + size(references.ref_fasta,"GB")) + 10
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
     Boolean defined_germline = if(length(input_germline_crams)>0) then true else false
-    Int cpu = select_first([cpu_override, if(is_aws) then 8 else 1])
-    Int mem = select_first([memory_override, if(!is_aws) then 32 else if(!is_somatic) then 64 else 128])
+    Int cpu = select_first([ cpu_override, if(is_aws) then 2 else 1])
+    Int mem = select_first([ memory_override, if(!is_somatic) then 8 else 128 ])
     # variables for metrics files reordering
     Boolean defined_germline_metrics = if(defined(germline_metrics)) then true else false
     Boolean defined_tumor_metrics = if(defined(tumor_metrics)) then true else false
     Boolean defined_assembly_metrics = if(defined(assembly_metrics)) then true else false
 
     command <<<
-        find
         set -o pipefail
         set -o xtrace
         set -e
@@ -1543,7 +1543,7 @@ task AnnotateVariants {
             echo $input_germline_crams_string
 
 
-            java -Xmx~{mem-2}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
+            java -Xmx~{mem-4}g -Xms~{mem/2}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
                 INPUT_VCF=~{input_vcf} \
                 R=~{references.ref_fasta} \
                 $input_tumor_crams_string \
@@ -1552,7 +1552,7 @@ task AnnotateVariants {
                 C=gridss.config \
                 ASSEMBLY=~{assembly} \
                 OUTPUT_VCF=~{output_vcf_prefix}.ann.vcf \
-                THREADS=~{cpu}
+                THREADS=1
 
         else
             # convert interval list to bed file
@@ -1597,7 +1597,7 @@ task AnnotateVariants {
 
         samtools index assembly_partial.cram
 
-            java -Xmx~{mem-2}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
+            java -Xmx~{mem-4}g -Xms~{mem/2}g -cp /opt/gridss/gridss--gridss-jar-with-dependencies.jar gridss.AnnotateVariants \
             INPUT_VCF=$input_vcf \
             R=~{references.ref_fasta} \
             ~{if is_somatic then "I=input_tumor.cram" else ""} \
@@ -1606,7 +1606,7 @@ task AnnotateVariants {
             C=gridss.config \
             ASSEMBLY=assembly_partial.cram \
             OUTPUT_VCF=~{output_vcf_prefix}.ann.vcf \
-            THREADS=~{cpu}
+            THREADS=1
         fi
     >>>
     parameter_meta {

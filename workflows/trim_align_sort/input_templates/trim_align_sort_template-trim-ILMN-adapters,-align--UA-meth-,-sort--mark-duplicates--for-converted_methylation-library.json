@@ -27,7 +27,7 @@
         "sort": true
     },
     "TrimAlignSort.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.25/public/trim_align_sort/trim-ILMN-adapters.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/trim_align_sort/trim-ILMN-adapters.json",
         "failure_read_group": "unmatched",
         "format": "trim ILMN adapters"
     },

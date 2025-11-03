@@ -1,0 +1,114 @@
+{
+    "SingleSampleCnmopsCNVCalling.base_file_name": {
+        "description": "Sample name",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.bed_graph": {
+        "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.cap_coverage_override": {
+        "description": "whether to cap extremely high average coverage windows to 2*cohort's average coverage quantile 99.9% value",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.chrX_name": {
+        "description": "The name of the female sex chromosome in the genome. default is: chrX",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.chrY_name": {
+        "description": "The name of the male sex chromosome in the genome. default is: chrY",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.cnv_lcr_file": {
+        "description": "UG-CNV-LCR bed file",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.cohort_reads_count_matrix": {
+        "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template. can be created by cn.mops::getReadCountsFromBAM R function ",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.enable_mod_cnv_override": {
+        "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: False",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.genome_windows": {
+        "description": "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix. if bed_graph input is set, this file must be given. ",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.input_bam_file": {
+        "description": "Input sample BAM/CRAM file. one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.input_bam_file_index": {
+        "description": "Input sample BAI/CRAI index file",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.input_sample_reads_count": {
+        "description": "Inputs sample windowed coverage stored as GenomicRanges object in rds file. can be calculated using cn.mops::getReadCountsFromBAM R function.  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.intersection_cutoff": {
+        "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.mapq": {
+        "description": "Reads mapping-quality cutoff for coverage aggregation, recommended value set in the template",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.merged_cohort_ploidy_file": {
+        "description": "Cohort ploidy file indicating 1 for male and 2 for female, per sample. The number of lines should be the same as the number of samples in cohort + current_sample. if not given, defaults to 2 for all samples.",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.min_cnv_length": {
+        "description": "Minimum length for reporting CNV. Default is: 10,000",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.min_width_value": {
+        "description": "Minimum of consecutive windows with a significant signal to consider for CNV reporting. Default is: 2",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.parallel": {
+        "description": "Number of cpus for cn.mops run",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.preemptible_tries_override": {
+        "description": "Number of preemptible tries,default is: 1",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.ref_seq_names": {
+        "description": "Chromosome names for which coverage will be calculated",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.reference_genome": {
+        "description": "Genome fasta file associated with the CRAM file",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.reference_genome_index": {
+        "description": "Fai index of the fasta file",
+        "optional": false
+    },
+    "SingleSampleCnmopsCNVCalling.save_csv_override": {
+        "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in csv format (additionally to RDS format). Default is: False.",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.save_hdf_override": {
+        "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.skip_figure_generation": {
+        "description": "Whether to skip figure generation. set true when using reference genome different than hg38.  Default is: False",
+        "optional": true
+    },
+    "SingleSampleCnmopsCNVCalling.window_length": {
+        "description": "Window length on which the read counts will be aggregated",
+        "optional": false
+    }
+}

@@ -19,7 +19,7 @@
         "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
         "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
         "v_aware_alignment_flag": false,
-        "ua_extra_args": "--seed-score-ratio 0.5 --vector --huge --soft-clipping --realignment-tag re --mismatch-cost -6"
+        "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6"
     },
     "SVPipeline.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",

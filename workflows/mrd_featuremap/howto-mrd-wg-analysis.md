@@ -18,6 +18,17 @@ The analysis of this MRD data is composed of three parts:
 
 This pipeline describes step #3, the intersection and MRD data analysis, once #1 and #2 are completed.
 
+## Template descriptions
+
+The following input templates are available for different kinds of input data:
+
+| Template File | Description |
+|---------------|-------------|
+| `mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering.json` | Use this template to run MRD using a matched signature, including cohort controls (non-matched mutation signature vcf). Quality filtering is applied to matched and control signatures (suitable for EfficientDV output). |
+| `mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering.json` | Use this template to run MRD using a matched signature, without cohort controls (non-matched mutation signature vcf). Quality filtering is applied to matched and signature (suitable for EfficientDV output). |
+| `mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering.json` | Use this template to run MRD using a matched signature, with cohort controls (non-matched mutation signature vcf). Quality filtering is not applied to matched and signature (suitable for vcf files without a QUAL field). |
+| `mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering.json` | Use this template to run MRD on a healthy control plasma without a matched signature, with cohort controls (non-matched mutation signature vcf). Quality filtering is applied to matched and signature (suitable for EfficientDV output). |
+
 ## Running the pipeline
 ### Step 1: Somatic variant calling
 Please refer to instruction in one of:

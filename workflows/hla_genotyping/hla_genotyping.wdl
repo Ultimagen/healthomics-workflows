@@ -25,7 +25,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow HLAGenotyping {
 input{
-    String pipeline_version = "1.23.2" # !UnusedDeclaration
+    String pipeline_version = "1.23.0" # !UnusedDeclaration
     String base_file_name
 
     File input_cram_bam

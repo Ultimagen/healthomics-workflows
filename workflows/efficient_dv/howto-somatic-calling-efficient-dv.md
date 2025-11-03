@@ -32,32 +32,16 @@ onnxFileName = gs://concordanz/deepvariant/model/somatic/wgs/model_dyn_1000_200_
 This model is intended for whole genome sequencing at a coverage of 40-150x for tumor and 40-100x for normal. For other applications, see the last sections of this document.
 
 ### Dockers and hardware requirements
+The dockers used in the pipeline are updated from time to time, matching versions referenced in workflows/efficient_dv/tasks/globals.wdl in this repository.
 
 The Efficient DV analysis pipeline is split into two docker images:
 
-1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
-```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.8
-or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.8 (public)
-```
-2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
-```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:2.2.3
-or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:2.2.3 (public)
-```
-
+1. `ug_make_examples_docker` docker - contains binaries for the make_examples and post_process steps.
+2. `ug_call_variants_docker` docker - contains binaries for the call_variants step. 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
-
 call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
 
-3. There are some [optional filtering steps](#additional-filtering-steps-recommended) that are implemented in the docker: 
-```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ugbio_filtering:1.14.0
-or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/ugbio_filtering:1.14.0 (public)
-```
+3. There are some [optional filtering steps](#additional-filtering-steps-recommended) that are implemented in the `ugbio_filtering_docker` docker.
 
 ## Workflow details
 
@@ -192,7 +176,7 @@ ug_postproc \
   --dbsnp Homo_sapiens_assembly38.dbsnp138.vcf
 ```
 
-The `bed_annotation_files` are comma-separated list of bed files that are used to annotate the vcf. Description of the bed file is recorded in the INFO field of the vcf. The description can be provided in one of two ways:
+Using `--annotate` together with `--bed_annotation_files` adds annotations to the VCF based on the provided BED files (given as a comma-separated list). A description of each BED file is recorded in the INFO field of the VCF. The description can be specified in one of two ways:
 
 Using a `##INFO` in the header of the bed file. For example:
 ```
@@ -210,7 +194,7 @@ If `##INFO` is not present in the bed file, then a json file with the same name 
 }
 ```
 
-If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows [JEXL filtering expressions](https://gatk.broadinstitute.org/hc/en-us/articles/360035891011-JEXL-filtering-expressions). Below is an example of a filters_file that is typically used. Note that these filters use the EXOME attribute, which is an annotation that was added using a bed file.
+If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows [JEXL filtering expressions](https://gatk.broadinstitute.org/hc/en-us/articles/360035891011-JEXL-filtering-expressions). Below is an example of a filters_file that is typically used. Note that these filters use the EXOME attribute, which is an annotation that was added using a bed file, if there is no annotation named EXOME this filter will fail.
 ```
 LowQualInExome
 QUAL < 16 and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and vc.hasAttribute('EXOME')
@@ -246,6 +230,7 @@ Specifically, the command below filters out any SNV or Non-homopolymer indel var
 The process to applying this filter is:
 
 ```
+  # Run in ugbio_filtering_docker
   filter_low_af_ratio_to_background --af_ratio_threshold 10 \
                                     --new_filter "LowAFRatioToBackground"  \
                                     <input_vcf> <output_vcf>

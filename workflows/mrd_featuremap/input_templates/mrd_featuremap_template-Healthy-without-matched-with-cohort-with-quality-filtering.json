@@ -17,7 +17,7 @@
     ],
     "MRDFeatureMap.mrd_analysis_params": {
         "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
-        "read_filter_query": "filt>0 and snvq>60"
+        "read_filter_query": "filt>0 and snvq>60 and mapq>=60"
     },
     "MRDFeatureMap.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",

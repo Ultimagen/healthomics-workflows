@@ -1,5 +1,5 @@
 # SomaticCNVCallingControlFREEC
-Runs single sample somatic CNV calling workflow based on \<a href="https://boevalab.inf.ethz.ch/FREEC/"\>ControlFREEC</a>.
+Runs single sample somatic CNV calling workflow based on [ControlFREEC](https://boevalab.inf.ethz.ch/FREEC/).
 
 CNVs are called based on both coverage and allele frequencies in the tumor and the matched germline sample.
 
@@ -29,7 +29,19 @@ The pipeline outputs:
 
 &nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.
 
-<b>When Running in AWS HealthOmics this pipeline should run with [static storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b
+<b>When Running in AWS HealthOmics this pipeline should run with</b> [static storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)
+
+<u>available templeates:</u>
+
+&nbsp;&nbsp;- controlFREEC_pipeline_bedGraph_input_template.json - use in case you have both .cram and _1.bedgraph input files.
+
+&nbsp;&nbsp;- controlFREEC_pipeline_bedGraph_and_mpileup_input_template.json - use in case you have both _1.bedgraph and precalculated .mpileup input files.
+
+&nbsp;&nbsp;- controlFREEC_pipeline_template.json - use in case you have only .cram input files.
+
+&nbsp;&nbsp;- controlFREEC_pipeline_high_sensitivity_mode_template.json - used for low tumor purity samples.
+
+
 
 ## Inputs
 

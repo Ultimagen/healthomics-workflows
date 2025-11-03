@@ -177,6 +177,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>File? </i> &mdash; 
          Germline vcf file in order to generate haplotypes that incorporate germline variants <br /> 
 </p>
+<p name="EfficientDV.optimization_level">
+        <b>EfficientDV.optimization_level</b><br />
+        <i>Int? </i> &mdash; 
+         Optimization level for TensorRT engine in call_variants <br /> 
+</p>
 <p name="EfficientDV.output_call_variants_tfrecords">
         <b>EfficientDV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash; 
@@ -352,6 +357,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.num_candidates</b><br />
         <i>Array[File]</i><br />
         Number of candidates that call_variants processed
+</p>
+<p name="EfficientDV.num_candidates_as_int">
+        <b>EfficientDV.num_candidates_as_int</b><br />
+        <i>Int</i><br />
+        Number of candidates that call_variants processed (as an integer)
 </p>
 
 <hr />

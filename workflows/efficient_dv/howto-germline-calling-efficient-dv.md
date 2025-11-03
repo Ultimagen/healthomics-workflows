@@ -38,15 +38,15 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.8
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.1.9
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/make_examples:3.1.8
+ultimagenomics/make_examples:3.1.9
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:2.2.3
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:2.2.4
 or
-337532070941.dkr.ecr.us-east-1.amazonaws.com/call_variants:2.2.3
+ultimagenomics/call_variants:2.2.4
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
@@ -175,7 +175,7 @@ ug_postproc \
   --dbsnp Homo_sapiens_assembly38.dbsnp138.vcf
 ```
 
-The `bed_annotation_files` are comma-separated list of bed files that are used to annotate the vcf. Description of the bed file is recorded in the INFO field of the vcf. The description can be provided in one of two ways:
+Using `--annotate` together with `--bed_annotation_files` adds annotations to the VCF based on the provided BED files (given as a comma-separated list). A description of each BED file is recorded in the INFO field of the VCF. The description can be specified in one of two ways:
 
 Using a `##INFO` in the header of the bed file. For example:
 ```
@@ -193,7 +193,7 @@ If `##INFO` is not present in the bed file, then a json file with the same name 
 }
 ```
 
-If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows [JEXL filtering expressions](https://gatk.broadinstitute.org/hc/en-us/articles/360035891011-JEXL-filtering-expressions). Below is an example of a filters_file that is typically used. Note that these filters use the EXOME attribute, which is an annotation that was added using a bed file.
+If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows [JEXL filtering expressions](https://gatk.broadinstitute.org/hc/en-us/articles/360035891011-JEXL-filtering-expressions). Below is an example of a filters_file that is typically used. Note that these filters use the EXOME attribute, which is an annotation that was added using a bed file, if there is no annotation named EXOME this filter will fail.
 ```
 LowQualInExome
 QUAL < 16 and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and vc.hasAttribute('EXOME')

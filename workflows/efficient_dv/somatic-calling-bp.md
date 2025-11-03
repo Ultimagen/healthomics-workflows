@@ -8,13 +8,11 @@ Last updated: Feb 11, 2025
    
    a. [Sample characterization, fresh frozen, PCR-free WGS libraries](#sample-characterization-fresh-frozen-pcr-free-wgs-libraries)
    
-   b. [Signature detection for MRD, fresh frozen, PCR-free WGS libraries](#signature-detection-for-mrd-fresh-frozen-pcr-free-wgs-libraries)
+   b. [Sample characterization, FFPE, amplified WGS libraries](#sample-characterization-ffpe-amplified-wgs-libraries)
    
-   c. [Sample characterization, FFPE, amplified WGS libraries](#sample-characterization-ffpe-amplified-wgs-libraries)
-   
-   d. [Sample characterization, amplified WES libraries](#sample-characterization-amplified-wes-libraries)
+   c. [Sample characterization, amplified WES libraries](#sample-characterization-amplified-wes-libraries)
 
-   e. [Sample characterization, unmatched normal sample] (#sample-characterization-unmatched-normal)
+   d. [Sample characterization, unmatched normal sample](#sample-characterization-unmatched-normal)
 
 3. [Pipeline output](#pipeline-output)
 4. [Evaluation process](#evaluation-process)
@@ -39,23 +37,13 @@ Samples required: tumor sample at coverage 40x-200x, normal sample at coverage 4
 
 Variants called at high confidence: SNVs with allele frequency > 5%, Indels  with allele frequency > 10%
 
-Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_3--lt20mer-40-200x_40-200x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_3--lt20mer-40-200x_40-200x-.json)
-
-<a name="signature-detection-for-mrd-fresh-frozen-pcr-free-wgs-libraries"></a>
-### Signature detection for MRD, fresh frozen, PCR-free WGS libraries
-Samples required: tumor sample at coverage 40x, normal sample at coverage 40x
-
-Variants called at high confidence: SNVs with allele frequency > 10%
-
-Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_3--lt20mer-40-200x_40-200x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-T_N-for-sample-characterization-v1_3--lt20mer-40-200x_40-200x-.json)
-
-The pipeline can be used for tumor samples with coverage higher than 40x as a much faster and cheaper alternative to the full sample characterization
+Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X.json)
 
 <a name="sample-characterization-ffpe-amplified-wgs-libraries"></a>
 ### Sample characterization, FFPE, amplified WGS libraries
 Samples required: tumor sample at coverage >100x, normal sample at coverage 40x-80x. Only tumor sample is expected to be FFPE, normal sample is expected to be PCR-free WGS. 
 
-Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-FFPE-T_N-for-sample-characterization-v1_3--100x_40-80x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-FFPE-T_N-for-sample-characterization-v1_3--100x_40-80x-.json) 
+Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal.json) 
 
 <a name="sample-characterization-amplified-wes-libraries"></a>
 ### Sample characterization, amplified WES libraries
@@ -63,7 +51,7 @@ Samples required: tumor sample at coverage >500x, normal sample at coverage >120
 
 Variants called: SNVs with allele frequency > 5%, indels with allele frequency > 5%
 
-Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WES-somatic-T_N-for-deep-sample-characterization-v0_1--500x_gt120x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WES-somatic-T_N-for-deep-sample-characterization-v0_1--500x_gt120x-.json)
+Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal.json)
 
 <a name="sample-characterization-unmatched-normal"></a>
 ### Sample characterization, unmatched normal sample
@@ -71,7 +59,7 @@ Samples required: tumor sample at coverage 40-200x, normal (unmatched) sample at
 
 Variants called at high confidence: SNVs with allele frequency > 5%, Indels  with allele frequency > 10%
 
-Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-unmatched_normal-for-sample-characterization-v1_1--lt20mer-40-200x_40-200x-.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-unmatched_normal-for-sample-characterization-v1_1--lt20mer-40-200x_40-200x-.json)
+Parameter set: [workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-unmatched_samples-v1_1-40X-200X.json](https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/efficient_dv/input_templates/efficient_dv_template-WGS-somatic-unmatched_samples-v1_1-40X-200X.json)
 
 <a name="pipeline-output"></a>
 ## Pipeline output

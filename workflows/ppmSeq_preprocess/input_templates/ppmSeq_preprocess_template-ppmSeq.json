@@ -21,7 +21,7 @@
     "ppmSeqPreprocess.ua_parameters": {
         "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
         "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
-        "ua_extra_args": "--seed-score-ratio 0.5 --vector --huge --soft-clipping",
+        "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
         "v_aware_alignment_flag": false
     },
     "ppmSeqPreprocess.sorter_params": {
@@ -38,13 +38,13 @@
     "ppmSeqPreprocess.create_md5_checksum_outputs": false,
     "ppmSeqPreprocess.adapter_version": "v1",
     "ppmSeqPreprocess.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/ppmSeq_formats.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq.json",
         "format": "ppmSeq",
         "pattern_files": [
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/ppmSeq_start_loop.csv",
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer_formats/ppmSeq/ppmSeq_end_loop.csv"
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_start_loop.csv",
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_end_loop.csv"
         ],
-        "extra_args": "--histogram %1.%2.%3.%4.%5.histogram.csv",
+        "extra_args": "--histogram %1.%2.%4.%5.histogram.csv",
         "failure_read_group": "unmatched",
         "cram_reference": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
     }

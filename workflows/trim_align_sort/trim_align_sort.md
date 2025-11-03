@@ -255,6 +255,21 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <i>Array[File]?</i><br />
         Statistics file in json format from UA.
 </p>
+<p name="TrimAlignSort.ua_index_build">
+        <b>TrimAlignSort.ua_index_build</b><br />
+        <i>File?</i><br />
+        UA index files if UA alignment is used and index is built as part of the workflow.
+</p>
+<p name="TrimAlignSort.ua_index_c2t_build">
+        <b>TrimAlignSort.ua_index_c2t_build</b><br />
+        <i>File?</i><br />
+        UA-meth index C2T files if UA-meth alignment is used and index is built as part of the workflow.
+</p>
+<p name="TrimAlignSort.ua_index_g2a_build">
+        <b>TrimAlignSort.ua_index_g2a_build</b><br />
+        <i>File?</i><br />
+        UA-meth index G2A files if UA-meth alignment is used and index is built as part of the workflow.
+</p>
 <p name="TrimAlignSort.align_star_reads_per_gene_file">
         <b>TrimAlignSort.align_star_reads_per_gene_file</b><br />
         <i>File?</i><br />

@@ -61,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.1.8
+ultimagenomics/make_examples:3.1.9
 ```
 
 Generate interval bed : 
@@ -150,7 +150,7 @@ samtools index output_basename_assembly_hap_out_sorted.bam
 UA Docker:
 
 ```
-ultimagenomics/ua:3.0.1
+ultimagenomics/alignment:3.0.4
 ```
 UA realignment command: (realignment is done on a merged bam consisting of a merge of all the BAMs produced in the scattered assembly)
 ```
@@ -165,7 +165,7 @@ samtools view -h -@ 40 output_basename_assembly_hap_out_sorted.bam | \
     --nthread max \
     --sam-input - \
     --sam-output - \
-    --seed-score-ratio 0.5 --vector --huge --soft-clipping --realignment-tag re --mismatch-cost -6 | \
+    --seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6 | \
 
 samtools view -@ 40 -o output_basename_assembly_file_ua_aligned.bam -
 samtools sort output_basename_assembly_file_ua_aligned.bam -o output_basename_assembly_file_ua_aligned_sorted.bam 

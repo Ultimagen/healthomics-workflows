@@ -38,7 +38,6 @@
         "<normal_bam_file>.cram.crai"
     ],
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx",
-    "EfficientDV.model_serialized": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx.serialized.a10g",
     "EfficientDV.keep_duplicates": false,
     "EfficientDV.add_ins_size_channel": false,
     "EfficientDV.min_fraction_hmer_indels": 0.02,

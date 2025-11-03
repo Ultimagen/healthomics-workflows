@@ -22,7 +22,7 @@ task ppmSeqQC {
   }
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    set -eo pipefail
+    set -exuo pipefail
 
     ppmSeq_qc_analysis \
       --adapter-version ~{adapter_version} \

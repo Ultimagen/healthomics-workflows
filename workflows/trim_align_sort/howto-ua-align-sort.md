@@ -24,10 +24,10 @@ The most up-to-date docker images can be found in the `workflows/trim_align_sort
     ultimagenomics/ (hosted on DockerHub)
 
 ### UA docker:
-    ultimagenomics/alignment:2.1.2
+    ultimagenomics/alignment:3.0.4
 
 ### Sorter docker:
-    ultimagenomics/sorter:1.4.2
+    ultimagenomics/sorter:1.4.15
 
 ## System Requirements
     1. CPUs: 32-40 
@@ -100,7 +100,7 @@ ua \
     --nthread max \
     --sam-input - \
     --sam-output - \
-    --seed-score-ratio 0.5 --vector --huge --soft-clipping | \
+    --seed-score-ratio 0.5 --vector --soft-clipping | \
 samtools view -@ 32 -o output_basename.bam -
 
 # When working with multiple input BAM files
