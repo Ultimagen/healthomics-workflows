@@ -24,7 +24,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.24.2" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -198,11 +198,11 @@ task RunCNVpytor {
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: "64 GB"
+        memory: "16 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
         noAddress: no_address
-        cpu: 36
+        cpu: 8
     }
     output {
         File cnvpytor_cnv_calls_tsv = "~{sample_name}.pytor.bin~{window_size}.CNVs.tsv"

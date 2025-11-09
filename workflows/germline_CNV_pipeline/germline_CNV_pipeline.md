@@ -117,16 +117,6 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>Boolean? </i> &mdash; 
          Whether to save sample reads counts/cohort including sample/cnmops output data in csv format (additionally to RDS format). Default is: False. <br /> 
 </p>
-<p name="GermlineCNVPipeline.CnmopsCNVCalling.preemptible_tries_override">
-        <b>GermlineCNVPipeline.CnmopsCNVCalling.preemptible_tries_override</b><br />
-        <i>Int? </i> &mdash; 
-         Number of preemptible tries,default is: 1 <br /> 
-</p>
-<p name="GermlineCNVPipeline.CombineGermlineCNVCalls.preemptible_tries_override">
-        <b>GermlineCNVPipeline.CombineGermlineCNVCalls.preemptible_tries_override</b><br />
-        <i>Int? </i> &mdash; 
-         Number of preemptible tries,default is: 1 <br /> 
-</p>
 </details>
 
 
@@ -140,11 +130,6 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <b>GermlineCNVPipeline.cnvpytor_cnv_calls_bed</b><br />
         <i>File</i><br />
         CNVpytor CNV calls in bed format
-</p>
-<p name="GermlineCNVPipeline.combined_cnv_calls_bed">
-        <b>GermlineCNVPipeline.combined_cnv_calls_bed</b><br />
-        <i>File</i><br />
-        Combined CNV calls in bed format
 </p>
 <p name="GermlineCNVPipeline.combined_cnv_calls_bed_vcf">
         <b>GermlineCNVPipeline.combined_cnv_calls_bed_vcf</b><br />

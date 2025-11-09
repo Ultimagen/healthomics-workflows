@@ -23,10 +23,6 @@
         "description": "Inputs sample windowed coverage stored as GenomicRanges object in rds file. can be calculated using cn.mops::getReadCountsFromBAM R function.  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
         "optional": true
     },
-    "GermlineCNVPipeline.CnmopsCNVCalling.preemptible_tries_override": {
-        "description": "Number of preemptible tries,default is: 1",
-        "optional": true
-    },
     "GermlineCNVPipeline.CnmopsCNVCalling.save_csv_override": {
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in csv format (additionally to RDS format). Default is: False.",
         "optional": true
@@ -35,41 +31,61 @@
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.cnvpytor_precent_gaps_threshold_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.cnvpytor_precent_gaps_threshold_override": {
         "description": "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.deletions_length_cutoff_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.deletions_length_cutoff_override": {
         "description": "Minimum length of deletions to be considered without jalign support. default=3000",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.distance_threshold_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.distance_threshold_override": {
         "description": "Distance threshold for merging CNV calls. default=1500",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.duplication_length_cutoff_for_cnmops_filter_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.duplication_length_cutoff_for_cnmops_filter_override": {
         "description": "Minimum length of duplications to be considered for cn.mops calls. default=10000",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.jalign_min_mismatches_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.jalign_min_mismatches_override": {
         "description": "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.jalign_written_cutoff_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.jalign_written_cutoff_override": {
         "description": "Minimal number of supporting jaligned reads for deletions. default=1",
-        "optional": true
-    },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.preemptible_tries_override": {
-        "description": "Number of preemptible tries,default is: 1",
         "optional": true
     },
     "GermlineCNVPipeline.base_file_name": {
         "description": "Sample name",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "<base_file_name"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "<base_file_name>"
+            }
+        ]
     },
     "GermlineCNVPipeline.bed_graph": {
         "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": [
+                    "s3://<sample>.1_bedGraph.gz"
+                ]
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": [
+                    "s3://<sample>.1_bedGraph.gz"
+                ]
+            }
+        ]
     },
     "GermlineCNVPipeline.cnmops_intersection_cutoff_override": {
         "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
@@ -105,11 +121,31 @@
     },
     "GermlineCNVPipeline.cohort_reads_count_matrix": {
         "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg19.ReadsCount.rds"
+            }
+        ]
     },
     "GermlineCNVPipeline.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": false
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": false
+            }
+        ]
     },
     "GermlineCNVPipeline.disable_mod_cnv": {
         "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
@@ -117,19 +153,59 @@
     },
     "GermlineCNVPipeline.genome_windows": {
         "description": "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix.",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/Homo_sapiens_assembly19.fasta.chr1-24.w1000.bed"
+            }
+        ]
     },
     "GermlineCNVPipeline.input_bam_file": {
         "description": "Input sample BAM/CRAM file",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "<input_bam_file>.bam"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "<input_bam_file>.bam"
+            }
+        ]
     },
     "GermlineCNVPipeline.input_bam_file_index": {
         "description": "Input sample BAI/CRAI index file",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "<input_bam_file>.bam.bai"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "<input_bam_file>.bam.bai"
+            }
+        ]
     },
     "GermlineCNVPipeline.merged_cohort_ploidy_file": {
         "description": "Merged cohort ploidy file in bed format",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy"
+            }
+        ]
     },
     "GermlineCNVPipeline.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -145,22 +221,114 @@
     },
     "GermlineCNVPipeline.ref_seq_names": {
         "description": "Chromosome names for which coverage will be calculated",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": [
+                    "chr1",
+                    "chr2",
+                    "chr3",
+                    "chr4",
+                    "chr5",
+                    "chr6",
+                    "chr7",
+                    "chr8",
+                    "chr9",
+                    "chr10",
+                    "chr11",
+                    "chr12",
+                    "chr13",
+                    "chr14",
+                    "chr15",
+                    "chr16",
+                    "chr17",
+                    "chr18",
+                    "chr19",
+                    "chr20",
+                    "chr21",
+                    "chr22",
+                    "chrX",
+                    "chrY"
+                ]
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "16",
+                    "17",
+                    "18",
+                    "19",
+                    "20",
+                    "21",
+                    "22",
+                    "X",
+                    "Y"
+                ]
+            }
+        ]
     },
     "GermlineCNVPipeline.reference_genome": {
         "description": "Genome fasta file associated with the CRAM file",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta"
+            }
+        ]
     },
     "GermlineCNVPipeline.reference_genome_index": {
         "description": "Fai index of the fasta file",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
+            },
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta.fai"
+            }
+        ]
     },
     "GermlineCNVPipeline.skip_figure_generation": {
         "description": "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template.hg19",
+                "value": true
+            }
+        ]
     },
     "GermlineCNVPipeline.ug_cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "germline_CNV_pipeline_template",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed"
+            }
+        ]
     }
 }

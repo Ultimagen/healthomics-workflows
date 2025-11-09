@@ -27,7 +27,7 @@ import "tasks/globals.wdl" as Globals
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.24.2" # !UnusedDeclaration
+        String pipeline_version = "1.23.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -71,7 +71,7 @@ workflow CombineGermlineCNVCalls {
             exclude: ["pipeline_version",
                 "monitoring_script_input",
                 "no_address_override",
-                "Globals.glob"
+                "Glob.glob"
                 ]}
     }
     parameter_meta {
@@ -165,11 +165,6 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "output"
         }
-        out_sample_cnvs_bed:{
-            help: "Bed file with sample's called CNVs",
-            type: "File",
-            category: "output"
-        }
         out_sample_cnvs_vcf:{
             help: "VCF file with sample's called CNVs",
             type: "File",
@@ -191,8 +186,8 @@ workflow CombineGermlineCNVCalls {
     Float cnvpytor_precent_gaps_threshold = select_first([cnvpytor_precent_gaps_threshold_override, 0])
     Int jalign_min_mismatches = select_first([jalign_min_mismatches_override,1])
 
-    call Globals.Globals as Globals
-      GlobalVariables global = Globals.global_dockers
+    call Globals.Globals as Glob
+    GlobalVariables global = Glob.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
@@ -236,7 +231,6 @@ workflow CombineGermlineCNVCalls {
     
     output {
         File out_jalign_del_bed = RunJalignForDelCandidates.out_jalign_del_bed
-        File out_sample_cnvs_bed = ProcessCnvCalls.sample_cnvs_bed_file
         File out_sample_cnvs_vcf = ProcessCnvCalls.sample_cnvs_vcf_file
         File out_sample_cnvs_vcf_index = ProcessCnvCalls.sample_cnvs_vcf_index_file
     }
@@ -270,7 +264,9 @@ task RunJalignForDelCandidates {
     Int disk_size = ceil(input_bam_file_size + input_bam_file_size + reference_fasta_file_size + additional_disk)
      
     command <<<
-                        
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+                
         echo "Generating DEL candidates"
         #cnmops output format example:
         #chr1    632000  634000  CN0
@@ -343,7 +339,6 @@ task ProcessCnvCalls  {
         Boolean no_address
         Int preemptible_tries
     }
-    Int cpu = 36
     Float cnmops_cnvs_bed_size = size(cnmops_cnvs_bed, "GB")
     Float cnvpytor_cnvs_tsv_size = size(cnvpytor_cnvs_tsv, "GB")
     Float jalign_del_candidates_size = size(jalign_del_candidates, "GB")
@@ -351,10 +346,10 @@ task ProcessCnvCalls  {
     Float additional_disk = 10
     Int disk_size = ceil(cnmops_cnvs_bed_size + cnvpytor_cnvs_tsv_size + jalign_del_candidates_size + cnv_lcr_file_size + additional_disk)
 
-    String out_sample_cnvs_bed_file = if defined(cnv_lcr_file) then "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.bed.annotate.bed" else "~{base_file_name}.cnmops_cnvpytor.cnvs.combined.bed"
-
+     
     command <<<
-        
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
         combine_cnmops_cnvpytor_cnv_calls \
             --cnmops_cnv_calls ~{cnmops_cnvs_bed} \
             --cnvpytor_cnv_calls ~{cnvpytor_cnvs_tsv} \
@@ -381,7 +376,6 @@ task ProcessCnvCalls  {
 
     output
     {
-        File sample_cnvs_bed_file = "~{out_sample_cnvs_bed_file}"
         File sample_cnvs_vcf_file = "~{base_file_name}.cnv.vcf.gz"
         File sample_cnvs_vcf_index_file = "~{base_file_name}.cnv.vcf.gz.tbi"
     }

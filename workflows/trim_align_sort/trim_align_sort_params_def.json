@@ -1,19 +1,115 @@
 {
     "TrimAlignSort.aligner": {
         "description": "Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected.",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": "ua-meth"
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": "ua-meth"
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": "ua"
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": "star"
+            }
+        ]
     },
     "TrimAlignSort.base_file_name": {
         "description": "Base name for the output files.",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": "<base_file_name>"
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": "<base_file_name>"
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": "<base_file_name>"
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": "<base_file_name>"
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": "<base_file_name>"
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": "<base_file_name>"
+            }
+        ]
     },
     "TrimAlignSort.cpu": {
         "description": "Number of cpus to be used for the tasks.",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": 32
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": 32
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": 32
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": 32
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": 32
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": 32
+            }
+        ]
     },
     "TrimAlignSort.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": false
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": false
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": false
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": false
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": false
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": false
+            }
+        ]
     },
     "TrimAlignSort.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
@@ -21,7 +117,51 @@
     },
     "TrimAlignSort.input_cram_bam_list": {
         "description": "List of input cram or bam files to be processed.",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": [
+                    "<input_bam_or_cram_1>.cram",
+                    "<input_bam_or_cram_2>.cram"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": [
+                    "<input_bam_or_cram_1>.cram",
+                    "<input_bam_or_cram_2>.cram"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": [
+                    "<input_bam_or_cram_1>.cram",
+                    "<input_bam_or_cram_2>.cram"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": [
+                    "<input_bam_or_cram_1>.cram",
+                    "<input_bam_or_cram_2>.cram"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": [
+                    "<input_bam_or_cram_1>.cram",
+                    "<input_bam_or_cram_2>.cram"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": [
+                    "<input_bam_or_cram_1>.cram",
+                    "<input_bam_or_cram_2>.cram"
+                ]
+            }
+        ]
     },
     "TrimAlignSort.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -29,27 +169,259 @@
     },
     "TrimAlignSort.no_address": {
         "description": "no_address",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": true
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": true
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": true
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": true
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": true
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": true
+            }
+        ]
     },
     "TrimAlignSort.preemptible_tries": {
         "description": "preemptible_tries",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": 1
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": 1
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": 1
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": 1
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": 1
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": 1
+            }
+        ]
     },
     "TrimAlignSort.ref_fastas_cram": {
         "description": "List of references for CreateReferenceCache task.",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": [
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": [
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": [
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": [
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": [
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+                ]
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": [
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+                ]
+            }
+        ]
     },
     "TrimAlignSort.references": {
         "description": "References for merging inputs into one file, alignment, and sorting.",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": {
+                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa.fai",
+                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.dict"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": {
+                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": {
+                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa.fai",
+                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.dict"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": {
+                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": {
+                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta",
+                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta.fai",
+                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.dict"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": {
+                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                }
+            }
+        ]
     },
     "TrimAlignSort.sorter_params": {
         "description": "Parameters for the sorter task. Mandatory if sort step is selected.",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": {
+                    "mark_duplicates": true,
+                    "aligned": true,
+                    "mark_duplicates_ends_read_uncertainty": 0,
+                    "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": {
+                    "mark_duplicates": false,
+                    "aligned": true,
+                    "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": {
+                    "mark_duplicates": true,
+                    "aligned": true,
+                    "mark_duplicates_ends_read_uncertainty": 0,
+                    "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": {
+                    "mark_duplicates": true,
+                    "aligned": true,
+                    "mark_duplicates_ends_read_uncertainty": 0,
+                    "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": {
+                    "mark_duplicates": true,
+                    "aligned": true,
+                    "mark_duplicates_ends_read_uncertainty": 0,
+                    "demux_extra_args": "--cram-ignore-md5"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": {
+                    "mark_duplicates": true,
+                    "aligned": true,
+                    "mark_duplicates_ends_read_uncertainty": 0,
+                    "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz",
+                    "demux_extra_args": "--mark-duplicates-all-RGs=true"
+                }
+            }
+        ]
     },
     "TrimAlignSort.star_align_extra_args": {
         "description": "Extra arguments for the STAR aligner.",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": "--outSAMunmapped Within --chimOutType WithinBAM SoftClip --clip3pNbases 0 --outFilterMatchNminOverLread 0.66 --outFilterScoreMinOverLread 0.66 --scoreDelOpen -2 --scoreDelBase -2 --scoreInsOpen -2 --scoreInsBase -2 --alignEndsType Local --outSAMmapqUnique 60"
+            }
+        ]
     },
     "TrimAlignSort.star_align_gtf_override": {
         "description": "GTF file to be used for STAR aligner.",
@@ -57,7 +429,13 @@
     },
     "TrimAlignSort.star_genome": {
         "description": "Star genome file. If aligner is star, supllay either star genome file or generate new genome index.",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/STAR_hg38_3_2.7.10a.zip"
+            }
+        ]
     },
     "TrimAlignSort.star_genome_generate_params": {
         "description": "Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file.",
@@ -65,18 +443,129 @@
     },
     "TrimAlignSort.steps": {
         "description": "Steps to be executed in the pipeline.Options are: trim, align, sort",
-        "optional": false
+        "optional": false,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": {
+                    "trim": true,
+                    "align": true,
+                    "sort": true
+                }
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-without-mark-duplicates--unamplified-libraries-",
+                "value": {
+                    "trim": false,
+                    "align": false,
+                    "sort": true
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": {
+                    "trim": true,
+                    "align": true,
+                    "sort": true
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": {
+                    "trim": true,
+                    "align": true,
+                    "sort": true
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": {
+                    "trim": true,
+                    "align": true,
+                    "sort": true
+                }
+            },
+            {
+                "name": "trim_align_sort_template-merge-and-sort-with-mark-duplicates--amplified-libraries-",
+                "value": {
+                    "trim": false,
+                    "align": false,
+                    "sort": true
+                }
+            }
+        ]
     },
     "TrimAlignSort.trimmer_parameters": {
         "description": "Parameters for the trimmer task. Mandatory if trim step is selected.",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": {
+                    "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/trim_align_sort/trim-ILMN-adapters-and-low-complexity-tail.json",
+                    "failure_read_group": "unmatched",
+                    "format": "trim ILMN adapters and low complexity tail"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": {
+                    "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/trim_align_sort/trim-ILMN-adapters.json",
+                    "failure_read_group": "unmatched",
+                    "format": "trim ILMN adapters"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": {
+                    "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/trim_align_sort/trim-ILMN-adapters.json",
+                    "failure_read_group": "unmatched",
+                    "format": "trim ILMN adapters"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim,-align--STAR-,-sort--mark-duplicates-",
+                "value": {
+                    "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/trim_align_sort/trim-ILMN-adapters.json",
+                    "failure_read_group": "unmatched",
+                    "format": "trim ILMN adapters"
+                }
+            }
+        ]
     },
     "TrimAlignSort.ua_meth_parameters": {
         "description": "Parameters for the UA meth aligner. Mandatory if aligner is ua-meth.",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim,-align--UA-meth-,-sort--mark-duplicates--for-converted_IDT_methylation-library",
+                "value": {
+                    "index_g2a": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19_v45.uai.g2a",
+                    "index_c2t": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19_v45.uai.c2t"
+                }
+            },
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-meth-,-sort--mark-duplicates--for-converted_methylation-library",
+                "value": {
+                    "index_g2a": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19_v45.uai.g2a",
+                    "index_c2t": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/hg38_Lambda_pUC19_v45.uai.c2t"
+                }
+            }
+        ]
     },
     "TrimAlignSort.ua_parameters": {
         "description": "Parameters for the UA aligner. Mandatory if aligner is ua.",
-        "optional": true
+        "optional": true,
+        "templates": [
+            {
+                "name": "trim_align_sort_template-trim-ILMN-adapters,-align--UA-,-sort--mark-duplicates-",
+                "value": {
+                    "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
+                    "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                    "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
+                    "v_aware_alignment_flag": false
+                }
+            }
+        ]
     }
 }

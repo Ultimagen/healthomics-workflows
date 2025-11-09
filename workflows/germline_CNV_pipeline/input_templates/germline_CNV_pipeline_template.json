@@ -33,7 +33,7 @@
         "chrX",
         "chrY"
     ],
-    "GermlineCNVPipeline.ug_cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+    "GermlineCNVPipeline.ug_cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed",
     "GermlineCNVPipeline.genome_windows": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed",
     "GermlineCNVPipeline.cohort_reads_count_matrix": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds",
     "GermlineCNVPipeline.merged_cohort_ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
