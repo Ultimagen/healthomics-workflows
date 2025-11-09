@@ -52,6 +52,5 @@
         100,
         80
     ],
-    "EfficientDV.ug_make_examples_memory_override": 4,
-    "EfficientDV.cloud_provider_override": "aws"
+    "EfficientDV.ug_make_examples_memory_override": 4
 }

@@ -37,17 +37,7 @@
     },
     "SVPipeline.cloud_provider_override": {
         "description": "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
-        "optional": true,
-        "templates": [
-            {
-                "name": "structural_variant_pipeline_template-somatic",
-                "value": "aws"
-            },
-            {
-                "name": "structural_variant_pipeline_template-germline",
-                "value": "aws"
-            }
-        ]
+        "optional": true
     },
     "SVPipeline.config_file_string": {
         "description": "Gridss config file content",

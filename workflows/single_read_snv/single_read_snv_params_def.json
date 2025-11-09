@@ -19,21 +19,7 @@
     },
     "SingleReadSNV.cloud_provider_override": {
         "description": "cloud_provider_override",
-        "optional": true,
-        "templates": [
-            {
-                "name": "single_read_snv_template-Standard-WG",
-                "value": "aws"
-            },
-            {
-                "name": "single_read_snv_template-ppmSeq_legacy_v5",
-                "value": "aws"
-            },
-            {
-                "name": "single_read_snv_template-ppmSeq",
-                "value": "aws"
-            }
-        ]
+        "optional": true
     },
     "SingleReadSNV.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",

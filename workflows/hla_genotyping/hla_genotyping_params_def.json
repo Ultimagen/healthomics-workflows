@@ -11,13 +11,7 @@
     },
     "HLAGenotyping.cloud_provider_override": {
         "description": "cloud_provider_override",
-        "optional": true,
-        "templates": [
-            {
-                "name": "hla_genotyping_template",
-                "value": "aws"
-            }
-        ]
+        "optional": true
     },
     "HLAGenotyping.graphs_files_tar": {
         "description": "HLA-LA graphs files tar",

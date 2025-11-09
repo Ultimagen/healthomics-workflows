@@ -211,25 +211,7 @@
     },
     "EfficientDV.cloud_provider_override": {
         "description": "cloud_provider_override",
-        "optional": true,
-        "templates": [
-            {
-                "name": "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal",
-                "value": "aws"
-            },
-            {
-                "name": "efficient_dv_template-WGS-germline-v1_9-solaris",
-                "value": "aws"
-            },
-            {
-                "name": "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal",
-                "value": "aws"
-            },
-            {
-                "name": "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X",
-                "value": "aws"
-            }
-        ]
+        "optional": true
     },
     "EfficientDV.cram_files": {
         "description": "Input cram files. Multiple files are merged.",

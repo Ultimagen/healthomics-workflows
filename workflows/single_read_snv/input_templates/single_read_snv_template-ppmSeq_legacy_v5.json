@@ -85,6 +85,5 @@
             "DS:i"
         ],
         "bed_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
-    },
-    "SingleReadSNV.cloud_provider_override": "aws"
+    }
 }

@@ -185,13 +185,7 @@
     },
     "SegDupAnalysis.cloud_provider_override": {
         "description": "Cloud provider override (for running on other clouds): gcp or aws",
-        "optional": true,
-        "templates": [
-            {
-                "name": "segdup_template",
-                "value": "aws"
-            }
-        ]
+        "optional": true
     },
     "SegDupAnalysis.cn_model": {
         "description": "CNV model file from parascopy, see template",
