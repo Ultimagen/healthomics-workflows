@@ -64,7 +64,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.24.2" # !UnusedDeclaration
+        String pipeline_version = "1.24.3" # !UnusedDeclaration
 
         File input_file
         String base_file_name
