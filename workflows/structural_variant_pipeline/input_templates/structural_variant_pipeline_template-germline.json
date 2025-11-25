@@ -15,6 +15,7 @@
     "SVPipeline.realign_mapq": 60,
     "SVPipeline.homopolymer_length": 10,
     "SVPipeline.max_reads_per_partition": 1500,
+    "SVPipeline.max_reads_per_working_area": 50000,
     "SVPipeline.ua_references": {
         "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
         "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",

@@ -1,0 +1,31 @@
+{
+    "SomaticFeaturemap.base_file_name": "<sample_name>",
+    "SomaticFeaturemap.tumor_featuremap_vcf": "<tumor_vcf_file>",
+    "SomaticFeaturemap.tumor_featuremap_vcf_index": "<tumor_vcf_file>.tbi",
+    "SomaticFeaturemap.normal_featuremap_vcf": "<normal_vcf_file>",
+    "SomaticFeaturemap.normal_featuremap_vcf_index": "<normal_vcf_file>.tbi",
+    "SomaticFeaturemap.ref_tandem_repeats": "s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed",
+    "SomaticFeaturemap.input_tumor_cram_bam": [
+        "<input_tumor_cram_bam_file>"
+    ],
+    "SomaticFeaturemap.input_tumor_cram_bam_index": [
+        "<input_tumor_cram_bam_index_file>"
+    ],
+    "SomaticFeaturemap.input_normal_cram_bam": [
+        "<input_normal_cram_bam_file>"
+    ],
+    "SomaticFeaturemap.input_normal_cram_bam_index": [
+        "<input_normal_cram_bam_index_file>"
+    ],
+    "SomaticFeaturemap.interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
+    "SomaticFeaturemap.num_shards": 30,
+    "SomaticFeaturemap.pad_size": 2,
+    "SomaticFeaturemap.min_mapq_for_samtools_mpileup": 0,
+    "SomaticFeaturemap.scatter_intervals_break": 10000000,
+    "SomaticFeaturemap.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.V1.6.json"
+}

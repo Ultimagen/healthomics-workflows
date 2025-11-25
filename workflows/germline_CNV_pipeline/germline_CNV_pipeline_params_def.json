@@ -23,10 +23,6 @@
         "description": "Inputs sample windowed coverage stored as GenomicRanges object in rds file. can be calculated using cn.mops::getReadCountsFromBAM R function.  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
         "optional": true
     },
-    "GermlineCNVPipeline.CnmopsCNVCalling.preemptible_tries_override": {
-        "description": "Number of preemptible tries,default is: 1",
-        "optional": true
-    },
     "GermlineCNVPipeline.CnmopsCNVCalling.save_csv_override": {
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in csv format (additionally to RDS format). Default is: False.",
         "optional": true
@@ -35,32 +31,20 @@
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.cnvpytor_precent_gaps_threshold_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.cnvpytor_precent_gaps_threshold_override": {
         "description": "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.deletions_length_cutoff_override": {
-        "description": "Minimum length of deletions to be considered without jalign support. default=3000",
-        "optional": true
-    },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.distance_threshold_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.distance_threshold_override": {
         "description": "Distance threshold for merging CNV calls. default=1500",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.duplication_length_cutoff_for_cnmops_filter_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.duplication_length_cutoff_for_cnmops_filter_override": {
         "description": "Minimum length of duplications to be considered for cn.mops calls. default=10000",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.jalign_min_mismatches_override": {
+    "GermlineCNVPipeline.CombineCNVCalls.jalign_min_mismatches_override": {
         "description": "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
-        "optional": true
-    },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.jalign_written_cutoff_override": {
-        "description": "Minimal number of supporting jaligned reads for deletions. default=1",
-        "optional": true
-    },
-    "GermlineCNVPipeline.CombineGermlineCNVCalls.preemptible_tries_override": {
-        "description": "Number of preemptible tries,default is: 1",
         "optional": true
     },
     "GermlineCNVPipeline.base_file_name": {
@@ -114,6 +98,10 @@
     "GermlineCNVPipeline.disable_mod_cnv": {
         "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
         "optional": true
+    },
+    "GermlineCNVPipeline.filtering_model": {
+        "description": "CNV filtering model, default in template",
+        "optional": false
     },
     "GermlineCNVPipeline.genome_windows": {
         "description": "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix.",

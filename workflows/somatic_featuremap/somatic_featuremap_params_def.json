@@ -1,0 +1,102 @@
+{
+    "SomaticFeaturemap.base_file_name": {
+        "description": "Sample name",
+        "optional": false
+    },
+    "SomaticFeaturemap.dummy_input_for_call_caching": {
+        "description": "Dummy input for call caching.",
+        "optional": true
+    },
+    "SomaticFeaturemap.input_normal_cram_bam": {
+        "description": "Input normal CRAM/BAM file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.input_normal_cram_bam_index": {
+        "description": "Input normal CRAM/BAM index file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.input_tumor_cram_bam": {
+        "description": "Input tumor CRAM/BAM file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.input_tumor_cram_bam_index": {
+        "description": "Input tumor CRAM/BAM index file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.interval_list": {
+        "description": "Input interval list file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.keep_non_pass_tumor_candidates_override": {
+        "description": "If true, keep non-PASS tumor candidates in the somatic featuremap.",
+        "optional": true
+    },
+    "SomaticFeaturemap.min_mapq_for_samtools_mpileup": {
+        "description": "Minimum mapping quality for samtools mpileup.",
+        "optional": true
+    },
+    "SomaticFeaturemap.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "SomaticFeaturemap.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "SomaticFeaturemap.normal_featuremap_vcf": {
+        "description": "Input normal featuremap VCF file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.normal_featuremap_vcf_index": {
+        "description": "Input normal featuremap VCF index file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.num_shards": {
+        "description": "Number of shards for splitting the interval list.",
+        "optional": true
+    },
+    "SomaticFeaturemap.pad_size": {
+        "description": "Size of padding to add to the positions of variants defined as tumor-PASS in somatic-pileup-featuremap.",
+        "optional": true
+    },
+    "SomaticFeaturemap.preemptible_tries_override": {
+        "description": "preemptible_tries_override",
+        "optional": true
+    },
+    "SomaticFeaturemap.ref_tandem_repeats": {
+        "description": "Reference tandem repeats file.",
+        "optional": false
+    },
+    "SomaticFeaturemap.references": {
+        "description": "Input reference genome file, index file and dict.",
+        "optional": true
+    },
+    "SomaticFeaturemap.run_mpileup_override": {
+        "description": "If true, run the mpileup step.",
+        "optional": true
+    },
+    "SomaticFeaturemap.scatter_intervals_break": {
+        "description": "Break scatter intervals at multiples of this value.",
+        "optional": true
+    },
+    "SomaticFeaturemap.sfm_xgb_model": {
+        "description": "XGBoost model file for somatic featuremap pileup scoring.",
+        "optional": true
+    },
+    "SomaticFeaturemap.somatic_featuremap_given": {
+        "description": "If provided, use this somatic featuremap file instead of generating a new one.",
+        "optional": true
+    },
+    "SomaticFeaturemap.somatic_featuremap_given_index": {
+        "description": "If provided, use this somatic featuremap index file instead of generating a new one.",
+        "optional": true
+    },
+    "SomaticFeaturemap.tumor_featuremap_vcf": {
+        "description": "Input tumor featuremap VCF file.",
+        "optional": true
+    },
+    "SomaticFeaturemap.tumor_featuremap_vcf_index": {
+        "description": "Input tumor featuremap VCF index file.",
+        "optional": true
+    }
+}

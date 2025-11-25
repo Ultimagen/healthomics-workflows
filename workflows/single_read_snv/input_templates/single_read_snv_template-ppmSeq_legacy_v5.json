@@ -1,7 +1,13 @@
 {
-    "SingleReadSNV.input_cram_bam": "<input_cram_bam>.cram",
-    "SingleReadSNV.input_cram_bam_index": "<input_cram_bam>.cram.crai",
-    "SingleReadSNV.sorter_json_stats_file": "<sorter_stats>.json",
+    "SingleReadSNV.input_cram_bam_list": [
+        "<input_cram_bam>.cram"
+    ],
+    "SingleReadSNV.input_cram_bam_index_list": [
+        "<input_cram_bam>.cram.crai"
+    ],
+    "SingleReadSNV.sorter_json_stats_file_list": [
+        "<sorter_stats>.json"
+    ],
     "SingleReadSNV.base_file_name": "<base_file_name>",
     "SingleReadSNV.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
@@ -10,7 +16,7 @@
     },
     "SingleReadSNV.training_regions_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
     "SingleReadSNV.training_regions_interval_list_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
-    "SingleReadSNV.xgboost_params_file": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/250628.xgboost_model_params.json",
+    "SingleReadSNV.xgboost_params_file": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/251117.xgboost_model_params.json",
     "SingleReadSNV.random_sample_trinuc_freq": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv",
     "SingleReadSNV.min_coverage_to_train_model": 8.0,
     "SingleReadSNV.preemptible_tries": 1,
@@ -49,9 +55,9 @@
     "SingleReadSNV.single_read_snv_params": {
         "random_seed": 0,
         "num_CV_folds": 3,
-        "tp_train_set_size": 1500000,
-        "fp_train_set_size": 1500000,
-        "tp_train_set_size_sampling_overhead": 10.0,
+        "tp_train_set_size": 3600000,
+        "fp_train_set_size": 3600000,
+        "tp_train_set_size_sampling_overhead": 50.0,
         "min_coverage_filter": 20,
         "max_coverage_factor": 2.0,
         "max_vaf_for_fp": 0.05,

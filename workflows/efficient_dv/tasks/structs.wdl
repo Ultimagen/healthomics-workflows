@@ -67,7 +67,11 @@ struct UaParameters {
 struct UaMethParameters {
   File? index_c2t
   File? index_g2a
+  File? ref_alt
+  String ua_extra_args
+  Boolean v_aware_alignment_flag
   Int? cpus
+  Int? memory_gb
 }
 
 struct VariantCallingSettings {

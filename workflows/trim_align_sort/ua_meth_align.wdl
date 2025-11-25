@@ -67,12 +67,16 @@ workflow UAMethAlignment {
             output_bam_basename     = base_file_name + ".ua.aln",
             index_c2t               = ua_index_c2t,
             index_g2a               = ua_index_g2a,
+            ref_alt                 = ua_meth_parameters.ref_alt,
+            extra_args              = ua_meth_parameters.ua_extra_args,
+            use_v_aware_alignment   = ua_meth_parameters.v_aware_alignment_flag,
             UaMethIntensiveMode     = UaMethIntensiveMode,
             no_address              = no_address,
             monitoring_script       = global.monitoring_script,  # !FileCoercion
             preemptible_tries       = preemptible_tries,
             ua_docker               = global.ua_docker,
-            cpus                    = cpu
+            memory_gb               = ua_meth_parameters.memory_gb,
+            cpu                     = cpu
     }
     output {
         Array[File] ua_output_json = AlignWithUAMeth.ua_output_json

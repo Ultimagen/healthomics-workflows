@@ -113,6 +113,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Int </i> &mdash; 
          Minimal mapping quality for candidate generation <br /> 
 </p>
+<p name="SegDupAnalysis.DV.min_hmer_plus_one_candidate">
+        <b>SegDupAnalysis.DV.min_hmer_plus_one_candidate</b><br />
+        <i>Int? </i> &mdash; 
+         Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions <br /> 
+</p>
 <p name="SegDupAnalysis.DV.max_reads_per_partition">
         <b>SegDupAnalysis.DV.max_reads_per_partition</b><br />
         <i>Int </i> &mdash; 

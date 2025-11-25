@@ -3,22 +3,20 @@ version 1.0
 struct GlobalVariables {
   String ubuntu_docker
   String broad_gatk_docker
-  String ug_call_variants_docker
-  String ug_make_examples_docker
-  String bcftools_docker
   String monitoring_script
-  String ugbio_filtering_docker
+  String ugbio_core_docker
+  String ugbio_featuremap_docker
+  String ugbio_freec_docker
 }
 workflow Globals {
   input {
   GlobalVariables glob ={
         "ubuntu_docker": "ubuntu:focal",
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
-        "ug_call_variants_docker": "ultimagenomics/call_variants:2.2.4",
-        "ug_make_examples_docker": "ultimagenomics/make_examples:3.1.10",
-        "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
-        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.17.0"
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.16.1",
+        "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.17.2",
+        "ugbio_freec_docker": "ultimagenomics/ugbio_freec:1.16.1"
 }
 }
 

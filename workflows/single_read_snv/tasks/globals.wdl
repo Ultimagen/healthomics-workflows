@@ -14,9 +14,9 @@ workflow Globals {
         "ubuntu_docker": "ubuntu:focal",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ugbio_core_docker": "ultimagenomics/ugbio_core:1.16.1",
-        "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.16.1",
+        "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.17.2",
         "ugbio_srsnv_docker": "ultimagenomics/ugbio_srsnv:1.16.1",
-        "featuremap_docker": "ultimagenomics/featuremap:master_883abc3"
+        "featuremap_docker": "ultimagenomics/featuremap:master_54894f4"
 }
 }
 

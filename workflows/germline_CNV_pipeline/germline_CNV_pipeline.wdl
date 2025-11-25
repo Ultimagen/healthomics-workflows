@@ -32,7 +32,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.24.3" # !UnusedDeclaration
+        String pipeline_version = "1.25.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -41,7 +41,7 @@ workflow GermlineCNVPipeline {
         File reference_genome_index
         Array[String] ref_seq_names
         File? ug_cnv_lcr_file
-
+        File filtering_model
         #cnmops params
         Int? cnmops_mapq_override
         Int? cnmops_window_length_override
@@ -73,6 +73,7 @@ workflow GermlineCNVPipeline {
         #@wv reference_genome == prefix(reference_genome_index)
         #@wv suffix(reference_genome) in {'.fasta', '.fa', '.fna'}
         #@wv suffix(reference_genome_index) == '.fai'
+        #@wv suffix(filtering_model) == '.pkl'
     }
 
     meta {
@@ -84,10 +85,15 @@ workflow GermlineCNVPipeline {
                 "SingleSampleReadsCount.monitoring_script_input",
                 "no_address_override",
                 "preemptible_tries_override",
-                "Globals.glob",
+                "Glob.glob",
                 "SingleSampleReadsCount.Globals.glob",
-                "MergeMd5sToJson.output_json"
-                ]}
+                "MergeMd5sToJson.output_json", 
+                'CombineCNVCalls.FilterVCF.ref_fasta',
+                'CombineCNVCalls.FilterVCF.ref_fasta_idx',
+                'CombineCNVCalls.FilterVCF.blacklist_file',
+                'CombineCNVCalls.FilterVCF.custom_annotations',
+                'CombineCNVCalls.FilterVCF.disk_size'
+        ]}
     }
     parameter_meta {
         base_file_name: {
@@ -124,6 +130,11 @@ workflow GermlineCNVPipeline {
             help: "UG-CNV-LCR bed file",
             type: "File",
             category: "input_optional"
+        }
+        filtering_model: {
+            help: "CNV filtering model, default in template",
+            type: "File",
+            category: "input_required"
         }
         cnmops_mapq_override: {
             help : "Reads mapping-quality cutoff for coverage aggregation used in cn.mops, default value is 1",
@@ -217,10 +228,11 @@ workflow GermlineCNVPipeline {
             category: "output"
         }
         combined_cnv_calls_bed: {
-            help: "Combined CNV calls in bed format",
+            help: "Final (combined) CNV calls in bed format",
             type: "File",
             category: "output"
         }
+
         combined_cnv_calls_bed_vcf: {
             help: "Combined CNV calls in vcf format",
             type: "File",
@@ -250,31 +262,35 @@ workflow GermlineCNVPipeline {
     Boolean no_address = select_first([no_address_override, true ])
     Boolean skip_figure_generation_value = select_first([skip_figure_generation, false])
     
-    call Globals.Globals as Globals
-      GlobalVariables global = Globals.global_dockers
+    call Globals.Globals as Glob
+    GlobalVariables global = Glob.global_dockers
 
-    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script]) #!FileCoercion
 
     call SingleSampleCnmopsCNVCalling.SingleSampleCnmopsCNVCalling as CnmopsCNVCalling{
         input:
-        base_file_name = base_file_name,
-        reference_genome = reference_genome,
-        reference_genome_index = reference_genome_index,
-        mapq = cnmops_mapq,
-        ref_seq_names = ref_seq_names,
-        window_length = cnmops_window_length,
-        parallel = cnmops_parallel,
-        bed_graph = bed_graph,
-        genome_windows = genome_windows,
-        cohort_reads_count_matrix = cohort_reads_count_matrix,
-        merged_cohort_ploidy_file = merged_cohort_ploidy_file,
-        min_width_value = cnmops_min_width_value,
-        min_cnv_length = cnmops_min_cnv_length,
-        intersection_cutoff = cnmops_intersection_cutoff,
-        cnv_lcr_file = ug_cnv_lcr_file,
-        enable_mod_cnv_override = enable_mod_cnv,
-        skip_figure_generation = skip_figure_generation_value,
+            base_file_name = base_file_name,
+            reference_genome = reference_genome,
+            reference_genome_index = reference_genome_index,
+            mapq = cnmops_mapq,
+            ref_seq_names = ref_seq_names,
+            window_length = cnmops_window_length,
+            parallel = cnmops_parallel,
+            bed_graph = bed_graph,
+            genome_windows = genome_windows,
+            cohort_reads_count_matrix = cohort_reads_count_matrix,
+            merged_cohort_ploidy_file = merged_cohort_ploidy_file,
+            min_width_value = cnmops_min_width_value,
+            min_cnv_length = cnmops_min_cnv_length,
+            intersection_cutoff = cnmops_intersection_cutoff,
+            cnv_lcr_file = ug_cnv_lcr_file,
+            enable_mod_cnv_override = enable_mod_cnv,
+            skip_figure_generation = skip_figure_generation_value,
+            preemptible_tries_override = preemptible_tries,
+            no_address_override = no_address,
+            monitoring_script_input = monitoring_script
     }
+
     call SingleSampleCNVpytorCalling.SingleSampleCNVpytorCalling as CnvpytorCNVCalling{
         input:
         base_file_name = base_file_name,
@@ -284,26 +300,33 @@ workflow GermlineCNVPipeline {
         reference_genome_index = reference_genome_index,
         ref_seq_names = ref_seq_names,
         window_length = cnvpytor_window_length,
-        mapq = cnvpytor_mapq
+        mapq = cnvpytor_mapq,
+        preemptible_tries_override = preemptible_tries,
+        no_address_override = no_address,
+        monitoring_script_input = monitoring_script
+
     }
-    call CombineGermlineCNVCalls.CombineGermlineCNVCalls as CombineGermlineCNVCalls{
+    
+    call CombineGermlineCNVCalls.CombineGermlineCNVCalls as CombineCNVCalls{
         input:
-        base_file_name = base_file_name,
-        cnmops_cnvs_bed = CnmopsCNVCalling.out_sample_cnvs_bed[0],
-        cnvpytor_cnvs_tsv = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv,
-        input_bam_file = input_bam_file,
-        input_bam_file_index = input_bam_file_index,
-        reference_genome = reference_genome,
-        reference_genome_index = reference_genome_index,
-        cnv_lcr_file = ug_cnv_lcr_file,
+            base_file_name = base_file_name,
+            cnmops_cnvs_bed = CnmopsCNVCalling.out_sample_cnvs_bed[0],
+            cnvpytor_cnvs_tsv = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv,
+            input_bam_file = input_bam_file,
+            input_bam_file_index = input_bam_file_index,
+            reference_genome = reference_genome,
+            reference_genome_index = reference_genome_index,
+            cnv_lcr_file = ug_cnv_lcr_file,
+            filtering_model = filtering_model,
+            monitoring_script_input = monitoring_script,
+            preemptible_tries_override = preemptible_tries,
+            no_address_override = no_address
     }
-    File combined_cnv_calls_bed_vcf_ = CombineGermlineCNVCalls.out_sample_cnvs_vcf
-    File combined_cnv_calls_bed_vcf_index_ = CombineGermlineCNVCalls.out_sample_cnvs_vcf_index
+
+    File combined_cnv_calls_bed_vcf_ = CombineCNVCalls.out_sample_cnvs_vcf
+    File combined_cnv_calls_bed_vcf_index_ = CombineCNVCalls.out_sample_cnvs_vcf_index
     if (create_md5_checksum_outputs) {
-        Array[File] output_files = select_all(flatten([
-                                                      select_first([[combined_cnv_calls_bed_vcf_], []]),
-                                                      select_first([[combined_cnv_calls_bed_vcf_index_], []]),
-                                                      ]))
+        Array[File] output_files = [combined_cnv_calls_bed_vcf_, combined_cnv_calls_bed_vcf_index_]
 
         scatter (file in output_files) {
             call UGGeneralTasks.ComputeMd5 as compute_md5 {
@@ -322,7 +345,7 @@ workflow GermlineCNVPipeline {
     output {
         File cnmops_cnv_calls_bed = CnmopsCNVCalling.out_sample_cnvs_bed[0]
         File cnvpytor_cnv_calls_bed = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv
-        File combined_cnv_calls_bed = CombineGermlineCNVCalls.out_sample_cnvs_bed
+        File combined_cnv_calls_bed = CombineCNVCalls.out_sample_cnvs_bed
         File combined_cnv_calls_bed_vcf = combined_cnv_calls_bed_vcf_
         File combined_cnv_calls_bed_vcf_index = combined_cnv_calls_bed_vcf_index_
 

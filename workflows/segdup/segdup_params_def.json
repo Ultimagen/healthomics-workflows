@@ -79,6 +79,10 @@
         "description": "Minimal base quality for candidate generation",
         "optional": true
     },
+    "SegDupAnalysis.DV.min_hmer_plus_one_candidate": {
+        "description": "Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions",
+        "optional": true
+    },
     "SegDupAnalysis.DV.min_read_count_hmer_indels": {
         "description": "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
         "optional": true

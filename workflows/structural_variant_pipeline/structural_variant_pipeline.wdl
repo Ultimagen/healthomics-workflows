@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.24.3" # !UnusedDeclaration
+        String pipeline_version = "1.25.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -55,6 +55,7 @@ workflow SVPipeline {
         Int min_base
         Int min_mapq
         Int max_reads_per_partition
+        Int max_reads_per_working_area
         Int? max_num_haps
         Int realign_mapq
         String? min_indel_sc_size_to_include
@@ -243,7 +244,12 @@ workflow SVPipeline {
         max_reads_per_partition: {
             type: "Int",
             help: "Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region",
-            category:"required"
+            category:"advanced"
+        }
+        max_reads_per_working_area: {
+            type: "Int",
+            help: "Rematching parameter: Maximal number of reads that are stored in memory when rematching reads to haplotypes (similar to max_reads_per_partition in assembly)",
+            category:"advanced"
         }
         prefilter_query: {
             type: "String",
@@ -587,7 +593,9 @@ workflow SVPipeline {
 
     }
 
+    # Find for each read the best haplotype that it matches to. 
     scatter (interval in ScatterIntervalList.out) {
+        # First we do this in chunks
         call MatchReadsToHaplotypes {
             input: 
                 germline_reads = input_germline_crams,
@@ -601,6 +609,7 @@ workflow SVPipeline {
                 min_indel_sc_size_to_include = min_indel_sc_size_to_include,
                 min_mismatch_count_to_include = min_mismatch_count_to_include,
                 min_mapq = min_mapq,
+                max_reads_per_working_area = max_reads_per_working_area,
                 number_of_shards = ScatterIntervalList.interval_count,
                 rematching_interval = interval,
                 reference = references,
@@ -613,11 +622,23 @@ workflow SVPipeline {
         }
     }
 
-    call MergeMatchedReads {
+    # combine the chunks, choosing best scoring assignment for read per chunk and sorting by haplotype
+    call MergeMatchReadsFiles {
+        input:
+            matched_reads_files = MatchReadsToHaplotypes.read_haplotype_assignment,
+            base_file_name = base_file_name,
+            docker = global.ubuntu_docker,
+            monitoring_script = monitoring_script,
+            preemptible_tries = preemptibles,
+            no_address = no_address 
+    }
+
+    # add the information into  the assembly BAM
+    call MergeMatchedReadsIntoAssembly {
         input:
             assembly_bam = LongHomopolymersAlignment.realigned_assembly,
             assembly_bam_index = LongHomopolymersAlignment.realigned_assembly_index,
-            matched_reads_files = MatchReadsToHaplotypes.read_haplotype_assignment,
+            matched_reads = MergeMatchReadsFiles.read_haplotype_assignment,
             base_file_name = base_file_name,
             reference = references,
             docker = global.rematching_docker,
@@ -626,8 +647,8 @@ workflow SVPipeline {
             no_address = no_address 
     }
 
-    File assembly_file = MergeMatchedReads.updated_assembly
-    File assembly_file_index = MergeMatchedReads.updated_assembly_index
+    File assembly_file = MergeMatchedReadsIntoAssembly.updated_assembly
+    File assembly_file_index = MergeMatchedReadsIntoAssembly.updated_assembly_index
 
     call IdentifyVariants {
         input:
@@ -946,9 +967,10 @@ task CreateAssembly {
             then
                 gatk --java-options "-Xms2G" PrintReads \
                 -I ~{sep=' -I ' input_germline_crams} \
-                -O input_germline.cram \
+                -O /dev/stdout  \
                 -L ~{interval} \
-                -R ~{references.ref_fasta}
+                -R ~{references.ref_fasta} | \
+                samtools view -C -T ~{references.ref_fasta} -o input_germline.cram --output-fmt-option embed_ref=1 -
 
                 samtools index input_germline.cram
             fi
@@ -957,9 +979,10 @@ task CreateAssembly {
             then
                 gatk --java-options "-Xms2G" PrintReads \
                 -I ~{sep=' -I ' input_tumor_crams} \
-                -O input_tumor.cram \
+                -O /dev/stdout \
                 -L ~{interval} \
-                -R ~{references.ref_fasta}
+                -R ~{references.ref_fasta} | \
+                samtools view -C -T ~{references.ref_fasta} -o input_tumor.cram --output-fmt-option embed_ref=1 -
 
                 samtools index input_tumor.cram
             fi
@@ -1105,6 +1128,7 @@ task LongHomopolymersAlignment {
             File realigned_assembly_index = "~{output_bam_basename}.bam.bai"
         }
 }
+
 task MatchReadsToHaplotypes {
     input {
         References reference
@@ -1115,6 +1139,7 @@ task MatchReadsToHaplotypes {
         Array[File] germline_reads
         Array[File] germline_reads_indexes
         Boolean is_somatic
+        Int max_reads_per_working_area
         String? min_indel_sc_size_to_include
         String? min_mismatch_count_to_include
         Int min_mapq
@@ -1160,10 +1185,11 @@ task MatchReadsToHaplotypes {
             echo $input_string
 
             sv_rematch -b interval.bed \
-            -j 2 -t -a \
+            -j 2 -t -a -v \
             -l '~{min_indel_sc_size_to_include}' \
             -s '~{min_mismatch_count_to_include}' \
             -m ~{min_mapq} \
+            -L ~{max_reads_per_working_area} \
             $input_string \
             ~{assembly_bam} \
             ~{reference.ref_fasta} \
@@ -1174,9 +1200,10 @@ task MatchReadsToHaplotypes {
             then
                 gatk --java-options "-Xms2G" PrintReads \
                 -I ~{sep=' -I ' germline_reads} \
-                -O input_germline.cram \
+                -O /dev/stdout \
                 -L ~{rematching_interval} \
-                -R ~{reference.ref_fasta}
+                -R ~{reference.ref_fasta} | \
+                samtools view -C -T ~{reference.ref_fasta} -o input_germline.cram --output-fmt-option embed_ref=1 -
 
                 samtools index input_germline.cram
             fi
@@ -1185,23 +1212,26 @@ task MatchReadsToHaplotypes {
             then
                 gatk --java-options "-Xms2G" PrintReads \
                 -I ~{sep=' -I ' tumor_reads} \
-                -O input_tumor.cram \
+                -O /dev/stdout \
                 -L ~{rematching_interval} \
-                -R ~{reference.ref_fasta}
+                -R ~{reference.ref_fasta} | \
+                samtools view -C -T ~{reference.ref_fasta} -o input_tumor.cram --output-fmt-option embed_ref=1 -
 
                 samtools index input_tumor.cram
             fi
 
             sv_rematch -b interval.bed \
-            -j 2 -t -a \
+            -j 2 -t -a -v \
             ~{"-l '" + min_indel_sc_size_to_include + "'"} \
             ~{"-s '" + min_mismatch_count_to_include + "'"} \
             -m ~{min_mapq} \
+            -L ~{max_reads_per_working_area} \
             ~{if is_somatic then (if defined_germline then "input_tumor.cram\\;input_germline.cram" else "input_tumor.cram") else "input_germline.cram"} \
             ~{assembly_bam} \
             ~{reference.ref_fasta} \
             ~{base_file_name}_rematched_hap.txt
         fi
+
     >>>
 
     parameter_meta {
@@ -1226,9 +1256,44 @@ task MatchReadsToHaplotypes {
     }
 }
 
-task MergeMatchedReads { 
+task MergeMatchReadsFiles { 
     input {
         Array[File] matched_reads_files
+        String base_file_name
+        String docker
+        File monitoring_script
+        Int preemptible_tries
+        Boolean no_address
+    }
+    
+    Int disk_size = ceil(4*size(matched_reads_files,"GB")) + 10
+
+    command <<<
+        set -o pipefail
+        set -ex
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        
+        # sort by read name, choose the best score, then sort by haplotype
+        LC_ALL=C sort -T "." -m -k1,1 -k3,3rn ~{sep=' ' matched_reads_files} | awk '$1 != prev { print; prev = $1 }'  | sort -T "." -k2,2 > ~{base_file_name}.all_matches_by_hap.txt
+    >>>
+
+    runtime {
+        memory: "4 GiB"
+        cpu: 2
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address   
+    }    
+    output {
+        File monitoring_log = "monitoring.log"
+        File read_haplotype_assignment = "~{base_file_name}.all_matches_by_hap.txt" 
+    }
+}
+
+task MergeMatchedReadsIntoAssembly { 
+    input {
+        File matched_reads
         File assembly_bam
         File assembly_bam_index
         References reference
@@ -1238,17 +1303,19 @@ task MergeMatchedReads {
         Int preemptible_tries
         Boolean no_address
     }
-    Int disk_size = ceil(2*size(matched_reads_files,"GB") + 2*size(assembly_bam,"GB")) + 10
+    Int disk_size = ceil(2*size(matched_reads,"GB") + 4*size(assembly_bam,"GB")) + 10
     command <<< 
         set -o pipefail
         set -ex
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        cat ~{sep=' ' matched_reads_files} > all_matches.txt
-        sv_rematch -M all_matches.txt \
-            ~{assembly_bam} \
+        samtools sort -N ~{assembly_bam} -o assembly_name_sorted.bam
+        sv_rematch -v -S -M ~{matched_reads} \
+            assembly_name_sorted.bam \
             ~{reference.ref_fasta} \
-            ~{base_file_name}_assembly.support.bam
+            ~{base_file_name}_assembly.support.name_sorted.bam
+
+        samtools sort ~{base_file_name}_assembly.support.name_sorted.bam -o ~{base_file_name}_assembly.support.bam
         samtools index ~{base_file_name}_assembly.support.bam
     >>> 
     runtime {
@@ -1569,9 +1636,10 @@ task AnnotateVariants {
                 gatk  \
                     PrintReads \
                 -I ~{sep=' -I ' input_tumor_crams} \
-                -O input_tumor.cram \
+                -O /dev/stdout \
                 -L ~{interval} \
-                -R ~{references.ref_fasta}
+                -R ~{references.ref_fasta} | \
+                samtools view -C -T ~{references.ref_fasta} -o input_tumor.cram --output-fmt-option embed_ref=1 -
 
                 samtools index input_tumor.cram
             fi
@@ -1581,9 +1649,10 @@ task AnnotateVariants {
                 gatk  \
                     PrintReads \
                 -I ~{sep=' -I ' input_germline_crams} \
-                -O input_germline.cram \
+                -O /dev/stdout \
                 -L ~{interval} \
-                -R ~{references.ref_fasta}
+                -R ~{references.ref_fasta} | \
+                samtools view -C -T ~{references.ref_fasta} -o input_germline.cram --output-fmt-option embed_ref=1 -
 
                 samtools index input_germline.cram
             fi
@@ -1591,9 +1660,10 @@ task AnnotateVariants {
         gatk \
             PrintReads \
           -I ~{assembly} \
-          -O assembly_partial.cram \
+          -O /dev/stdout \
           -L ~{interval} \
-          -R ~{references.ref_fasta}
+          -R ~{references.ref_fasta} | \
+            samtools view -C -T ~{references.ref_fasta} -o assembly_partial.cram --output-fmt-option embed_ref=1 -
 
         samtools index assembly_partial.cram
 

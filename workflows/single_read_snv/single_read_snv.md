@@ -12,15 +12,15 @@ The following input templates are available for different kinds of input data:
 ## Inputs
 
 ### Required inputs
-<p name="SingleReadSNV.input_cram_bam">
-        <b>SingleReadSNV.input_cram_bam</b><br />
-        <i>File </i> &mdash; 
-         Input CRAM or BAM file <br /> 
+<p name="SingleReadSNV.input_cram_bam_list">
+        <b>SingleReadSNV.input_cram_bam_list</b><br />
+        <i>Array[File] </i> &mdash; 
+         Input CRAM file/s <br /> 
 </p>
-<p name="SingleReadSNV.input_cram_bam_index">
-        <b>SingleReadSNV.input_cram_bam_index</b><br />
-        <i>File </i> &mdash; 
-         Input CRAM or BAM index file <br /> 
+<p name="SingleReadSNV.input_cram_bam_index_list">
+        <b>SingleReadSNV.input_cram_bam_index_list</b><br />
+        <i>Array[File] </i> &mdash; 
+         Input CRAM index file/s <br /> 
 </p>
 <p name="SingleReadSNV.base_file_name">
         <b>SingleReadSNV.base_file_name</b><br />
@@ -87,10 +87,10 @@ The following input templates are available for different kinds of input data:
 </p>
 
 ### Optional inputs
-<p name="SingleReadSNV.sorter_json_stats_file">
-        <b>SingleReadSNV.sorter_json_stats_file</b><br />
-        <i>File? </i> &mdash; 
-         (Optional) Sorter json stats file. Provide EITHER this file OR both mean_coverage and total_aligned_bases. <br /> 
+<p name="SingleReadSNV.sorter_json_stats_file_list">
+        <b>SingleReadSNV.sorter_json_stats_file_list</b><br />
+        <i>Array[File]? </i> &mdash; 
+         (Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases. <br /> 
 </p>
 <p name="SingleReadSNV.random_sample_trinuc_freq">
         <b>SingleReadSNV.random_sample_trinuc_freq</b><br />
@@ -105,12 +105,12 @@ The following input templates are available for different kinds of input data:
 <p name="SingleReadSNV.mean_coverage">
         <b>SingleReadSNV.mean_coverage</b><br />
         <i>Float? </i> &mdash; 
-         (Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file. <br /> 
+         (Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file_list. <br /> 
 </p>
 <p name="SingleReadSNV.total_aligned_bases">
         <b>SingleReadSNV.total_aligned_bases</b><br />
-        <i>Int? </i> &mdash; 
-         (Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file. <br /> 
+        <i>String? </i> &mdash; 
+         (Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list. <br /> 
 </p>
 
 ### Optional parameters

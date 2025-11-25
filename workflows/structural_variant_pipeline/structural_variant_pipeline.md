@@ -44,11 +44,6 @@ The steps of the pipeline are as following:
         <i>Int </i> &mdash; 
          Assembly parameter: Minimum mapping quality. Default value in template <br /> 
 </p>
-<p name="SVPipeline.max_reads_per_partition">
-        <b>SVPipeline.max_reads_per_partition</b><br />
-        <i>Int </i> &mdash; 
-         Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region <br /> 
-</p>
 <p name="SVPipeline.max_num_haps">
         <b>SVPipeline.max_num_haps</b><br />
         <i>Int? </i> &mdash; 
@@ -196,6 +191,16 @@ The steps of the pipeline are as following:
 ### Advanced inputs
 <details>
 <summary> Show/Hide </summary>
+<p name="SVPipeline.max_reads_per_partition">
+        <b>SVPipeline.max_reads_per_partition</b><br />
+        <i>Int &mdash; Default: None</i><br />
+         Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region 
+</p>
+<p name="SVPipeline.max_reads_per_working_area">
+        <b>SVPipeline.max_reads_per_working_area</b><br />
+        <i>Int &mdash; Default: None</i><br />
+         Rematching parameter: Maximal number of reads that are stored in memory when rematching reads to haplotypes (similar to max_reads_per_partition in assembly) 
+</p>
 <p name="SVPipeline.config_file_string">
         <b>SVPipeline.config_file_string</b><br />
         <i>String &mdash; Default: None</i><br />

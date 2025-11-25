@@ -23,16 +23,16 @@
         "description": "Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template.",
         "optional": false
     },
-    "SingleReadSNV.input_cram_bam": {
-        "description": "Input CRAM or BAM file",
+    "SingleReadSNV.input_cram_bam_index_list": {
+        "description": "Input CRAM index file/s",
         "optional": false
     },
-    "SingleReadSNV.input_cram_bam_index": {
-        "description": "Input CRAM or BAM index file",
+    "SingleReadSNV.input_cram_bam_list": {
+        "description": "Input CRAM file/s",
         "optional": false
     },
     "SingleReadSNV.mean_coverage": {
-        "description": "(Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file.",
+        "description": "(Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file_list.",
         "optional": true
     },
     "SingleReadSNV.min_coverage_to_train_model": {
@@ -79,12 +79,16 @@
         "description": "SingleReadSNV parameters, recommended value set in the template.",
         "optional": true
     },
-    "SingleReadSNV.sorter_json_stats_file": {
-        "description": "(Optional) Sorter json stats file. Provide EITHER this file OR both mean_coverage and total_aligned_bases.",
+    "SingleReadSNV.sorter_json_stats_file_list": {
+        "description": "(Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases.",
         "optional": true
     },
     "SingleReadSNV.total_aligned_bases": {
-        "description": "(Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file.",
+        "description": "(Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list.",
+        "optional": true
+    },
+    "SingleReadSNV.training_memory_gb": {
+        "description": "training_memory_gb",
         "optional": true
     },
     "SingleReadSNV.training_regions_interval_list": {

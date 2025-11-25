@@ -91,6 +91,10 @@
         "description": "Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region",
         "optional": false
     },
+    "SVPipeline.max_reads_per_working_area": {
+        "description": "Rematching parameter: Maximal number of reads that are stored in memory when rematching reads to haplotypes (similar to max_reads_per_partition in assembly)",
+        "optional": false
+    },
     "SVPipeline.min_base": {
         "description": "Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template",
         "optional": false
