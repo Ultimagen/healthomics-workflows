@@ -1,0 +1,165 @@
+{
+    "SomaticFeaturemap.base_file_name": {
+        "description": "Sample name",
+        "optional": false,
+        "useCase": {
+            "somatic_featuremap_template": "<sample_name>"
+        }
+    },
+    "SomaticFeaturemap.dummy_input_for_call_caching": {
+        "description": "Dummy input for call caching.",
+        "optional": true
+    },
+    "SomaticFeaturemap.input_normal_cram_bam": {
+        "description": "Input normal CRAM/BAM file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_normal_cram_bam_file>"
+            ]
+        }
+    },
+    "SomaticFeaturemap.input_normal_cram_bam_index": {
+        "description": "Input normal CRAM/BAM index file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_normal_cram_bam_index_file>"
+            ]
+        }
+    },
+    "SomaticFeaturemap.input_tumor_cram_bam": {
+        "description": "Input tumor CRAM/BAM file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_tumor_cram_bam_file>"
+            ]
+        }
+    },
+    "SomaticFeaturemap.input_tumor_cram_bam_index": {
+        "description": "Input tumor CRAM/BAM index file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_tumor_cram_bam_index_file>"
+            ]
+        }
+    },
+    "SomaticFeaturemap.interval_list": {
+        "description": "Input interval list file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list"
+        }
+    },
+    "SomaticFeaturemap.keep_non_pass_tumor_candidates_override": {
+        "description": "If true, keep non-PASS tumor candidates in the somatic featuremap.",
+        "optional": true
+    },
+    "SomaticFeaturemap.min_mapq_for_samtools_mpileup": {
+        "description": "Minimum mapping quality for samtools mpileup.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": 0
+        }
+    },
+    "SomaticFeaturemap.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "SomaticFeaturemap.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "SomaticFeaturemap.normal_featuremap_vcf": {
+        "description": "Input normal featuremap VCF file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<normal_vcf_file>"
+        }
+    },
+    "SomaticFeaturemap.normal_featuremap_vcf_index": {
+        "description": "Input normal featuremap VCF index file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<normal_vcf_file>.tbi"
+        }
+    },
+    "SomaticFeaturemap.num_shards": {
+        "description": "Number of shards for splitting the interval list.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": 30
+        }
+    },
+    "SomaticFeaturemap.pad_size": {
+        "description": "Size of padding to add to the positions of variants defined as tumor-PASS in somatic-pileup-featuremap.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": 2
+        }
+    },
+    "SomaticFeaturemap.preemptible_tries_override": {
+        "description": "preemptible_tries_override",
+        "optional": true
+    },
+    "SomaticFeaturemap.ref_tandem_repeats": {
+        "description": "Reference tandem repeats file.",
+        "optional": false,
+        "useCase": {
+            "somatic_featuremap_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed"
+        }
+    },
+    "SomaticFeaturemap.references": {
+        "description": "Input reference genome file, index file and dict.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": {
+                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
+    },
+    "SomaticFeaturemap.run_mpileup_override": {
+        "description": "If true, run the mpileup step.",
+        "optional": true
+    },
+    "SomaticFeaturemap.scatter_intervals_break": {
+        "description": "Break scatter intervals at multiples of this value.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": 10000000
+        }
+    },
+    "SomaticFeaturemap.sfm_xgb_model": {
+        "description": "XGBoost model file for somatic featuremap pileup scoring.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.V1.6.json"
+        }
+    },
+    "SomaticFeaturemap.somatic_featuremap_given": {
+        "description": "If provided, use this somatic featuremap file instead of generating a new one.",
+        "optional": true
+    },
+    "SomaticFeaturemap.somatic_featuremap_given_index": {
+        "description": "If provided, use this somatic featuremap index file instead of generating a new one.",
+        "optional": true
+    },
+    "SomaticFeaturemap.tumor_featuremap_vcf": {
+        "description": "Input tumor featuremap VCF file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<tumor_vcf_file>"
+        }
+    },
+    "SomaticFeaturemap.tumor_featuremap_vcf_index": {
+        "description": "Input tumor featuremap VCF index file.",
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<tumor_vcf_file>.tbi"
+        }
+    }
+}

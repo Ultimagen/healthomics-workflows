@@ -2,46 +2,37 @@
     "HLAGenotyping.base_file_name": {
         "description": "Base file name for the output files (to be used as the prefix)",
         "optional": false,
-        "templates": [
-            {
-                "name": "hla_genotyping_template",
-                "value": "<base_name>"
-            }
-        ]
+        "useCase": {
+            "hla_genotyping_template": "<base_name>"
+        }
     },
     "HLAGenotyping.cloud_provider_override": {
         "description": "cloud_provider_override",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "hla_genotyping_template": "aws"
+        }
     },
     "HLAGenotyping.graphs_files_tar": {
         "description": "HLA-LA graphs files tar",
         "optional": true,
-        "templates": [
-            {
-                "name": "hla_genotyping_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz"
-            }
-        ]
+        "useCase": {
+            "hla_genotyping_template": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz"
+        }
     },
     "HLAGenotyping.input_cram_bam": {
         "description": "Input CRAM or BAM file for annalysing HLA genotyping",
         "optional": false,
-        "templates": [
-            {
-                "name": "hla_genotyping_template",
-                "value": "<cram>.cram"
-            }
-        ]
+        "useCase": {
+            "hla_genotyping_template": "<cram>.cram"
+        }
     },
     "HLAGenotyping.input_cram_bam_index": {
         "description": "Input CRAM or BAM index file for annalysing HLA genotyping",
         "optional": false,
-        "templates": [
-            {
-                "name": "hla_genotyping_template",
-                "value": "<cram>.cram.crai"
-            }
-        ]
+        "useCase": {
+            "hla_genotyping_template": "<cram>.cram.crai"
+        }
     },
     "HLAGenotyping.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -58,15 +49,12 @@
     "HLAGenotyping.references": {
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
         "optional": false,
-        "templates": [
-            {
-                "name": "hla_genotyping_template",
-                "value": {
-                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-                }
+        "useCase": {
+            "hla_genotyping_template": {
+                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
             }
-        ]
+        }
     }
 }

@@ -10,68 +10,32 @@
     "SomaticCNVCallingControlFREEC.base_file_name": {
         "description": "Base file name used for some output files",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "<sample_base_name>"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "<base_file_name>"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "<base_file_name>"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "<sample_base_name>"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "<sample_base_name>",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "<base_file_name>",
+            "controlFREEC_pipeline_bedGraph_input_template": "<base_file_name>",
+            "controlFREEC_pipeline_template": "<sample_base_name>"
+        }
     },
     "SomaticCNVCallingControlFREEC.bed_graph_output": {
         "description": "Whether to add bed_graph_output to controlFREEC outputs, recommended value set in the template",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": true
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": true,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": true,
+            "controlFREEC_pipeline_bedGraph_input_template": true,
+            "controlFREEC_pipeline_template": true
+        }
     },
     "SomaticCNVCallingControlFREEC.chrLenFile_override": {
         "description": "Chromosome lengths file focusing controlFREEC regions. file is expected to be tab-delimited where the first column indicates the chromosome name and the second column indicates the chromosome length. By default, the reference.fai file will be used.",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
+            "controlFREEC_pipeline_bedGraph_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
+            "controlFREEC_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome"
+        }
     },
     "SomaticCNVCallingControlFREEC.cloud_provider_override": {
         "description": "cloud_provider_override",
@@ -80,80 +44,53 @@
     "SomaticCNVCallingControlFREEC.cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.4/ug_cnv_lcr.bed"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+            "controlFREEC_pipeline_bedGraph_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+            "controlFREEC_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.4/ug_cnv_lcr.bed"
+        }
     },
     "SomaticCNVCallingControlFREEC.collect_coverage_region": {
         "description": "Genomic region to limit the CNV calling to",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": [
-                    "chr1",
-                    "chr2",
-                    "chr3",
-                    "chr4",
-                    "chr5",
-                    "chr6",
-                    "chr7",
-                    "chr8",
-                    "chr9",
-                    "chr10",
-                    "chr11",
-                    "chr12",
-                    "chr13",
-                    "chr14",
-                    "chr15",
-                    "chr16",
-                    "chr17",
-                    "chr18",
-                    "chr19",
-                    "chr20",
-                    "chr21",
-                    "chr22",
-                    "chrX"
-                ]
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_template": [
+                "chr1",
+                "chr2",
+                "chr3",
+                "chr4",
+                "chr5",
+                "chr6",
+                "chr7",
+                "chr8",
+                "chr9",
+                "chr10",
+                "chr11",
+                "chr12",
+                "chr13",
+                "chr14",
+                "chr15",
+                "chr16",
+                "chr17",
+                "chr18",
+                "chr19",
+                "chr20",
+                "chr21",
+                "chr22",
+                "chrX"
+            ]
+        }
     },
     "SomaticCNVCallingControlFREEC.contamination_adjustment": {
         "description": "Whether to run controlFREEC with contamination_adjustment option, recommended value set in the template",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": true
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": true,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": true,
+            "controlFREEC_pipeline_bedGraph_input_template": true,
+            "controlFREEC_pipeline_template": true
+        }
     },
     "SomaticCNVCallingControlFREEC.contamination_fraction": {
         "description": "a priori known value of tumor sample contamination by normal cells. Default: contamination=0",
@@ -162,24 +99,12 @@
     "SomaticCNVCallingControlFREEC.degree": {
         "description": "Degree of polynomial for GC normalization. Default is 3",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 3
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 3
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 3
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 3
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 3,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 3,
+            "controlFREEC_pipeline_bedGraph_input_template": 3,
+            "controlFREEC_pipeline_template": 3
+        }
     },
     "SomaticCNVCallingControlFREEC.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
@@ -188,330 +113,171 @@
     "SomaticCNVCallingControlFREEC.force_gc_content_normalization": {
         "description": "Whether to run controlFREEC with force_gc_content_normalization option, recommended value set in the template",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 1
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 1
+        }
     },
     "SomaticCNVCallingControlFREEC.gem_mappability_file": {
         "description": "Gem file holding mappablity biased regions. ",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
+            "controlFREEC_pipeline_bedGraph_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
+            "controlFREEC_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem"
+        }
     },
     "SomaticCNVCallingControlFREEC.genome_windows": {
         "description": "Bed file of the genome binned to equal sized windows",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed",
+            "controlFREEC_pipeline_bedGraph_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed",
+            "controlFREEC_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed"
+        }
     },
     "SomaticCNVCallingControlFREEC.high_sensitivity_mode": {
         "description": "Whether to run controlFREEC in high sensitivity mode",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": false
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": false
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": false
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": true,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": false,
+            "controlFREEC_pipeline_bedGraph_input_template": false,
+            "controlFREEC_pipeline_template": false
+        }
     },
     "SomaticCNVCallingControlFREEC.input_format": {
         "description": "controlFREEC input format, recommended value set in the template",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "BAM"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "BAM"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "BAM"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "BAM"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "BAM",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "BAM",
+            "controlFREEC_pipeline_bedGraph_input_template": "BAM",
+            "controlFREEC_pipeline_template": "BAM"
+        }
     },
     "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": {
         "description": "Input normal BAM/CRAM files",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": [
-                    "<normal>.cram"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": [
-                    "<normal>.cram"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": [
-                    "<normal>.cram"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": [
-                    "<normal>.bam"
-                ]
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": [
+                "<normal>.cram"
+            ],
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": [
+                "<normal>.cram"
+            ],
+            "controlFREEC_pipeline_bedGraph_input_template": [
+                "<normal>.cram"
+            ],
+            "controlFREEC_pipeline_template": [
+                "<normal>.bam"
+            ]
+        }
     },
     "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": {
         "description": "Input normal BAI/CRAI index files",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": [
-                    "<normal>.cram.crai"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": [
-                    "<normal>.cram.crai"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": [
-                    "<normal>.cram.crai"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": [
-                    "<normal>.bam.bai"
-                ]
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": [
+                "<normal>.cram.crai"
+            ],
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": [
+                "<normal>.cram.crai"
+            ],
+            "controlFREEC_pipeline_bedGraph_input_template": [
+                "<normal>.cram.crai"
+            ],
+            "controlFREEC_pipeline_template": [
+                "<normal>.bam.bai"
+            ]
+        }
     },
     "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": {
         "description": "Input tumor BAM/CRAM files",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": [
-                    "<tumor>.cram"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": [
-                    "<tumor>.cram"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": [
-                    "<tumor>.cram"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": [
-                    "<tumor>.bam"
-                ]
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": [
+                "<tumor>.cram"
+            ],
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": [
+                "<tumor>.cram"
+            ],
+            "controlFREEC_pipeline_bedGraph_input_template": [
+                "<tumor>.cram"
+            ],
+            "controlFREEC_pipeline_template": [
+                "<tumor>.bam"
+            ]
+        }
     },
     "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": {
         "description": "Input tumor BAI/CRAI index files",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": [
-                    "<tumor>.cram.crai"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": [
-                    "<tumor>.cram.crai"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": [
-                    "<tumor>.cram.crai"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": [
-                    "<tumor>.bam.bai"
-                ]
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": [
+                "<tumor>.cram.crai"
+            ],
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": [
+                "<tumor>.cram.crai"
+            ],
+            "controlFREEC_pipeline_bedGraph_input_template": [
+                "<tumor>.cram.crai"
+            ],
+            "controlFREEC_pipeline_template": [
+                "<tumor>.bam.bai"
+            ]
+        }
     },
     "SomaticCNVCallingControlFREEC.intersection_cutoff": {
         "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is  0.5",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 0.5
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 0.5
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 0.5
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 0.5
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 0.5,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 0.5,
+            "controlFREEC_pipeline_bedGraph_input_template": 0.5,
+            "controlFREEC_pipeline_template": 0.5
+        }
     },
     "SomaticCNVCallingControlFREEC.interval_list": {
         "description": "Interval list defining the regions to gather allele frequencies on, recommended value set in the template",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
+            "controlFREEC_pipeline_bedGraph_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
+            "controlFREEC_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list"
+        }
     },
     "SomaticCNVCallingControlFREEC.mapq_override": {
         "description": "Reads mapping-quality cutoff for coverage calculation. Default is 1",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 1
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 1
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 1
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 1
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 1,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 1,
+            "controlFREEC_pipeline_bedGraph_input_template": 1,
+            "controlFREEC_pipeline_template": 1
+        }
     },
     "SomaticCNVCallingControlFREEC.max_threads_override": {
         "description": "maximal threads for controlFREEC. Default is 8",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 8
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 8
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 8
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 8
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 8,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 8,
+            "controlFREEC_pipeline_bedGraph_input_template": 8,
+            "controlFREEC_pipeline_template": 8
+        }
     },
     "SomaticCNVCallingControlFREEC.min_cnv_length": {
         "description": "Minimum length for reported CNVs. Default is 10,000",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 10000
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 10000
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 10000
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 10000
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 10000,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 10000,
+            "controlFREEC_pipeline_bedGraph_input_template": 10000,
+            "controlFREEC_pipeline_template": 10000
+        }
     },
     "SomaticCNVCallingControlFREEC.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -520,24 +286,12 @@
     "SomaticCNVCallingControlFREEC.naive_normalization": {
         "description": "Whether to run controlFREEC with naive normalization mode (Rather than using FREEC Polynomial fitting)",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": true
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": true
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": true,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": true,
+            "controlFREEC_pipeline_bedGraph_input_template": true,
+            "controlFREEC_pipeline_template": true
+        }
     },
     "SomaticCNVCallingControlFREEC.no_address_override": {
         "description": "no_address_override",
@@ -546,66 +300,39 @@
     "SomaticCNVCallingControlFREEC.normal_coverage_cpn": {
         "description": "Pre-calculated binned coverage for the normal sample in the format needed for controlFREEC (cpn)",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "<normal>.cpn"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "<normal>.cpn"
+        }
     },
     "SomaticCNVCallingControlFREEC.normal_mpileup_override": {
         "description": "Pre-calculated mpileup for normal sample",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "<normal>.pileup"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "<normal>_minipileup.pileup"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "<normal>.pileup",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "<normal>_minipileup.pileup"
+        }
     },
     "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph": {
         "description": "Pre-calculated bedGraph files containing per-base coverage for the normal sample",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": [
-                    "<normal>_1.bedGraph.gz"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": [
-                    "<normal>_1.bedGraph.gz"
-                ]
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": [
+                "<normal>_1.bedGraph.gz"
+            ],
+            "controlFREEC_pipeline_bedGraph_input_template": [
+                "<normal>_1.bedGraph.gz"
+            ]
+        }
     },
     "SomaticCNVCallingControlFREEC.num_shards": {
         "description": "Shards for scatter-interval-list",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 100
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 100
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 100
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 100
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 100,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 100,
+            "controlFREEC_pipeline_bedGraph_input_template": 100,
+            "controlFREEC_pipeline_template": 100
+        }
     },
     "SomaticCNVCallingControlFREEC.output_all_controlFREEC_outputs_override": {
         "description": "Whether to output all original controlFREEC outputs",
@@ -622,187 +349,103 @@
     "SomaticCNVCallingControlFREEC.references": {
         "description": "Struct of reference objects holding reference fasta with corresponding fai and dict files",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": {
-                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-                }
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": {
+                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
             },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": {
-                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-                }
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": {
+                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
             },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": {
-                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-                }
+            "controlFREEC_pipeline_bedGraph_input_template": {
+                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
             },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": {
-                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-                }
+            "controlFREEC_pipeline_template": {
+                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
             }
-        ]
+        }
     },
     "SomaticCNVCallingControlFREEC.scatter_intervals_break": {
         "description": "Breaks for scatter interval list, see template for the default",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 10000000
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 10000000
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 10000000
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 10000000
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 10000000,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 10000000,
+            "controlFREEC_pipeline_bedGraph_input_template": 10000000,
+            "controlFREEC_pipeline_template": 10000000
+        }
     },
     "SomaticCNVCallingControlFREEC.sex": {
         "description": "Sample's sex value, should be 'XX' or 'XY'",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "XY"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "XY"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "XY"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "XY",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "XY",
+            "controlFREEC_pipeline_bedGraph_input_template": "XY"
+        }
     },
     "SomaticCNVCallingControlFREEC.snp_file": {
         "description": "Vcf file holding locations of the common variants to calculate pileup statistics on",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz",
+            "controlFREEC_pipeline_bedGraph_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz",
+            "controlFREEC_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz"
+        }
     },
     "SomaticCNVCallingControlFREEC.snp_file_index": {
         "description": "Vcf.tbi index file for snp_file",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi"
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi",
+            "controlFREEC_pipeline_bedGraph_input_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi",
+            "controlFREEC_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi"
+        }
     },
     "SomaticCNVCallingControlFREEC.tumor_coverage_cpn": {
         "description": "Pre-calculated binned coverage for the tumor sample in the format needed for controlFREEC (cpn)",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "<tumor>.cpn"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "<tumor>.cpn"
+        }
     },
     "SomaticCNVCallingControlFREEC.tumor_mpileup_override": {
         "description": "Pre-calculated mpileup for tumor sample",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": "<tumor>.pileup"
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": "<tumor>_minipileup.pileup"
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": "<tumor>.pileup",
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": "<tumor>_minipileup.pileup"
+        }
     },
     "SomaticCNVCallingControlFREEC.tumor_sorter_zipped_bed_graph": {
         "description": "Pre-calculated bedGraph files containing per-base coverage for the tumor sample",
         "optional": true,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": [
-                    "<tumor>_1.bedGraph.gz"
-                ]
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": [
-                    "<tumor>_1.bedGraph.gz"
-                ]
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": [
+                "<tumor>_1.bedGraph.gz"
+            ],
+            "controlFREEC_pipeline_bedGraph_input_template": [
+                "<tumor>_1.bedGraph.gz"
+            ]
+        }
     },
     "SomaticCNVCallingControlFREEC.window": {
         "description": "The size of the window over which the coverage is aggregated",
         "optional": false,
-        "templates": [
-            {
-                "name": "controlFREEC_pipeline_high_sensitivity_mode_template",
-                "value": 1000
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_and_mpileup_input_template",
-                "value": 1000
-            },
-            {
-                "name": "controlFREEC_pipeline_bedGraph_input_template",
-                "value": 1000
-            },
-            {
-                "name": "controlFREEC_pipeline_template",
-                "value": 1000
-            }
-        ]
+        "useCase": {
+            "controlFREEC_pipeline_high_sensitivity_mode_template": 1000,
+            "controlFREEC_pipeline_bedGraph_and_mpileup_input_template": 1000,
+            "controlFREEC_pipeline_bedGraph_input_template": 1000,
+            "controlFREEC_pipeline_template": 1000
+        }
     }
 }

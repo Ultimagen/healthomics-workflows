@@ -46,54 +46,33 @@
     "SingleCell.barcode_rg": {
         "description": "Read group name for the barcode reads, e.g. S1_L001_R1_001",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": "S1_L001_R1_001"
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": "S1_L001_R1_001"
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": "S1_L001_R1_001",
+            "single_cell_general_test_input": "S1_L001_R1_001"
+        }
     },
     "SingleCell.base_file_name": {
         "description": "Base file name for output files. The output files will be named <tt>[base_file_name]*.fastq.gz</tt>",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": "<base_file_name>"
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": "test-10x-flex-nomatch"
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": "<base_file_name>",
+            "single_cell_general_test_input": "test-10x-flex-nomatch"
+        }
     },
     "SingleCell.cpu": {
         "description": "Number of CPUs to use (for Trimmer, conversion to fastq, and alignment tasks)",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": 32
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": 32
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": 32,
+            "single_cell_general_test_input": 32
+        }
     },
     "SingleCell.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
         "optional": true,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": false
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": false
+        }
     },
     "SingleCell.downstream_analysis": {
         "description": "Can be either star_solo, star, or undefined (default)",
@@ -106,30 +85,18 @@
     "SingleCell.input_file": {
         "description": "Input CRAM or BAM file",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": "<input_file>.cram"
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/single_cell/410378-Z0097.flex_subsample.bam"
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": "<input_file>.cram",
+            "single_cell_general_test_input": "s3://gen-pipe-shared-337532070941-us-east-1/tests-inputs/single_cell/410378-Z0097.flex_subsample.bam"
+        }
     },
     "SingleCell.insert_rg": {
         "description": "Read group name for the insert reads, e.g. S1_L001_R2_001",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": "S1_L001_R2_001"
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": "S1_L001_R2_001"
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": "S1_L001_R2_001",
+            "single_cell_general_test_input": "S1_L001_R2_001"
+        }
     },
     "SingleCell.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -138,30 +105,18 @@
     "SingleCell.no_address": {
         "description": "Should the instances used be without external IP address. Allows for more parallelization, but not supported with Dockerhub dockers Default: true",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": true
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": true
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": true,
+            "single_cell_general_test_input": true
+        }
     },
     "SingleCell.preemptible_tries": {
         "description": "Number of preemptible tries",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": 1
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": 1
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": 1,
+            "single_cell_general_test_input": 1
+        }
     },
     "SingleCell.qc_memory_gb": {
         "description": "qc_memory_gb",
@@ -170,103 +125,79 @@
     "SingleCell.qc_thresholds": {
         "description": "Thresholds for the single cell qc",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": {
-                    "pass_trim_rate": 88,
-                    "read_length": 72,
-                    "fraction_below_read_length": 10,
-                    "percent_aligned": 80
-                }
+        "useCase": {
+            "single_cell_general_template-10x-flex": {
+                "pass_trim_rate": 88,
+                "read_length": 72,
+                "fraction_below_read_length": 10,
+                "percent_aligned": 80
             },
-            {
-                "name": "single_cell_general_test_input",
-                "value": {
-                    "pass_trim_rate": 85,
-                    "fraction_below_read_length": 10,
-                    "read_length": 72,
-                    "percent_aligned": 90
-                }
+            "single_cell_general_test_input": {
+                "pass_trim_rate": 85,
+                "fraction_below_read_length": 10,
+                "read_length": 72,
+                "percent_aligned": 90
             }
-        ]
+        }
     },
     "SingleCell.ref_fastas_cram": {
         "description": "Reference fasta files for the CRAM file",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": [
-                    "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
-                    "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
-                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
-                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
-                    "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
-                ]
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": [
-                    "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "s3://genomics-pipeline-concordanz-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
-                    "s3://broad-references/hg19/v0/Homo_sapiens_assembly19.fasta",
-                    "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/hg19.ucsc.fa",
-                    "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
-                    "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
-                ]
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": [
+                "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
+                "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+                "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+            ],
+            "single_cell_general_test_input": [
+                "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://genomics-pipeline-concordanz-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
+                "s3://broad-references/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/hg19.ucsc.fa",
+                "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                "s3://genomics-pipeline-concordanz-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+            ]
+        }
     },
     "SingleCell.references": {
         "description": "References for the workflow",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": {
-                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-                }
+        "useCase": {
+            "single_cell_general_template-10x-flex": {
+                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
             },
-            {
-                "name": "single_cell_general_test_input",
-                "value": {
-                    "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict",
-                    "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta"
-                }
+            "single_cell_general_test_input": {
+                "ref_fasta_index": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.dict",
+                "ref_fasta": "s3://broad-references/hg38/v0/Homo_sapiens_assembly38.fasta"
             }
-        ]
+        }
     },
     "SingleCell.sorter_params": {
         "description": "Parameters for Sorter task.  See input template",
         "optional": true,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": {
-                    "mark_duplicates": false,
-                    "aligned": false,
-                    "output_group": "{minorRG}",
-                    "output_path": "{RunID}/{RunID}_{minorRG}",
-                    "demux_extra_args": "--cell-barcode-filter=true --cell-barcode-umi-length 12  --fastq-header-line='{instrument}:{ri}:{ri}:{ri}:{camera}:{ring}:{tile}:{xpos}:{ypos}:{segment-num}:{first-flow-signal}:{filtered}:{RSQ}:{barcode-seq}:{umis}:{bead-index}' --fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false",
-                    "single_cell_cbc_classifier": "s3://ultimagen-workflow-resources-us-east-1/single_cell/class_suspicious_cells/cbc_classifier_params_10x_v1.json"
-                }
+        "useCase": {
+            "single_cell_general_template-10x-flex": {
+                "mark_duplicates": false,
+                "aligned": false,
+                "output_group": "{minorRG}",
+                "output_path": "{RunID}/{RunID}_{minorRG}",
+                "demux_extra_args": "--cell-barcode-filter=true --cell-barcode-umi-length 12  --fastq-header-line='{instrument}:{ri}:{ri}:{ri}:{camera}:{ring}:{tile}:{xpos}:{ypos}:{segment-num}:{first-flow-signal}:{filtered}:{RSQ}:{barcode-seq}:{umis}:{bead-index}' --fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false",
+                "single_cell_cbc_classifier": "s3://ultimagen-workflow-resources-us-east-1/single_cell/class_suspicious_cells/cbc_classifier_params_10x_v1.json"
             },
-            {
-                "name": "single_cell_general_test_input",
-                "value": {
-                    "output_path": "{RunID}/{RunID}_{minorRG}",
-                    "aligned": false,
-                    "mark_duplicates": false,
-                    "output_group": "{minorRG}",
-                    "demux_extra_args": "--fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false"
-                }
+            "single_cell_general_test_input": {
+                "output_path": "{RunID}/{RunID}_{minorRG}",
+                "aligned": false,
+                "mark_duplicates": false,
+                "output_group": "{minorRG}",
+                "demux_extra_args": "--fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false"
             }
-        ]
+        }
     },
     "SingleCell.star_align_extra_args": {
         "description": "Extra parameters to pass to the StarAlignment task.  See input template",
@@ -279,16 +210,10 @@
     "SingleCell.star_genome": {
         "description": "The genome to use in the StarAlignment task.  See input template",
         "optional": true,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/STAR_hg38_cr_2.7.8a.zip"
-            },
-            {
-                "name": "single_cell_general_test_input",
-                "value": "s3://genomics-pipeline-concordanz-us-east-1/bioinfo-resources/tools/STAR_hg38_cr_2.7.8a.zip"
-            }
-        ]
+        "useCase": {
+            "single_cell_general_template-10x-flex": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/STAR_hg38_cr_2.7.8a.zip",
+            "single_cell_general_test_input": "s3://genomics-pipeline-concordanz-us-east-1/bioinfo-resources/tools/STAR_hg38_cr_2.7.8a.zip"
+        }
     },
     "SingleCell.star_solo_params": {
         "description": "Parameters for running the StarSolo task.  See input template",
@@ -297,54 +222,42 @@
     "SingleCell.steps": {
         "description": "The steps to run in the workflow (trim+sort)",
         "optional": false,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": {
-                    "trim": true,
-                    "align": false,
-                    "sort": true
-                }
+        "useCase": {
+            "single_cell_general_template-10x-flex": {
+                "trim": true,
+                "align": false,
+                "sort": true
             },
-            {
-                "name": "single_cell_general_test_input",
-                "value": {
-                    "trim": true,
-                    "sort": true
-                }
+            "single_cell_general_test_input": {
+                "trim": true,
+                "sort": true
             }
-        ]
+        }
     },
     "SingleCell.trimmer_parameters": {
         "description": "Parameters for Trimmer task.  See input template",
         "optional": true,
-        "templates": [
-            {
-                "name": "single_cell_general_template-10x-flex",
-                "value": {
-                    "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/single_cell/10x-BDB-flex.json",
-                    "format": "10x BDB flex",
-                    "failure_read_group": "unmatched",
-                    "extra_args": "--compare \"rq<=1.0\" --histogram=%1.histogram.csv --failure-field=fm:Z:cram  --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %5%4%3",
-                    "add_run_id_as_ri_tag": true,
-                    "pattern_files": [
-                        "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/single_cell/10x-737K-fixed-rna-profiling.csv"
-                    ],
-                    "memory_gb": 128
-                }
+        "useCase": {
+            "single_cell_general_template-10x-flex": {
+                "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/single_cell/10x-BDB-flex.json",
+                "format": "10x BDB flex",
+                "failure_read_group": "unmatched",
+                "extra_args": "--compare \"rq<=1.0\" --histogram=%1.histogram.csv --failure-field=fm:Z:cram  --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %5%4%3",
+                "add_run_id_as_ri_tag": true,
+                "pattern_files": [
+                    "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/single_cell/10x-737K-fixed-rna-profiling.csv"
+                ],
+                "memory_gb": 128
             },
-            {
-                "name": "single_cell_general_test_input",
-                "value": {
-                    "format": "10x flex",
-                    "pattern_files": [
-                        "s3://genomics-pipeline-concordanz-us-east-1/trimmer_formats/single_cell/10x-737K-fixed-rna-profiling.csv"
-                    ],
-                    "memory_gb": 128,
-                    "formats_description": "s3://genomics-pipeline-trimmer-dev-formats/single_cell/bkp_oldtrimmer_241007/single_cell_trimmer_formats_10x_flex.json",
-                    "extra_args": "--histogram=%1.%2.histogram.csv --failure-field=rg:Z:unmatched --failure-field=fm:Z:cram --read-group Z0097 --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %3"
-                }
+            "single_cell_general_test_input": {
+                "format": "10x flex",
+                "pattern_files": [
+                    "s3://genomics-pipeline-concordanz-us-east-1/trimmer_formats/single_cell/10x-737K-fixed-rna-profiling.csv"
+                ],
+                "memory_gb": 128,
+                "formats_description": "s3://genomics-pipeline-trimmer-dev-formats/single_cell/bkp_oldtrimmer_241007/single_cell_trimmer_formats_10x_flex.json",
+                "extra_args": "--histogram=%1.%2.histogram.csv --failure-field=rg:Z:unmatched --failure-field=fm:Z:cram --read-group Z0097 --output-field fm:Z:fastq --output-qname %Q/1 --output-field rg:Z:S1_L001_R1_001 --output-sequence %1%2 --new-output-context --output-field fm:Z:fastq --output-qname %Q/2 --output-field rg:Z:S1_L001_R2_001 --output-sequence %3"
             }
-        ]
+        }
     }
 }
