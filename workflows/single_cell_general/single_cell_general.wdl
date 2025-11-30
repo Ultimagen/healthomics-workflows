@@ -64,7 +64,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.23.0" # !UnusedDeclaration
+        String pipeline_version = "1.25.0" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -123,7 +123,7 @@ workflow SingleCell {
         #@wv not("<!READ GROUP!>" in trimmer_parameters['extra_args'])
 
         # Sort checks
-        #@wv 'sort' in steps and steps['sort'] -> defined(sorter_params))
+        #@wv 'sort' in steps and steps['sort'] -> defined(sorter_params)
 
         # STAR solo validations
         #@wv defined(downstream_analysis) and downstream_analysis == "star_solo" -> defined(star_solo_params)

@@ -18,5 +18,6 @@
     "SegDupAnalysis.dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
     "SegDupAnalysis.dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
     "SegDupAnalysis.preemptible_tries": 3,
-    "SegDupAnalysis.no_address": true
+    "SegDupAnalysis.no_address": true,
+    "SegDupAnalysis.cloud_provider_override": "aws"
 }

@@ -15,6 +15,7 @@
     "SVPipeline.realign_mapq": 60,
     "SVPipeline.homopolymer_length": 10,
     "SVPipeline.max_reads_per_partition": 1500,
+    "SVPipeline.max_reads_per_working_area": 50000,
     "SVPipeline.ua_references": {
         "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
         "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
@@ -47,5 +48,6 @@
     "SVPipeline.pon_sv_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/sv_pon.38.bedpe.gz",
     "SVPipeline.known_hotspot_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/known_fusions.38.sorted.bedpe",
     "SVPipeline.repeat_mask_file": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/repeat_mask_data.38.fa.gz",
-    "SVPipeline.create_md5_checksum_outputs": false
+    "SVPipeline.create_md5_checksum_outputs": false,
+    "SVPipeline.cloud_provider_override": "aws"
 }

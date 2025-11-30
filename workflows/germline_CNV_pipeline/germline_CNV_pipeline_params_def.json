@@ -35,10 +35,6 @@
         "description": "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineCNVCalls.deletions_length_cutoff_override": {
-        "description": "Minimum length of deletions to be considered without jalign support. default=3000",
-        "optional": true
-    },
     "GermlineCNVPipeline.CombineCNVCalls.distance_threshold_override": {
         "description": "Distance threshold for merging CNV calls. default=1500",
         "optional": true
@@ -51,41 +47,25 @@
         "description": "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineCNVCalls.jalign_written_cutoff_override": {
-        "description": "Minimal number of supporting jaligned reads for deletions. default=1",
-        "optional": true
-    },
     "GermlineCNVPipeline.base_file_name": {
         "description": "Sample name",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "<base_file_name"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "<base_file_name>"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "<base_file_name",
+            "germline_CNV_pipeline_template.hg19": "<base_file_name>"
+        }
     },
     "GermlineCNVPipeline.bed_graph": {
         "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": [
-                    "s3://<sample>.1_bedGraph.gz"
-                ]
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": [
-                    "s3://<sample>.1_bedGraph.gz"
-                ]
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": [
+                "s3://<sample>.1_bedGraph.gz"
+            ],
+            "germline_CNV_pipeline_template.hg19": [
+                "s3://<sample>.1_bedGraph.gz"
+            ]
+        }
     },
     "GermlineCNVPipeline.cnmops_intersection_cutoff_override": {
         "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
@@ -122,90 +102,62 @@
     "GermlineCNVPipeline.cohort_reads_count_matrix": {
         "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg19.ReadsCount.rds"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds",
+            "germline_CNV_pipeline_template.hg19": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg19.ReadsCount.rds"
+        }
     },
     "GermlineCNVPipeline.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
         "optional": true,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": false
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": false
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": false,
+            "germline_CNV_pipeline_template.hg19": false
+        }
     },
     "GermlineCNVPipeline.disable_mod_cnv": {
         "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
         "optional": true
     },
+    "GermlineCNVPipeline.filtering_model": {
+        "description": "CNV filtering model, default in template",
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.3.pkl",
+            "germline_CNV_pipeline_template.hg19": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.3.1.pkl"
+        }
+    },
     "GermlineCNVPipeline.genome_windows": {
         "description": "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix.",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/Homo_sapiens_assembly19.fasta.chr1-24.w1000.bed"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed",
+            "germline_CNV_pipeline_template.hg19": "s3://ultimagen-workflow-resources-us-east-1/hg19/Homo_sapiens_assembly19.fasta.chr1-24.w1000.bed"
+        }
     },
     "GermlineCNVPipeline.input_bam_file": {
         "description": "Input sample BAM/CRAM file",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "<input_bam_file>.bam"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "<input_bam_file>.bam"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "<input_bam_file>.bam",
+            "germline_CNV_pipeline_template.hg19": "<input_bam_file>.bam"
+        }
     },
     "GermlineCNVPipeline.input_bam_file_index": {
         "description": "Input sample BAI/CRAI index file",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "<input_bam_file>.bam.bai"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "<input_bam_file>.bam.bai"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "<input_bam_file>.bam.bai",
+            "germline_CNV_pipeline_template.hg19": "<input_bam_file>.bam.bai"
+        }
     },
     "GermlineCNVPipeline.merged_cohort_ploidy_file": {
         "description": "Merged cohort ploidy file in bed format",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
+            "germline_CNV_pipeline_template.hg19": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy"
+        }
     },
     "GermlineCNVPipeline.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -222,113 +174,89 @@
     "GermlineCNVPipeline.ref_seq_names": {
         "description": "Chromosome names for which coverage will be calculated",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": [
-                    "chr1",
-                    "chr2",
-                    "chr3",
-                    "chr4",
-                    "chr5",
-                    "chr6",
-                    "chr7",
-                    "chr8",
-                    "chr9",
-                    "chr10",
-                    "chr11",
-                    "chr12",
-                    "chr13",
-                    "chr14",
-                    "chr15",
-                    "chr16",
-                    "chr17",
-                    "chr18",
-                    "chr19",
-                    "chr20",
-                    "chr21",
-                    "chr22",
-                    "chrX",
-                    "chrY"
-                ]
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": [
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "X",
-                    "Y"
-                ]
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": [
+                "chr1",
+                "chr2",
+                "chr3",
+                "chr4",
+                "chr5",
+                "chr6",
+                "chr7",
+                "chr8",
+                "chr9",
+                "chr10",
+                "chr11",
+                "chr12",
+                "chr13",
+                "chr14",
+                "chr15",
+                "chr16",
+                "chr17",
+                "chr18",
+                "chr19",
+                "chr20",
+                "chr21",
+                "chr22",
+                "chrX",
+                "chrY"
+            ],
+            "germline_CNV_pipeline_template.hg19": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21",
+                "22",
+                "X",
+                "Y"
+            ]
+        }
     },
     "GermlineCNVPipeline.reference_genome": {
         "description": "Genome fasta file associated with the CRAM file",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+            "germline_CNV_pipeline_template.hg19": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta"
+        }
     },
     "GermlineCNVPipeline.reference_genome_index": {
         "description": "Fai index of the fasta file",
         "optional": false,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
-            },
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta.fai"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+            "germline_CNV_pipeline_template.hg19": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta.fai"
+        }
     },
     "GermlineCNVPipeline.skip_figure_generation": {
         "description": "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
         "optional": true,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template.hg19",
-                "value": true
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template.hg19": true
+        }
     },
     "GermlineCNVPipeline.ug_cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",
         "optional": true,
-        "templates": [
-            {
-                "name": "germline_CNV_pipeline_template",
-                "value": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed"
-            }
-        ]
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed"
+        }
     }
 }

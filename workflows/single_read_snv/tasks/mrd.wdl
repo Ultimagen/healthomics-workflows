@@ -50,7 +50,7 @@ task MrdDataAnalysis {
     File features = "~{basename}.features.parquet"
     File signatures = "~{basename}.signatures.parquet"
     File mrd_analysis_html = "~{basename}.mrd_data_analysis.html"
-    File tumor_fraction_h5 = "~{basename}.tumor_fraction.h5"
+    File ctdna_vaf_h5 = "~{basename}.ctdna_vaf.h5"
   }
 }
 

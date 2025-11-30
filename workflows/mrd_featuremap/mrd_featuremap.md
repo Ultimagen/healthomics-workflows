@@ -1,5 +1,5 @@
 # MRDFeatureMap
-The UG pipeline for tumor informed MRD measures the tumor fraction in cfDNA from the presence of tumor-specific SNVs. The input data is generally 3 aligned cram files:
+The UG pipeline for tumor informed MRD measures the ctDNA variant allele fraction in cfDNA from the presence of tumor-specific SNVs. The input data is generally 3 aligned cram files:
 
 - cfDNA (plasma)
 
@@ -19,7 +19,7 @@ The analysis of this MRD data is composed of three parts:
 
 2. Single Read SNV pipeline, where all the SNV candidates compared to the reference genome are extracted from the cfDNA cram file to a FeatureMap vcf, annotated and assigned a quality score (SNVQ).
 
-3. Intersection and MRD data analysis, where the FeatureMap and signature are intersected and filtered, then reads supporting the tumor mutations are counted and a tumor fraction is measured. Control signatures can be added to estimate the background noise, e.g. from other cohort patients, and in addition control signatures are generated from a somatic mutation database. 
+3. Intersection and MRD data analysis, where the FeatureMap and signature are intersected and filtered, then reads supporting the tumor mutations are counted and a ctDNA variant allele fraction is measured. Control signatures can be added to estimate the background noise, e.g. from other cohort patients, and in addition control signatures are generated from a somatic mutation database. 
 
 
 
@@ -218,10 +218,10 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>File</i><br />
         HTML report of the MRD analysis
 </p>
-<p name="MRDFeatureMap.tumor_fraction_h5">
-        <b>MRDFeatureMap.tumor_fraction_h5</b><br />
+<p name="MRDFeatureMap.ctdna_vaf_h5">
+        <b>MRDFeatureMap.ctdna_vaf_h5</b><br />
         <i>File</i><br />
-        HDF5 file of the tumor fraction and other results of the MRD analysis
+        HDF5 file of the ctDNA VAF and other results of the MRD analysis
 </p>
 <p name="MRDFeatureMap.intersected_featuremaps_parquet">
         <b>MRDFeatureMap.intersected_featuremaps_parquet</b><br />

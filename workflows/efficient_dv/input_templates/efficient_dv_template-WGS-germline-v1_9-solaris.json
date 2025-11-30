@@ -39,5 +39,6 @@
         50
     ],
     "EfficientDV.keep_duplicates": true,
-    "EfficientDV.add_ins_size_channel": true
+    "EfficientDV.add_ins_size_channel": true,
+    "EfficientDV.cloud_provider_override": "aws"
 }

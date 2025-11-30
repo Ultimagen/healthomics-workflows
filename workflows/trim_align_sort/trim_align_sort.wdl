@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.23.0" # !UnusedDeclaration
+        String pipeline_version = "1.25.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
@@ -139,6 +139,9 @@ workflow TrimAlignSort {
             "UAMethAlignment.Globals.glob",
             "UAMethAlignment.BuildUaMethIndex.disk_size",
             "UAMethAlignment.AlignWithUAMeth.disk_size",
+            "UAMethAlignment.AlignWithUAMeth.v_aware_vcf",
+            "UAMethAlignment.AlignWithUAMeth.disk_size",
+            "UAMethAlignment.AlignWithUAMeth.cpu",
             "StarAlignment.monitoring_script_input",
             "StarAlignment.Globals.glob",
             "StarAlignment.StarGenomeGenerate.disk_size",

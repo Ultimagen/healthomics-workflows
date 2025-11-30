@@ -54,5 +54,6 @@
     ],
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,
-    "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos"
+    "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
+    "EfficientDV.cloud_provider_override": "aws"
 }

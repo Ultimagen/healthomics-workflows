@@ -19,12 +19,12 @@ workflow Globals {
         "perl_docker": "perl:5.38",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ref_cache_script": "s3://ultimagen-workflow-resources-us-east-1/scripts/seq_cache_populate.pl",
-        "ua_docker": "ultimagenomics/alignment:3.0.4",
+        "ua_docker": "ultimagenomics/alignment:3.0.6",
         "trimmer_docker": "ultimagenomics/trimmer:2.3.4",
         "star_docker": "ultimagenomics/star:2.7.10a",
         "sorter_docker": "ultimagenomics/sorter:1.4.15",
         "single_cell_qc_docker": "ultimagenomics/ugbio_single_cell:1.14.0",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.16.1"
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:main_0ed4298"
 }
 }
 

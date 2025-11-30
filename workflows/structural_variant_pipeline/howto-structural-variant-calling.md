@@ -61,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.1.9
+ultimagenomics/make_examples:3.1.10
 ```
 
 Generate interval bed : 
@@ -206,7 +206,8 @@ Docker:
 
 #### Match reads to the haplotypes. 
 
-For the whole genome run it is best to run this process scattered over genomic intervals as described in the assembly section
+For the whole genome run it is best to run this process scattered over genomic intervals as described in the assembly section. 
+Here we assign the reads to the best supported haplotype.
 
 Docker: 
 
@@ -214,15 +215,19 @@ Docker:
 
 ```
     sv_rematch -b interval.bed \
-    -j 2 -t -a \
+    -j 2 -t -a -v \
     ~{"-l <dependent of somatic/germline>"} \
     ~{"-s <dependent of somatic/germline>"} \
     -m 5 \
+    -L 50000 \
     <input_crams> \
     long_homopolymer_realigned.assembly.bam \
     Homo_sapiens_assembly38.fasta \
     rematched_hap.txt
 ```
+
+**Note:** -L parameter determines the maximal number of reads per working area and primarily prevents 
+memory overfill in the regions of exceptionally high coverage. 
 
 * Germline SV calling: 
 - `<input_crams>` - germline.cram
@@ -252,6 +257,28 @@ sv_rematch -M all_read_haplotype_assignments.tsv \
 ```
 
 Index the `assembly.support.bam` file
+
+**Note:** 
+
+In high coverage samples the last two steps could running out of memory, to avoid this, first concatenate 
+the tsv files in a sorted order like this: 
+
+```
+ LC_ALL=C sort -T "." -m -k1,1 -k3,3rn <matched_reads_files space sep> | awk '$1 != prev { print; prev = $1 }'  | sort -T "." -k2,2 > sorted.all_matches_by_hap.txt
+```
+
+Second, name-sort realigned assembly
+
+    samtools sort -N long_homopolymer_realigned.assembly.bam -o assembly.name.sorted.bam
+
+Third, merge read support into the assembly
+
+    sv_rematch -v -S -M  sorted.all_matches_by_hap.txt \
+            assembly_name_sorted.bam \
+            Homo_sapiens_assembly38.fasta \
+            assembly.support.name_sorted.bam
+
+Fourth, sort the assembly by coordinate. 
 
 
 #### GRIDSS Identify Variants

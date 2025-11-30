@@ -25,6 +25,7 @@ task UGMakeExamples{
     Float min_fraction_hmer_indels
     Float min_fraction_non_hmer_indels
     Float min_fraction_single_strand_non_snps
+    Int? min_hmer_plus_one_candidate
     Int candidate_min_mapping_quality
     Int max_reads_per_partition
     Int assembly_min_base_quality
@@ -114,9 +115,10 @@ task UGMakeExamples{
     if [[ "~{cloud_provider}" != "aws" ]]; then
       gatk --java-options "-Xms2G" PrintReads \
           -I ~{sep=' -I ' cram_files} \
-          -O input.cram \
+          -O /dev/stdout \
           -L ~{interval} \
-          -R ~{references.ref_fasta}
+          -R ~{references.ref_fasta} |\
+      samtools view -C -T ~{references.ref_fasta} -o input.cram --output-fmt-option embed_ref=1 -
 
       samtools index input.cram -@ ~{cpu}
       input=input.cram
@@ -127,9 +129,10 @@ task UGMakeExamples{
       if [[ "~{defined_background}" == "true" ]]; then
         gatk --java-options "-Xms2G" PrintReads \
             -I  ~{sep=' -I ' background_cram_files} \
-            -O background.cram \
+            -O /dev/stdout \
             -L ~{interval} \
-            -R ~{references.ref_fasta}
+            -R ~{references.ref_fasta} |\
+        samtools view -C -T ~{references.ref_fasta} -o background.cram --output-fmt-option embed_ref=1 -
 
         samtools index background.cram -@ ~{cpu}
         background=background.cram
@@ -207,6 +210,7 @@ task UGMakeExamples{
         --cgp-min-fraction-non-hmer-indels ~{min_fraction_non_hmer_indels} \
         --cgp-min-fraction-single-strand-non-snps ~{min_fraction_single_strand_non_snps} \
         --cgp-min-mapping-quality ~{candidate_min_mapping_quality} \
+        --cgp-min-hmer-plus-one-candidate ~{if defined(min_hmer_plus_one_candidate) then min_hmer_plus_one_candidate else 7} \
         --max-reads-per-region ~{max_reads_per_partition} \
         --assembly-min-base-quality ~{assembly_min_base_quality} \
         ~{true="--realigned-sam" false="" output_realignment} \

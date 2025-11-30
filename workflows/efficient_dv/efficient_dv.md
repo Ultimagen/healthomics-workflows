@@ -137,6 +137,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Int </i> &mdash; 
          Minimal mapping quality for candidate generation <br /> 
 </p>
+<p name="EfficientDV.min_hmer_plus_one_candidate">
+        <b>EfficientDV.min_hmer_plus_one_candidate</b><br />
+        <i>Int? </i> &mdash; 
+         Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions <br /> 
+</p>
 <p name="EfficientDV.max_reads_per_partition">
         <b>EfficientDV.max_reads_per_partition</b><br />
         <i>Int </i> &mdash; 

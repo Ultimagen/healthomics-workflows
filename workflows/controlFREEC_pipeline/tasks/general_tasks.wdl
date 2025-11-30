@@ -803,6 +803,38 @@ task MergeVCFs {
   }
 }
 
+task ConcatVcfs{
+    input {
+        File monitoring_script
+        Array[File] input_vcfs
+        Array[File] input_vcfs_indexes
+        String output_vcf_name
+        Int disk_size = ceil(2*size(input_vcfs,"GB")+5)
+        Int preemptible_tries
+        String docker
+        Boolean no_address
+    }
+    command {
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        set -eo pipefail
+        bcftools concat ~{sep=' ' input_vcfs} | bcftools sort -T . -Oz -o ~{output_vcf_name} - 
+        bcftools index -t ~{output_vcf_name}
+    }
+    runtime {
+        preemptible: preemptible_tries
+        memory: "4 GB"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        noAddress: no_address
+        maxRetries: 2
+    }
+    output {
+        File output_vcf = "~{output_vcf_name}"
+        File output_vcf_index = "~{output_vcf_name}.tbi"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
 task FilterVcfWithBcftools {
     input {
         String docker
@@ -914,21 +946,52 @@ task FilterVcfWithBcftools {
     }
 }
 
-task GetMeanCoverageFromSorterStats {
+
+task ExtractSorterStatsMetrics {
     input{
-      File sorter_json_stats_file
+      Array[File] sorter_json_stats_files
       String docker
       Int preemptible_tries
       File monitoring_script
     }
-    String output_file = basename(sorter_json_stats_file, ".json") + ".mean_coverage.txt"
+    String mean_coverage_output_file = "mean_coverage.txt"
+    String total_aligned_bases_output_file = "total_aligned_bases.txt"
     command <<<
-        set -eo pipefail
+        set -eox pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        sorter_stats_to_mean_coverage \
-            --sorter-stats-json "~{sorter_json_stats_file}" \
-            --output-file "~{output_file}"
+        # Initialize sums
+        TOTAL_COVERAGE_SUM=0.0
+        TOTAL_ALIGNED_BASES=0
+
+        # Process each file
+        for stats_file in ~{sep=" " sorter_json_stats_files}; do
+            echo "Processing file: $stats_file"
+            
+            # Extract mean_coverage from this file
+            MEAN_COV_TMP=$(mktemp)
+            sorter_stats_to_mean_coverage \
+                --sorter-stats-json "$stats_file" \
+                --output-file "$MEAN_COV_TMP"
+            MEAN_COV=$(cat "$MEAN_COV_TMP")
+            rm "$MEAN_COV_TMP"
+            
+            # Extract total_aligned_bases from this file using jq
+            TOTAL_BASES=$(jq -re '.total_aligned_bases // .total_bases // error("missing total_aligned_bases and total_bases")' "$stats_file")
+            
+            echo "File: $stats_file - mean_coverage: $MEAN_COV, total_aligned_bases: $TOTAL_BASES"
+            
+            # Aggregate mean_coverage and total_aligned_bases
+            TOTAL_COVERAGE_SUM=$(awk -v current="$TOTAL_COVERAGE_SUM" -v new="$MEAN_COV" 'BEGIN{printf "%.12f", current + new}')
+            TOTAL_ALIGNED_BASES=$((TOTAL_ALIGNED_BASES + TOTAL_BASES))
+        done
+
+        echo "Final mean_coverage (sum): $TOTAL_COVERAGE_SUM"
+        echo "Final total_aligned_bases (sum): $TOTAL_ALIGNED_BASES"
+        
+        # Write outputs
+        echo "$TOTAL_COVERAGE_SUM" > "~{mean_coverage_output_file}"
+        echo "$TOTAL_ALIGNED_BASES" > "~{total_aligned_bases_output_file}"
 
     >>>
     runtime {
@@ -938,10 +1001,12 @@ task GetMeanCoverageFromSorterStats {
         cpu: "1"
     }
     output {
-        Float mean_coverage = read_float("~{output_file}")
+        Float mean_coverage = read_float("~{mean_coverage_output_file}")
+        String total_aligned_bases = read_string("~{total_aligned_bases_output_file}")
         File monitoring_log = "monitoring.log"
     }
   }
+
 
 task CopyFiles {
     input {

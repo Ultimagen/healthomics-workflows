@@ -110,7 +110,6 @@ task CreateMpileup {
     Boolean is_aws = defined(cloud_provider)
     String snp_file_basename = basename(snp_file)
 
-
     parameter_meta {
       input_bam_files: {
           localization_optional: true
@@ -118,14 +117,9 @@ task CreateMpileup {
     }
 
 command <<<
-        bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -xeou pipefail
-
-    # if ~{is_aws}
-    # then
-    #     inputs_string="~{sep=' ' input_bam_files}"
-    # else
-    echo "DEBUG start PrintReads $(date)"
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+    set -xeou pipefail
+    
     # download only the region of interval
     gatk --java-options "-Xms1G" PrintReads \
         -I ~{sep=' -I ' input_bam_files} \
@@ -133,8 +127,7 @@ command <<<
         -L ~{interval} \
         -R ~{reference_fasta}
     inputs_string="input.bam"
-    echo "DEBUG end PrintReads $(date)"
-    # fi
+    samtools index input.bam
 
     echo "inputs_string:"
     echo $inputs_string

@@ -551,6 +551,10 @@ task AlignWithUAMeth {
     String output_bam_basename
     File index_c2t
     File index_g2a
+    File? ref_alt
+    Boolean use_v_aware_alignment
+    File? v_aware_vcf
+    String? extra_args
     File? cache_tarball
     Boolean UaMethIntensiveMode = false
     File monitoring_script
@@ -558,50 +562,50 @@ task AlignWithUAMeth {
     Int preemptible_tries
     Boolean no_address
     String ua_docker
-    Int cpus
+    Int cpu = 40
+    Int memory_gb = 200
 
     }
     Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
     String ua_meth_mode = if (UaMethIntensiveMode) then "--methylation-intensive" else "--methylation"
 
     command <<<
-    set -eo pipefail
-
+    set -exuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    echo "~{sep='\n'input_bams}" > bam_list.txt
 
     ua_index_file_name=$(echo ~{index_c2t} | sed -r 's/'.c2t'//g')
-    ls -lstr
-    cat bam_list.txt
 
     ~{"tar -zxf "+cache_tarball}
-
+    
     # for compatibility with the old image where ua was in /ua/ua and not in PATH
     export PATH=$PATH:/ua
-    export REF_CACHE=cache/%2s/%2s/
-    export REF_PATH='.'
-    samtools cat -b bam_list.txt | \
-    samtools view -h -@ ~{cpus} - | \
+    export REF_CACHE=cache/%2s/%2s/ 
+    export REF_PATH='.' 
+    
+    samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{sep=" " input_bams} | \
     ua \
         ~{ua_meth_mode} \
-        --align true \
         --index "${ua_index_file_name}" \
+        --align true \
         --progress \
         --tp reference \
-        --vector \
-        --json ~{output_bam_basename}-%s.json \
-        --nthread ~{cpus} \
+        ~{"--alt=" + ref_alt} \
+        --stat=~{output_bam_basename}.%s.json \
+        --nthread max \
+        ~{"--vcf="+ v_aware_vcf}  \
+        ~{true="--vcf-snps-only --vcf-af-threshold=0.01" false='' use_v_aware_alignment} \
         --sam-input - \
-        --sam-output - | \
-    samtools view -@ ~{cpus} -o "~{output_bam_basename}.bam" -
+        --sam-output - \
+        ~{extra_args} | \
+    samtools view -@ ~{cpu} -o ~{output_bam_basename}.bam -
 
     >>>
 
     runtime {
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries_final
-        memory: "200 GB"
-        cpu: "~{cpus}"
+        memory: "~{memory_gb} GiB"
+        cpu: "~{cpu}"
         disks: "local-disk " + disk_size + " HDD"
         docker: ua_docker
         noAddress: no_address

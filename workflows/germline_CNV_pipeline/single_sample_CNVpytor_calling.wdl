@@ -24,7 +24,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.23.0" # !UnusedDeclaration
+        String pipeline_version = "1.25.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -61,7 +61,7 @@ workflow SingleSampleCNVpytorCalling {
                 "monitoring_script_input",
                 "no_address_override",
                 "preemptible_tries_override",
-                "Globals.glob"
+                "Glob.glob"
                 ]}
     }
     parameter_meta {
@@ -110,35 +110,46 @@ workflow SingleSampleCNVpytorCalling {
             type: "File",
             category: "output"
         }
-        
+        cnvpytor_cnv_calls_vcf: {
+            help: "CNVpytor CNV calls in VCF format",
+            type: "File",
+            category: "output"
+        }
+        cnvpytor_cnv_calls_vcf_index: {
+            help: "Index file for the CNVpytor CNV calls VCF",
+            type: "File",
+            category: "output"  
+        }
     }
 
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
     Boolean no_address = select_first([no_address_override, true ])
-    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
      
-    call Globals.Globals as Globals
-      GlobalVariables global = Globals.global_dockers
+    call Globals.Globals as Glob
+    GlobalVariables global = Glob.global_dockers
+    
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script]) #!FileCoercion
 
     
     call RunCNVpytor {
         input:
-        sample_name = base_file_name,
-        input_bam = input_bam_file,
-        input_bam_index = input_bam_file_index,
-        reference_fasta = reference_genome,
-        reference_fasta_index = reference_genome_index,
-        window_size = window_length,
-        chr_list = ref_seq_names,
-        mapq = mapq,
-        docker = global.ugbio_cnv_docker,
-        monitoring_script = monitoring_script,
-        no_address = no_address,
-        preemptible_tries = preemptible_tries
+            sample_name = base_file_name,
+            input_bam = input_bam_file,
+            input_bam_index = input_bam_file_index,
+            reference_fasta = reference_genome,
+            reference_fasta_index = reference_genome_index,
+            window_size = window_length,
+            chr_list = ref_seq_names,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
     }
 
     output {
         File cnvpytor_cnv_calls_tsv = RunCNVpytor.cnvpytor_cnv_calls_tsv
+        File cnvpytor_cnv_calls_vcf = RunCNVpytor.cnvpytor_cnv_calls_vcf
+        File cnvpytor_cnv_calls_vcf_index = RunCNVpytor.cnvpytor_cnv_calls_vcf_index
     }
 }
 
@@ -151,7 +162,6 @@ task RunCNVpytor {
         File reference_fasta_index
         Int window_size
         Array[String] chr_list
-        Int mapq
         
         String docker
         File monitoring_script
@@ -182,6 +192,14 @@ task RunCNVpytor {
         cnvpytor -root ~{sample_name}.pytor \
             -call ~{window_size} > ~{sample_name}.pytor.bin~{window_size}.CNVs.1based.tsv
         
+        cnvpytor -root ~{sample_name}.pytor  -view ~{window_size} <<EOF
+                set print_filename ~{sample_name}.~{window_size}.CNV.vcf
+                print calls
+                quit 
+        EOF
+        
+        bcftools view -Oz -o ~{sample_name}.~{window_size}.CNV.vcf.gz ~{sample_name}.~{window_size}.CNV.vcf
+        bcftools index -tf ~{sample_name}.~{window_size}.CNV.vcf.gz
         #making cnvpytor output coordinates 0-based
         awk 'BEGIN {OFS="\t"}
         {
@@ -206,6 +224,8 @@ task RunCNVpytor {
     }
     output {
         File cnvpytor_cnv_calls_tsv = "~{sample_name}.pytor.bin~{window_size}.CNVs.tsv"
+        File cnvpytor_cnv_calls_vcf = "~{sample_name}.~{window_size}.CNV.vcf.gz"
+        File cnvpytor_cnv_calls_vcf_index = "~{sample_name}.~{window_size}.CNV.vcf.gz.tbi"
         File monitoring_log = "monitoring.log"
     }
     

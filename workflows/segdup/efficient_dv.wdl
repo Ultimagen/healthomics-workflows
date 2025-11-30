@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.23.0" # !UnusedDeclaration
+    String pipeline_version = "1.25.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -62,6 +62,7 @@ workflow EfficientDV {
     Int min_base_quality = 5
     Int pileup_min_mapping_quality = 5
     Int candidate_min_mapping_quality = 5
+    Int? min_hmer_plus_one_candidate = 7
     Int max_reads_per_partition = 1500
     Int dbg_min_base_quality = 0 # Minimal base quality during the assembly process
     Boolean prioritize_alt_supporting_reads = false
@@ -294,6 +295,10 @@ workflow EfficientDV {
       type: "Int",
       help: "Minimal mapping quality for candidate generation",
       category: "param_optional"
+    }
+    min_hmer_plus_one_candidate: {
+       help: "Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions",
+       category: "param_optional"
     }
     max_reads_per_partition: {
       type: "Int",
@@ -659,6 +664,7 @@ workflow EfficientDV {
         min_fraction_snps = min_fraction_snps,
         min_fraction_hmer_indels = min_fraction_hmer_indels,
         min_fraction_non_hmer_indels = min_fraction_non_hmer_indels,
+        min_hmer_plus_one_candidate = min_hmer_plus_one_candidate,
         candidate_min_mapping_quality = candidate_min_mapping_quality,
         max_reads_per_partition = max_reads_per_partition,
         assembly_min_base_quality  = dbg_min_base_quality,

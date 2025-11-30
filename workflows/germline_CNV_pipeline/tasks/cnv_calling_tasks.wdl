@@ -84,22 +84,22 @@ task ConvertBedGraphToGranges {
             file_basename=$(basename $bedgraph)
             if [[ $bedgraph =~ \.gz$ ]]; 
             then 
-                gzip -d -c $bedgraph > $file_basename.bedgraph; 
+                gzip -d -c $bedgraph > "$file_basename.bedgraph"; 
             else
-                cp $bedgraph $file_basename.bedgraph;
+                cp $bedgraph "$file_basename.bedgraph";
             fi
-            bedtools map -g ~{genome_file} -a ~{genome_windows} -b $file_basename.bedgraph -c 4 -o mean | \
+            bedtools map -g ~{genome_file} -a ~{genome_windows} -b "$file_basename.bedgraph" -c 4 -o mean | \
             awk '{if($4=="."){print $1"\t"$2"\t"$3"\t"0}else{print $1"\t"$2"\t"$3"\t"$4}}' \
-            > $file_basename.bedgraph.mean;
+            > "$file_basename.bedgraph.mean";
         done
         
         if ~{multiple_bedgraph_files}
         then    
-            bedtools unionbedg -i *.bedgraph.mean | \
+            bedtools unionbedg -i ./*.bedgraph.mean | \
             awk -v OFS="\t" -F "\t" 'NR>0{sum=0; for(i=4; i<=NF; i++) sum += $i; NF++; $NF=sum } 1' | \
             awk '{print $1"\t"$2"\t"$3"\t"$NF}' > ~{input_bedGraph_basename}.win.bedGraph
         else
-            cp $file_basename.bedgraph.mean ~{input_bedGraph_basename}.win.bedGraph
+            cp "$file_basename.bedgraph.mean" ~{input_bedGraph_basename}.win.bedGraph
         fi            
 
         Rscript --vanilla /home/ugbio/src/cnv/cnmops/convert_bedGraph_to_Granges.R \
@@ -264,15 +264,56 @@ task RunCnmops {
     }
 }
 
-task FilterSampleCnvs {
+task ExtractNormalizedReadCount {
+    input {
+        File cohort_reads_count_norm
+        Array[String] sample_names
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+
+    Float cohort_reads_count_norm_file_size = size(cohort_reads_count_norm, "GB")
+    Float additional_disk = 10
+    Int disk_size = ceil(cohort_reads_count_norm_file_size + additional_disk)
+
+    command <<<
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        set -exo pipefail
+        for sample_name in ~{sep=" " sample_names}; do
+            Rscript --vanilla /home/ugbio/src/cnv/cnmops/export_cohort_matrix_to_bed.R  \
+                ~{cohort_reads_count_norm} --sample "$sample_name"
+        done
+        Rscript --vanilla  /home/ugbio/src/cnv/cnmops/export_cohort_matrix_to_bed.R  \
+            ~{cohort_reads_count_norm} --mean
+    >>>
+    runtime {
+        preemptible: preemptible_tries
+        memory: "8 GiB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+        noAddress: no_address
+        cpu: 2
+    }
+    output {
+        Array[File] sample_reads_count_bed = glob("*.cov.bed")
+        File cohort_reads_count_bed = "coverage.cohort.bed"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+task ProcessCnmopsCnvs {
     input {
         File cohort_cnvs_csv
         Array[String] sample_names
         Int min_cnv_length
+        Array[File] sample_norm_coverage_file
+        File cohort_norm_avg_coverage_file
         Float intersection_cutoff
         File? cnv_lcr_file
         File ref_genome_file
-        File germline_coverge_rds
+        File germline_coverage_rds
         String docker
         Boolean skip_figure_generation
         File monitoring_script
@@ -285,65 +326,84 @@ task FilterSampleCnvs {
     Float ref_genome_file_size = size(ref_genome_file, "GB")
     Float additional_disk = 25
     Int disk_size = ceil(cohort_cnvs_csv_file_size + ref_genome_file_size + additional_disk)
-
+    
     command <<<
-        set -eo pipefail
+        set -xeo pipefail
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        #write all samples coverage to bed files
-        Rscript --vanilla -e "args=commandArgs(trailingOnly=TRUE)
-            suppressPackageStartupMessages(library('GenomicRanges'))
-            gr <- readRDS(args[2])
-            sample_names <- colnames(mcols(gr))
-            for (sample in sample_names) {
-                    df_sample <- as.data.frame(gr[,sample])
-                    write.table(df_sample[,c('seqnames','start','end',make.names(sample))], paste(sample,'cov.bed',sep='.') , sep = '\t', col.names = FALSE, row.names = FALSE, quote = FALSE)
-            }" --args ~{germline_coverge_rds}
+        for f in ~{sep=' ' sample_norm_coverage_file}; do
+            echo $f >> filelist.txt
+        done
 
+        #write all samples coverage to bed files
+        Rscript --vanilla  /home/ugbio/src/cnv/cnmops/export_cohort_matrix_to_bed.R  ~{germline_coverage_rds}
         #get samples CNVs
+
         for sample_name in ~{sep=" " sample_names}
         do 
             if grep -q "$sample_name" ~{cohort_cnvs_csv};
                 then grep "$sample_name" ~{cohort_cnvs_csv} > $sample_name.cnvs.csv ;
                 awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' $sample_name.cnvs.csv > $sample_name.cnvs.bed;
 
+                ## looking for the depth file that matches the sample
+                while read -r line; do
+                    bn=$(basename "$line" .cov.bed)
+                    if [[ "$bn" == "$sample_name" ]]; then
+                        desired_file="$line"
+                        break
+                    fi
+                done < filelist.txt
+                
+                echo "$sample_name coverage file: $desired_file" >&2
                 if ~{filter_lcr}; then 
-                    #filter CNVs
-                    filter_sample_cnvs \
+                    process_cnmops_cnvs \
+                        --sample_name "$sample_name" \
                         --input_bed_file $sample_name.cnvs.bed \
                         --intersection_cutoff ~{intersection_cutoff} \
                         --cnv_lcr_file ~{cnv_lcr_file} \
-                        --min_cnv_length ~{min_cnv_length};
-                    
-                    #convert bed file to vcf
-                    convert_cnv_results_to_vcf \
-                        --cnv_annotated_bed_file $sample_name.cnvs.annotate.bed \
-                        --fasta_index_file ~{ref_genome_file} \
-                        --sample_name $sample_name
-                    
-                    #seperate duplications and deletions calls
-                    cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
-                    cat $sample_name.cnvs.filter.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
+                        --min_cnv_length ~{min_cnv_length} \
+                        --out_directory . \
+                        --sample_norm_coverage_file "$desired_file" \
+                        --cohort_avg_coverage_file ~{cohort_norm_avg_coverage_file} \
+                        --fasta_index_file ~{ref_genome_file}
+
+                                        
                 else
-                    #seperate duplications and deletions calls
-                    cat $sample_name.cnvs.bed | sed 's/CN//' | awk '$4>2' > $sample_name.cnvs.filter.DUP.bed
-                    cat $sample_name.cnvs.bed | sed 's/CN//' | awk '$4<2' > $sample_name.cnvs.filter.DEL.bed
+                    #convert bed file to vcf
+                    process_cnmops_cnvs \
+                        --sample_name "$sample_name" \
+                        --input_bed_file $sample_name.cnvs.bed \
+                        --intersection_cutoff ~{intersection_cutoff} \
+                        --min_cnv_length ~{min_cnv_length} \
+                        --out_directory . \
+                        --sample_norm_coverage_file "$desired_file" \
+                        --cohort_avg_coverage_file ~{cohort_norm_avg_coverage_file} \
+                        --fasta_index_file ~{ref_genome_file}
                 fi
+
+                bcftools view -i "INFO/SVTYPE='DEL'" $sample_name.cnvs.annotate.vcf.gz | \
+                bcftools query -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n' - > "$sample_name".DEL.bed
+                
+                bcftools view -i "INFO/SVTYPE='DUP'" $sample_name.cnvs.annotate.vcf.gz | \
+                bcftools query -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n' - > "$sample_name".DUP.bed
                 
                 #generate figure for each sample
                 if ~{skip_figure_generation}; then
                     echo "skip figure generation"; 
                 else
+                    cut -f1-3,5 $sample_name.cov.bed > $sample_name.cov.for_plot.bed
                     plot_cnv_results \
-                        --germline_coverage $sample_name.cov.bed \
-                        --duplication_cnv_calls $sample_name.cnvs.filter.DUP.bed \
-                        --deletion_cnv_calls $sample_name.cnvs.filter.DEL.bed \
+                        --germline_coverage $sample_name.cov.for_plot.bed \
+                        --duplication_cnv_calls $sample_name.DUP.bed \
+                        --deletion_cnv_calls $sample_name.DEL.bed \
                         --sample_name $sample_name \
-                        --out_directory CNV_figures
+                        --out_directory CNV_figures \
+                        --vcf-like
                 fi
 
-            else echo "$sample_name not found in ~{cohort_cnvs_csv}";
+            else 
+                echo "$sample_name not found in ~{cohort_cnvs_csv}"
             fi
         done
 
@@ -358,12 +418,8 @@ task FilterSampleCnvs {
     }
     output {
         Array[File] csvs = glob("*.csv")
-        Array[File] sample_cnvs_csv = glob(".cnvs.csv")
-        Array[File] sample_cnvs_bed = glob("*.cnvs.bed")
-        Array[File] sample_cnvs_annotated_bed = glob("*.cnvs.annotate.bed")
-        Array[File] sample_cnvs_vcf = glob("*.cnv.vcf.gz")
-        Array[File] sample_cnvs_vcf_index = glob("*.cnv.vcf.gz.tbi")
-        Array[File] sample_cnvs_filtered_bed = glob("*.cnvs.filter.bed")
+        Array[File] sample_cnvs_vcf = glob("*.cnvs.annotate.vcf.gz")
+        Array[File] sample_cnvs_vcf_index = glob("*.cnvs.annotate.vcf.gz.tbi")
         Array[File] coverage_plot = glob("*/*.CNV.coverage.jpeg")
         Array[File] dup_del_plot = glob("*/*.dup_del.calls.jpeg")
         Array[File] copy_number_plot = glob("*/*.CNV.calls.jpeg")
@@ -550,3 +606,36 @@ task Bicseq2PostProcessing {
         runtime_minutes: "60"
     }
 }
+
+
+task CnvVcfToBed {
+    input {
+        File input_cnv_vcf
+        String base_file_name
+
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+
+    command <<<
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        bcftools query -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n' ~{input_cnv_vcf} > ~{base_file_name}.cnv.bed
+    >>>
+    runtime {
+        preemptible: preemptible_tries
+        memory: "4 GiB"
+        disks: "local-disk 10 LOCAL"
+        docker: docker
+        noAddress: no_address
+        cpu: 2
+    }
+
+    output {
+        File output_cnv_bed = "~{base_file_name}.cnv.bed"
+    }
+}
+

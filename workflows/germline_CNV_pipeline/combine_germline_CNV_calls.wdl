@@ -23,20 +23,21 @@ version 1.0
 # CHANGELOG in reverse chronological order
 
 import "tasks/globals.wdl" as Globals
-
+import "tasks/single_sample_vc_tasks.wdl" as Filtering
+import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.23.0" # !UnusedDeclaration
+        String pipeline_version = "1.25.0" # !UnusedDeclaration
 
         String base_file_name
 
-        File cnmops_cnvs_bed
-        File cnvpytor_cnvs_tsv
+        File cnmops_cnvs_vcf
+        File cnmops_cnvs_vcf_index
+        File cnvpytor_cnvs_vcf
+        File cnvpytor_cnvs_vcf_index
         Float? cnvpytor_precent_gaps_threshold_override
         Int? distance_threshold_override
-        Int? deletions_length_cutoff_override
-        Int? jalign_written_cutoff_override
         Int? jalign_min_mismatches_override
         Int? duplication_length_cutoff_for_cnmops_filter_override
 
@@ -47,7 +48,7 @@ workflow CombineGermlineCNVCalls {
         File reference_genome_index
         
         File? cnv_lcr_file
-        
+        File filtering_model 
         Boolean? no_address_override
         Int? preemptible_tries_override
 
@@ -62,6 +63,7 @@ workflow CombineGermlineCNVCalls {
         #@wv reference_genome == prefix(reference_genome_index)
         #@wv suffix(reference_genome) in {'.fasta', '.fa', '.fna'}
         #@wv suffix(reference_genome_index) == '.fai'
+        #@wv suffix(filtering_model) == ".pkl"
     }
 
     meta {
@@ -71,7 +73,12 @@ workflow CombineGermlineCNVCalls {
             exclude: ["pipeline_version",
                 "monitoring_script_input",
                 "no_address_override",
-                "Glob.glob"
+                "Glob.glob", 
+                'FilterVCF.ref_fasta',
+                'FilterVCF.ref_fasta_idx',
+                'FilterVCF.blacklist_file',
+                'FilterVCF.custom_annotations',
+                'FilterVCF.disk_size'
                 ]}
     }
     parameter_meta {
@@ -80,13 +87,23 @@ workflow CombineGermlineCNVCalls {
             type: "String",
             category: "input_required"
         }
-        cnmops_cnvs_bed: {
-            help: "cn.mops CNV calls in bed format",
+        cnmops_cnvs_vcf: {
+            help: "cn.mops CNV calls in VCF format",
             type: "File",
             category: "input_required"
         }
-        cnvpytor_cnvs_tsv: {
-            help: "cnvpytor CNV calls in bed format",
+        cnmops_cnvs_vcf_index: {
+            help: "Index file for cn.mops CNV calls VCF",
+            type: "File",
+            category: "input_required"
+        }
+        cnvpytor_cnvs_vcf: {
+            help: "cnvpytor CNV calls in VCF format",
+            type: "File",
+            category: "input_required"
+        }
+        cnvpytor_cnvs_vcf_index: {
+            help: "Index file for cnvpytor CNV calls VCF",
             type: "File",
             category: "input_required"
         }
@@ -97,16 +114,6 @@ workflow CombineGermlineCNVCalls {
         }
         distance_threshold_override: {
             help: "Distance threshold for merging CNV calls. default=1500",
-            type: "Int",
-            category: "param_advanced"
-        }
-        deletions_length_cutoff_override: {
-            help: "Minimum length of deletions to be considered without jalign support. default=3000",
-            type: "Int",
-            category: "param_advanced"
-        }
-        jalign_written_cutoff_override: {
-            help: "Minimal number of supporting jaligned reads for deletions. default=1",
             type: "Int",
             category: "param_advanced"
         }
@@ -145,6 +152,11 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "input_optional"
         }
+        filtering_model: {
+            help: "CNV filtering model file, set in template",
+            type: "File",
+            category: "input_advanced"
+        }
         no_address_override: {
             help: "Whether to use the --no-address flag in docker run commands. Default is: true",
             type: "Boolean",
@@ -165,6 +177,11 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "output"
         }
+        out_sample_cnvs_bed: {
+            help: "Final (combined) CNV calls in bed format",
+            type: "File",
+            category: "output"
+        }
         out_sample_cnvs_vcf:{
             help: "VCF file with sample's called CNVs",
             type: "File",
@@ -180,8 +197,6 @@ workflow CombineGermlineCNVCalls {
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
     Boolean no_address = select_first([no_address_override, true ])
     Int distance_threshold = select_first([distance_threshold_override,1500])
-    Int deletions_length_cutoff = select_first([deletions_length_cutoff_override,3000])
-    Int jalign_written_cutoff = select_first([jalign_written_cutoff_override,1])
     Int duplication_length_cutoff_for_cnmops_filter = select_first([duplication_length_cutoff_for_cnmops_filter_override,10000])
     Float cnvpytor_precent_gaps_threshold = select_first([cnvpytor_precent_gaps_threshold_override, 0])
     Int jalign_min_mismatches = select_first([jalign_min_mismatches_override,1])
@@ -194,8 +209,8 @@ workflow CombineGermlineCNVCalls {
     call RunJalignForDelCandidates {
         input:
         base_file_name = base_file_name,
-        cnmops_cnvs_bed = cnmops_cnvs_bed,
-        cnvpytor_cnvs_tsv = cnvpytor_cnvs_tsv,
+        cnmops_cnvs_bed = cnmops_cnvs_vcf,
+        cnvpytor_cnvs_tsv = cnvpytor_cnvs_vcf,
         cnvpytor_precent_gaps_threshold = cnvpytor_precent_gaps_threshold,
         distance_threshold = distance_threshold,
         
@@ -212,13 +227,11 @@ workflow CombineGermlineCNVCalls {
     }
     call ProcessCnvCalls  {
         input:
-        cnmops_cnvs_bed = cnmops_cnvs_bed,
-        cnvpytor_cnvs_tsv = cnvpytor_cnvs_tsv,
+        cnmops_cnvs_bed = cnmops_cnvs_vcf,
+        cnvpytor_cnvs_tsv = cnvpytor_cnvs_vcf,
         jalign_del_candidates = RunJalignForDelCandidates.out_jalign_del_bed,
         base_file_name = base_file_name,
         distance_threshold = distance_threshold,
-        deletions_length_cutoff = deletions_length_cutoff,
-        jalign_written_cutoff = jalign_written_cutoff,
         duplication_length_cutoff_for_cnmops_filter = duplication_length_cutoff_for_cnmops_filter,
         cnv_lcr_file = cnv_lcr_file,
         reference_fasta = reference_genome,
@@ -228,11 +241,38 @@ workflow CombineGermlineCNVCalls {
         no_address = no_address,
         preemptible_tries = preemptible_tries
     }   
-    
+    Array[String] custom_annotations = ["JUMP_ALIGNMENTS","REGION_ANNOTATIONS","CNV_SOURCE","RoundedCopyNumber", "SVLEN","SVTYPE"]
+
+    call Filtering.FilterVCF{
+        input:
+            input_vcf = ProcessCnvCalls.sample_cnvs_vcf_file,
+            input_vcf_index = ProcessCnvCalls.sample_cnvs_vcf_index_file,
+            input_model = filtering_model,
+            filter_cg_insertions = false,
+            final_vcf_base_name = base_file_name,
+            recalibrate_gt = false,
+            custom_annotations = custom_annotations,
+            monitoring_script = monitoring_script,
+            preemptible_tries = preemptible_tries,
+            docker = global.ugbio_filtering_docker, 
+            no_address = no_address
+    }    
+
+    call CnvTasks.CnvVcfToBed {
+        input:
+            input_cnv_vcf = FilterVCF.output_vcf_filtered,
+            base_file_name = base_file_name,
+            docker = global.bcftools_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
+    }
+
     output {
         File out_jalign_del_bed = RunJalignForDelCandidates.out_jalign_del_bed
-        File out_sample_cnvs_vcf = ProcessCnvCalls.sample_cnvs_vcf_file
-        File out_sample_cnvs_vcf_index = ProcessCnvCalls.sample_cnvs_vcf_index_file
+        File out_sample_cnvs_bed = CnvVcfToBed.output_cnv_bed
+        File out_sample_cnvs_vcf = FilterVCF.output_vcf_filtered
+        File out_sample_cnvs_vcf_index = FilterVCF.output_vcf_filtered_index
     }
 }
 
@@ -272,16 +312,18 @@ task RunJalignForDelCandidates {
         #chr1    632000  634000  CN0
         #chr1    124740000       124742000       CN0,CN1
         cat ~{cnmops_cnvs_bed} | sed 's/UG-CNV-LCR//g' | sed 's/LEN//g' | sed 's/|//g' | grep -E "CN0|CN1" | \
-            bedtools merge -c 4 -o distinct -d ~{distance_threshold} -i - \
+        bedtools sort -i - | \
+        bedtools merge -c 4 -o distinct -d ~{distance_threshold} -i - \
             > ~{base_file_name}.cnmops.DEL.merged.bed
         
         #cnvpytor output format example: 
         #chr1    123468001       124437000       deletion,969000
         #chr1    124440001       124511500       deletion,16500,deletion,54000
         cat ~{cnvpytor_cnvs_tsv} | grep "deletion" | awk '$(NF-1)<=~{cnvpytor_precent_gaps_threshold}' | \
-            cut -f1-3 | sed 's/:/\t/' | sed 's/-/\t/' | \
-             awk '{print $2"\t"$3"\t"$4"\t"$1","$5}' | \
-            bedtools merge -c 4 -o distinct -d ~{distance_threshold} -i - \
+        cut -f1-3 | sed 's/:/\t/' | sed 's/-/\t/' | \
+        awk '{print $2"\t"$3"\t"$4"\t"$1","$5}' | \
+        bedtools sort -i - | \
+        bedtools merge -c 4 -o distinct -d ~{distance_threshold} -i - \
             > ~{base_file_name}.cnvpytor.DEL.merged.bed
 
         cat ~{base_file_name}.cnmops.DEL.merged.bed ~{base_file_name}.cnvpytor.DEL.merged.bed | \
@@ -331,8 +373,6 @@ task ProcessCnvCalls  {
         File reference_fasta
         File fasta_index
         Int? distance_threshold
-        Int? deletions_length_cutoff
-        Int? jalign_written_cutoff
         Int? duplication_length_cutoff_for_cnmops_filter
         String docker
         File monitoring_script
@@ -354,8 +394,6 @@ task ProcessCnvCalls  {
             --cnmops_cnv_calls ~{cnmops_cnvs_bed} \
             --cnvpytor_cnv_calls ~{cnvpytor_cnvs_tsv} \
             --del_jalign_merged_results ~{jalign_del_candidates} \
-            ~{"--deletions_length_cutoff " + deletions_length_cutoff} \
-            ~{"--jalign_written_cutoff " + jalign_written_cutoff} \
             ~{"--distance_threshold "+ distance_threshold} \
             ~{"--duplication_length_cutoff_for_cnmops_filter " + duplication_length_cutoff_for_cnmops_filter} \
             ~{"--ug_cnv_lcr " + cnv_lcr_file} \
@@ -380,3 +418,4 @@ task ProcessCnvCalls  {
         File sample_cnvs_vcf_index_file = "~{base_file_name}.cnv.vcf.gz.tbi"
     }
 }
+
