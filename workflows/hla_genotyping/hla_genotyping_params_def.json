@@ -3,35 +3,40 @@
         "description": "Base file name for the output files (to be used as the prefix)",
         "optional": false,
         "useCase": {
-            "hla_genotyping_template": "<base_name>"
+            "hla_genotyping_template": "<base_name>",
+            "hla_genotyping_template-Test": "NA24385"
         }
     },
     "HLAGenotyping.cloud_provider_override": {
         "description": "cloud_provider_override",
         "optional": true,
         "useCase": {
-            "hla_genotyping_template": "aws"
+            "hla_genotyping_template": "aws",
+            "hla_genotyping_template-Test": "aws"
         }
     },
     "HLAGenotyping.graphs_files_tar": {
         "description": "HLA-LA graphs files tar",
         "optional": true,
         "useCase": {
-            "hla_genotyping_template": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz"
+            "hla_genotyping_template": "s3://<ultima-input-bucket>/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz",
+            "hla_genotyping_template-Test": "s3://<ultima-input-bucket>/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz"
         }
     },
     "HLAGenotyping.input_cram_bam": {
         "description": "Input CRAM or BAM file for annalysing HLA genotyping",
         "optional": false,
         "useCase": {
-            "hla_genotyping_template": "<cram>.cram"
+            "hla_genotyping_template": "<cram>.cram",
+            "hla_genotyping_template-Test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
         }
     },
     "HLAGenotyping.input_cram_bam_index": {
         "description": "Input CRAM or BAM index file for annalysing HLA genotyping",
         "optional": false,
         "useCase": {
-            "hla_genotyping_template": "<cram>.cram.crai"
+            "hla_genotyping_template": "<cram>.cram.crai",
+            "hla_genotyping_template-Test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
         }
     },
     "HLAGenotyping.monitoring_script_input": {
@@ -51,9 +56,14 @@
         "optional": false,
         "useCase": {
             "hla_genotyping_template": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "hla_genotyping_template-Test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     }

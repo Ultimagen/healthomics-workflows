@@ -29,7 +29,8 @@
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": "legacy_v5",
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": "v1",
-            "ppmSeq_preprocess_template-ppmSeq": "v1"
+            "ppmSeq_preprocess_template-ppmSeq": "v1",
+            "ppmSeq_preprocess_template-Test": "v1"
         }
     },
     "ppmSeqPreprocess.base_file_name": {
@@ -38,7 +39,8 @@
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": "<base_file_name>",
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": "<base_file_name>",
-            "ppmSeq_preprocess_template-ppmSeq": "<base_file_name>"
+            "ppmSeq_preprocess_template-ppmSeq": "<base_file_name>",
+            "ppmSeq_preprocess_template-Test": "401940-HG001-Z0102"
         }
     },
     "ppmSeqPreprocess.cloud_provider_override": {
@@ -51,7 +53,8 @@
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": 32,
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": 32,
-            "ppmSeq_preprocess_template-ppmSeq": 32
+            "ppmSeq_preprocess_template-ppmSeq": 32,
+            "ppmSeq_preprocess_template-Test": 32
         }
     },
     "ppmSeqPreprocess.create_md5_checksum_outputs": {
@@ -60,7 +63,8 @@
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": false,
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": false,
-            "ppmSeq_preprocess_template-ppmSeq": false
+            "ppmSeq_preprocess_template-ppmSeq": false,
+            "ppmSeq_preprocess_template-Test": false
         }
     },
     "ppmSeqPreprocess.input_cram_bam_list": {
@@ -78,6 +82,9 @@
             "ppmSeq_preprocess_template-ppmSeq": [
                 "<input_bam_or_cram_1>.cram",
                 "<input_bam_or_cram_2>.cram"
+            ],
+            "ppmSeq_preprocess_template-Test": [
+                "s3://<ultima-input-bucket>/sample_data/ppmSeq/401940-HG001-Z0102.ppmSeq.cram"
             ]
         }
     },
@@ -91,7 +98,8 @@
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": true,
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": true,
-            "ppmSeq_preprocess_template-ppmSeq": true
+            "ppmSeq_preprocess_template-ppmSeq": true,
+            "ppmSeq_preprocess_template-Test": true
         }
     },
     "ppmSeqPreprocess.ppmSeq_analysis_extra_args": {
@@ -104,7 +112,8 @@
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": 1,
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": 1,
-            "ppmSeq_preprocess_template-ppmSeq": 1
+            "ppmSeq_preprocess_template-ppmSeq": 1,
+            "ppmSeq_preprocess_template-Test": 1
         }
     },
     "ppmSeqPreprocess.ref_fastas_cram": {
@@ -112,22 +121,28 @@
         "optional": false,
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
-                "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
+                "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://<ultima-input-bucket>/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://<ultima-input-bucket>/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
             ],
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
-                "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
+                "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://<ultima-input-bucket>/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://<ultima-input-bucket>/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
             ],
             "ppmSeq_preprocess_template-ppmSeq": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
-                "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
+                "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://<ultima-input-bucket>/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://<ultima-input-bucket>/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
+            ],
+            "ppmSeq_preprocess_template-Test": [
+                "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://<ultima-input-bucket>/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://<ultima-input-bucket>/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
             ]
         }
     },
@@ -136,19 +151,24 @@
         "optional": false,
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "ppmSeq_preprocess_template-ppmSeq": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "ppmSeq_preprocess_template-Test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     },
@@ -160,19 +180,25 @@
                 "mark_duplicates": true,
                 "aligned": true,
                 "mark_duplicates_ends_read_uncertainty": 0,
-                "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+                "coverage_intervals": "s3://<ultima-input-bucket>/interval_lists/coverage_intervals.hg38.tar.gz"
             },
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": {
                 "mark_duplicates": true,
                 "aligned": true,
                 "mark_duplicates_ends_read_uncertainty": 0,
-                "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+                "coverage_intervals": "s3://<ultima-input-bucket>/interval_lists/coverage_intervals.hg38.tar.gz"
             },
             "ppmSeq_preprocess_template-ppmSeq": {
                 "mark_duplicates": true,
                 "aligned": true,
                 "mark_duplicates_ends_read_uncertainty": 0,
-                "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+                "coverage_intervals": "s3://<ultima-input-bucket>/interval_lists/coverage_intervals.hg38.tar.gz"
+            },
+            "ppmSeq_preprocess_template-Test": {
+                "mark_duplicates": true,
+                "aligned": true,
+                "mark_duplicates_ends_read_uncertainty": 0,
+                "coverage_intervals": "s3://<ultima-input-bucket>/interval_lists/coverage_intervals.hg38.tar.gz"
             }
         }
     },
@@ -194,6 +220,11 @@
                 "trim": true,
                 "align": true,
                 "sort": true
+            },
+            "ppmSeq_preprocess_template-Test": {
+                "trim": true,
+                "align": true,
+                "sort": true
             }
         }
     },
@@ -202,33 +233,44 @@
         "optional": false,
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": {
-                "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_legacy_v5.json",
+                "formats_description": "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_legacy_v5.json",
                 "format": "ppmSeq_legacy_v5",
                 "extra_args": "--histogram %1.%2.%3.%4.%5.histogram.csv",
                 "failure_read_group": "unmatched",
-                "cram_reference": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
+                "cram_reference": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta"
             },
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": {
-                "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_post_native_adapter_trimming.json",
+                "formats_description": "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_post_native_adapter_trimming.json",
                 "pattern_files": [
-                    "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_start_loop.csv",
-                    "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_end_loop.csv"
+                    "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_start_loop.csv",
+                    "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_end_loop.csv"
                 ],
                 "format": "ppmSeq_post_native_adapter_trimming",
                 "extra_args": "--histogram %1.%2.%4.%5.histogram.csv",
                 "failure_read_group": "unmatched",
-                "cram_reference": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
+                "cram_reference": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta"
             },
             "ppmSeq_preprocess_template-ppmSeq": {
-                "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq.json",
+                "formats_description": "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq.json",
                 "format": "ppmSeq",
                 "pattern_files": [
-                    "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_start_loop.csv",
-                    "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_end_loop.csv"
+                    "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_start_loop.csv",
+                    "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_end_loop.csv"
                 ],
                 "extra_args": "--histogram %1.%2.%4.%5.histogram.csv",
                 "failure_read_group": "unmatched",
-                "cram_reference": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
+                "cram_reference": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta"
+            },
+            "ppmSeq_preprocess_template-Test": {
+                "formats_description": "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq.json",
+                "format": "ppmSeq",
+                "pattern_files": [
+                    "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_start_loop.csv",
+                    "s3://<ultima-input-bucket>/trimmer-formats/2.30/public/ppmSeq/ppmSeq_end_loop.csv"
+                ],
+                "extra_args": "--histogram %1.%2.%4.%5.histogram.csv",
+                "failure_read_group": "unmatched",
+                "cram_reference": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta"
             }
         }
     },
@@ -237,20 +279,26 @@
         "optional": false,
         "useCase": {
             "ppmSeq_preprocess_template-ppmSeq_legacy_v5": {
-                "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
+                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
                 "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
                 "v_aware_alignment_flag": false
             },
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": {
-                "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
+                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
                 "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
                 "v_aware_alignment_flag": false
             },
             "ppmSeq_preprocess_template-ppmSeq": {
-                "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
+                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
+                "v_aware_alignment_flag": false
+            },
+            "ppmSeq_preprocess_template-Test": {
+                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
+                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
                 "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
                 "v_aware_alignment_flag": false
             }

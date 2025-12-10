@@ -80,7 +80,7 @@
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
-            "mrd_featuremap_template-Test": "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram",
+            "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram",
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram"
         }
     },
@@ -91,7 +91,7 @@
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
-            "mrd_featuremap_template-Test": "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai",
+            "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai",
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram.crai"
         }
     },
@@ -102,7 +102,7 @@
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
-            "mrd_featuremap_template-Test": "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/test_data_chr20/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz",
+            "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data_chr20/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz",
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf"
         }
     },
@@ -113,7 +113,7 @@
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
-            "mrd_featuremap_template-Test": "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/test_data_chr20/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi",
+            "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data_chr20/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi",
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf.tbi"
         }
     },
@@ -152,29 +152,29 @@
         "optional": true,
         "useCase": {
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
             ],
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
             ],
             "mrd_featuremap_template-Test": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
             ]
         }
     },
@@ -189,7 +189,7 @@
                 "<external_control_signatures>"
             ],
             "mrd_featuremap_template-Test": [
-                "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/test_data_chr20/Pa_67_FFPE.ann.chr20.vcf.gz"
+                "s3://<ultima-input-bucket>/sample_data/mrd/test_data_chr20/Pa_67_FFPE.ann.chr20.vcf.gz"
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
                 "<external_control_signatures>"
@@ -207,7 +207,7 @@
                 "<external_matched_signatures>"
             ],
             "mrd_featuremap_template-Test": [
-                "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/test_data_chr20/Pa_46_FreshFrozen.ann.chr20.vcf.gz"
+                "s3://<ultima-input-bucket>/sample_data/mrd/test_data_chr20/Pa_46_FreshFrozen.ann.chr20.vcf.gz"
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
                 "<external_matched_signatures>"
@@ -221,7 +221,7 @@
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
-            "mrd_featuremap_template-Test": "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/test_data/Pa_46_333_LuNgs_08.featuremap_df.parquet",
+            "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data/Pa_46_333_LuNgs_08.featuremap_df.parquet",
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<featuremap_df_file>.parquet"
         }
     },
@@ -230,19 +230,19 @@
         "optional": false,
         "useCase": {
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
             ],
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
             ],
             "mrd_featuremap_template-Test": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
             ]
         }
     },
@@ -322,29 +322,29 @@
         "optional": false,
         "useCase": {
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "mrd_featuremap_template-Test": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     },
@@ -352,11 +352,11 @@
         "description": "Somatic mutation database to use for generating control signatures",
         "optional": true,
         "useCase": {
-            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz",
-            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz",
-            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz",
-            "mrd_featuremap_template-Test": "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/pancan_pcawg_2020.chr20.vcf.gz",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz"
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/pancan_pcawg_2020.chr20.vcf.gz",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz"
         }
     },
     "MRDFeatureMap.srsnv_metadata_json": {
@@ -366,7 +366,7 @@
             "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
-            "mrd_featuremap_template-Test": "s3://ultimagen-workflow-resources-<AWS_REGION>/sample_data/mrd/test_data/Pa_46_333_LuNgs_08.srsnv_metadata.json",
+            "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data/Pa_46_333_LuNgs_08.srsnv_metadata.json",
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<srsnv_metadata_json>.json"
         }
     }

@@ -11,16 +11,18 @@
         "description": "Base file name for the output files (to be used as the prefix)",
         "optional": false,
         "useCase": {
-            "structural_variant_pipeline_template-somatic": "<base_name>",
-            "structural_variant_pipeline_template-germline": "<base_name>"
+            "structural_variant_pipeline_template-somatic": "<base_file_name>",
+            "structural_variant_pipeline_template-Test-germline": "NA24385",
+            "structural_variant_pipeline_template-germline": "<base_file_name>"
         }
     },
     "SVPipeline.blacklist_bed": {
         "description": "Gridss blacklist file",
         "optional": true,
         "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://ultimagen-workflow-resources-us-east-1/sv/gridss/ENCFF356LFX.bed",
-            "structural_variant_pipeline_template-germline": "s3://ultimagen-workflow-resources-us-east-1/sv/gridss/ENCFF356LFX.bed"
+            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gridss/ENCFF356LFX.bed",
+            "structural_variant_pipeline_template-Test-germline": "s3://<ultima-input-bucket>/sv/gridss/ENCFF356LFX.bed",
+            "structural_variant_pipeline_template-germline": "s3://<ultima-input-bucket>/sv/gridss/ENCFF356LFX.bed"
         }
     },
     "SVPipeline.cloud_provider_override": {
@@ -28,6 +30,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": "aws",
+            "structural_variant_pipeline_template-Test-germline": "aws",
             "structural_variant_pipeline_template-germline": "aws"
         }
     },
@@ -36,6 +39,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5",
+            "structural_variant_pipeline_template-Test-germline": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5",
             "structural_variant_pipeline_template-germline": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5"
         }
     },
@@ -49,10 +53,7 @@
     },
     "SVPipeline.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
-        "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": false
-        }
+        "optional": true
     },
     "SVPipeline.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
@@ -63,6 +64,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": "SHORT_SR_NORMAL",
+            "structural_variant_pipeline_template-Test-germline": "SHORT_SR_NORMAL",
             "structural_variant_pipeline_template-germline": "SHORT_SR_NORMAL"
         }
     },
@@ -74,16 +76,27 @@
         "description": "vg giraffe index files to improve haplotype interpretation using population graphs",
         "optional": true,
         "useCase": {
+            "structural_variant_pipeline_template-Test-germline": {
+                "references": {
+                    "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                    "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+                },
+                "ref_gbz": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.gbz",
+                "ref_dist": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.dist",
+                "ref_min": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.min",
+                "ref_path_list": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/GRCh38.path_list.txt"
+            },
             "structural_variant_pipeline_template-germline": {
                 "references": {
-                    "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                    "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                    "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                    "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
                 },
-                "ref_gbz": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.gbz",
-                "ref_dist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.dist",
-                "ref_min": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.min",
-                "ref_path_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/GRCh38.path_list.txt"
+                "ref_gbz": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.gbz",
+                "ref_dist": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.dist",
+                "ref_min": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.min",
+                "ref_path_list": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/GRCh38.path_list.txt"
             }
         }
     },
@@ -96,6 +109,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 10,
+            "structural_variant_pipeline_template-Test-germline": 10,
             "structural_variant_pipeline_template-germline": 10
         }
     },
@@ -104,10 +118,13 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": [
-                "<cram>.cram"
+                "<cram_file>.cram"
+            ],
+            "structural_variant_pipeline_template-Test-germline": [
+                "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
             ],
             "structural_variant_pipeline_template-germline": [
-                "<cram>.cram"
+                "<cram_file>.cram"
             ]
         }
     },
@@ -116,10 +133,13 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": [
-                "<cram>.cram.crai"
+                "<cram_file>.cram.crai"
+            ],
+            "structural_variant_pipeline_template-Test-germline": [
+                "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
             ],
             "structural_variant_pipeline_template-germline": [
-                "<cram>.cram.crai"
+                "<cram_file>.cram.crai"
             ]
         }
     },
@@ -128,7 +148,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": [
-                "<cram>.cram"
+                "<cram_file>.cram"
             ]
         }
     },
@@ -137,7 +157,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": [
-                "<cram>.cram.crai"
+                "<cram_file>.cram.crai"
             ]
         }
     },
@@ -146,6 +166,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": true,
+            "structural_variant_pipeline_template-Test-germline": false,
             "structural_variant_pipeline_template-germline": false
         }
     },
@@ -153,7 +174,7 @@
         "description": "gripss paramter: Known locations that are hot spot for SVs (see https://github.com/hartwigmedical/hmftools/tree/master/linx), filtered less stringently",
         "optional": true,
         "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/known_fusions.38.sorted.bedpe"
+            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/known_fusions.38.sorted.bedpe"
         }
     },
     "SVPipeline.max_num_haps": {
@@ -161,6 +182,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 40,
+            "structural_variant_pipeline_template-Test-germline": 40,
             "structural_variant_pipeline_template-germline": 40
         }
     },
@@ -169,6 +191,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 1500,
+            "structural_variant_pipeline_template-Test-germline": 1500,
             "structural_variant_pipeline_template-germline": 1500
         }
     },
@@ -177,6 +200,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 50000,
+            "structural_variant_pipeline_template-Test-germline": 50000,
             "structural_variant_pipeline_template-germline": 50000
         }
     },
@@ -185,6 +209,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 0,
+            "structural_variant_pipeline_template-Test-germline": 0,
             "structural_variant_pipeline_template-germline": 0
         }
     },
@@ -193,6 +218,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": "20;0",
+            "structural_variant_pipeline_template-Test-germline": "10",
             "structural_variant_pipeline_template-germline": "10"
         }
     },
@@ -201,6 +227,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 5,
+            "structural_variant_pipeline_template-Test-germline": 5,
             "structural_variant_pipeline_template-germline": 5
         }
     },
@@ -209,6 +236,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": "5;0",
+            "structural_variant_pipeline_template-Test-germline": "5",
             "structural_variant_pipeline_template-germline": "5"
         }
     },
@@ -229,6 +257,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 200,
+            "structural_variant_pipeline_template-Test-germline": 50,
             "structural_variant_pipeline_template-germline": 50
         }
     },
@@ -236,14 +265,14 @@
         "description": "gripss paramter: Panel of normals for single end breakend (partially resolved) calls. Note that the default value is in template",
         "optional": true,
         "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/sgl_pon.38.bed.gz"
+            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/sgl_pon.38.bed.gz"
         }
     },
     "SVPipeline.pon_sv_file": {
         "description": "gripss paramter: panel of normals for breakpoint (fully resolved) calls. Note that the default value is in template",
         "optional": true,
         "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/sv_pon.38.bedpe.gz"
+            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/sv_pon.38.bedpe.gz"
         }
     },
     "SVPipeline.preemptible_tries_override": {
@@ -255,6 +284,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": "QUAL>120",
+            "structural_variant_pipeline_template-Test-germline": "QUAL>120",
             "structural_variant_pipeline_template-germline": "QUAL>120"
         }
     },
@@ -263,6 +293,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 60,
+            "structural_variant_pipeline_template-Test-germline": 60,
             "structural_variant_pipeline_template-germline": 60
         }
     },
@@ -271,6 +302,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": "38",
+            "structural_variant_pipeline_template-Test-germline": "38",
             "structural_variant_pipeline_template-germline": "38"
         }
     },
@@ -279,14 +311,19 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "structural_variant_pipeline_template-Test-germline": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "structural_variant_pipeline_template-germline": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     },
@@ -298,7 +335,7 @@
         "description": "gripss paramter: Repeat mask file. Note that the default value is in template",
         "optional": true,
         "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://ultimagen-workflow-resources-us-east-1/sv/gripss/repeat_mask_data.38.fa.gz"
+            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/repeat_mask_data.38.fa.gz"
         }
     },
     "SVPipeline.run_giraffe": {
@@ -306,6 +343,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": false,
+            "structural_variant_pipeline_template-Test-germline": true,
             "structural_variant_pipeline_template-germline": true
         }
     },
@@ -314,6 +352,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": true,
+            "structural_variant_pipeline_template-Test-germline": true,
             "structural_variant_pipeline_template-germline": true
         }
     },
@@ -322,6 +361,7 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": 10000000,
+            "structural_variant_pipeline_template-Test-germline": 10000000,
             "structural_variant_pipeline_template-germline": 10000000
         }
     },
@@ -330,6 +370,7 @@
         "optional": true,
         "useCase": {
             "structural_variant_pipeline_template-somatic": true,
+            "structural_variant_pipeline_template-Test-germline": true,
             "structural_variant_pipeline_template-germline": true
         }
     },
@@ -338,14 +379,20 @@
         "optional": false,
         "useCase": {
             "structural_variant_pipeline_template-somatic": {
-                "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
+                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                "v_aware_alignment_flag": false,
+                "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6"
+            },
+            "structural_variant_pipeline_template-Test-germline": {
+                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
+                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
                 "v_aware_alignment_flag": false,
                 "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6"
             },
             "structural_variant_pipeline_template-germline": {
-                "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
+                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
                 "v_aware_alignment_flag": false,
                 "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6"
             }
@@ -355,8 +402,9 @@
         "description": "interval list defining the region to perform variant calling on, recommended value set in the template",
         "optional": false,
         "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://ultimagen-workflow-resources-us-east-1/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list",
-            "structural_variant_pipeline_template-germline": "s3://ultimagen-workflow-resources-us-east-1/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list"
+            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list",
+            "structural_variant_pipeline_template-Test-germline": "s3://<ultima-input-bucket>/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list",
+            "structural_variant_pipeline_template-germline": "s3://<ultima-input-bucket>/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list"
         }
     }
 }

@@ -171,84 +171,84 @@
         "description": "Background regions (non-segmental duplicated) for CNV calling, see template and `parascopy`",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz"
         }
     },
     "SegDupAnalysis.base_file_name": {
         "description": "Prefix of the output files",
         "optional": false,
         "useCase": {
-            "segdup_template": "String"
+            "segdup_template-Test": "NA24385"
         }
     },
     "SegDupAnalysis.cloud_provider_override": {
         "description": "Cloud provider override (for running on other clouds): gcp or aws",
         "optional": true,
         "useCase": {
-            "segdup_template": "aws"
+            "segdup_template-Test": "aws"
         }
     },
     "SegDupAnalysis.cn_model": {
         "description": "CNV model file from parascopy, see template",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_250205/model.tar.gz"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/parascopy_model_250205/model.tar.gz"
         }
     },
     "SegDupAnalysis.dbsnp": {
         "description": "dbSNP reference file (for annotation)",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
         }
     },
     "SegDupAnalysis.dbsnp_index": {
         "description": "dbSNP reference index file (for annotation)",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
         }
     },
     "SegDupAnalysis.exome_intervals": {
         "description": "Exome intervals for variant calling (required for deepVariant, otherwise not important)",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed"
         }
     },
     "SegDupAnalysis.homology_table": {
         "description": "Segmental duplication table (see parascopy), see template",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hg38.bed.gz"
         }
     },
     "SegDupAnalysis.homology_table_index": {
         "description": "Segmental duplication table index (see parascopy), see template",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz.tbi"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hg38.bed.gz.tbi"
         }
     },
     "SegDupAnalysis.input_crai_bai": {
         "description": "Input CRAM/BAM index file",
         "optional": false,
         "useCase": {
-            "segdup_template": "<File>.cram.crai"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
         }
     },
     "SegDupAnalysis.input_cram_bam": {
         "description": "Input CRAM/BAM file",
         "optional": false,
         "useCase": {
-            "segdup_template": "<File>.cram"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
         }
     },
     "SegDupAnalysis.model_onnx": {
         "description": "DeepVariant model for variant calling on segmental duplications, see template",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx"
         }
     },
     "SegDupAnalysis.model_serialized": {
@@ -259,31 +259,31 @@
         "description": "Number of threads to use",
         "optional": false,
         "useCase": {
-            "segdup_template": 20
+            "segdup_template-Test": 20
         }
     },
     "SegDupAnalysis.no_address": {
         "description": "Start instances with no public IP address",
         "optional": false,
         "useCase": {
-            "segdup_template": true
+            "segdup_template-Test": true
         }
     },
     "SegDupAnalysis.preemptible_tries": {
         "description": "Number of preemptible tries",
         "optional": true,
         "useCase": {
-            "segdup_template": 3
+            "segdup_template-Test": 3
         }
     },
     "SegDupAnalysis.references": {
         "description": "Reference genome files",
         "optional": false,
         "useCase": {
-            "segdup_template": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+            "segdup_template-Test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     },
@@ -291,7 +291,7 @@
         "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template (BED file)",
         "optional": false,
         "useCase": {
-            "segdup_template": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hom.regions.bed"
+            "segdup_template-Test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hom.regions.bed"
         }
     }
 }

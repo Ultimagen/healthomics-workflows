@@ -3,7 +3,9 @@
         "description": "Use a channel with the insertion size (depends on the model).",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": true,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": true,
+            "efficient_dv_template-Test-somatic": true,
             "efficient_dv_template-WGS-germline-v1_9-solaris": true,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": false,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": true
@@ -14,6 +16,7 @@
         "optional": true,
         "useCase": {
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 10,
+            "efficient_dv_template-Test-somatic": 10,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 10,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 10
         }
@@ -22,31 +25,44 @@
         "description": "List of bed files for VCF annotation",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-germline": [
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/LCR-hs38.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/mappability.0.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/hmers_7_and_higher.bed",
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
+            ],
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/LCR-hs38.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/mappability.0.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/hmers_7_and_higher.bed",
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
+            ],
+            "efficient_dv_template-Test-somatic": [
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/LCR-hs38.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/mappability.0.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/hmers_7_and_higher.bed",
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
             ],
             "efficient_dv_template-WGS-germline-v1_9-solaris": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/LCR-hs38.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/mappability.0.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/hmers_7_and_higher.bed",
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
             ],
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/LCR-hs38.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/mappability.0.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/hmers_7_and_higher.bed",
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
             ],
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": [
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed",
-                "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/LCR-hs38.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/mappability.0.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/hmers_7_and_higher.bed",
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
             ]
         }
     },
@@ -56,6 +72,9 @@
         "useCase": {
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": [
                 "<normal_cram_file>.cram"
+            ],
+            "efficient_dv_template-Test-somatic": [
+                "s3://<ultima-input-bucket>/sample_data/somatic/normal.031865-Lb_2212-Z0134-CTTCAGCATACAGAT.cram"
             ],
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": [
                 "<normal_bam_file>.cram"
@@ -72,6 +91,9 @@
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": [
                 "<normal_cram_file>.cram.crai"
             ],
+            "efficient_dv_template-Test-somatic": [
+                "s3://<ultima-input-bucket>/sample_data/somatic/normal.031865-Lb_2212-Z0134-CTTCAGCATACAGAT.cram.crai"
+            ],
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": [
                 "<normal_bam_file>.cram.crai"
             ],
@@ -84,7 +106,9 @@
         "description": "Prefix for name of all output files",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": "NA24385",
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "<base_file_name>",
+            "efficient_dv_template-Test-somatic": "031865-COLO829",
             "efficient_dv_template-WGS-germline-v1_9-solaris": "<base_file_name>",
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "<base_file_name>",
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "<base_file_name>"
@@ -110,6 +134,7 @@
         "description": "Memory buffer allocated for each uncompression thread in calll_variants",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-somatic": 2,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 2,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 2
         }
@@ -122,7 +147,9 @@
         "description": "Defines downsampling behavior. When false, then the reads are downsampled such that the average coverage equals \"optimal coverage\". When true, each position is downsampled to \"optimal coverage\".",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": false,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": false,
+            "efficient_dv_template-Test-somatic": false,
             "efficient_dv_template-WGS-germline-v1_9-solaris": false,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": true,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": false
@@ -132,7 +159,9 @@
         "description": "cloud_provider_override",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-germline": "aws",
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "aws",
+            "efficient_dv_template-Test-somatic": "aws",
             "efficient_dv_template-WGS-germline-v1_9-solaris": "aws",
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "aws",
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "aws"
@@ -142,8 +171,14 @@
         "description": "Input cram files. Multiple files are merged.",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": [
+                "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
+            ],
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": [
                 "<cram_file>.cram"
+            ],
+            "efficient_dv_template-Test-somatic": [
+                "s3://<ultima-input-bucket>/sample_data/somatic/tumor.031865-Lb_2211-Z0048-CTGCCAGACTGTGAT.cram"
             ],
             "efficient_dv_template-WGS-germline-v1_9-solaris": [
                 "<cram_file>.cram"
@@ -160,8 +195,14 @@
         "description": "Input cram index files.",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": [
+                "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
+            ],
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": [
                 "<cram_file>.cram.crai"
+            ],
+            "efficient_dv_template-Test-somatic": [
+                "s3://<ultima-input-bucket>/sample_data/somatic/tumor.031865-Lb_2211-Z0048-CTGCCAGACTGTGAT.cram.crai"
             ],
             "efficient_dv_template-WGS-germline-v1_9-solaris": [
                 "<cram_file>.cram.crai"
@@ -186,10 +227,12 @@
         "description": "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
         "optional": false,
         "useCase": {
-            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
-            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
-            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
-            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed"
+            "efficient_dv_template-Test-germline": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed",
+            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed",
+            "efficient_dv_template-Test-somatic": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed",
+            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed",
+            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed",
+            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed"
         }
     },
     "EfficientDV.germline_vcf": {
@@ -226,7 +269,9 @@
         "description": "Enable somatic calling mode, which enables somatic-specific post-processing options",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": false,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": true,
+            "efficient_dv_template-Test-somatic": true,
             "efficient_dv_template-WGS-germline-v1_9-solaris": false,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": true,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": true
@@ -236,7 +281,9 @@
         "description": "Keep duplicated reads in the images. Do not use in high depth samples (e.g. WES).",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": true,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": false,
+            "efficient_dv_template-Test-somatic": true,
             "efficient_dv_template-WGS-germline-v1_9-solaris": true,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": false,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": true
@@ -250,7 +297,9 @@
         "description": "Whether to generate a gvcf. Default: False",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": true,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": false,
+            "efficient_dv_template-Test-somatic": false,
             "efficient_dv_template-WGS-germline-v1_9-solaris": true,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": false,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": false
@@ -272,6 +321,7 @@
         "optional": true,
         "useCase": {
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 0.03,
+            "efficient_dv_template-Test-somatic": 0.03,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 0.02,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 0.03
         }
@@ -281,6 +331,7 @@
         "optional": true,
         "useCase": {
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 0.03,
+            "efficient_dv_template-Test-somatic": 0.03,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 0.02,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 0.03
         }
@@ -289,7 +340,9 @@
         "description": "In active region detection, in case single_strand_filter is set to true, keep only non snps candidates that have at least min_fraction_single_strand_non_snps fraction",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": 0.15,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 0.15,
+            "efficient_dv_template-Test-somatic": 0.15,
             "efficient_dv_template-WGS-germline-v1_9-solaris": 0.15,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 0.15,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 0.15
@@ -300,6 +353,7 @@
         "optional": true,
         "useCase": {
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 0.03,
+            "efficient_dv_template-Test-somatic": 0.03,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 0.02,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 0.03
         }
@@ -324,7 +378,9 @@
         "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-germline": 7,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 10,
+            "efficient_dv_template-Test-somatic": 20,
             "efficient_dv_template-WGS-germline-v1_9-solaris": 7,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 10,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 20
@@ -334,7 +390,9 @@
         "description": "Minimal h-mer indel quality in order to be labeled as PASS",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-germline": 5,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 10,
+            "efficient_dv_template-Test-somatic": 20,
             "efficient_dv_template-WGS-germline-v1_9-solaris": 5,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 10,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 20
@@ -344,7 +402,9 @@
         "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-germline": 0,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 10,
+            "efficient_dv_template-Test-somatic": 20,
             "efficient_dv_template-WGS-germline-v1_9-solaris": 0,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 10,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 20
@@ -354,7 +414,9 @@
         "description": "Minimal snp variant quality in order to be labeled as PASS",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-germline": 0,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 10,
+            "efficient_dv_template-Test-somatic": 14,
             "efficient_dv_template-WGS-germline-v1_9-solaris": 0,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 10,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 14
@@ -364,10 +426,12 @@
         "description": "TensorRT model for calling variants (onnx format)",
         "optional": false,
         "useCase": {
-            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wgs-ffpe-model-v1.3.ckpt-890000.onnx",
-            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx",
-            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx",
-            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx"
+            "efficient_dv_template-Test-germline": "s3://<ultima-input-bucket>/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx",
+            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://<ultima-input-bucket>/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wgs-ffpe-model-v1.3.ckpt-890000.onnx",
+            "efficient_dv_template-Test-somatic": "s3://<ultima-input-bucket>/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx",
+            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://<ultima-input-bucket>/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx",
+            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://<ultima-input-bucket>/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx",
+            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://<ultima-input-bucket>/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx"
         }
     },
     "EfficientDV.model_serialized": {
@@ -386,7 +450,9 @@
         "description": "Whether to normalize the strand bias in the images. This is useful for WES calling, where target enrichment may introduce strand bias between alleles.",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": false,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": false,
+            "efficient_dv_template-Test-somatic": false,
             "efficient_dv_template-WGS-germline-v1_9-solaris": false,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": true,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": false
@@ -396,7 +462,9 @@
         "description": "Maximal number of intervals the genome is broken into when parallelizing the make_examples step",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": 50,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 50,
+            "efficient_dv_template-Test-somatic": 100,
             "efficient_dv_template-WGS-germline-v1_9-solaris": 50,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 300,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 100
@@ -406,9 +474,16 @@
         "description": "Each sample is downsampled to the \"optimal coverage\" (dictated by the coverage of the training set). Downsampling method is determined by cap_at_optimal_coverage.",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": [
+                50
+            ],
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": [
                 100,
                 80
+            ],
+            "efficient_dv_template-Test-somatic": [
+                200,
+                200
             ],
             "efficient_dv_template-WGS-germline-v1_9-solaris": [
                 50
@@ -447,7 +522,9 @@
         "description": "Number of preemptible tries",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": 2,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 2,
+            "efficient_dv_template-Test-somatic": 2,
             "efficient_dv_template-WGS-germline-v1_9-solaris": 2,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 2,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 2
@@ -464,7 +541,9 @@
         "description": "Whether to recalculate the variant allele frequency on the PASS variants, improves over the naive VAF calculate of DeepVariant (somatic calling only)",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": false,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": true,
+            "efficient_dv_template-Test-somatic": true,
             "efficient_dv_template-WGS-germline-v1_9-solaris": false,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": true,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": true
@@ -474,45 +553,59 @@
         "description": "DbSNP vcf for the annotation of known variants",
         "optional": false,
         "useCase": {
-            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
-            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
-            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
-            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
+            "efficient_dv_template-Test-germline": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+            "efficient_dv_template-Test-somatic": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
         }
     },
     "EfficientDV.ref_dbsnp_index": {
         "description": "DbSNP vcf index",
         "optional": false,
         "useCase": {
-            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
-            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
-            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
-            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
+            "efficient_dv_template-Test-germline": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+            "efficient_dv_template-Test-somatic": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
         }
     },
     "EfficientDV.references": {
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "efficient_dv_template-Test-somatic": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "efficient_dv_template-WGS-germline-v1_9-solaris": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     },
@@ -528,7 +621,9 @@
         "description": "Whether to filter out non snp candidates that are on a single strand. Reduces the number of candidates and hence the cost. Most useful for somatic calling.",
         "optional": false,
         "useCase": {
+            "efficient_dv_template-Test-germline": false,
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": true,
+            "efficient_dv_template-Test-somatic": true,
             "efficient_dv_template-WGS-germline-v1_9-solaris": false,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": false,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": true
@@ -548,10 +643,12 @@
         "description": "Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used.",
         "optional": true,
         "useCase": {
-            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
-            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
+            "efficient_dv_template-Test-germline": "s3://<ultima-input-bucket>/hg38/v0/wgs_calling_regions.hg38.interval_list",
+            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://<ultima-input-bucket>/hg38/v0/wgs_calling_regions.hg38.interval_list",
+            "efficient_dv_template-Test-somatic": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
+            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://<ultima-input-bucket>/hg38/v0/wgs_calling_regions.hg38.interval_list",
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "<targeted_exome>.interval_list",
-            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list"
+            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list"
         }
     },
     "EfficientDV.ug_call_variants_extra_mem": {
@@ -574,6 +671,7 @@
         "optional": true,
         "useCase": {
             "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": 4,
+            "efficient_dv_template-Test-somatic": 4,
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": 4,
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": 4
         }
@@ -582,6 +680,7 @@
         "description": "Additional arguments for post-processing",
         "optional": true,
         "useCase": {
+            "efficient_dv_template-Test-somatic": "--ignore_multi_allelic_cvos",
             "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "--ignore_multi_allelic_cvos",
             "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "--ignore_multi_allelic_cvos"
         }

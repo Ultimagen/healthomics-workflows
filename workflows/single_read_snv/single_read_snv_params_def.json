@@ -3,6 +3,7 @@
         "description": "Base file name for output files. The output files will be named [base_file_name].with_ml_qual.vcf.gz",
         "optional": false,
         "useCase": {
+            "single_read_snv_template-Test": "402572-CL10377",
             "single_read_snv_template-Standard-WG": "<base_file_name>",
             "single_read_snv_template-ppmSeq_legacy_v5": "<base_file_name>",
             "single_read_snv_template-ppmSeq": "<base_file_name>"
@@ -12,6 +13,7 @@
         "description": "cloud_provider_override",
         "optional": true,
         "useCase": {
+            "single_read_snv_template-Test": "aws",
             "single_read_snv_template-Standard-WG": "aws",
             "single_read_snv_template-ppmSeq_legacy_v5": "aws",
             "single_read_snv_template-ppmSeq": "aws"
@@ -21,6 +23,7 @@
         "description": "Create md5 checksum for requested output files",
         "optional": true,
         "useCase": {
+            "single_read_snv_template-Test": false,
             "single_read_snv_template-Standard-WG": false,
             "single_read_snv_template-ppmSeq_legacy_v5": false,
             "single_read_snv_template-ppmSeq": false
@@ -47,7 +50,7 @@
                     "DS:i",
                     "NM:i"
                 ],
-                "bed_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+                "bed_file": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
             },
             "single_read_snv_template-ppmSeq_legacy_v5": {
                 "min_mapq": 1,
@@ -69,7 +72,7 @@
                     "MI:Z",
                     "DS:i"
                 ],
-                "bed_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+                "bed_file": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
             },
             "single_read_snv_template-ppmSeq": {
                 "min_mapq": 1,
@@ -103,7 +106,7 @@
                     "MI:Z",
                     "DS:i"
                 ],
-                "bed_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+                "bed_file": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
             }
         }
     },
@@ -219,6 +222,9 @@
         "description": "Input CRAM index file/s",
         "optional": false,
         "useCase": {
+            "single_read_snv_template-Test": [
+                "s3://<ultima-input-bucket>/sample_data/single_read_snv/402572-CL10377-Z0151-CAGTGAATCATCGAT.cram.crai"
+            ],
             "single_read_snv_template-Standard-WG": [
                 "<input_cram_bam>.cram.crai"
             ],
@@ -234,6 +240,9 @@
         "description": "Input CRAM file/s",
         "optional": false,
         "useCase": {
+            "single_read_snv_template-Test": [
+                "s3://<ultima-input-bucket>/sample_data/single_read_snv/402572-CL10377-Z0151-CAGTGAATCATCGAT.cram"
+            ],
             "single_read_snv_template-Standard-WG": [
                 "<input_cram_bam>.cram"
             ],
@@ -253,6 +262,7 @@
         "description": "Minimum coverage to train the ML model, needed as label assignment (true/false SNV) is unreliable at low coverages, the recommended value is set in the template",
         "optional": false,
         "useCase": {
+            "single_read_snv_template-Test": 8.0,
             "single_read_snv_template-Standard-WG": 8.0,
             "single_read_snv_template-ppmSeq_legacy_v5": 8.0,
             "single_read_snv_template-ppmSeq": 8.0
@@ -278,6 +288,7 @@
         "description": "preemptible_tries",
         "optional": true,
         "useCase": {
+            "single_read_snv_template-Test": 1,
             "single_read_snv_template-Standard-WG": 1,
             "single_read_snv_template-ppmSeq_legacy_v5": 1,
             "single_read_snv_template-ppmSeq": 1
@@ -291,6 +302,7 @@
         "description": "Raise and exception and fail the pipeline if an error is raised in the QC report",
         "optional": true,
         "useCase": {
+            "single_read_snv_template-Test": true,
             "single_read_snv_template-Standard-WG": false,
             "single_read_snv_template-ppmSeq_legacy_v5": false,
             "single_read_snv_template-ppmSeq": false
@@ -300,29 +312,35 @@
         "description": "(Optional) CSV or TSV file with trinucleotide frequencies for the random sample. If provided, the random sample featuremap will be sampled according to the given trinucleotide frequency. If not provided, sampling is uniform.",
         "optional": true,
         "useCase": {
-            "single_read_snv_template-Standard-WG": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv",
-            "single_read_snv_template-ppmSeq_legacy_v5": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv",
-            "single_read_snv_template-ppmSeq": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv"
+            "single_read_snv_template-Test": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv",
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv"
         }
     },
     "SingleReadSNV.references": {
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
         "optional": false,
         "useCase": {
+            "single_read_snv_template-Test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
             "single_read_snv_template-Standard-WG": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "single_read_snv_template-ppmSeq_legacy_v5": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             },
             "single_read_snv_template-ppmSeq": {
-                "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     },
@@ -390,6 +408,9 @@
         "description": "(Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases.",
         "optional": true,
         "useCase": {
+            "single_read_snv_template-Test": [
+                "s3://<ultima-input-bucket>/sample_data/single_read_snv/402572-CL10377-Z0151-CAGTGAATCATCGAT.json"
+            ],
             "single_read_snv_template-Standard-WG": [
                 "<sorter_stats>.json"
             ],
@@ -413,27 +434,30 @@
         "description": "Genomic regions to include in the training set, the recommended value is set in the template",
         "optional": false,
         "useCase": {
-            "single_read_snv_template-Standard-WG": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
-            "single_read_snv_template-ppmSeq_legacy_v5": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
-            "single_read_snv_template-ppmSeq": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz"
+            "single_read_snv_template-Test": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz"
         }
     },
     "SingleReadSNV.training_regions_interval_list_index": {
         "description": "Index for genomic regions to exclude from the training set, the recommended value is set in the template",
         "optional": true,
         "useCase": {
-            "single_read_snv_template-Standard-WG": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
-            "single_read_snv_template-ppmSeq_legacy_v5": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
-            "single_read_snv_template-ppmSeq": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi"
+            "single_read_snv_template-Test": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi"
         }
     },
     "SingleReadSNV.xgboost_params_file": {
         "description": "XGBoost parameters file for training the SNV quality model, recommended value set in the template.",
         "optional": false,
         "useCase": {
-            "single_read_snv_template-Standard-WG": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/251117.xgboost_model_params.json",
-            "single_read_snv_template-ppmSeq_legacy_v5": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/251117.xgboost_model_params.json",
-            "single_read_snv_template-ppmSeq": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/251117.xgboost_model_params.json"
+            "single_read_snv_template-Test": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json",
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json"
         }
     }
 }
