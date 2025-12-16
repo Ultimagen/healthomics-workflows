@@ -10,20 +10,12 @@
     "SVPipeline.base_file_name": {
         "description": "Base file name for the output files (to be used as the prefix)",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "<base_file_name>",
-            "structural_variant_pipeline_template-Test-germline": "NA24385",
-            "structural_variant_pipeline_template-germline": "<base_file_name>"
-        }
+        "useCase": {}
     },
     "SVPipeline.blacklist_bed": {
         "description": "Gridss blacklist file",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gridss/ENCFF356LFX.bed",
-            "structural_variant_pipeline_template-Test-germline": "s3://<ultima-input-bucket>/sv/gridss/ENCFF356LFX.bed",
-            "structural_variant_pipeline_template-germline": "s3://<ultima-input-bucket>/sv/gridss/ENCFF356LFX.bed"
-        }
+        "useCase": {}
     },
     "SVPipeline.cloud_provider_override": {
         "description": "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
@@ -31,17 +23,14 @@
         "useCase": {
             "structural_variant_pipeline_template-somatic": "aws",
             "structural_variant_pipeline_template-Test-germline": "aws",
-            "structural_variant_pipeline_template-germline": "aws"
+            "structural_variant_pipeline_template-germline": "aws",
+            "germline.NA24385-Z0027.healthomics_public.test": "aws"
         }
     },
     "SVPipeline.config_file_string": {
         "description": "Gridss config file content",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5",
-            "structural_variant_pipeline_template-Test-germline": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5",
-            "structural_variant_pipeline_template-germline": "variantcalling.breakpointLowQuality = 120.0 variantcalling.breakendLowQuality = 120.0 variantcalling.writeFiltered = true variantcalling.requireReadPair = false variantcalling.requireSplitRead = false variantcalling.callUnassembledBreakends = true variantcalling.callUnassembledBreakpoints = true variantcalling.breakendMaxAssemblySupportBias = 100 variantcalling.breakpointMaxAssemblySupportBias = 100 variantcalling.includeSingleAssemblyFilter = false variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5"
-        }
+        "useCase": {}
     },
     "SVPipeline.convert_vcf_format_memory_override": {
         "description": "memory override for convert_vcf_format task",
@@ -53,7 +42,8 @@
     },
     "SVPipeline.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
-        "optional": true
+        "optional": true,
+        "useCase": {}
     },
     "SVPipeline.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
@@ -62,11 +52,7 @@
     "SVPipeline.exclude_filters": {
         "description": "gripss paramter: Exclude filters from the output vcf, separated by ;",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "SHORT_SR_NORMAL",
-            "structural_variant_pipeline_template-Test-germline": "SHORT_SR_NORMAL",
-            "structural_variant_pipeline_template-germline": "SHORT_SR_NORMAL"
-        }
+        "useCase": {}
     },
     "SVPipeline.germline_link_variants_memory_override": {
         "description": "memory override for germline_link_variants task",
@@ -75,30 +61,7 @@
     "SVPipeline.giraffe_parameters": {
         "description": "vg giraffe index files to improve haplotype interpretation using population graphs",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-Test-germline": {
-                "references": {
-                    "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
-                },
-                "ref_gbz": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.gbz",
-                "ref_dist": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.dist",
-                "ref_min": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.min",
-                "ref_path_list": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/GRCh38.path_list.txt"
-            },
-            "structural_variant_pipeline_template-germline": {
-                "references": {
-                    "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
-                    "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                    "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
-                },
-                "ref_gbz": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.gbz",
-                "ref_dist": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.dist",
-                "ref_min": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.min",
-                "ref_path_list": "s3://<ultima-input-bucket>/hg38/hprc-pangenomes/GRCh38.path_list.txt"
-            }
-        }
+        "useCase": {}
     },
     "SVPipeline.gridss_metrics_interval": {
         "description": "Interval for collecting gridss metrics",
@@ -107,138 +70,72 @@
     "SVPipeline.homopolymer_length": {
         "description": "Realignment parameter: do realignment on homopolymeres longer than this value",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 10,
-            "structural_variant_pipeline_template-Test-germline": 10,
-            "structural_variant_pipeline_template-germline": 10
-        }
+        "useCase": {}
     },
     "SVPipeline.input_germline_crams": {
         "description": "Input CRAM file for the germline or matched normal sample; optinal for supporting somatic calling tumor only, default []",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": [
-                "<cram_file>.cram"
-            ],
-            "structural_variant_pipeline_template-Test-germline": [
-                "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
-            ],
-            "structural_variant_pipeline_template-germline": [
-                "<cram_file>.cram"
-            ]
-        }
+        "useCase": {}
     },
     "SVPipeline.input_germline_crams_indexes": {
         "description": "Input CRAM index for the germline or matched normal sample; optinal for supporting somatic calling tumor only",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": [
-                "<cram_file>.cram.crai"
-            ],
-            "structural_variant_pipeline_template-Test-germline": [
-                "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
-            ],
-            "structural_variant_pipeline_template-germline": [
-                "<cram_file>.cram.crai"
-            ]
-        }
+        "useCase": {}
     },
     "SVPipeline.input_tumor_crams": {
         "description": "Input CRAM file for the tumor (in case of matched T/N calling)",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": [
-                "<cram_file>.cram"
-            ]
-        }
+        "useCase": {}
     },
     "SVPipeline.input_tumor_crams_indexes": {
         "description": "Input CRAM index for the tumor (in case of matched T/N calling)",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": [
-                "<cram_file>.cram.crai"
-            ]
-        }
+        "useCase": {}
     },
     "SVPipeline.is_somatic": {
         "description": "run in somatic mode or in germline mode",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": true,
-            "structural_variant_pipeline_template-Test-germline": false,
-            "structural_variant_pipeline_template-germline": false
-        }
+        "useCase": {}
     },
     "SVPipeline.known_hotspot_file": {
         "description": "gripss paramter: Known locations that are hot spot for SVs (see https://github.com/hartwigmedical/hmftools/tree/master/linx), filtered less stringently",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/known_fusions.38.sorted.bedpe"
-        }
+        "useCase": {}
     },
     "SVPipeline.max_num_haps": {
         "description": "Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 40,
-            "structural_variant_pipeline_template-Test-germline": 40,
-            "structural_variant_pipeline_template-germline": 40
-        }
+        "useCase": {}
     },
     "SVPipeline.max_reads_per_partition": {
         "description": "Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 1500,
-            "structural_variant_pipeline_template-Test-germline": 1500,
-            "structural_variant_pipeline_template-germline": 1500
-        }
+        "useCase": {}
     },
     "SVPipeline.max_reads_per_working_area": {
         "description": "Rematching parameter: Maximal number of reads that are stored in memory when rematching reads to haplotypes (similar to max_reads_per_partition in assembly)",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 50000,
-            "structural_variant_pipeline_template-Test-germline": 50000,
-            "structural_variant_pipeline_template-germline": 50000
-        }
+        "useCase": {}
     },
     "SVPipeline.min_base": {
         "description": "Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 0,
-            "structural_variant_pipeline_template-Test-germline": 0,
-            "structural_variant_pipeline_template-germline": 0
-        }
+        "useCase": {}
     },
     "SVPipeline.min_indel_sc_size_to_include": {
         "description": "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly. ;-separated between samples",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "20;0",
-            "structural_variant_pipeline_template-Test-germline": "10",
-            "structural_variant_pipeline_template-germline": "10"
-        }
+        "useCase": {}
     },
     "SVPipeline.min_mapq": {
         "description": "Assembly parameter: Minimum mapping quality. Default value in template",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 5,
-            "structural_variant_pipeline_template-Test-germline": 5,
-            "structural_variant_pipeline_template-germline": 5
-        }
+        "useCase": {}
     },
     "SVPipeline.min_mismatch_count_to_include": {
         "description": "Assembly parameter: Minimal number of counts to require to include the read in the assembly. ;-separated between samples",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "5;0",
-            "structural_variant_pipeline_template-Test-germline": "5",
-            "structural_variant_pipeline_template-germline": "5"
-        }
+        "useCase": {}
     },
     "SVPipeline.min_normal_coverage": {
         "description": "gripss paramter: Minimum coverage in the normal sample to determine somatic status. Default value:8",
@@ -255,25 +152,17 @@
     "SVPipeline.num_shards": {
         "description": "Relevant for scatter tasks, which are CreateAssembly and gridss.AnnotateVariants",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 200,
-            "structural_variant_pipeline_template-Test-germline": 50,
-            "structural_variant_pipeline_template-germline": 50
-        }
+        "useCase": {}
     },
     "SVPipeline.pon_sgl_file": {
         "description": "gripss paramter: Panel of normals for single end breakend (partially resolved) calls. Note that the default value is in template",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/sgl_pon.38.bed.gz"
-        }
+        "useCase": {}
     },
     "SVPipeline.pon_sv_file": {
         "description": "gripss paramter: panel of normals for breakpoint (fully resolved) calls. Note that the default value is in template",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/sv_pon.38.bedpe.gz"
-        }
+        "useCase": {}
     },
     "SVPipeline.preemptible_tries_override": {
         "description": "preemptible_tries_override",
@@ -282,50 +171,22 @@
     "SVPipeline.prefilter_query": {
         "description": "Expression (in bcftools view format) to filter the variants before annotation",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "QUAL>120",
-            "structural_variant_pipeline_template-Test-germline": "QUAL>120",
-            "structural_variant_pipeline_template-germline": "QUAL>120"
-        }
+        "useCase": {}
     },
     "SVPipeline.realign_mapq": {
         "description": "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 60,
-            "structural_variant_pipeline_template-Test-germline": 60,
-            "structural_variant_pipeline_template-germline": 60
-        }
+        "useCase": {}
     },
     "SVPipeline.reference_name": {
         "description": "Can be 38 or 19",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "38",
-            "structural_variant_pipeline_template-Test-germline": "38",
-            "structural_variant_pipeline_template-germline": "38"
-        }
+        "useCase": {}
     },
     "SVPipeline.references": {
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": {
-                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
-            },
-            "structural_variant_pipeline_template-Test-germline": {
-                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
-            },
-            "structural_variant_pipeline_template-germline": {
-                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
-                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
-            }
-        }
+        "useCase": {}
     },
     "SVPipeline.rematching_memory_override": {
         "description": "memory override for rematching task",
@@ -334,77 +195,36 @@
     "SVPipeline.repeat_mask_file": {
         "description": "gripss paramter: Repeat mask file. Note that the default value is in template",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/gripss/repeat_mask_data.38.fa.gz"
-        }
+        "useCase": {}
     },
     "SVPipeline.run_giraffe": {
         "description": "Whether to run Giraffe haplotype aware alignment or not",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": false,
-            "structural_variant_pipeline_template-Test-germline": true,
-            "structural_variant_pipeline_template-germline": true
-        }
+        "useCase": {}
     },
     "SVPipeline.run_ua": {
         "description": "Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": true,
-            "structural_variant_pipeline_template-Test-germline": true,
-            "structural_variant_pipeline_template-germline": true
-        }
+        "useCase": {}
     },
     "SVPipeline.scatter_intervals_break": {
         "description": "Maximal resolution for scattering intervals",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": 10000000,
-            "structural_variant_pipeline_template-Test-germline": 10000000,
-            "structural_variant_pipeline_template-germline": 10000000
-        }
+        "useCase": {}
     },
     "SVPipeline.symbolic_vcf_format": {
         "description": "Whether to convert the output vcf to the region format or not, default True",
         "optional": true,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": true,
-            "structural_variant_pipeline_template-Test-germline": true,
-            "structural_variant_pipeline_template-germline": true
-        }
+        "useCase": {}
     },
     "SVPipeline.ua_references": {
         "description": "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": {
-                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
-                "v_aware_alignment_flag": false,
-                "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6"
-            },
-            "structural_variant_pipeline_template-Test-germline": {
-                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
-                "v_aware_alignment_flag": false,
-                "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6"
-            },
-            "structural_variant_pipeline_template-germline": {
-                "ua_index": "s3://<ultima-input-bucket>/hg38/UA/b38-v45-79372c0.uai",
-                "ref_alt": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
-                "v_aware_alignment_flag": false,
-                "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping --realignment-tag re --mismatch-cost -6"
-            }
-        }
+        "useCase": {}
     },
     "SVPipeline.wgs_calling_interval_list": {
         "description": "interval list defining the region to perform variant calling on, recommended value set in the template",
         "optional": false,
-        "useCase": {
-            "structural_variant_pipeline_template-somatic": "s3://<ultima-input-bucket>/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list",
-            "structural_variant_pipeline_template-Test-germline": "s3://<ultima-input-bucket>/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list",
-            "structural_variant_pipeline_template-germline": "s3://<ultima-input-bucket>/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list"
-        }
+        "useCase": {}
     }
 }

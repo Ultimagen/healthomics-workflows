@@ -251,15 +251,14 @@ task UGMakeExamples{
 
   if [ ~{output_realignment} == "true" ]
   then
-      # concat the output ~{output_prefix}_hap_out.sam files into one (using samtools)
-      samtools cat -@ ~{cpu} -o ~{output_prefix}_hap_out.sam ~{output_prefix}_*_hap_out.sam | \
-      samtools sort -@ ~{cpu} ~{output_prefix}_hap_out.sam | \
-      samtools view -C -@ ~{cpu} --reference ~{references.ref_fasta} -o ~{output_prefix}_realign.cram
-      samtools index ~{output_prefix}_realign.cram -@ ~{cpu}
-      ls -lh ~{output_prefix}_realign.cram
+      # merge the output ~{output_prefix}_hap_out.sam files into one CRAM file
+      samtools merge -@ ~{cpu} ~{output_prefix}_unsorted.bam ~{output_prefix}_*_hap_out.sam
+      samtools sort -@ ~{cpu} -o ~{output_prefix}_realign.bam ~{output_prefix}_unsorted.bam
+      samtools index ~{output_prefix}_realign.bam -@ ~{cpu}
+      ls -lh ~{output_prefix}_realign.bam
   fi
-  touch "~{output_prefix}_realign.cram"
-  touch "~{output_prefix}_realign.cram.crai"
+  touch "~{output_prefix}_realign.bam"
+  touch "~{output_prefix}_realign.bam.bai"
 
   ls -lh -- *tfrecord*
 
@@ -287,8 +286,8 @@ task UGMakeExamples{
     File input_cram_index = "input.cram.crai"
     File background_cram  = "background.cram"
     File background_cram_index = "background.cram.crai"
-    File realigned_cram = "~{output_prefix}_realign.cram"
-    File realigned_cram_index = "~{output_prefix}_realign.cram.crai"
+    File realigned_cram = "~{output_prefix}_realign.bam"
+    File realigned_cram_index = "~{output_prefix}_realign.bam.bai"
     Array[File] output_examples = glob("~{output_prefix}*[0-9].tfrecord.gz")
     Array[File?] gvcf_records = glob("~{output_prefix}*.gvcf.tfrecord.gz")
     Array[File] output_jsons = glob("~{output_prefix}*.json")

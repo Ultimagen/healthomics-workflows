@@ -23,7 +23,7 @@ workflow Globals {
         "trimmer_docker": "ultimagenomics/trimmer:2.3.4",
         "star_docker": "ultimagenomics/star:2.7.10a",
         "sorter_docker": "ultimagenomics/sorter:1.4.15",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:main_0ed4298",
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:main_9b97e48",
         "ugbio_ppmseq_docker": "ultimagenomics/ugbio_ppmseq:1.16.2"
 }
 }

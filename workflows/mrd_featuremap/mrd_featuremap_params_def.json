@@ -59,7 +59,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<base_file_name>",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<base_file_name>",
             "mrd_featuremap_template-Test": "Pa_46_matched_cohort",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<base_file_name>"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<base_file_name>",
+            "Pa_46_matched_cohort.healthomics_public.test": "Pa_46_matched_cohort"
         }
     },
     "MRDFeatureMap.bcftools_extra_args": {
@@ -70,7 +71,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'",
             "mrd_featuremap_template-Test": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "-f PASS --type snps -m2 -M2"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "-f PASS --type snps -m2 -M2",
+            "Pa_46_matched_cohort.healthomics_public.test": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'"
         }
     },
     "MRDFeatureMap.cfdna_cram_bam": {
@@ -81,7 +83,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
             "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram"
         }
     },
     "MRDFeatureMap.cfdna_cram_bam_index": {
@@ -92,7 +95,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
             "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram.crai"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram.crai",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai"
         }
     },
     "MRDFeatureMap.cfdna_featuremap": {
@@ -103,7 +107,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
             "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data_chr20/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz"
         }
     },
     "MRDFeatureMap.cfdna_featuremap_index": {
@@ -114,7 +119,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
             "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data_chr20/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf.tbi"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi"
         }
     },
     "MRDFeatureMap.cloud_provider_override": {
@@ -129,7 +135,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": false,
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": false,
             "mrd_featuremap_template-Test": false,
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": false
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": false,
+            "Pa_46_matched_cohort.healthomics_public.test": false
         }
     },
     "MRDFeatureMap.diluent_germline_vcfs": {
@@ -140,7 +147,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": [],
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [],
             "mrd_featuremap_template-Test": [],
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": []
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [],
+            "Pa_46_matched_cohort.healthomics_public.test": []
         }
     },
     "MRDFeatureMap.dummy_input_for_call_caching": {
@@ -175,6 +183,11 @@
                 "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
                 "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
                 "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
             ]
         }
     },
@@ -193,6 +206,9 @@
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
                 "<external_control_signatures>"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/mrd/Pa_67_FFPE.ann.chr20.vcf.gz"
             ]
         }
     },
@@ -211,6 +227,9 @@
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
                 "<external_matched_signatures>"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_FreshFrozen.ann.chr20.vcf.gz"
             ]
         }
     },
@@ -222,7 +241,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
             "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data/Pa_46_333_LuNgs_08.featuremap_df.parquet",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<featuremap_df_file>.parquet"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<featuremap_df_file>.parquet",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.featuremap_df.parquet"
         }
     },
     "MRDFeatureMap.include_regions": {
@@ -243,6 +263,9 @@
             ],
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
                 "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
             ]
         }
     },
@@ -254,7 +277,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": 0,
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": 0,
             "mrd_featuremap_template-Test": 0,
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 0
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 0,
+            "Pa_46_matched_cohort.healthomics_public.test": 0
         }
     },
     "MRDFeatureMap.memory_extract_coverage_override": {
@@ -288,6 +312,10 @@
             "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": {
                 "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
                 "read_filter_query": "filt>0 and snvq>60 and mapq>=60"
+            },
+            "Pa_46_matched_cohort.healthomics_public.test": {
+                "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
+                "read_filter_query": "filt>0 and snvq>40"
             }
         }
     },
@@ -299,7 +327,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": 5,
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": 5,
             "mrd_featuremap_template-Test": 5,
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 5
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 5,
+            "Pa_46_matched_cohort.healthomics_public.test": 5
         }
     },
     "MRDFeatureMap.no_address_override": {
@@ -314,7 +343,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": 1,
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": 1,
             "mrd_featuremap_template-Test": 1,
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 1
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 1,
+            "Pa_46_matched_cohort.healthomics_public.test": 1
         }
     },
     "MRDFeatureMap.references": {
@@ -345,6 +375,11 @@
                 "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
                 "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
                 "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "Pa_46_matched_cohort.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
             }
         }
     },
@@ -356,7 +391,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
             "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/pancan_pcawg_2020.chr20.vcf.gz",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/pancan_pcawg_2020.chr20.vcf.gz"
         }
     },
     "MRDFeatureMap.srsnv_metadata_json": {
@@ -367,7 +403,8 @@
             "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
             "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
             "mrd_featuremap_template-Test": "s3://<ultima-input-bucket>/sample_data/mrd/test_data/Pa_46_333_LuNgs_08.srsnv_metadata.json",
-            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<srsnv_metadata_json>.json"
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<srsnv_metadata_json>.json",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.srsnv_metadata.json"
         }
     }
 }
