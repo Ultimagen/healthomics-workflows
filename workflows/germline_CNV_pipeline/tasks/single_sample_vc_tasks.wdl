@@ -311,6 +311,8 @@ task FilterVCF {
     File input_vcf_index
     File? input_model
     Boolean filter_cg_insertions
+    Int? decision_threshold
+    Boolean? overwrite_quality
     File? ref_fasta
     File? ref_fasta_idx
     File? blacklist_file
@@ -323,6 +325,7 @@ task FilterVCF {
     Boolean no_address
   }
 
+  Boolean should_overwrite_quality = defined(overwrite_quality) && select_first([overwrite_quality])
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     set -eo pipefail
@@ -334,6 +337,8 @@ task FilterVCF {
                                        ~{"--ref_fasta " + ref_fasta} \
                                        ~{true="--custom_annotations " false="" defined(custom_annotations)}~{sep=" --custom_annotations " custom_annotations} \
                                        ~{true="--recalibrate_genotype --treat_multiallelics" false="" recalibrate_gt} \
+                                       ~{"--decision_threshold " + decision_threshold} \
+                                       ~{true="--overwrite_qual_tag" false="" should_overwrite_quality} \
                                        --output_file ~{final_vcf_base_name}.filtered.vcf.gz
                                        
   >>>

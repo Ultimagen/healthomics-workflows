@@ -1,7 +1,7 @@
 {
-    "HLAGenotyping.base_file_name": "<base_name>",
-    "HLAGenotyping.input_cram_bam": "<cram>.cram",
-    "HLAGenotyping.input_cram_bam_index": "<cram>.cram.crai",
+    "HLAGenotyping.base_file_name": "<base_file_name>",
+    "HLAGenotyping.input_cram_bam": "<cram_file>.cram",
+    "HLAGenotyping.input_cram_bam_index": "<cram_file>.cram.crai",
     "HLAGenotyping.graphs_files_tar": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz",
     "HLAGenotyping.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",

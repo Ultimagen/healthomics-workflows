@@ -1,0 +1,44 @@
+{
+    "EfficientDV.base_file_name": "414004",
+    "EfficientDV.cram_files": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/414004-L7386-Z0114-CAACATACATCAGAT.cram"
+    ],
+    "EfficientDV.cram_index_files": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/414004-L7386-Z0114-CAACATACATCAGAT.cram.crai"
+    ],
+    "EfficientDV.num_shards": 50,
+    "EfficientDV.make_gvcf": true,
+    "EfficientDV.recalibrate_vaf": false,
+    "EfficientDV.is_somatic": false,
+    "EfficientDV.single_strand_filter": false,
+    "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
+    "EfficientDV.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "EfficientDV.preemptible_tries": 2,
+    "EfficientDV.ref_dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+    "EfficientDV.ref_dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+    "EfficientDV.cap_at_optimal_coverage": false,
+    "EfficientDV.exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
+    "EfficientDV.annotation_intervals": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
+    ],
+    "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
+    "EfficientDV.normalize_strand_bias": false,
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx",
+    "EfficientDV.min_variant_quality_hmer_indels": 5,
+    "EfficientDV.min_variant_quality_exome_hmer_indels": 7,
+    "EfficientDV.min_variant_quality_non_hmer_indels": 0,
+    "EfficientDV.min_variant_quality_snps": 0,
+    "EfficientDV.optimal_coverages": [
+        50
+    ],
+    "EfficientDV.keep_duplicates": true,
+    "EfficientDV.add_ins_size_channel": true,
+    "EfficientDV.cloud_provider_override": "aws"
+}

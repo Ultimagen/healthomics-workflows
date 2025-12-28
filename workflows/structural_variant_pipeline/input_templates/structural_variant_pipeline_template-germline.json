@@ -1,10 +1,10 @@
 {
-    "SVPipeline.base_file_name": "<base_name>",
+    "SVPipeline.base_file_name": "<base_file_name>",
     "SVPipeline.input_germline_crams": [
-        "<cram>.cram"
+        "<cram_file>.cram"
     ],
     "SVPipeline.input_germline_crams_indexes": [
-        "<cram>.cram.crai"
+        "<cram_file>.cram.crai"
     ],
     "SVPipeline.prefilter_query": "QUAL>120",
     "SVPipeline.blacklist_bed": "s3://ultimagen-workflow-resources-us-east-1/sv/gridss/ENCFF356LFX.bed",

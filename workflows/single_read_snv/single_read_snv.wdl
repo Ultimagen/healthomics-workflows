@@ -41,7 +41,7 @@ input {
   Array[File] input_cram_bam_index_list
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.25.0"
+  String pipeline_version = "1.26.0"
   References references
 
   FeatureMapParams featuremap_params

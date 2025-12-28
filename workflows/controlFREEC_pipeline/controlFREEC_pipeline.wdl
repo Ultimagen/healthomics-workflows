@@ -32,7 +32,7 @@ import "tasks/pileup_tasks.wdl" as UGPileupTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.25.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -1123,7 +1123,7 @@ task FilterControlFREECCnvs {
                 --loss_cutoff ~{loss_cutoff}
         else
             #convert to bedfile
-            cat ~{CNV_calls} | sed 's/^/chr/' | grep -v "neutral" | cut -f1-4 > ~{out_cnvs_file}
+            sed 's/^/chr/' ~{CNV_calls} | grep -v "neutral" | cut -f1-4 > ~{out_cnvs_file}
         fi
 
         #annotate cnvs bed file
@@ -1131,18 +1131,20 @@ task FilterControlFREECCnvs {
                 --input_bed_file ~{out_cnvs_file} \
                 --intersection_cutoff ~{intersection_cutoff} \
                 --cnv_lcr_file ~{cnv_lcr_file} \
-                --min_cnv_length ~{min_cnv_length}
+                --min_cnv_length ~{min_cnv_length} \
+                --out_directory . 
 
-        cat ~{normal_coverage_cpn} | awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' | sed 's/^/chr/' > normal_coverage.cpn.bed
-        cat ~{tumor_coverage_cpn} | awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' | sed 's/^/chr/' > tumor_coverage.cpn.bed
+        grep -v UG-CNV-LCR ~{out_annotated_cnv_file} | grep -v LEN > ~{out_filtered_cnv_file}
+        awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{normal_coverage_cpn} | sed 's/^/chr/' > normal_coverage.cpn.bed
+        awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{tumor_coverage_cpn} | sed 's/^/chr/' > tumor_coverage.cpn.bed
 
         if ~{high_sensitivity_mode}
         then
-            cat ~{out_filtered_cnv_file} | awk '$4>~{gain_cutoff}' > ~{sample_name}.cnvs.filter.DUP.bed
-            cat ~{out_filtered_cnv_file} | awk '$4<~{loss_cutoff}' > ~{sample_name}.cnvs.filter.DEL.bed
+            awk '$4>~{gain_cutoff}' ~{out_filtered_cnv_file} > ~{sample_name}.cnvs.filter.DUP.bed
+            awk '$4<~{loss_cutoff}' ~{out_filtered_cnv_file} > ~{sample_name}.cnvs.filter.DEL.bed
         else
-            cat  ~{out_filtered_cnv_file} | sed 's/CN//' | awk '$4>~{ploidy}' > ~{sample_name}.cnvs.filter.DUP.bed
-            cat  ~{out_filtered_cnv_file} | sed 's/CN//' | awk '$4<~{ploidy}' > ~{sample_name}.cnvs.filter.DEL.bed
+            sed 's/CN//' ~{out_filtered_cnv_file} | awk '$4>~{ploidy}' > ~{sample_name}.cnvs.filter.DUP.bed
+            sed 's/CN//' ~{out_filtered_cnv_file} | awk '$4<~{ploidy}' > ~{sample_name}.cnvs.filter.DEL.bed
         fi
 
         mkdir CNV_figures

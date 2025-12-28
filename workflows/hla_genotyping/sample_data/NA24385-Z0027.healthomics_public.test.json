@@ -1,0 +1,12 @@
+{
+    "HLAGenotyping.base_file_name": "NA24385",
+    "HLAGenotyping.input_cram_bam": "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/NA24385-Z0027.cram",
+    "HLAGenotyping.input_cram_bam_index": "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/NA24385-Z0027.cram.crai",
+    "HLAGenotyping.graphs_files_tar": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz",
+    "HLAGenotyping.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "HLAGenotyping.cloud_provider_override": "aws"
+}

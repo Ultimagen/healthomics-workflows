@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.25.0" # !UnusedDeclaration
+    String pipeline_version = "1.26.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -62,7 +62,7 @@ workflow EfficientDV {
     Int min_base_quality = 5
     Int pileup_min_mapping_quality = 5
     Int candidate_min_mapping_quality = 5
-    Int? min_hmer_plus_one_candidate = 7
+    Int min_hmer_plus_one_candidate = 7
     Int max_reads_per_partition = 1500
     Int dbg_min_base_quality = 0 # Minimal base quality during the assembly process
     Boolean prioritize_alt_supporting_reads = false

@@ -1,7 +1,7 @@
 {
-    "SegDupAnalysis.base_file_name": "String",
-    "SegDupAnalysis.input_cram_bam": "<File>.cram",
-    "SegDupAnalysis.input_crai_bai": "<File>.cram.crai",
+    "SegDupAnalysis.base_file_name": "<base_file_name>",
+    "SegDupAnalysis.input_cram_bam": "<cram_file>.cram",
+    "SegDupAnalysis.input_crai_bai": "<cram_file>.cram.crai",
     "SegDupAnalysis.references": {
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",

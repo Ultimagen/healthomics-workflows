@@ -67,9 +67,9 @@
     "SingleReadSNV.single_read_snv_params": {
         "random_seed": 0,
         "num_CV_folds": 3,
-        "tp_train_set_size": 3600000,
-        "fp_train_set_size": 3600000,
-        "tp_train_set_size_sampling_overhead": 50.0,
+        "tp_train_set_size": 3200000,
+        "fp_train_set_size": 3200000,
+        "tp_train_set_size_sampling_overhead": 3.0,
         "min_coverage_filter": 20,
         "max_coverage_factor": 2.0,
         "max_vaf_for_fp": 0.05,

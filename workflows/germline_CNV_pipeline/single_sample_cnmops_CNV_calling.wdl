@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.25.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -101,7 +101,7 @@ workflow SingleSampleCnmopsCNVCalling {
                 "monitoring_script_input",
                 "SingleSampleReadsCount.monitoring_script_input",
                 "no_address_override",
-                "Globals.glob",
+                "Glob.glob",
                 "SingleSampleReadsCount.Globals.glob"
                 ]}
     }
@@ -276,6 +276,12 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "Array[File]",
             category: "output"
         }
+        sample_norm_read_counts_bed:{
+            help: "Bed file with normalized read counts of the sample",
+            type: "File",
+            category: "output"
+        }
+
         enable_mod_cnv_override:
         {
             help: "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: False",
@@ -300,10 +306,10 @@ workflow SingleSampleCnmopsCNVCalling {
     Boolean cap_coverage = select_first([cap_coverage_override, false])
     Boolean skip_figure_generation_value = select_first([skip_figure_generation, false])
 
-    call Globals.Globals as Globals
-      GlobalVariables global = Globals.global_dockers
+    call Globals.Globals as Glob
+    GlobalVariables global = Glob.global_dockers
 
-    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])    #!FileCoercion
 
     if(skip_reads_count == false) {
         File input_bam = select_first([input_bam_file])
@@ -358,49 +364,74 @@ workflow SingleSampleCnmopsCNVCalling {
 
     call CnvTasks.RunCnmops {
         input:
-        merged_cohort_reads_count_matrix = AddCountsToCohortMatrix.merged_cohort_reads_count_matrix,
-        min_width_value = min_width_value,
-        ploidy = merged_cohort_ploidy_file,
-        chrX_name = chrX_name,
-        chrY_name = chrY_name,
-        cap_coverage = cap_coverage,
-        docker = global.ugbio_cnv_docker,
-        save_hdf = save_hdf,
-        save_csv = save_csv,
-        mod_cnv = enable_mod_cnv,
-        monitoring_script = monitoring_script,
-        no_address = no_address,
-        preemptible_tries = preemptible_tries,
-        parallel = parallel
+            merged_cohort_reads_count_matrix = AddCountsToCohortMatrix.merged_cohort_reads_count_matrix,
+            min_width_value = min_width_value,
+            ploidy = merged_cohort_ploidy_file,
+            chrX_name = chrX_name,
+            chrY_name = chrY_name,
+            cap_coverage = cap_coverage,
+            docker = global.ugbio_cnv_docker,
+            save_hdf = save_hdf,
+            save_csv = save_csv,
+            mod_cnv = enable_mod_cnv,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries,
+            parallel = parallel
     }
 
     Array[String] sample_names = [sample_name]
-    call CnvTasks.FilterSampleCnvs {
-        input:
-        cohort_cnvs_csv = RunCnmops.cohort_cnvs_csv,
-        sample_names = sample_names,
-        min_cnv_length = min_cnv_length,
-        intersection_cutoff = intersection_cutoff,
-        cnv_lcr_file = cnv_lcr_file,
-        skip_figure_generation = skip_figure_generation_value,
-        ref_genome_file = reference_genome_index,
-        germline_coverge_rds = sample_reads_count_file,
-        docker = global.ugbio_cnv_docker,
-        monitoring_script = monitoring_script,
-        no_address = no_address,
-        preemptible_tries = preemptible_tries
+
+    call CnvTasks.ExtractNormalizedReadCount{
+        input: 
+            cohort_reads_count_norm = RunCnmops.cohort_reads_count_norm,
+            sample_names = sample_names,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
     }
+
+    call CnvTasks.ProcessCnmopsCnvs {
+        input:
+            cohort_cnvs_csv = RunCnmops.cohort_cnvs_csv,
+            sample_names = sample_names,
+            min_cnv_length = min_cnv_length,
+            intersection_cutoff = intersection_cutoff,
+            cnv_lcr_file = cnv_lcr_file,
+            sample_norm_coverage_file = ExtractNormalizedReadCount.sample_reads_count_bed,
+            cohort_norm_avg_coverage_file = ExtractNormalizedReadCount.cohort_reads_count_bed,
+            skip_figure_generation = skip_figure_generation_value,
+            ref_genome_file = reference_genome_index,
+            germline_coverage_rds = sample_reads_count_file,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
+    }
+
+    scatter (vcf_file in zip(sample_names, ProcessCnmopsCnvs.sample_cnvs_vcf)) {
+        call CnvTasks.CnvVcfToBed {
+            input:
+                input_cnv_vcf = vcf_file.right,
+                base_file_name = vcf_file.left,
+                docker = global.ugbio_cnv_docker,
+                monitoring_script = monitoring_script,
+                no_address = no_address,
+                preemptible_tries = preemptible_tries
+        }
+    }
+
     output {
         File out_sample_reads_count = sample_reads_count_file
         File? out_sample_merged_bedGraph = ConvertBedGraphToGranges.merged_bedGraph
         File? out_sample_reads_count_hdf5 = SingleSampleReadsCount.out_reads_count_hdf5
-        Array[File] out_sample_cnvs_bed = FilterSampleCnvs.sample_cnvs_bed
-        Array[File] out_sample_cnvs_vcf = FilterSampleCnvs.sample_cnvs_vcf
-        Array[File] out_sample_cnvs_vcf_index = FilterSampleCnvs.sample_cnvs_vcf_index
-        Array[File] out_sample_cnvs_filtered_bed = FilterSampleCnvs.sample_cnvs_filtered_bed
-        Array[File] out_coverage_plot_files = FilterSampleCnvs.coverage_plot
-        Array[File] out_dup_del_plot_files = FilterSampleCnvs.dup_del_plot
-        Array[File] out_copy_number_plot_files = FilterSampleCnvs.copy_number_plot
+        File out_sample_cnvs_vcf = ProcessCnmopsCnvs.sample_cnvs_vcf[0]
+        File out_sample_cnvs_vcf_index = ProcessCnmopsCnvs.sample_cnvs_vcf_index[0]
+        File out_sample_cnvs_bed = CnvVcfToBed.output_cnv_bed[0]
+        Array[File] out_coverage_plot_files = ProcessCnmopsCnvs.coverage_plot
+        Array[File] out_dup_del_plot_files = ProcessCnmopsCnvs.dup_del_plot
+        Array[File] out_copy_number_plot_files = ProcessCnmopsCnvs.copy_number_plot
     }
 }
 

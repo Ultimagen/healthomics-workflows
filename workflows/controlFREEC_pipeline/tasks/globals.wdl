@@ -13,7 +13,7 @@ workflow Globals {
         "ubuntu_docker": "ubuntu:focal",
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
-        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.17.1",
+        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.18.0",
         "ugbio_freec_docker": "ultimagenomics/ugbio_freec:1.16.1"
 }
 }

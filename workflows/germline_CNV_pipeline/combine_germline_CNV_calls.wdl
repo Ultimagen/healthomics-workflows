@@ -24,16 +24,19 @@ version 1.0
 
 import "tasks/globals.wdl" as Globals
 import "tasks/single_sample_vc_tasks.wdl" as Filtering
+import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.25.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.0" # !UnusedDeclaration
 
         String base_file_name
 
-        File cnmops_cnvs_bed
-        File cnvpytor_cnvs_tsv
-        Float? cnvpytor_precent_gaps_threshold_override
+        File cnmops_cnvs_vcf
+        File cnmops_cnvs_vcf_index
+        File cnvpytor_cnvs_vcf
+        File cnvpytor_cnvs_vcf_index
+        Int cushion_size
         Int? distance_threshold_override
         Int? jalign_min_mismatches_override
         Int? duplication_length_cutoff_for_cnmops_filter_override
@@ -45,7 +48,9 @@ workflow CombineGermlineCNVCalls {
         File reference_genome_index
         
         File? cnv_lcr_file
-        File filtering_model 
+        File? filtering_model 
+        Int? filtering_model_decision_threshold
+        Boolean skip_filtering
         Boolean? no_address_override
         Int? preemptible_tries_override
 
@@ -84,20 +89,25 @@ workflow CombineGermlineCNVCalls {
             type: "String",
             category: "input_required"
         }
-        cnmops_cnvs_bed: {
-            help: "cn.mops CNV calls in bed format",
+        cnmops_cnvs_vcf: {
+            help: "cn.mops CNV calls in VCF format",
             type: "File",
             category: "input_required"
         }
-        cnvpytor_cnvs_tsv: {
-            help: "cnvpytor CNV calls in bed format",
+        cnmops_cnvs_vcf_index: {
+            help: "Index file for cn.mops CNV calls VCF",
             type: "File",
             category: "input_required"
         }
-        cnvpytor_precent_gaps_threshold_override: {
-            help: "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
-            type: "Float",
-            category: "param_advanced"
+        cnvpytor_cnvs_vcf: {
+            help: "cnvpytor CNV calls in VCF format",
+            type: "File",
+            category: "input_required"
+        }
+        cnvpytor_cnvs_vcf_index: {
+            help: "Index file for cnvpytor CNV calls VCF",
+            type: "File",
+            category: "input_required"
         }
         distance_threshold_override: {
             help: "Distance threshold for merging CNV calls. default=1500",
@@ -124,6 +134,12 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "input_required"
        }
+       cushion_size: {
+            help: "Cushion size around CNV breakpoints for split-read analysis and jump alignment analysis",
+            type: "Int",
+            category: "param_required"
+        }
+
         reference_genome: {
             help: "Genome fasta file associated with the CRAM file",
             type: "File",
@@ -140,10 +156,21 @@ workflow CombineGermlineCNVCalls {
             category: "input_optional"
         }
         filtering_model: {
-            help: "CNV filtering model file, set in template",
+            help: "CNV filtering model file, set in template, can be removed, the callset is not filtered if not provided",
             type: "File",
-            category: "input_advanced"
+            category: "input_optional"
         }
+        filtering_model_decision_threshold: {
+            help: "Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent",
+            type: "Int",
+            category: "param_advanced"
+        }
+        skip_filtering: {
+            help: "Whether to skip the filtering step even if a filtering model is provided. Default is false, useful for training models",
+            type: "Boolean",
+            category: "param_advanced"
+        }
+
         no_address_override: {
             help: "Whether to use the --no-address flag in docker run commands. Default is: true",
             type: "Boolean",
@@ -159,11 +186,6 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "input_advanced"
         }        
-        out_jalign_del_bed:{
-            help: "Output file with DEL candidates after jalign",
-            type: "File",
-            category: "output"
-        }
         out_sample_cnvs_bed: {
             help: "Final (combined) CNV calls in bed format",
             type: "File",
@@ -185,69 +207,119 @@ workflow CombineGermlineCNVCalls {
     Boolean no_address = select_first([no_address_override, true ])
     Int distance_threshold = select_first([distance_threshold_override,1500])
     Int duplication_length_cutoff_for_cnmops_filter = select_first([duplication_length_cutoff_for_cnmops_filter_override,10000])
-    Float cnvpytor_precent_gaps_threshold = select_first([cnvpytor_precent_gaps_threshold_override, 0])
     Int jalign_min_mismatches = select_first([jalign_min_mismatches_override,1])
 
     call Globals.Globals as Glob
     GlobalVariables global = Glob.global_dockers
 
-    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script]) #!FileCoercion
 
-    call RunJalignForDelCandidates {
+    call ConcatAndAnnotateCallsets{
         input:
-        base_file_name = base_file_name,
-        cnmops_cnvs_bed = cnmops_cnvs_bed,
-        cnvpytor_cnvs_tsv = cnvpytor_cnvs_tsv,
-        cnvpytor_precent_gaps_threshold = cnvpytor_precent_gaps_threshold,
-        distance_threshold = distance_threshold,
-        
-        input_bam_file = input_bam_file,
-        input_bam_file_index = input_bam_file_index,
-        reference_genome = reference_genome,
-        reference_genome_index = reference_genome_index,
-        jalign_min_mismatches = jalign_min_mismatches,
-        
-        docker = global.ug_jalign_docker,
-        monitoring_script = monitoring_script,
-        no_address = no_address,
-        preemptible_tries = preemptible_tries
+            base_file_name = base_file_name,
+            cnmops_vcf = cnmops_cnvs_vcf,
+            cnmops_vcf_index = cnmops_cnvs_vcf_index,
+            cnvpytor_vcf = cnvpytor_cnvs_vcf,
+            cnvpytor_vcf_index = cnvpytor_cnvs_vcf_index,
+            distance_threshold_for_cnmops_dups = distance_threshold,
+            duplication_length_cutoff_for_cnmops_filter = duplication_length_cutoff_for_cnmops_filter,
+            reference_genome = reference_genome,
+            reference_genome_index = reference_genome_index,
+            ug_cnv_lcr_bed = cnv_lcr_file,
+            overlap_fraction_for_annotation = 0.5,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
     }
-    call ProcessCnvCalls  {
-        input:
-        cnmops_cnvs_bed = cnmops_cnvs_bed,
-        cnvpytor_cnvs_tsv = cnvpytor_cnvs_tsv,
-        jalign_del_candidates = RunJalignForDelCandidates.out_jalign_del_bed,
-        base_file_name = base_file_name,
-        distance_threshold = distance_threshold,
-        duplication_length_cutoff_for_cnmops_filter = duplication_length_cutoff_for_cnmops_filter,
-        cnv_lcr_file = cnv_lcr_file,
-        reference_fasta = reference_genome,
-        fasta_index = reference_genome_index,
-        docker = global.ugbio_cnv_docker,
-        monitoring_script = monitoring_script,
-        no_address = no_address,
-        preemptible_tries = preemptible_tries
-    }   
-    Array[String] custom_annotations = ["JUMP_ALIGNMENTS","REGION_ANNOTATIONS","CNV_SOURCE","RoundedCopyNumber", "SVLEN","SVTYPE"]
 
-    call Filtering.FilterVCF{
+    call AnnotateWithSplitReadsInfo {
         input:
-            input_vcf = ProcessCnvCalls.sample_cnvs_vcf_file,
-            input_vcf_index = ProcessCnvCalls.sample_cnvs_vcf_index_file,
-            input_model = filtering_model,
-            filter_cg_insertions = false,
-            final_vcf_base_name = base_file_name,
-            recalibrate_gt = false,
-            custom_annotations = custom_annotations,
+            input_cnv_vcf = ConcatAndAnnotateCallsets.combined_cnv_calls_vcf,
+            base_file_name = base_file_name,
+            input_cram_bam_file = input_bam_file,
+            input_cram_bam_file_index = input_bam_file_index,
+            reference_genome = reference_genome,
+            reference_genome_index = reference_genome_index,
+            cushion_size = cushion_size,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
+    }
+
+    call RunJalignForCNVCandidates {
+        input:
+            base_file_name = base_file_name,
+            input_vcf = AnnotateWithSplitReadsInfo.annotated_cnv_calls_vcf,
+            input_vcf_index = AnnotateWithSplitReadsInfo.annotated_cnv_calls_vcf_index,
+            
+            input_bam_file = input_bam_file,
+            input_bam_file_index = input_bam_file_index,
+            reference_genome = reference_genome,
+            reference_genome_index = reference_genome_index,
+            jalign_min_mismatches = jalign_min_mismatches,
+            
+            docker = global.ug_jalign_docker,
             monitoring_script = monitoring_script,
             preemptible_tries = preemptible_tries,
-            docker = global.ugbio_filtering_docker, 
             no_address = no_address
-    }    
+    }
 
-    call CnvVcfToBed {
+    Array[String] custom_annotations =     [
+        "CNV_SOURCE",
+        "RoundedCopyNumber",
+        "CopyNumber",
+        "pytorQ0",
+        "pytorP2",
+        "pytorRD",
+        "pytorP1",
+        "pytorP3",
+        "CN",
+        "GAP_PERCENTAGE",
+        "CNV_DUP_READS",
+        "CNV_DEL_READS",
+        "CNV_DUP_FRAC",
+        "CNV_DEL_FRAC",
+        "JALIGN_DUP_SUPPORT",
+        "JALIGN_DEL_SUPPORT",
+        "JALIGN_DUP_SUPPORT_STRONG",
+        "JALIGN_DEL_SUPPORT_STRONG",
+        "SVTYPE",
+        "SVLEN",
+    ]
+    if (defined(filtering_model) && !skip_filtering) {
+        call Filtering.FilterVCF{
+            input:
+                input_vcf = RunJalignForCNVCandidates.output_vcf,
+                input_vcf_index = RunJalignForCNVCandidates.output_vcf_index,
+                input_model = filtering_model,
+                filter_cg_insertions = false,
+                final_vcf_base_name = base_file_name,
+                recalibrate_gt = false,
+                custom_annotations = custom_annotations,
+                decision_threshold = filtering_model_decision_threshold, 
+                overwrite_quality = true,
+                monitoring_script = monitoring_script,
+                preemptible_tries = preemptible_tries,
+                docker = global.ugbio_filtering_docker, 
+                no_address = no_address
+        }   
+
+        call CollapseCallset{
+            input:
+                input_vcf = FilterVCF.output_vcf_filtered,
+                input_vcf_index = FilterVCF.output_vcf_filtered_index,
+                base_file_name = base_file_name,
+                docker = global.ugbio_cnv_docker,
+                monitoring_script = monitoring_script,
+                no_address = no_address,
+                preemptible_tries = preemptible_tries
+        } 
+    }
+    call CnvTasks.CnvVcfToBed {
         input:
-            input_cnv_vcf = FilterVCF.output_vcf_filtered,
+            input_cnv_vcf = select_first([CollapseCallset.output_vcf,RunJalignForCNVCandidates.output_vcf]),
             base_file_name = base_file_name,
             docker = global.bcftools_docker,
             monitoring_script = monitoring_script,
@@ -256,20 +328,127 @@ workflow CombineGermlineCNVCalls {
     }
 
     output {
-        File out_jalign_del_bed = RunJalignForDelCandidates.out_jalign_del_bed
         File out_sample_cnvs_bed = CnvVcfToBed.output_cnv_bed
-        File out_sample_cnvs_vcf = FilterVCF.output_vcf_filtered
-        File out_sample_cnvs_vcf_index = FilterVCF.output_vcf_filtered_index
+        File out_sample_cnvs_vcf = select_first([CollapseCallset.output_vcf, RunJalignForCNVCandidates.output_vcf])
+        File out_sample_cnvs_vcf_index = select_first([CollapseCallset.output_vcf_index, RunJalignForCNVCandidates.output_vcf_index])
     }
 }
 
-task RunJalignForDelCandidates {
+task ConcatAndAnnotateCallsets {
     input {
         String base_file_name
-        File cnmops_cnvs_bed
-        File cnvpytor_cnvs_tsv
-        Float cnvpytor_precent_gaps_threshold
-        Int distance_threshold
+        File cnmops_vcf
+        File cnmops_vcf_index
+        File cnvpytor_vcf
+        File cnvpytor_vcf_index
+        Int distance_threshold_for_cnmops_dups
+        Int duplication_length_cutoff_for_cnmops_filter
+        File reference_genome
+        File reference_genome_index
+        File? ug_cnv_lcr_bed
+        Float overlap_fraction_for_annotation
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+    Boolean ug_cnv_lcr_provided = defined(ug_cnv_lcr_bed)
+    command <<<
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        combine_cnmops_cnvpytor_cnv_calls concat \
+            --cnmops_vcf ~{cnmops_vcf} \
+            --cnvpytor_vcf ~{cnvpytor_vcf} \
+            --output_vcf ~{base_file_name}.step1.vcf.gz \
+            --fasta_index ~{reference_genome_index}
+
+        combine_cnmops_cnvpytor_cnv_calls filter_cnmops_dups \
+            --combined_calls ~{base_file_name}.step1.vcf.gz \
+            --combined_calls_annotated ~{base_file_name}.step2.vcf.gz \
+            --filtered_length ~{duplication_length_cutoff_for_cnmops_filter} \
+            --distance_threshold ~{distance_threshold_for_cnmops_dups} 
+
+        combine_cnmops_cnvpytor_cnv_calls annotate_gaps \
+            --calls_vcf ~{base_file_name}.step2.vcf.gz \
+            --output_vcf ~{base_file_name}.step3.vcf.gz \
+            --ref_fasta ~{reference_genome}
+
+        if ~{ug_cnv_lcr_provided} ; then
+            combine_cnmops_cnvpytor_cnv_calls annotate_regions \
+            --input_vcf ~{base_file_name}.step3.vcf.gz \
+            --output_vcf ~{base_file_name}.combined.vcf.gz \
+            --annotation_bed ~{ug_cnv_lcr_bed} \
+            --overlap_fraction ~{overlap_fraction_for_annotation} \
+            --genome ~{reference_genome_index}
+        else
+            cp ~{base_file_name}.step3.vcf.gz ~{base_file_name}.combined.vcf.gz
+            cp ~{base_file_name}.step3.vcf.gz.tbi ~{base_file_name}.combined.vcf.gz.tbi
+        fi 
+         
+    >>>
+    runtime {
+        docker: docker
+        cpu: 2
+        memory: "4 GiB"
+        disks: "local-disk 10 HDD"
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }
+    output {
+        File combined_cnv_calls_vcf = "~{base_file_name}.combined.vcf.gz"
+        File combined_cnv_calls_vcf_index = "~{base_file_name}.combined.vcf.gz.tbi"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+task AnnotateWithSplitReadsInfo {
+    input {
+        File input_cnv_vcf
+        String base_file_name
+        File input_cram_bam_file
+        File input_cram_bam_file_index
+        File reference_genome
+        File reference_genome_index
+        Int cushion_size
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+    Int disk_size = ceil(size(input_cram_bam_file, "GB") + size(input_cnv_vcf, "GB") + 10)
+    command <<<
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        analyze_cnv_breakpoint_reads \
+            --bam-file ~{input_cram_bam_file} \
+            --vcf-file ~{input_cnv_vcf} \
+            --reference-fasta ~{reference_genome} \
+            --cushion ~{cushion_size} \
+            --output-file ~{base_file_name}.split.annotated.vcf.gz
+        bcftools index -t ~{base_file_name}.split.annotated.vcf.gz
+    >>>
+    runtime {
+        docker: docker
+        cpu: 2
+        memory: "4 GiB"
+        disks: "local-disk " + disk_size + " HDD"
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }
+    output {
+        File annotated_cnv_calls_vcf = "~{base_file_name}.split.annotated.vcf.gz"
+        File annotated_cnv_calls_vcf_index = "~{base_file_name}.split.annotated.vcf.gz.tbi"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+task RunJalignForCNVCandidates {
+    input {
+        String base_file_name
+        File input_vcf
+        File input_vcf_index
         
         File input_bam_file
         File input_bam_file_index
@@ -283,10 +462,10 @@ task RunJalignForDelCandidates {
         Boolean no_address
         Int preemptible_tries
     }
-    Int cpu = 48
+    Int cpu = 32
     Float input_bam_file_size = size(input_bam_file, "GB")
     Float reference_fasta_file_size = size(reference_genome, "GB")
-    Float additional_disk = 100
+    Float additional_disk = 10
 
     Int disk_size = ceil(input_bam_file_size + input_bam_file_size + reference_fasta_file_size + additional_disk)
      
@@ -294,145 +473,64 @@ task RunJalignForDelCandidates {
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
                 
-        echo "Generating DEL candidates"
-        #cnmops output format example:
-        #chr1    632000  634000  CN0
-        #chr1    124740000       124742000       CN0,CN1
-        cat ~{cnmops_cnvs_bed} | sed 's/UG-CNV-LCR//g' | sed 's/LEN//g' | sed 's/|//g' | grep -E "CN0|CN1" | \
-        bedtools sort -i - | \
-        bedtools merge -c 4 -o distinct -d ~{distance_threshold} -i - \
-            > ~{base_file_name}.cnmops.DEL.merged.bed
-        
-        #cnvpytor output format example: 
-        #chr1    123468001       124437000       deletion,969000
-        #chr1    124440001       124511500       deletion,16500,deletion,54000
-        cat ~{cnvpytor_cnvs_tsv} | grep "deletion" | awk '$(NF-1)<=~{cnvpytor_precent_gaps_threshold}' | \
-        cut -f1-3 | sed 's/:/\t/' | sed 's/-/\t/' | \
-        awk '{print $2"\t"$3"\t"$4"\t"$1","$5}' | \
-        bedtools sort -i - | \
-        bedtools merge -c 4 -o distinct -d ~{distance_threshold} -i - \
-            > ~{base_file_name}.cnvpytor.DEL.merged.bed
-
-        cat ~{base_file_name}.cnmops.DEL.merged.bed ~{base_file_name}.cnvpytor.DEL.merged.bed | \
-            bedtools sort -i - \
-            > ~{base_file_name}.cnmops_cnvpytor.DEL.bed
-
-        echo "split DEL candidates for parallel processing"
-        mkdir cnmops500mod_cnvpytor500_DEL_split
-        cat ~{base_file_name}.cnmops_cnvpytor.DEL.bed | split -l 10 -d --additional-suffix .bed
-        mv x*.bed cnmops500mod_cnvpytor500_DEL_split/
-
-        echo "Running jalign for DEL candidates"
-        python /jalign/scripts/parallel_run_cnv_realign.py \
-            --folder_with_cnv_del_bed_files cnmops500mod_cnvpytor500_DEL_split \
-            --input_cram ~{input_bam_file} \
-            --ref_fasta ~{reference_genome} \
-            --out_folder out_jalign \
-            --sample_name ~{base_file_name} \
-            --min_mismatches ~{jalign_min_mismatches} \
-            --mode DEL \
-            --num_jobs ~{cpu} 
-            
+        python /jalign/scripts/annotate_with_jalign.py \
+                --input_cram  ~{input_bam_file} \
+                --ref_fasta ~{reference_genome}  \
+                --input_vcf  ~{input_vcf} \
+                --output_vcf ~{base_file_name}.jalign.vcf.gz \
+                --num_jobs ~{cpu} \
+                --min_mismatches ~{jalign_min_mismatches} 
+        bcftools index -tf ~{base_file_name}.jalign.vcf.gz
     >>>
     runtime {
-        preemptible: preemptible_tries
-        memory: "96 GiB"
-        disks: "local-disk " + ceil(disk_size) + " LOCAL"
+        memory: "32 GiB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
         noAddress: no_address
+        preemptible: preemptible_tries
         cpu: cpu
     }
 
     output {
-        File out_jalign_del_bed = "out_jalign/DEL_jalign_merged_results/~{base_file_name}.DEL.jalign.bed"
-        File out_jalign_del_bam = "out_jalign/DEL_jalign_merged_results/~{base_file_name}.DEL.jalign.bam"
-        File out_jalign_del_bam_index = "out_jalign/DEL_jalign_merged_results/~{base_file_name}.DEL.jalign.bam.bai"
+        File output_vcf = "~{base_file_name}.jalign.vcf.gz"
+        File output_vcf_index = "~{base_file_name}.jalign.vcf.gz.tbi"
+        File monitoring_log = "monitoring.log"
     }
 }
 
-task ProcessCnvCalls  {
-    input {
-        File cnmops_cnvs_bed
-        File cnvpytor_cnvs_tsv
-        File jalign_del_candidates
+task CollapseCallset {
+    input{ 
+        File input_vcf
+        File input_vcf_index
         String base_file_name
-        File? cnv_lcr_file
-        File reference_fasta
-        File fasta_index
-        Int? distance_threshold
-        Int? duplication_length_cutoff_for_cnmops_filter
         String docker
         File monitoring_script
         Boolean no_address
         Int preemptible_tries
     }
-    Float cnmops_cnvs_bed_size = size(cnmops_cnvs_bed, "GB")
-    Float cnvpytor_cnvs_tsv_size = size(cnvpytor_cnvs_tsv, "GB")
-    Float jalign_del_candidates_size = size(jalign_del_candidates, "GB")
-    Float cnv_lcr_file_size = size(cnv_lcr_file, "GB")   
-    Float additional_disk = 10
-    Int disk_size = ceil(cnmops_cnvs_bed_size + cnvpytor_cnvs_tsv_size + jalign_del_candidates_size + cnv_lcr_file_size + additional_disk)
-
-     
-    command <<<
-        set -xeo pipefail
-        bash ~{monitoring_script} | tee monitoring.log >&2 &
-        combine_cnmops_cnvpytor_cnv_calls \
-            --cnmops_cnv_calls ~{cnmops_cnvs_bed} \
-            --cnvpytor_cnv_calls ~{cnvpytor_cnvs_tsv} \
-            --del_jalign_merged_results ~{jalign_del_candidates} \
-            ~{"--distance_threshold "+ distance_threshold} \
-            ~{"--duplication_length_cutoff_for_cnmops_filter " + duplication_length_cutoff_for_cnmops_filter} \
-            ~{"--ug_cnv_lcr " + cnv_lcr_file} \
-            --ref_fasta ~{reference_fasta} \
-            --fasta_index ~{fasta_index} \
-            --out_directory . \
-            --sample_name ~{base_file_name}
-
-    >>>
-    runtime {
-        preemptible: preemptible_tries
-        memory: "4 GiB"
-        disks: "local-disk " + ceil(disk_size) + " LOCAL"
-        docker: docker
-        noAddress: no_address
-        cpu: 2
-    }
-
-    output
-    {
-        File sample_cnvs_vcf_file = "~{base_file_name}.cnv.vcf.gz"
-        File sample_cnvs_vcf_index_file = "~{base_file_name}.cnv.vcf.gz.tbi"
-    }
-}
-
-task CnvVcfToBed {
-    input {
-        File input_cnv_vcf
-        String base_file_name
-
-        String docker
-        File monitoring_script
-        Boolean no_address
-        Int preemptible_tries
-    }
-
     command <<<
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        bcftools query -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n' ~{input_cnv_vcf} > ~{base_file_name}.cnv.bed
+        combine_cnmops_cnvpytor_cnv_calls merge_records \
+            --input_vcf ~{input_vcf} \
+            --output_vcf ./~{base_file_name}.mrg.vcf.gz \
+            --distance 0 
+        bcftools index -t ~{base_file_name}.mrg.vcf.gz
     >>>
     runtime {
-        preemptible: preemptible_tries
         memory: "4 GiB"
-        disks: "local-disk 10 LOCAL"
+        disks: "local-disk " + "4 HDD"
         docker: docker
         noAddress: no_address
         cpu: 2
+        preemptible: preemptible_tries
     }
 
     output {
-        File output_cnv_bed = "~{base_file_name}.cnv.bed"
+        File output_vcf = "~{base_file_name}.mrg.vcf.gz"
+        File output_vcf_index = "~{base_file_name}.mrg.vcf.gz.tbi"
+        File monitoring_log = "monitoring.log"
     }
+
 }

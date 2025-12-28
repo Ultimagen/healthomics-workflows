@@ -64,7 +64,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.25.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.0" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -297,6 +297,11 @@ workflow SingleCell {
             help: "Single Cell application QC h5 file", 
             category: "output"
         }
+        aggregated_metrics_json: {
+            type: "File",
+            help: "Single Cell application QC json file", 
+            category: "output"
+        }
         trimmer_stats_output: {
             type: "File",
             help: "Trimmer output statistics", 
@@ -492,6 +497,7 @@ workflow SingleCell {
         # SingleCellQc outputs
         File report_html                    = report_html_
         File application_qc_h5          = SingleCellQc.h5
+        File aggregated_metrics_json        = SingleCellQc.json
 
         # Star solo outputs
         StarSoloOutputs? star_solo_outputs = StarSoloWorkflow.outputs

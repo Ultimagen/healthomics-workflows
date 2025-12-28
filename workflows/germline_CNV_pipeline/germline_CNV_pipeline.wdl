@@ -22,6 +22,8 @@ version 1.0
 
 
 # CHANGELOG in reverse chronological order
+# 1.26.0 - Updated annotations and filtering model, quality significantly improved
+# 1.24.0 - Removed filtering on UG-CNV-LCR, updated filtering model
 
 import "single_sample_cnmops_CNV_calling.wdl" as SingleSampleCnmopsCNVCalling
 import "single_sample_CNVpytor_calling.wdl" as SingleSampleCNVpytorCalling
@@ -32,7 +34,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.25.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -41,7 +43,10 @@ workflow GermlineCNVPipeline {
         File reference_genome_index
         Array[String] ref_seq_names
         File? ug_cnv_lcr_file
-        File filtering_model
+
+        Boolean skip_filtering
+        File? filtering_model
+        Int? filtering_model_decision_threshold
         #cnmops params
         Int? cnmops_mapq_override
         Int? cnmops_window_length_override
@@ -59,6 +64,8 @@ workflow GermlineCNVPipeline {
         Int? cnvpytor_window_length_override
         Int? cnvpytor_mapq_override
 
+        Int cushion_size
+        
         Boolean? skip_figure_generation
         Boolean? no_address_override
         Int? preemptible_tries_override
@@ -77,7 +84,7 @@ workflow GermlineCNVPipeline {
     }
 
     meta {
-        description: "Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results</b>"
+        description: "Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results, verifies them using split reads and jump alignments<br>4. Applies ML model to estimate quality of the CNV</b>"
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
@@ -132,9 +139,19 @@ workflow GermlineCNVPipeline {
             category: "input_optional"
         }
         filtering_model: {
-            help: "CNV filtering model, default in template",
+            help: "CNV filtering model, default in template, calls are not filtered if not provided",
             type: "File",
-            category: "input_required"
+            category: "input_optional"
+        }
+        filtering_model_decision_threshold: {
+            help: "Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent",
+            type: "Int",
+            category: "param_optional"
+        }
+        skip_filtering: {
+            help: "Whether to skip CNV filtering step, default is False",
+            type: "Boolean",
+            category: "param_required"
         }
         cnmops_mapq_override: {
             help : "Reads mapping-quality cutoff for coverage aggregation used in cn.mops, default value is 1",
@@ -222,10 +239,35 @@ workflow GermlineCNVPipeline {
             type: "File",
             category: "output"
         }
+        cnmops_cnv_calls_vcf: {
+            help: "CNMOPS CNV calls in VCF format",
+            type: "File",
+            category: "output"
+        }
+        cnmops_cnv_calls_vcf_index: {
+            help: "Index file for the CNMOPS CNV calls VCF",
+            type: "File",
+            category: "output"
+        }
         cnvpytor_cnv_calls_bed: {
             help: "CNVpytor CNV calls in bed format",
             type: "File",
             category: "output"
+        }
+        cnvpytor_cnv_calls_vcf: {
+            help: "CNVpytor CNV calls in VCF format",
+            type: "File",
+            category: "output"
+        }
+        cnvpytor_cnv_calls_vcf_index: {
+            help: "Index file for the CNVpytor CNV calls VCF",
+            type: "File",
+            category: "output"  
+        }
+        cushion_size: {
+            help: "Cushion size around CNV breakpoints for split-read analysis and jump alignment analysis",
+            type: "Int",
+            category: "param_required"
         }
         combined_cnv_calls_bed: {
             help: "Final (combined) CNV calls in bed format",
@@ -310,14 +352,19 @@ workflow GermlineCNVPipeline {
     call CombineGermlineCNVCalls.CombineGermlineCNVCalls as CombineCNVCalls{
         input:
             base_file_name = base_file_name,
-            cnmops_cnvs_bed = CnmopsCNVCalling.out_sample_cnvs_bed[0],
-            cnvpytor_cnvs_tsv = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv,
+            cnmops_cnvs_vcf = CnmopsCNVCalling.out_sample_cnvs_vcf,
+            cnmops_cnvs_vcf_index = CnmopsCNVCalling.out_sample_cnvs_vcf_index,
+            cnvpytor_cnvs_vcf = CnvpytorCNVCalling.cnvpytor_cnv_calls_vcf,
+            cnvpytor_cnvs_vcf_index = CnvpytorCNVCalling.cnvpytor_cnv_calls_vcf_index,            
             input_bam_file = input_bam_file,
             input_bam_file_index = input_bam_file_index,
+            cushion_size = cushion_size,
             reference_genome = reference_genome,
             reference_genome_index = reference_genome_index,
             cnv_lcr_file = ug_cnv_lcr_file,
+            skip_filtering = skip_filtering,
             filtering_model = filtering_model,
+            filtering_model_decision_threshold = filtering_model_decision_threshold,
             monitoring_script_input = monitoring_script,
             preemptible_tries_override = preemptible_tries,
             no_address_override = no_address
@@ -343,8 +390,12 @@ workflow GermlineCNVPipeline {
         }
     }
     output {
-        File cnmops_cnv_calls_bed = CnmopsCNVCalling.out_sample_cnvs_bed[0]
+        File cnmops_cnv_calls_bed = CnmopsCNVCalling.out_sample_cnvs_bed
+        File cnmops_cnv_calls_vcf = CnmopsCNVCalling.out_sample_cnvs_vcf
+        File cnmops_cnv_calls_vcf_index = CnmopsCNVCalling.out_sample_cnvs_vcf_index
         File cnvpytor_cnv_calls_bed = CnvpytorCNVCalling.cnvpytor_cnv_calls_tsv
+        File cnvpytor_cnv_calls_vcf = CnvpytorCNVCalling.cnvpytor_cnv_calls_vcf
+        File cnvpytor_cnv_calls_vcf_index = CnvpytorCNVCalling.cnvpytor_cnv_calls_vcf_index
         File combined_cnv_calls_bed = CombineCNVCalls.out_sample_cnvs_bed
         File combined_cnv_calls_bed_vcf = combined_cnv_calls_bed_vcf_
         File combined_cnv_calls_bed_vcf_index = combined_cnv_calls_bed_vcf_index_

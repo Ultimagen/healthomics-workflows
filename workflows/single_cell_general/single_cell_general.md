@@ -232,6 +232,11 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>File</i><br />
         Single Cell application QC h5 file
 </p>
+<p name="SingleCell.aggregated_metrics_json">
+        <b>SingleCell.aggregated_metrics_json</b><br />
+        <i>File</i><br />
+        Single Cell application QC json file
+</p>
 <p name="SingleCell.star_bam">
         <b>SingleCell.star_bam</b><br />
         <i>File?</i><br />

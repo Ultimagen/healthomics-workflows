@@ -1,0 +1,50 @@
+{
+    "ppmSeqPreprocess.input_cram_bam_list": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/ppmSeq/401940-HG001-Z0102.ppmSeq.cram"
+    ],
+    "ppmSeqPreprocess.base_file_name": "401940-HG001-Z0102",
+    "ppmSeqPreprocess.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "ppmSeqPreprocess.ref_fastas_cram": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta"
+    ],
+    "ppmSeqPreprocess.preemptible_tries": 1,
+    "ppmSeqPreprocess.no_address": true,
+    "ppmSeqPreprocess.cpu": 32,
+    "ppmSeqPreprocess.ua_parameters": {
+        "ua_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai",
+        "ref_alt": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt",
+        "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
+        "v_aware_alignment_flag": false
+    },
+    "ppmSeqPreprocess.sorter_params": {
+        "mark_duplicates": true,
+        "aligned": true,
+        "mark_duplicates_ends_read_uncertainty": 0,
+        "coverage_intervals": "s3://ultimagen-workflow-resources-us-east-1/interval_lists/coverage_intervals.hg38.tar.gz"
+    },
+    "ppmSeqPreprocess.steps": {
+        "trim": true,
+        "align": true,
+        "sort": true
+    },
+    "ppmSeqPreprocess.create_md5_checksum_outputs": false,
+    "ppmSeqPreprocess.adapter_version": "v1",
+    "ppmSeqPreprocess.trimmer_parameters": {
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq.json",
+        "format": "ppmSeq",
+        "pattern_files": [
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_start_loop.csv",
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/ppmSeq/ppmSeq_end_loop.csv"
+        ],
+        "extra_args": "--histogram %1.%2.%4.%5.histogram.csv",
+        "failure_read_group": "unmatched",
+        "cram_reference": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
+    }
+}

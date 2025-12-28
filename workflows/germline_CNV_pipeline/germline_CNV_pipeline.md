@@ -1,5 +1,5 @@
 # GermlineCNVPipeline
-Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results</b>
+Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results, verifies them using split reads and jump alignments<br>4. Applies ML model to estimate quality of the CNV</b>
 
 ## Inputs
 
@@ -18,11 +18,6 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <b>GermlineCNVPipeline.input_bam_file_index</b><br />
         <i>File </i> &mdash; 
          Input sample BAI/CRAI index file <br /> 
-</p>
-<p name="GermlineCNVPipeline.filtering_model">
-        <b>GermlineCNVPipeline.filtering_model</b><br />
-        <i>File </i> &mdash; 
-         CNV filtering model, default in template <br /> 
 </p>
 <p name="GermlineCNVPipeline.bed_graph">
         <b>GermlineCNVPipeline.bed_graph</b><br />
@@ -51,6 +46,16 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>Array[String] </i> &mdash; 
          Chromosome names for which coverage will be calculated <br /> 
 </p>
+<p name="GermlineCNVPipeline.skip_filtering">
+        <b>GermlineCNVPipeline.skip_filtering</b><br />
+        <i>Boolean </i> &mdash; 
+         Whether to skip CNV filtering step, default is False <br /> 
+</p>
+<p name="GermlineCNVPipeline.cushion_size">
+        <b>GermlineCNVPipeline.cushion_size</b><br />
+        <i>Int </i> &mdash; 
+         Cushion size around CNV breakpoints for split-read analysis and jump alignment analysis <br /> 
+</p>
 
 ### Required references
 <p name="GermlineCNVPipeline.reference_genome">
@@ -69,6 +74,11 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <b>GermlineCNVPipeline.ug_cnv_lcr_file</b><br />
         <i>File? </i> &mdash; 
          UG-CNV-LCR bed file <br /> 
+</p>
+<p name="GermlineCNVPipeline.filtering_model">
+        <b>GermlineCNVPipeline.filtering_model</b><br />
+        <i>File? </i> &mdash; 
+         CNV filtering model, default in template, calls are not filtered if not provided <br /> 
 </p>
 <p name="GermlineCNVPipeline.create_md5_checksum_outputs">
         <b>GermlineCNVPipeline.create_md5_checksum_outputs</b><br />
@@ -92,6 +102,11 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
 </p>
 
 ### Optional parameters
+<p name="GermlineCNVPipeline.filtering_model_decision_threshold">
+        <b>GermlineCNVPipeline.filtering_model_decision_threshold</b><br />
+        <i>Int? </i> &mdash; 
+         Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent <br /> 
+</p>
 <p name="GermlineCNVPipeline.skip_figure_generation">
         <b>GermlineCNVPipeline.skip_figure_generation</b><br />
         <i>Boolean? </i> &mdash; 
@@ -131,10 +146,30 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>File</i><br />
         CNMOPS CNV calls in bed format
 </p>
+<p name="GermlineCNVPipeline.cnmops_cnv_calls_vcf">
+        <b>GermlineCNVPipeline.cnmops_cnv_calls_vcf</b><br />
+        <i>File</i><br />
+        CNMOPS CNV calls in VCF format
+</p>
+<p name="GermlineCNVPipeline.cnmops_cnv_calls_vcf_index">
+        <b>GermlineCNVPipeline.cnmops_cnv_calls_vcf_index</b><br />
+        <i>File</i><br />
+        Index file for the CNMOPS CNV calls VCF
+</p>
 <p name="GermlineCNVPipeline.cnvpytor_cnv_calls_bed">
         <b>GermlineCNVPipeline.cnvpytor_cnv_calls_bed</b><br />
         <i>File</i><br />
         CNVpytor CNV calls in bed format
+</p>
+<p name="GermlineCNVPipeline.cnvpytor_cnv_calls_vcf">
+        <b>GermlineCNVPipeline.cnvpytor_cnv_calls_vcf</b><br />
+        <i>File</i><br />
+        CNVpytor CNV calls in VCF format
+</p>
+<p name="GermlineCNVPipeline.cnvpytor_cnv_calls_vcf_index">
+        <b>GermlineCNVPipeline.cnvpytor_cnv_calls_vcf_index</b><br />
+        <i>File</i><br />
+        Index file for the CNVpytor CNV calls VCF
 </p>
 <p name="GermlineCNVPipeline.combined_cnv_calls_bed">
         <b>GermlineCNVPipeline.combined_cnv_calls_bed</b><br />

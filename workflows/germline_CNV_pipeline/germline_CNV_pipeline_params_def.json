@@ -31,10 +31,6 @@
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineCNVCalls.cnvpytor_precent_gaps_threshold_override": {
-        "description": "Threshold for pN (fraction of reference genome gaps (N's) in call region) for cnvpytor calls. default=0.9",
-        "optional": true
-    },
     "GermlineCNVPipeline.CombineCNVCalls.distance_threshold_override": {
         "description": "Distance threshold for merging CNV calls. default=1500",
         "optional": true
@@ -95,13 +91,21 @@
         "description": "Create md5 checksum for requested output files",
         "optional": true
     },
+    "GermlineCNVPipeline.cushion_size": {
+        "description": "Cushion size around CNV breakpoints for split-read analysis and jump alignment analysis",
+        "optional": false
+    },
     "GermlineCNVPipeline.disable_mod_cnv": {
         "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
         "optional": true
     },
     "GermlineCNVPipeline.filtering_model": {
-        "description": "CNV filtering model, default in template",
-        "optional": false
+        "description": "CNV filtering model, default in template, calls are not filtered if not provided",
+        "optional": true
+    },
+    "GermlineCNVPipeline.filtering_model_decision_threshold": {
+        "description": "Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent",
+        "optional": true
     },
     "GermlineCNVPipeline.genome_windows": {
         "description": "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix.",
@@ -146,6 +150,10 @@
     "GermlineCNVPipeline.skip_figure_generation": {
         "description": "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
         "optional": true
+    },
+    "GermlineCNVPipeline.skip_filtering": {
+        "description": "Whether to skip CNV filtering step, default is False",
+        "optional": false
     },
     "GermlineCNVPipeline.ug_cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",

@@ -7,12 +7,12 @@ The UG pipeline for tumor informed MRD measures the tumor fraction in cfDNA from
 - Tumor tissue (FFPE / FF)
 - Normal tissue (buffy coat / PBMCs)
 
-It is possible to provide the cfDNA cram file only with an existing somatic vcf file.
+It is possible to provide the cfDNA cram file only, with an existing somatic vcf file.
 
-The analysis of this MRD data is composed of three parts:
-1. Tumor signature mutation calling, where the tumor and normal tissues are used for finding the tumor somatic mutations signature with somatic variant calling (by default UG Somatic DeepVariant, though these can be provided from other callers).
+The analysis is composed of three parts:
+1. Tumor signature mutation calling, where the tumor and normal tissues are used for finding the tumor somatic mutations signature with somatic variant calling (by default UG Somatic Efficient DeepVariant [efficient_dv.wdl], though these can be provided from other callers).
 2. Single Read SNV pipeline, where all the SNV candidates compared to the reference genome are extracted from the cfDNA cram file to a FeatureMap vcf, annotated and assigned a quality score (SNVQ).
-3. Intersection and MRD data analysis, where the FeatureMap and signature are intersected and filtered, then reads supporting the tumor mutations are counted and a tumor fraction is measured. Control signatures can be added to estimate the background noise, e.g. from other cohort patients, and in addition control signatures are generated from a somatic mutation database. 
+3. Intersection and MRD data analysis, where the FeatureMap and signature are intersected and filtered, then reads supporting the tumor mutations are counted and a circulating tumor variant allele fraction (ctDNA VAF) is measured. Control signatures can be added to estimate the background noise, e.g. from other cohort patients, and in addition control signatures are generated from a somatic mutation database. 
 
 <img src="mrd_pipeline_scheme.png" width="800"/>
 
@@ -32,9 +32,9 @@ The following input templates are available for different kinds of input data:
 ## Running the pipeline
 ### Step 1: Somatic variant calling
 Please refer to instruction in one of:
-1. WDL - dv_inference.wdl
+1. WDL - efficient_dv.wdl
 
-2. Standalone - howto-somatic-calling-dv.md
+2. Standalone - howto-somatic-calling-efficient-dv.md
 
 The following outputs from this workflow are needed:
 1. vcf_file - A vcf file containing the mutations found in the tumor tissue, with a quality score (QUAL) assigned to each mutation. Mutations suspected as germline appear in this vcf and are filtered out and marked RefCall in the FILTER column. The output vcf file is used as input to the next step.
@@ -46,16 +46,16 @@ Please refer to instruction in one of:
 2. Standalone - howto-single-read-snv.md
 
 The following outputs from this workflow are needed:
-1. featuremap - Output FeatureMap, a VCF file that contains a record for each SNV in each read. Additional information about the SNV and about the read encoded as INFO fields. Additionally, a machine learning model is trained on these features to assign an SNV quality score, saved as the QUAL field of each SNV in the FeatureMap. 
+1. featuremap - Output FeatureMap, a VCF file that contains a record per variant (SNV), with aggregated information per read in the FORMAT fields. Additional information about variant is encoded in the INFO fields. Additionally, a machine learning model is trained on these features to assign an SNV quality score, saved in the SNVQ FORMAT field per read. The maximal SNVQ per variant is saved in the QUAL field. 
 2. featuremap_index - index of the FeatureMap vcf file
-3. test_set_statistics_h5 - A file containing statistics about the test set used to train the machine learning model, saved as a h5 file.
-4. X_test_file - X_test file, a numpy array of the features of each SNV in a subsample of reads used as a test set, saved as a parquet file.
-5. y_test_file - y_test file, a numpy array of True/False status of the entries in X, saved as a parquet file.
-6. qual_test_file - a numpy array of the QUAL values predicted for the test set, saved as a parquet file.
+3. application_qc_h5 - A file containing statistics about the test set used to train the machine learning model, saved as a h5 file.
+4. featuremap_df - a parquet file containing the training dataset with labels and predictions
+5. srsnv_metadata_json - A metadata JSON file for the SNV quality model, containing information about the model, features, and training parameters
 
 
 ### Step 3: Intersection and MRD data analysis 
-In this stage the FeatureMap and signature are intersected, reads supporting the tumor mutations are counted and a tumor fraction is measured. In this stage control signatures can (and should) be added to estimate the background noise, and in addition a mutation database is used to simulate control signatures that mimic the tested signature, in matters of the number of variants and trinucleotide distribution. 
+In this stage the FeatureMap and signature are intersected, reads supporting the tumor mutations are counted and the circulating tumor variant allele fraction (ctDNA VAF) is measured. ctDNA VAF can be used to estimate the tumor fraction in plasma. 
+In this stage control signatures can (and should) be added to estimate the background noise. In addition a mutation database is used for estimating background noise (see below).
 The WDL used in this stage is: mrd_featuremap.wdl
 Standalone - howto-mrd-featuremap.md
 
@@ -67,11 +67,11 @@ Either when using the WDL or running as standalone, the following inputs are nee
   b. include_regions - region/s to which the analysis will be limited, multiple regions would be intersected. Default:
     
     [
-      "gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
+      "gs://concordanz/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
     ]
     or 
     [
-      "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_hcr.bed"
+      "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
     ]
 
   c. exclude_regions - regions that will be excluded from the analysis, supporting bed and vcf formats. Default:
@@ -107,9 +107,9 @@ Either when using the WDL or running as standalone, the following inputs are nee
 2. Input signatures
 
   a. external_matched_signatures - a list of somatic vcf files matching the plasma sample. 
-  An option to use multiple inputs is supported (e.g. signatures from different callers/tissues) and intersections are calculated for all options, but the first entry is used as the signature to sample for database controls. All loci in this signature will be excluded from the control signatures, and it will then be filtered with the bcftools_extra_args string (see below) before intersection with the FeatureMap.
+  An option to use multiple inputs is supported (e.g. signatures from different callers/tissues) and intersections are calculated for all options, but the first entry is used as the signature to sample for database controls. All loci in this signature will be excluded from the control signatures, implemented with bcftools_extra_args string (see below) before intersection with the FeatureMap.
 
-  b. external_control_signatures - A list of control signatures that can be added to estimate the background noise, e.g. from other cohort patients. These will be filtered with the jexl_variant_string (see below) before intersection with the FeatureMap.
+  b. external_control_signatures - A list of control signatures that can be added to estimate the background noise, e.g. from other cohort patients. The control signatures are filtered with bcftools_extra_args.
 
   c. bcftools_extra_args - A string used by bcftools for filtering the matched and control signatures. Default:
 
@@ -119,284 +119,367 @@ Either when using the WDL or running as standalone, the following inputs are nee
     
     "-f PASS --type snps -m2 -M2"
 
-  d. snv_database - a large database of WG somatic cancer mutations from which variants for synthetic control signatures (also called database controls) will be drawn. Default is the PCAWG database (Nature 2020). Default:
+  d. snv_database - a large database of whole-genome somatic cancer mutations from which variants for synthetic control signatures (also called database controls) will be drawn. Default is the PCAWG database (Nature 2020). The synthetic signatures (default: 5 synthetic signatures) are generated based on the matched signature: they have the same size and same trinucleotide motif distribution as the first matched signature. In case matched signatures are not part of the input, the sythetic signatures mimic the first control signature. The synthetic signatures appear as "db_control" signatures in the output ctdna_vaf.h5. snv_database default:
   
     "gs://concordanz/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
     or
     "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
 
   e. n_synthetic_signatures - number of synthetic signatures to generate from the database. Default: 5
+
+  f. diluent_germline_vcfs - optional argument. A list of vcf files which are output of germline calling of the diluent's DNA, in case of an experiment where patient's cfDNA was diluted into a cfDNA coming from a healthy donor, or a similar mixing experiment. Default: empty array []
   
 
 3. Inputs from Single Read SNV pipeline
 
-  a. cfdna_featuremap - SRSNV output featuremap
+  a. cfdna_featuremap - SRSNV output: featuremap
 
-  b. cfdna_featuremap_index
+  b. cfdna_featuremap_index - SRSNV output: featuremap_index
 
-  c. featuremap_df_file
+  c. featuremap_df_file - SRSNV output: featuremap_df
+
+  d. srsnv_metadata_json - SRSNV output: srsnv_metadata_json
     
 4. Analysis filters
 
-  a. mapping_quality_threshold - minimum mapping quality of reads supporting a mutation, used only when estimating effective coverage. The FeatureMap is assumed to be filtered with the same value in the SRSNV pipeline. Default: 60
+  a. mapping_quality_threshold - minimum mapping quality of reads supporting a mutation, used only when estimating effective coverage. The FeatureMap is assumed to be filtered with the same value in the SRSNV pipeline. Default: 0
   
-  b. mrd_analysis_params - filters used in the final analysis steps. By default the signature is filtered for a normalized coverage that does not significantly deviate from the median coverage, and the reads are filtered for SNVQ60. Default: 
-  
+  b. mrd_analysis_params - filters used in the final analysis steps.
+    1. "signature_filter_query": the default is: "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)"
+    It filters out variants found in regions of extreme coverage of the cfDNA sample
+    2. "signature_filter_query": the default is: "filt>0 and snvq>60 and mapq>=60"
+    Taking only featuremap entries with pass filter, have high SNVQ and maximal mapping quality.
+    In order to take only mixed reads from a ppmSeq data, the following read_filter_query should be applied:
+    "read_filter_query" : "(st == 'MIXED') and (et == 'MIXED')"
 
-    {
-      "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)"
-      "read_filter_query": "qual > 60"
-    }
+## Manual execution (outside WDL)
 
+### Environment / dockers
+Pull (matching versions referenced in workflows/single_read_snv/tasks/globals.wdl in this repository):
 
-  In of taking only mixed reads from a ppmSeq data, the following read_filter_query should be applied:
+1. ugbio_core_docker
+2. bcftools_docker
+3. ugbio_mrd_docker
+4. mosdepth_docker
 
+### Step-by-step commands
+Below is a bash script emulating the mrd_featuremap.wdl. Variable names mirror WDL inputs; example corresponds to test data provided (see file paths for test data in the last section of this deocument). See input templates for full filenames, only base names are used below for clarity.
 
-    "read_filter_query" : "(strand_ratio_category_start == 'MIXED') and (strand_ratio_category_end == 'MIXED')"
+```bash
+# Set base name & inputs
+BASE_FILE_NAME="Pa_46_333_LuNgs_08"
+CFDNA_FEATUREMAP="Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz"
+CFDNA_FEATUREMAP_INDEX="Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi"
+CFDNA_CRAM_BAM="Pa_46.333_LuNgs_08.Lb_744.chr20.cram"
+CFDNA_CRAM_BAM_INDEX="Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai"
+FEATUREMAP_DF_FILE="Pa_46_333_LuNgs_08.featuremap_df.parquet"
+SRSNV_METADATA_JSON="Pa_46_333_LuNgs_08.srsnv_metadata.json"
 
-## Standalone steps:
+# External signatures (arrays)
+EXTERNAL_MATCHED_SIGNATURES=("Pa_46_FreshFrozen.ann.chr20.vcf.gz")
+EXTERNAL_CONTROL_SIGNATURES=("Pa_67_FFPE.ann.chr20.vcf.gz")
+DILUENT_GERMLINE_VCFS=()  # Optional, empty in this example
 
-Running MRD analysis using standalone functions (and not through the wdl pipeline) requires the installation of UGVC.
-Please follow the instractions in "UGVC repository" subsection in howto-single-read-snv.md.
+# Reference files
+REF_FASTA="Homo_sapiens_assembly38.fasta"
+REF_FASTA_INDEX="Homo_sapiens_assembly38.fasta.fai"
+REF_DICT="Homo_sapiens_assembly38.dict"
 
-### Signature filtering and manipulation:
+# Regions and database
+INCLUDE_REGIONS=("ug_hcr.bed")
+EXCLUDE_REGIONS=(
+    "af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz"
+    "Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz"
+    "UG_MRD_blacklist_v0.bed.gz"
+)
+SNV_DATABASE="pancan_pcawg_2020.chr20.vcf.gz"
 
-#### FilterVcf
+# Parameters
+MAPPING_QUALITY_THRESHOLD=0
+N_SYNTHETIC_SIGNATURES=5
+BCFTOOLS_EXTRA_ARGS="-f PASS --type snps -m2 -M2 -i 'QUAL>10'"
+SIGNATURE_FILTER_QUERY="(norm_coverage <= 2.5) and (norm_coverage >= 0.6)"
+READ_FILTER_QUERY="filt>0 and snvq>60 and mapq>=60"
 
-Filter signature/s on genomics regions (include, exclude regions) and by the bcftools_extra_args string.
-This task wraps the "bcftools view" method.
-```
-bcftools view \
-    --threads 4 \
-    ~{bcftools_extra_args} \
-    ~{input_vcf} \
-    | bcftools view - -T ~{sep=" | bcftools view - -T " include_regions} \
-    | bcftools view - -T ^~{sep=" | bcftools view - -T ^" exclude_regions} \
-    -Oz \
-    -o ~{output_vcf_filename}
-bcftools index -t ~{output_vcf_filename}
-```
-##### FilterMatched
+# Initialize arrays for tracking filtered signatures
+filtered_matched_signatures=()
+filtered_control_signatures=()
+db_signatures=()
+padded_diluent_files=()
 
-Filter the matched signature/s. 
-Input the signature vcf/s, exclude regions, include regions and bcftools_extra_args string into FilterVcf task.
+# Define signature filtering function
+filter_signatures() {
+    local signature_type="$1"
+    local array_name="$2"
+    local bcftools_extra_args="${3:-$BCFTOOLS_EXTRA_ARGS}"  # Optional, defaults to global value
+    shift 3
+    local exclude_regions=("$@")
+    
+    # Extract signature files array
+    eval "local signature_files=(\"\${${array_name}[@]}\")"
+    
+    echo "Filtering ${signature_type} signatures..."
+    # run inside bcftools_docker
+    
+    for input_vcf in "${signature_files[@]}"; do
+        basename_vcf=$(basename "$input_vcf" .vcf.gz)
+        output_vcf="${basename_vcf}.filtered.vcf.gz"
+        
+        # Start with basic filtering and include regions
+        cmd="bcftools view --threads 4 $bcftools_extra_args \"$input_vcf\""
+        
+        # Add include regions (pipe through each one)
+        for include_region in "${INCLUDE_REGIONS[@]}"; do
+            cmd="$cmd | bcftools view - -T \"$include_region\""
+        done
+        
+        # Add exclude regions (pipe through each one)
+        for exclude_region in "${exclude_regions[@]}"; do
+            if [[ -n "$exclude_region" ]]; then
+                cmd="$cmd | bcftools view - -T ^\"$exclude_region\""
+            fi
+        done
+        
+        # Finalize command with output
+        cmd="$cmd -Oz -o \"$output_vcf\""
+        
+        # Execute the command
+        echo "Executing command: $cmd"
+        eval "$cmd"
+        bcftools index -t "$output_vcf"
+    done
+}
 
+# 1. OPTIONAL: Pad diluent VCF files (if provided)
+# Skip in this example since DILUENT_GERMLINE_VCFS is empty
+if [[ ${#DILUENT_GERMLINE_VCFS[@]} -gt 0 ]]; then
+    echo "Processing diluent germline VCFs..."
+    # run inside ugbio_core_docker
+    for input_vcf in "${DILUENT_GERMLINE_VCFS[@]}"; do
+        basename_vcf=$(basename "$input_vcf" .vcf.gz)
+        
+        # Extract variant positions and pad them
+        bcftools query -f '%CHROM\t%POS0\t%END\t%REF\t%ALT\n' "$input_vcf" | \
+        awk -F'\t' 'BEGIN{OFS="\t"}{
+            s=$2;
+            m=length($4);
+            n=split($5,a,",");
+            for(i=1;i<=n;i++) if(length(a[i])>m) m=length(a[i]);
+            print $1, s, s+m
+        }' | gzip > variants.bed.gz
+        
+        # Create genome file for bedtools
+        cut -f1,2 "$REF_FASTA_INDEX" > genome.txt
+        
+        # Pad variants using bedtools
+        zcat variants.bed.gz | bedtools slop -i stdin -g genome.txt -b 2 | \
+        gzip > "${basename_vcf}.padded.bed.gz"
+        
+        padded_diluent_files+=("${basename_vcf}.padded.bed.gz")
+    done
+fi
 
-#### FilterControls 
+# 2. Filter matched signatures
+all_exclude_regions=("${EXCLUDE_REGIONS[@]}" "${padded_diluent_files[@]}")
+if [[ ${#EXTERNAL_MATCHED_SIGNATURES[@]} -gt 0 ]]; then
+    filter_signatures "matched" "EXTERNAL_MATCHED_SIGNATURES" "$BCFTOOLS_EXTRA_ARGS" "${all_exclude_regions[@]}"
+    # Collect filtered outputs
+    for input_vcf in "${EXTERNAL_MATCHED_SIGNATURES[@]}"; do
+        basename_vcf=$(basename "$input_vcf" .vcf.gz)
+        filtered_matched_signatures+=("${basename_vcf}.filtered.vcf.gz")
+    done
+fi
 
-Filter control signatures (other patients from the cohort), if any. 
-Input the control signature vcfs, include regions, exclude regions  + matched signature loci and bcftools_extra_args string into FilterVcf task.
+# 3. Filter control signatures (exclude matched signature loci too)
+control_exclude_regions=("${EXCLUDE_REGIONS[@]}" "${EXTERNAL_MATCHED_SIGNATURES[@]}" "${padded_diluent_files[@]}")
+if [[ ${#EXTERNAL_CONTROL_SIGNATURES[@]} -gt 0 ]]; then
+    filter_signatures "control" "EXTERNAL_CONTROL_SIGNATURES"  "$BCFTOOLS_EXTRA_ARGS" "${control_exclude_regions[@]}"
+    # Collect filtered outputs
+    for input_vcf in "${EXTERNAL_CONTROL_SIGNATURES[@]}"; do
+        basename_vcf=$(basename "$input_vcf" .vcf.gz)
+        filtered_control_signatures+=("${basename_vcf}.filtered.vcf.gz")
+    done
+fi
 
-#### FilterDb
+# 4. Filter database and generate synthetic controls
+echo "Filtering SNV database and generating synthetic controls..."
+# run inside bcftools_docker
+if [[ -n "$SNV_DATABASE" ]]; then
+    # Create a temporary array with just the database file
+    temp_db_array=("$SNV_DATABASE")
+    filter_signatures "database" "temp_db_array" " " "${control_exclude_regions[@]}"
+    
+    # Get the filtered database file
+    basename_db=$(basename "$SNV_DATABASE" .vcf.gz)
+    filtered_db_vcf="${basename_db}.filtered.vcf.gz"
+else
+    filtered_db_vcf="filtered_db.vcf.gz"
+fi
 
-Filter external SNV database, if any.
-Input the SNV database vcf, include regions, exclude regions  + matched signature loci and bcftools_extra_args string into FilterVcf task.
+# run inside ugbio_mrd_docker
+# Use first filtered signature as reference (prefer matched over control)
+reference_signature="${filtered_matched_signatures[0]:-${filtered_control_signatures[0]}}"
 
-
-#### GenerateControlSignaturesFromDatabase 
-
-Generate synthetic control signatures from the database matching the filtered matched signature in size and trinucleotide motif distribution.
-```
-echo "********** Generating control signatures from database **********"
-python /VariantCalling/ugvc generate_synthetic_signatures \
-  --signature_vcf ~{signature_file} \
-  --db_vcf ~{snv_database} \
-  --n_synthetic_signatures ~{n_synthetic_signatures} \
-  --ref_fasta ~{ref_fasta} \
+generate_synthetic_signatures \
+  --signature_vcf "$reference_signature" \
+  --db_vcf "$filtered_db_vcf" \
+  --n_synthetic_signatures $N_SYNTHETIC_SIGNATURES \
+  --ref_fasta "$REF_FASTA" \
   --output_dir ./
 
-echo "********** Converting control signatures to dataframe **********"
-find syn*.vcf.gz | \
-  xargs -P~{cpus} -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
-echo "********** DONE **********"
-```
+# Collect generated database signatures
+db_signatures=(syn*.vcf.gz)
 
-#### ExtractCoverageOverVcfFiles 
+# 5. Extract coverage over all signatures
+echo "Extracting coverage over signature loci..."
+# Combine all signature VCF files for coverage calculation
+all_signature_files=("${filtered_matched_signatures[@]}" "${filtered_control_signatures[@]}" "${db_signatures[@]}")
 
-Extract coverage over the filtered signatures (over the mapping quality threshold).
-This task wraps the "gatk ExtractCoverageOverVcfFiles", using the complete set of regions coverage by the signatures, and the cfDNA WGS cram file.
-```
-echo "Combining all the VCF loci into one BED file..."
-
-for vcf in ~{sep=" " vcf_files}; do
-    zcat $vcf | grep -v "^#" | awk '{print $1"\t"($2-1)"\t"$2}' >> combined_loci.bed
+# run inside ugbio_core_docker
+# Convert VCF loci to BED format
+echo "Combining all VCF loci into one BED file..."
+for vcf in "${all_signature_files[@]}"; do
+    zcat "$vcf" | grep -v "^#" | awk '{print $1"\t"($2-1)"\t"$2}' >> combined_loci.bed
 done
 
+# Sort and merge overlapping regions
 echo "Sorting and merging the combined BED..."
 sort -k1,1 -k2,2n combined_loci.bed | bedtools merge > merged_loci.bed
 
+# run inside mosdepth_docker
+# Extract coverage using mosdepth
 echo "Extracting coverage from CRAM for the specified loci..."
-gatk \
-  DepthOfCoverage \
-  -R ~{references.ref_fasta} \
-  -O ~{base_file_name}.coverage \
-  -I ~{input_cram_bam} \
-  --intervals merged_loci.bed \
-  --read-filter MappingQualityReadFilter --minimum-mapping-quality ~{mapping_quality_threshold} \
-  --output-format "~{output_format}"
+mosdepth --by merged_loci.bed -f "$REF_FASTA" -Q $MAPPING_QUALITY_THRESHOLD --fast-mode \
+"$BASE_FILE_NAME" "$CFDNA_CRAM_BAM"
 
-# The default output does not contain a prefix
-mv "~{base_file_name}.coverage" "~{base_file_name}.coverage.csv"
+coverage_bed="${BASE_FILE_NAME}.per-base.bed.gz"
+coverage_bed_index="${BASE_FILE_NAME}.per-base.bed.gz.csi"
 
-echo "Editing csv output..."
-# The default output format is chr1:1000 and we convert it to chr1,1000 
-sed -i -e 's/Locus/Chrom,Pos/' -e 's/:/,/g' "~{base_file_name}.coverage.csv"
+# 6. Intersect FeatureMap with signatures
+echo "Intersecting FeatureMap with signatures..."
+# run inside ugbio_mrd_docker
+intersection_files=()
+intersection_parquet_files=()
 
-echo "Coverage extraction completed."
-```
+# Process matched signatures
+for signature in "${filtered_matched_signatures[@]}"; do
+    featuremap_base=$(basename "$CFDNA_FEATUREMAP")
+    signature_base=$(basename "$signature")
+    signature_type="matched"
+    output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
+    
+    # Perform intersection
+    bcftools isec -n=2 -w1 "$CFDNA_FEATUREMAP" "$signature" -Oz -o "$output_vcf"
+    bcftools index -t "$output_vcf"
+    intersection_files+=("$output_vcf")
+    
+    # Convert to parquet if not empty
+    if [[ $(bcftools view "$output_vcf" -H | wc -l) -gt 0 ]]; then
+        output_parquet="${output_vcf%.vcf.gz}.parquet"
+        featuremap_to_dataframe --in "$output_vcf" --out "$output_parquet" --jobs 4 --drop-format AD GT
+        intersection_parquet_files+=("$output_parquet")
+    fi
+done
 
-### FeatureMapIntersectWithSignatures
+# Process control signatures
+for signature in "${filtered_control_signatures[@]}"; do
+    featuremap_base=$(basename "$CFDNA_FEATUREMAP")
+    signature_base=$(basename "$signature")
+    signature_type="control"
+    output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
+    
+    bcftools isec -n=2 -w1 "$CFDNA_FEATUREMAP" "$signature" -Oz -o "$output_vcf"
+    bcftools index -t "$output_vcf"
+    intersection_files+=("$output_vcf")
+    
+    if [[ $(bcftools view "$output_vcf" -H | wc -l) -gt 0 ]]; then
+        output_parquet="${output_vcf%.vcf.gz}.parquet"
+        featuremap_to_dataframe --in "$output_vcf" --out "$output_parquet" --jobs 4 --drop-format AD GT
+        intersection_parquet_files+=("$output_parquet")
+    fi
+done
 
-Intersection of signatures and FeatureMap.
-The instersection of a signature and the FeatureMap is calculated, for each signature separately.
-Output is a "*.intersection.vcf.gz" and *.intersection.parquet" per signature.
+# Process database control signatures
+for signature in "${db_signatures[@]}"; do
+    featuremap_base=$(basename "$CFDNA_FEATUREMAP")
+    signature_base=$(basename "$signature")
+    signature_type="db_control"
+    output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
+    
+    bcftools isec -n=2 -w1 "$CFDNA_FEATUREMAP" "$signature" -Oz -o "$output_vcf"
+    bcftools index -t "$output_vcf"
+    intersection_files+=("$output_vcf")
+    
+    if [[ $(bcftools view "$output_vcf" -H | wc -l) -gt 0 ]]; then
+        output_parquet="${output_vcf%.vcf.gz}.parquet"
+        featuremap_to_dataframe --in "$output_vcf" --out "$output_parquet" --jobs 4 --drop-format AD GT
+        intersection_parquet_files+=("$output_parquet")
+    fi
+done
 
-```
-# run intersections
-if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_matched_signatures} ]]
-then
-    echo "******** Processing matched signatures ********"
-    echo "******** 1/2 Run intersections ********"
-    echo ~{sep=" " matched_signatures} | tr " " $"\n" | sort | uniq | \
-      xargs -P~{cpus} -I% sh -c \
-      "python /VariantCalling/ugvc intersect_featuremap_with_signature \
-      --featuremap ~{featuremap} \
-      --signature % \
-      --signature_type matched"
-  echo "******** 2/2 Converting to dataframes ********"
-  # the next command is not multiprocessed because it uses pyfaidx which is not multiprocessing-safe
-  find *.matched.intersection.vcf.gz | \
-    xargs -P1 -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
+# 7. MRD data analysis - Generate final report and ctDNA VAF calculations
+echo "Running MRD data analysis..."
+# run inside ugbio_mrd_docker
+
+# Build arguments for different signature types
+matched_sigs_args=""
+if [[ ${#filtered_matched_signatures[@]} -gt 0 ]]; then
+    matched_sigs_args="--matched-signatures-vcf $(IFS=' '; echo "${filtered_matched_signatures[*]}")"
 fi
 
-if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_control_signatures} ]]
-then
-  echo "******** Processing control signatures ********"
-  echo "******** 1/2 Run intersections ********"
-  echo ~{sep=" " control_signatures} | tr " " $"\n" | sort | uniq | \
-    xargs -P~{cpus} -I% sh -c \
-    "python /VariantCalling/ugvc intersect_featuremap_with_signature \
-    --featuremap ~{featuremap} \
-    --signature % \
-    --signature_type control"
-  echo "******** 2/2 Converting to dataframes ********"
-  find *.control.intersection.vcf.gz | \
-    xargs -P1 -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
+control_sigs_args=""
+if [[ ${#filtered_control_signatures[@]} -gt 0 ]]; then
+    control_sigs_args="--control-signatures-vcf $(IFS=' '; echo "${filtered_control_signatures[*]}")"
 fi
 
-if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_db_signatures} ]]
-then
-  echo "******** Processing db control signatures ********"
-  echo "******** 1/2 Run intersections ********"
-  echo ~{sep=" " db_signatures} | tr " " $"\n" | sort | uniq | \
-    xargs -P~{cpus} -I% sh -c \
-    "python /VariantCalling/ugvc intersect_featuremap_with_signature \
-    --featuremap ~{featuremap} \
-    --signature % \
-    --signature_type db_control"
-  echo "******** 2/2 Converting to dataframes ********"
-  find *.db_control.intersection.vcf.gz | \
-    xargs -P1 -I% sh -c "python /VariantCalling/ugvc featuremap_to_dataframe -i %"
+db_sigs_args=""
+if [[ ${#db_signatures[@]} -gt 0 ]]; then
+    db_sigs_args="--db-control-signatures-vcf $(IFS=' '; echo "${db_signatures[*]}")"
 fi
 
-echo "******** DONE ********"
-```
+# Run final MRD data analysis
+generate_report \
+    --intersected-featuremaps $(IFS=' '; echo "${intersection_parquet_files[*]}") \
+    --coverage-bed "$coverage_bed" \
+    $matched_sigs_args \
+    $control_sigs_args \
+    $db_sigs_args \
+    --output-dir "$PWD" \
+    --output-basename "$BASE_FILE_NAME" \
+    --signature-filter-query "$SIGNATURE_FILTER_QUERY" \
+    --read-filter-query "$READ_FILTER_QUERY" \
+    --featuremap-file "$FEATUREMAP_DF_FILE" \
+    --srsnv-metadata-json "$SRSNV_METADATA_JSON"
 
-### MrdDataAnalysis 
-
-The MRD analysis task is composed of two stages:
-
-1. Aggregating data to consice dataframes:
-input:
-- intersected_featuremaps_parquet: one file per signature
-- coverage_csv: output of ExtractCoverageOverVcfFiles
-- matched-signatures-vcf (not mandatory)
-- control-signatures-vcf (not mandatory)
-- db-control-signatures-vcf
-output:
-- ~{basename}.features.parquet: aggregation of all featuremap entries that intersect with the full set of signatures
-- ~{basename}.signatures.parquet: aggregation of all signatures
-
-```
-echo "********** Aggregating data to neat dataframes **********"
-python /VariantCalling/ugvc prepare_data_from_mrd_pipeline \
-  --intersected-featuremaps ~{sep=" " intersected_featuremaps_parquet} \
-  --coverage-csv ~{coverage_csv} \
-  ~{true="--matched-signatures-vcf " false="" defined(matched_signatures_vcf)}~{sep=" " matched_signatures_vcf} \
-  ~{true="--control-signatures-vcf " false="" defined(control_signatures_vcf)}~{sep=" " control_signatures_vcf} \
-  ~{true="--db-control-signatures-vcf " false="" defined(db_signatures_vcf)}~{sep=" " db_signatures_vcf} \
-  --output-dir "$PWD" \
-  --output-basename "~{basename}" \
-```
-
-
-2. Creating MRD analysis notebook:
-This notebook integrates all the gathered data and outputs a list of MRD supporting reads and an estimation for the tumor fraction in plasma.
-First, it applies additional filters on the signatures and the featuremap (defined in "mrd_analysis_params").
-MRD supporting reads is the number of reads found in the cfDNA sample per signature locus.
-Tumor fraction is the sum of MRD supporting reads, divided by the coverage of the total signature. 
-As in most cases, some of the reads do not pass the quality threshold, we correct the coverage denominator of the tumor fraction by the retention rate of the requested quality threshod.
-output:
-- ~{basename}.tumor_fraction.h5: an hdf file, that aggregates dataframes:
-  - df_tf_filt_signature_filt_featuremap: tumor fraction table, applying filters on the signature and on the featuremap
-  - df_tf_unfilt_signature_filt_featuremap: unfiltered signature and filtered featuremap
-  - df_tf_filt_signature_unfilt_featuremap: filtered signature and unfiltered featuremap
-  - df_supporting_reads_per_locus_filt_signature_filt_featuremap: a table of supporting reads per locus, corresponding to the first tf table
-  - df_supporting_reads_per_locus_unfilt_signature_filt_featuremap: corresponding to the second tf table
-  - df_supporting_reads_per_locus_filt_signature_unfilt_featuremap: corresponding to the third tf table
-- An MRD analysis html
-
-```
-echo "********** Creating MRD analysis notebook **********"
-papermill /VariantCalling/ugvc/reports/mrd_automatic_data_analysis.ipynb ~{basename}.mrd_data_analysis.ipynb \
-  -p features_file_parquet "~{basename}.features.parquet" \
-  -p signatures_file_parquet "~{basename}.signatures.parquet" \
-  -p signature_filter_query "~{mrd_analysis_params.signature_filter_query}" \
-  -p read_filter_query "~{mrd_analysis_params.read_filter_query}" \
-  -p featuremap_df_file "~{featuremap_df_file}" \
-  -p output_dir "$PWD" \
-  -p basename "~{basename}" \
-  -k python3
-
-echo "********** Creating html version **********"
-jupyter nbconvert ~{basename}.mrd_data_analysis.ipynb --output ~{basename}.mrd_data_analysis.html \
-  --to html --template classic --no-input
+echo "MRD analysis complete!"
+echo "Output files:"
+echo "  - ${BASE_FILE_NAME}.features.parquet"
+echo "  - ${BASE_FILE_NAME}.signatures.parquet"
+echo "  - ${BASE_FILE_NAME}.mrd_data_analysis.html"
+echo "  - ${BASE_FILE_NAME}.ctdna_vaf.h5"
 ```
 
 ## Summary of the important MRD output files
 - report_html (automated analysis of the results in html format)
-- mrd_analysis_notebook (automated analysis of the results in jupyter notebook format, can be used as a template for customized analyses)
 - features_dataframe (python pandas dataframe of all the substitutions in the cfDNA sample after intersection with all the signatures, parquet format)
 - signatures_dataframe (python pandas dataframe of all the variants in all the signatures, parquet format)
-- tumor_fraction.h5 (dataframes of tumor fraction and supporting reads per locus)
-
+- ctdna_vaf.h5 (dataframes of ctDNA VAF and supporting reads per locus)
 
 ## Summary of the relevant files
 - **WDLs:**
   - mrd_featuremap.wdl
   - single_read_snv.wdl
-  - dv_inference.wdl
+  - efficient_dv.wdl
 
 ## test files
 ```
-{base_file_name}:"Pa_46_matched_cohort"
-{cfdna_featuremap}:gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_46.with_ml_qual.chr20.vcf.gz
-{cfdna_featuremap_index}:gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_46.with_ml_qual.chr20.vcf.gz.tbi
-{cfdna_cram_bam}:gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram
-{cfdna_cram_bam_index}:gs://ug-cromwell-tests/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
-{external_matched_signatures}: ["gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_46_FreshFrozen.ann.chr20.vcf.gz"]
-{external_control_signatures}: ["gs://ug-cromwell-tests/mrd/test_data_chr20/Pa_67_FFPE.ann.chr20.vcf.gz"]
-{featuremap_df_file}:gs://ug-cromwell-tests/mrd/test_data/Pa_46_333_LuNgs_08.featuremap_df.parquet
-{snv_database}:gs://concordanz/hg38/pcawg/pancan_pcawg_2020.chr20.vcf.gz
-
-or
-
-{cfdna_featuremap}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.with_ml_qual.chr20.vcf.gz
-{cfdna_featuremap_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46.with_ml_qual.chr20.vcf.gz.tbi
+{cfdna_featuremap}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz
+{cfdna_featuremap_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi
 {cfdna_cram_bam}:s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram
 {cfdna_cram_bam_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
 {external_matched_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_FreshFrozen.ann.chr20.vcf.gz"]
 {external_control_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_67_FFPE.ann.chr20.vcf.gz"]
 {featuremap_df_file}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_333_LuNgs_08.featuremap_df.parquet
 {snv_database}:s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.chr20.vcf.gz
+{srsnv_metadata_json}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_333_LuNgs_08.srsnv_metadata.json
 ```

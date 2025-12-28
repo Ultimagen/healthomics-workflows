@@ -34,7 +34,7 @@ import "tasks/pileup_tasks.wdl" as UGPileupTasks
 workflow SomaticFeaturemap {
 
     input {
-        String pipeline_version = "1.25.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.0" # !UnusedDeclaration
 
         String base_file_name
         File? tumor_featuremap_vcf
@@ -348,10 +348,10 @@ workflow SomaticFeaturemap {
     
     File somatic_featuremap_vcf = select_first([somatic_featuremap_given, CreateSomaticFeaturemap.somatic_featuremap])
     File somatic_featuremap_vcf_index = select_first([somatic_featuremap_given_index, CreateSomaticFeaturemap.somatic_featuremap_index])
-
+    References references_variable = select_first([references])
+    
     if (run_mpileup)
-    {
-        References references_variable = select_first([references])
+    {    
         # 2. Make a padded regions file for tumor-pass variants
         call UGMrdTasks.PadVcf as PadSomaticFeaturemapVcf {
             input:
@@ -464,6 +464,7 @@ workflow SomaticFeaturemap {
                 xgb_model = sfm_xgb_model,
                 interval_list = interval,
                 ref_tandem_repeats = ref_tandem_repeats,
+                reference_fai = references_variable.ref_fasta_index,
                 docker = global.ugbio_featuremap_docker,
                 no_address = no_address,
                 preemptible_tries = preemptible_tries,
@@ -615,12 +616,13 @@ task ScoreSomaticVariants {
         File? xgb_model
         File interval_list
         File ref_tandem_repeats
+        File reference_fai
         String docker
         File monitoring_script
         Boolean no_address
         Int preemptible_tries
     }
-    Int cpus = 8
+    Int cpus = 4
     String out_sfm_vcf_filename = basename(input_sfm_vcf, ".vcf.gz") + ".tr_info.xgb_proba.vcf.gz"
 
     command <<<
@@ -641,12 +643,13 @@ task ScoreSomaticVariants {
             -o ~{out_sfm_vcf_filename} \
             -i interval_list.bed \
             -ref_tr ~{ref_tandem_repeats} \
+            -g ~{reference_fai} \
             ~{"-xgb_model " + xgb_model}
             
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: "64 GB"
+        memory: "8 GB"
         disks: "local-disk 100 HDD"
         docker: docker
         noAddress: no_address

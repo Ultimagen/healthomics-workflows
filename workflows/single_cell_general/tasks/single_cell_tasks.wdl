@@ -256,6 +256,12 @@ task SingleCellQc {
             --fraction-below-read-length ~{qc_thresholds.fraction_below_read_length} \
             --percent-aligned ~{qc_thresholds.percent_aligned} \
             --star-db ~{star_db}
+
+      convert_h5_to_json \
+            --root_element "metrics" \
+            --ignored_h5_key_substring histogram \
+            --input_h5 sc_qc/~{base_file_name}.scRNA.applicationQC.h5 \
+            --output_json sc_qc/~{base_file_name}.scRNA.applicationQC.json
     >>>
 
     runtime{
@@ -269,6 +275,7 @@ task SingleCellQc {
     output{
         File report         = "sc_qc/~{base_file_name}.scRNA.applicationQC.html"
         File h5             = "sc_qc/~{base_file_name}.scRNA.applicationQC.h5"
+        File json           = "sc_qc/~{base_file_name}.scRNA.applicationQC.json"
         File monitoring_log = "monitoring.log"
     }
 }

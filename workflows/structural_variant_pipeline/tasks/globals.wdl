@@ -23,10 +23,10 @@ workflow Globals {
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ua_docker": "ultimagenomics/alignment:3.0.6",
         "giraffe_docker": "ultimagenomics/giraffe:1.47.1",
-        "rematching_docker": "ultimagenomics/rematcher:main_28d1f2e",
+        "rematching_docker": "ultimagenomics/rematcher:1.1.0_28d1f2e",
         "gridss_docker": "ultimagenomics/gridss:0c97dd1",
         "gripss_docker": "ultimagenomics/gripss:ug_2.4.1_165b492",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.16.1"
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.18.0"
 }
 }
 

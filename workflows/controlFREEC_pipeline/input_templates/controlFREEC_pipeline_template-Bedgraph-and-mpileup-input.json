@@ -1,17 +1,18 @@
 {
-    "SomaticCNVCallingControlFREEC.base_file_name": "<sample_base_name>",
+    "SomaticCNVCallingControlFREEC.base_file_name": "<base_file_name>",
     "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file": [
-        "<tumor>.bam"
+        "<tumor>.cram"
     ],
     "SomaticCNVCallingControlFREEC.input_tumor_cram_bam_file_index": [
-        "<tumor>.bam.bai"
+        "<tumor>.cram.crai"
     ],
     "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file": [
-        "<normal>.bam"
+        "<normal>.cram"
     ],
     "SomaticCNVCallingControlFREEC.input_normal_cram_bam_file_index": [
-        "<normal>.bam.bai"
+        "<normal>.cram.crai"
     ],
+    "SomaticCNVCallingControlFREEC.sex": "XY",
     "SomaticCNVCallingControlFREEC.num_shards": 100,
     "SomaticCNVCallingControlFREEC.scatter_intervals_break": 10000000,
     "SomaticCNVCallingControlFREEC.interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
@@ -32,34 +33,17 @@
     "SomaticCNVCallingControlFREEC.max_threads_override": 8,
     "SomaticCNVCallingControlFREEC.window": 1000,
     "SomaticCNVCallingControlFREEC.degree": 3,
-    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.4/ug_cnv_lcr.bed",
+    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
     "SomaticCNVCallingControlFREEC.gem_mappability_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
-    "SomaticCNVCallingControlFREEC.collect_coverage_region": [
-        "chr1",
-        "chr2",
-        "chr3",
-        "chr4",
-        "chr5",
-        "chr6",
-        "chr7",
-        "chr8",
-        "chr9",
-        "chr10",
-        "chr11",
-        "chr12",
-        "chr13",
-        "chr14",
-        "chr15",
-        "chr16",
-        "chr17",
-        "chr18",
-        "chr19",
-        "chr20",
-        "chr21",
-        "chr22",
-        "chrX"
-    ],
     "SomaticCNVCallingControlFREEC.chrLenFile_override": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
     "SomaticCNVCallingControlFREEC.high_sensitivity_mode": false,
-    "SomaticCNVCallingControlFREEC.naive_normalization": true
+    "SomaticCNVCallingControlFREEC.naive_normalization": true,
+    "SomaticCNVCallingControlFREEC.tumor_sorter_zipped_bed_graph": [
+        "<tumor>_1.bedGraph.gz"
+    ],
+    "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph": [
+        "<normal>_1.bedGraph.gz"
+    ],
+    "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "<tumor>_minipileup.pileup",
+    "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>_minipileup.pileup"
 }
