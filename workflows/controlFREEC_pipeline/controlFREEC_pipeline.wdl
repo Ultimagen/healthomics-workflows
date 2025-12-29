@@ -32,7 +32,7 @@ import "tasks/pileup_tasks.wdl" as UGPileupTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.26.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.1" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.

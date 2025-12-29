@@ -34,7 +34,7 @@ import "tasks/pileup_tasks.wdl" as UGPileupTasks
 workflow SomaticFeaturemap {
 
     input {
-        String pipeline_version = "1.26.0" # !UnusedDeclaration
+        String pipeline_version = "1.26.1" # !UnusedDeclaration
 
         String base_file_name
         File? tumor_featuremap_vcf
