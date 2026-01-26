@@ -45,11 +45,27 @@
     },
     "GermlineCNVPipeline.base_file_name": {
         "description": "Sample name",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "<base_file_name",
+            "germline_CNV_pipeline_template.hg19": "<base_file_name>",
+            "HG002.healthomics_public.test": "HG002.full_sample.test"
+        }
     },
     "GermlineCNVPipeline.bed_graph": {
         "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": [
+                "s3://<sample>.1_bedGraph.gz"
+            ],
+            "germline_CNV_pipeline_template.hg19": [
+                "s3://<sample>.1_bedGraph.gz"
+            ],
+            "HG002.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.bedgraph.gz"
+            ]
+        }
     },
     "GermlineCNVPipeline.cnmops_intersection_cutoff_override": {
         "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
@@ -85,15 +101,30 @@
     },
     "GermlineCNVPipeline.cohort_reads_count_matrix": {
         "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds",
+            "germline_CNV_pipeline_template.hg19": "s3://<ultima-input-bucket>/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg19.ReadsCount.rds",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds"
+        }
     },
     "GermlineCNVPipeline.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "germline_CNV_pipeline_template": false,
+            "germline_CNV_pipeline_template.hg19": false,
+            "HG002.healthomics_public.test": false
+        }
     },
     "GermlineCNVPipeline.cushion_size": {
         "description": "Cushion size around CNV breakpoints for split-read analysis and jump alignment analysis",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": 1500,
+            "germline_CNV_pipeline_template.hg19": 1500,
+            "HG002.healthomics_public.test": 1500
+        }
     },
     "GermlineCNVPipeline.disable_mod_cnv": {
         "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
@@ -101,27 +132,57 @@
     },
     "GermlineCNVPipeline.filtering_model": {
         "description": "CNV filtering model, default in template, calls are not filtered if not provided",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/filtering_models/cnv_filtering_model_v1.5.0.pkl",
+            "germline_CNV_pipeline_template.hg19": "s3://<ultima-input-bucket>/filtering_models/cnv_filtering_model_v1.5.0.pkl",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/filtering_models/cnv_filtering_model_v1.5.0.pkl"
+        }
     },
     "GermlineCNVPipeline.filtering_model_decision_threshold": {
         "description": "Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "germline_CNV_pipeline_template": 31,
+            "germline_CNV_pipeline_template.hg19": 31,
+            "HG002.healthomics_public.test": 31
+        }
     },
     "GermlineCNVPipeline.genome_windows": {
         "description": "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed",
+            "germline_CNV_pipeline_template.hg19": "s3://<ultima-input-bucket>/hg19/Homo_sapiens_assembly19.fasta.chr1-24.w1000.bed",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed"
+        }
     },
     "GermlineCNVPipeline.input_bam_file": {
         "description": "Input sample BAM/CRAM file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "<input_bam_file>.bam",
+            "germline_CNV_pipeline_template.hg19": "<input_bam_file>.bam",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
+        }
     },
     "GermlineCNVPipeline.input_bam_file_index": {
         "description": "Input sample BAI/CRAI index file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "<input_bam_file>.bam.bai",
+            "germline_CNV_pipeline_template.hg19": "<input_bam_file>.bam.bai",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
+        }
     },
     "GermlineCNVPipeline.merged_cohort_ploidy_file": {
         "description": "Merged cohort ploidy file in bed format",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
+            "germline_CNV_pipeline_template.hg19": "s3://<ultima-input-bucket>/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy"
+        }
     },
     "GermlineCNVPipeline.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -137,26 +198,128 @@
     },
     "GermlineCNVPipeline.ref_seq_names": {
         "description": "Chromosome names for which coverage will be calculated",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": [
+                "chr1",
+                "chr2",
+                "chr3",
+                "chr4",
+                "chr5",
+                "chr6",
+                "chr7",
+                "chr8",
+                "chr9",
+                "chr10",
+                "chr11",
+                "chr12",
+                "chr13",
+                "chr14",
+                "chr15",
+                "chr16",
+                "chr17",
+                "chr18",
+                "chr19",
+                "chr20",
+                "chr21",
+                "chr22",
+                "chrX",
+                "chrY"
+            ],
+            "germline_CNV_pipeline_template.hg19": [
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21",
+                "22",
+                "X",
+                "Y"
+            ],
+            "HG002.healthomics_public.test": [
+                "chr1",
+                "chr2",
+                "chr3",
+                "chr4",
+                "chr5",
+                "chr6",
+                "chr7",
+                "chr8",
+                "chr9",
+                "chr10",
+                "chr11",
+                "chr12",
+                "chr13",
+                "chr14",
+                "chr15",
+                "chr16",
+                "chr17",
+                "chr18",
+                "chr19",
+                "chr20",
+                "chr21",
+                "chr22",
+                "chrX",
+                "chrY"
+            ]
+        }
     },
     "GermlineCNVPipeline.reference_genome": {
         "description": "Genome fasta file associated with the CRAM file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+            "germline_CNV_pipeline_template.hg19": "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta"
+        }
     },
     "GermlineCNVPipeline.reference_genome_index": {
         "description": "Fai index of the fasta file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+            "germline_CNV_pipeline_template.hg19": "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta.fai",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
+        }
     },
     "GermlineCNVPipeline.skip_figure_generation": {
         "description": "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "germline_CNV_pipeline_template.hg19": true
+        }
     },
     "GermlineCNVPipeline.skip_filtering": {
         "description": "Whether to skip CNV filtering step, default is False",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "germline_CNV_pipeline_template": false,
+            "germline_CNV_pipeline_template.hg19": false,
+            "HG002.healthomics_public.test": false
+        }
     },
     "GermlineCNVPipeline.ug_cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed"
+        }
     }
 }

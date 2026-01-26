@@ -1,19 +1,148 @@
 {
     "SingleReadSNV.base_file_name": {
         "description": "Base file name for output files. The output files will be named [base_file_name].with_ml_qual.vcf.gz",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": "<base_file_name>",
+            "single_read_snv_template-ppmSeq_legacy_v5": "<base_file_name>",
+            "single_read_snv_template-ppmSeq": "<base_file_name>",
+            "ppmSeq.402572_CL10377.healthomics_public.test": "402572-CL10377"
+        }
     },
     "SingleReadSNV.cloud_provider_override": {
         "description": "cloud_provider_override",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": "aws",
+            "single_read_snv_template-ppmSeq_legacy_v5": "aws",
+            "single_read_snv_template-ppmSeq": "aws",
+            "ppmSeq.402572_CL10377.healthomics_public.test": "aws"
+        }
     },
     "SingleReadSNV.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": false,
+            "single_read_snv_template-ppmSeq_legacy_v5": false,
+            "single_read_snv_template-ppmSeq": false,
+            "ppmSeq.402572_CL10377.healthomics_public.test": false
+        }
     },
     "SingleReadSNV.featuremap_params": {
         "description": "FeatureMap parameters, recommended value set in the template.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": {
+                "min_mapq": 1,
+                "padding_size": 5,
+                "score_limit": 100,
+                "exclude_nan_scores": true,
+                "include_dup_reads": true,
+                "keep_supplementary": false,
+                "surrounding_quality_size": 20,
+                "reference_context_size": 3,
+                "cram_tags_to_copy": [
+                    "tm:Z:A:AQ:AQZ:AZ:Q:QZ:Z",
+                    "a3:i",
+                    "rq:f",
+                    "MI:Z",
+                    "DS:i",
+                    "NM:i"
+                ],
+                "bed_file": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+            },
+            "single_read_snv_template-ppmSeq_legacy_v5": {
+                "min_mapq": 1,
+                "padding_size": 5,
+                "score_limit": 100,
+                "exclude_nan_scores": true,
+                "include_dup_reads": true,
+                "keep_supplementary": false,
+                "surrounding_quality_size": 20,
+                "reference_context_size": 3,
+                "cram_tags_to_copy": [
+                    "tm:Z:A:AQ:AQZ:AZ:Q:QZ:Z",
+                    "a3:i",
+                    "rq:f",
+                    "as:f",
+                    "ts:f",
+                    "ae:f",
+                    "te:f",
+                    "MI:Z",
+                    "DS:i"
+                ],
+                "bed_file": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+            },
+            "single_read_snv_template-ppmSeq": {
+                "min_mapq": 1,
+                "padding_size": 5,
+                "score_limit": 100,
+                "exclude_nan_scores": true,
+                "include_dup_reads": true,
+                "keep_supplementary": false,
+                "surrounding_quality_size": 20,
+                "reference_context_size": 3,
+                "cram_tags_to_copy": [
+                    "tm:Z:A:AQ:AQZ:AZ:Q:QZ:Z",
+                    "a3:i",
+                    "rq:f",
+                    "st:Z:MIXED:MINUS:PLUS:UNDETERMINED",
+                    "et:Z:MIXED:MINUS:PLUS:UNDETERMINED",
+                    "sd:i",
+                    "ed:i",
+                    "l1:i",
+                    "l2:i",
+                    "l3:i",
+                    "l4:i",
+                    "l5:i",
+                    "l6:i",
+                    "l7:i",
+                    "q2:i",
+                    "q3:i",
+                    "q4:i",
+                    "q5:i",
+                    "q6:i",
+                    "MI:Z",
+                    "DS:i"
+                ],
+                "bed_file": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+            },
+            "ppmSeq.402572_CL10377.healthomics_public.test": {
+                "min_mapq": 1,
+                "padding_size": 5,
+                "score_limit": 100,
+                "exclude_nan_scores": true,
+                "include_dup_reads": true,
+                "keep_supplementary": false,
+                "surrounding_quality_size": 20,
+                "reference_context_size": 3,
+                "cram_tags_to_copy": [
+                    "tm:Z:A:AQ:AQZ:AZ:Q:QZ:Z",
+                    "a3:i",
+                    "rq:f",
+                    "st:Z:MIXED:MINUS:PLUS:UNDETERMINED",
+                    "et:Z:MIXED:MINUS:PLUS:UNDETERMINED",
+                    "sd:i",
+                    "ed:i",
+                    "l1:i",
+                    "l2:i",
+                    "l3:i",
+                    "l4:i",
+                    "l5:i",
+                    "l6:i",
+                    "l7:i",
+                    "q2:i",
+                    "q3:i",
+                    "q4:i",
+                    "q5:i",
+                    "q6:i",
+                    "MI:Z",
+                    "DS:i"
+                ],
+                "bed_file": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+            }
+        }
     },
     "SingleReadSNV.featuremap_scatter_count_override": {
         "description": "featuremap_scatter_count_override",
@@ -21,15 +150,185 @@
     },
     "SingleReadSNV.features": {
         "description": "Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": [
+                "REF",
+                "ALT",
+                "X_PREV1",
+                "X_NEXT1",
+                "X_PREV2",
+                "X_NEXT2",
+                "X_PREV3",
+                "X_NEXT3",
+                "X_HMER_REF",
+                "X_HMER_ALT",
+                "BCSQ",
+                "BCSQCSS",
+                "RL",
+                "INDEX",
+                "REV",
+                "SCST",
+                "SCED",
+                "SMQ_BEFORE",
+                "SMQ_AFTER",
+                "tm",
+                "rq",
+                "EDIST",
+                "HAMDIST",
+                "HAMDIST_FILT"
+            ],
+            "single_read_snv_template-ppmSeq_legacy_v5": [
+                "REF",
+                "ALT",
+                "X_PREV1",
+                "X_NEXT1",
+                "X_PREV2",
+                "X_NEXT2",
+                "X_PREV3",
+                "X_NEXT3",
+                "X_HMER_REF",
+                "X_HMER_ALT",
+                "BCSQ",
+                "BCSQCSS",
+                "RL",
+                "INDEX",
+                "REV",
+                "SCST",
+                "SCED",
+                "SMQ_BEFORE",
+                "SMQ_AFTER",
+                "tm",
+                "rq",
+                "as",
+                "ae",
+                "ts",
+                "te",
+                "EDIST",
+                "HAMDIST",
+                "HAMDIST_FILT"
+            ],
+            "single_read_snv_template-ppmSeq": [
+                "REF",
+                "ALT",
+                "X_PREV1",
+                "X_NEXT1",
+                "X_PREV2",
+                "X_NEXT2",
+                "X_PREV3",
+                "X_NEXT3",
+                "X_HMER_REF",
+                "X_HMER_ALT",
+                "BCSQ",
+                "BCSQCSS",
+                "RL",
+                "INDEX",
+                "REV",
+                "SCST",
+                "SCED",
+                "SMQ_BEFORE",
+                "SMQ_AFTER",
+                "tm",
+                "rq",
+                "st",
+                "et",
+                "sd",
+                "ed",
+                "l1",
+                "l2",
+                "l3",
+                "l4",
+                "l5",
+                "l6",
+                "l7",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "EDIST",
+                "HAMDIST",
+                "HAMDIST_FILT"
+            ],
+            "ppmSeq.402572_CL10377.healthomics_public.test": [
+                "REF",
+                "ALT",
+                "X_PREV1",
+                "X_NEXT1",
+                "X_PREV2",
+                "X_NEXT2",
+                "X_PREV3",
+                "X_NEXT3",
+                "X_HMER_REF",
+                "X_HMER_ALT",
+                "BCSQ",
+                "BCSQCSS",
+                "RL",
+                "INDEX",
+                "REV",
+                "SCST",
+                "SCED",
+                "SMQ_BEFORE",
+                "SMQ_AFTER",
+                "tm",
+                "rq",
+                "st",
+                "et",
+                "sd",
+                "ed",
+                "l1",
+                "l2",
+                "l3",
+                "l4",
+                "l5",
+                "l6",
+                "l7",
+                "q2",
+                "q3",
+                "q4",
+                "q5",
+                "q6",
+                "EDIST",
+                "HAMDIST",
+                "HAMDIST_FILT"
+            ]
+        }
     },
     "SingleReadSNV.input_cram_bam_index_list": {
         "description": "Input CRAM index file/s",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": [
+                "<input_cram_bam>.cram.crai"
+            ],
+            "single_read_snv_template-ppmSeq_legacy_v5": [
+                "<input_cram_bam>.cram.crai"
+            ],
+            "single_read_snv_template-ppmSeq": [
+                "<input_cram_bam>.cram.crai"
+            ],
+            "ppmSeq.402572_CL10377.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/single_read_snv/402572-CL10377-Z0151-CAGTGAATCATCGAT.cram.crai"
+            ]
+        }
     },
     "SingleReadSNV.input_cram_bam_list": {
         "description": "Input CRAM file/s",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": [
+                "<input_cram_bam>.cram"
+            ],
+            "single_read_snv_template-ppmSeq_legacy_v5": [
+                "<input_cram_bam>.cram"
+            ],
+            "single_read_snv_template-ppmSeq": [
+                "<input_cram_bam>.cram"
+            ],
+            "ppmSeq.402572_CL10377.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/single_read_snv/402572-CL10377-Z0151-CAGTGAATCATCGAT.cram"
+            ]
+        }
     },
     "SingleReadSNV.mean_coverage": {
         "description": "(Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file_list.",
@@ -37,7 +336,13 @@
     },
     "SingleReadSNV.min_coverage_to_train_model": {
         "description": "Minimum coverage to train the ML model, needed as label assignment (true/false SNV) is unreliable at low coverages, the recommended value is set in the template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": 8.0,
+            "single_read_snv_template-ppmSeq_legacy_v5": 8.0,
+            "single_read_snv_template-ppmSeq": 8.0,
+            "ppmSeq.402572_CL10377.healthomics_public.test": 8.0
+        }
     },
     "SingleReadSNV.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -57,7 +362,13 @@
     },
     "SingleReadSNV.preemptible_tries": {
         "description": "preemptible_tries",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": 1,
+            "single_read_snv_template-ppmSeq_legacy_v5": 1,
+            "single_read_snv_template-ppmSeq": 1,
+            "ppmSeq.402572_CL10377.healthomics_public.test": 1
+        }
     },
     "SingleReadSNV.prepare_featuremap_for_training_gb": {
         "description": "prepare_featuremap_for_training_gb",
@@ -65,23 +376,145 @@
     },
     "SingleReadSNV.raise_exceptions_in_report": {
         "description": "Raise and exception and fail the pipeline if an error is raised in the QC report",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": false,
+            "single_read_snv_template-ppmSeq_legacy_v5": false,
+            "single_read_snv_template-ppmSeq": false,
+            "ppmSeq.402572_CL10377.healthomics_public.test": true
+        }
     },
     "SingleReadSNV.random_sample_trinuc_freq": {
         "description": "(Optional) CSV or TSV file with trinucleotide frequencies for the random sample. If provided, the random sample featuremap will be sampled according to the given trinucleotide frequency. If not provided, sampling is uniform.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv",
+            "ppmSeq.402572_CL10377.healthomics_public.test": "s3://<ultima-input-bucket>/single_read_snv/ref_trinuc_freq.csv"
+        }
     },
     "SingleReadSNV.references": {
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "single_read_snv_template-ppmSeq_legacy_v5": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "single_read_snv_template-ppmSeq": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "ppmSeq.402572_CL10377.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
     },
     "SingleReadSNV.single_read_snv_params": {
         "description": "SingleReadSNV parameters, recommended value set in the template.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": {
+                "random_seed": 0,
+                "num_CV_folds": 3,
+                "tp_train_set_size": 3200000,
+                "fp_train_set_size": 3200000,
+                "tp_train_set_size_sampling_overhead": 3.0,
+                "min_coverage_filter": 20,
+                "max_coverage_factor": 2.0,
+                "max_vaf_for_fp": 0.05,
+                "pre_filters": [
+                    "name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=mapping",
+                    "name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality",
+                    "name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality",
+                    "name=edist_le_10:field=EDIST:op=lt:value=10:type=quality",
+                    "name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality",
+                    "name=not_a_duplicate:field=DUP:op=eq:value=False:type=label"
+                ]
+            },
+            "single_read_snv_template-ppmSeq_legacy_v5": {
+                "random_seed": 0,
+                "num_CV_folds": 3,
+                "tp_train_set_size": 3200000,
+                "fp_train_set_size": 3200000,
+                "tp_train_set_size_sampling_overhead": 3.0,
+                "min_coverage_filter": 20,
+                "max_coverage_factor": 2.0,
+                "max_vaf_for_fp": 0.05,
+                "pre_filters": [
+                    "name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=mapping",
+                    "name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality",
+                    "name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality",
+                    "name=edist_le_10:field=EDIST:op=lt:value=10:type=quality",
+                    "name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality",
+                    "name=not_a_duplicate:field=DUP:op=eq:value=False:type=label"
+                ]
+            },
+            "single_read_snv_template-ppmSeq": {
+                "random_seed": 0,
+                "num_CV_folds": 3,
+                "tp_train_set_size": 3200000,
+                "fp_train_set_size": 3200000,
+                "tp_train_set_size_sampling_overhead": 3.0,
+                "min_coverage_filter": 20,
+                "max_coverage_factor": 2.0,
+                "max_vaf_for_fp": 0.05,
+                "pre_filters": [
+                    "name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=mapping",
+                    "name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality",
+                    "name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality",
+                    "name=edist_le_10:field=EDIST:op=lt:value=10:type=quality",
+                    "name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality",
+                    "name=not_a_duplicate:field=DUP:op=eq:value=False:type=label"
+                ]
+            },
+            "ppmSeq.402572_CL10377.healthomics_public.test": {
+                "random_seed": 0,
+                "num_CV_folds": 3,
+                "tp_train_set_size": 3200000,
+                "fp_train_set_size": 3200000,
+                "tp_train_set_size_sampling_overhead": 3.0,
+                "min_coverage_filter": 20,
+                "max_coverage_factor": 2.0,
+                "max_vaf_for_fp": 0.05,
+                "pre_filters": [
+                    "name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=mapping",
+                    "name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality",
+                    "name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality",
+                    "name=edist_le_10:field=EDIST:op=lt:value=10:type=quality",
+                    "name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality",
+                    "name=not_a_duplicate:field=DUP:op=eq:value=False:type=label"
+                ]
+            }
+        }
     },
     "SingleReadSNV.sorter_json_stats_file_list": {
         "description": "(Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": [
+                "<sorter_stats>.json"
+            ],
+            "single_read_snv_template-ppmSeq_legacy_v5": [
+                "<sorter_stats>.json"
+            ],
+            "single_read_snv_template-ppmSeq": [
+                "<sorter_stats>.json"
+            ],
+            "ppmSeq.402572_CL10377.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/single_read_snv/402572-CL10377-Z0151-CAGTGAATCATCGAT.json"
+            ]
+        }
     },
     "SingleReadSNV.total_aligned_bases": {
         "description": "(Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list.",
@@ -93,14 +526,32 @@
     },
     "SingleReadSNV.training_regions_interval_list": {
         "description": "Genomic regions to include in the training set, the recommended value is set in the template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
+            "ppmSeq.402572_CL10377.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz"
+        }
     },
     "SingleReadSNV.training_regions_interval_list_index": {
         "description": "Index for genomic regions to exclude from the training set, the recommended value is set in the template",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
+            "ppmSeq.402572_CL10377.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi"
+        }
     },
     "SingleReadSNV.xgboost_params_file": {
         "description": "XGBoost parameters file for training the SNV quality model, recommended value set in the template.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json",
+            "ppmSeq.402572_CL10377.healthomics_public.test": "s3://<ultima-input-bucket>/single_read_snv/251117.xgboost_model_params.json"
+        }
     }
 }

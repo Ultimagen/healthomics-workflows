@@ -1,23 +1,43 @@
 {
     "HLAGenotyping.base_file_name": {
         "description": "Base file name for the output files (to be used as the prefix)",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "hla_genotyping_template": "<base_file_name>",
+            "NA24385-Z0027.healthomics_public.test": "NA24385"
+        }
     },
     "HLAGenotyping.cloud_provider_override": {
         "description": "cloud_provider_override",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "hla_genotyping_template": "aws",
+            "NA24385-Z0027.healthomics_public.test": "aws"
+        }
     },
     "HLAGenotyping.graphs_files_tar": {
         "description": "HLA-LA graphs files tar",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "hla_genotyping_template": "s3://<ultima-input-bucket>/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz"
+        }
     },
     "HLAGenotyping.input_cram_bam": {
         "description": "Input CRAM or BAM file for annalysing HLA genotyping",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "hla_genotyping_template": "<cram_file>.cram",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
+        }
     },
     "HLAGenotyping.input_cram_bam_index": {
         "description": "Input CRAM or BAM index file for annalysing HLA genotyping",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "hla_genotyping_template": "<cram_file>.cram.crai",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
+        }
     },
     "HLAGenotyping.monitoring_script_input": {
         "description": "monitoring_script_input",
@@ -33,6 +53,18 @@
     },
     "HLAGenotyping.references": {
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "hla_genotyping_template": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "NA24385-Z0027.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
     }
 }

@@ -53,27 +53,69 @@
     },
     "MRDFeatureMap.base_file_name": {
         "description": "Base file name for output files.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<base_file_name>",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<base_file_name>",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<base_file_name>",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<base_file_name>",
+            "Pa_46_matched_cohort.healthomics_public.test": "Pa_46_matched_cohort"
+        }
     },
     "MRDFeatureMap.bcftools_extra_args": {
         "description": "Extra argument given after the 'bcftools view' command that filters the matched and control signatures. E.g. '-f PASS' to filter only PASS variants.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "-f PASS --type snps -m2 -M2",
+            "Pa_46_matched_cohort.healthomics_public.test": "-f PASS --type snps -m2 -M2 -i 'QUAL>10'"
+        }
     },
     "MRDFeatureMap.cfdna_cram_bam": {
         "description": "CRAM or BAM file of cfDNA sample, must be equal to the input used for the SingleReadSNV pipeline that generated cfdna_featuremap",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram"
+        }
     },
     "MRDFeatureMap.cfdna_cram_bam_index": {
         "description": "Respective index",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_cram_bam>.cram.crai",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_cram_bam>.cram.crai",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai"
+        }
     },
     "MRDFeatureMap.cfdna_featuremap": {
         "description": "FeatureMap file generated from the cfDNA CRAM file by the SingleReadSNV pipeline",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz"
+        }
     },
     "MRDFeatureMap.cfdna_featuremap_index": {
         "description": "Respective index",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<cfdna_featuremap>.vcf.tbi",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi"
+        }
     },
     "MRDFeatureMap.cloud_provider_override": {
         "description": "cloud_provider_override",
@@ -81,11 +123,25 @@
     },
     "MRDFeatureMap.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": false,
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": false,
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": false,
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": false,
+            "Pa_46_matched_cohort.healthomics_public.test": false
+        }
     },
     "MRDFeatureMap.diluent_germline_vcfs": {
         "description": "Optional germline VCF files from diluent samples to pad and exclude from analysis",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": [],
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": [],
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [],
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [],
+            "Pa_46_matched_cohort.healthomics_public.test": []
+        }
     },
     "MRDFeatureMap.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
@@ -93,27 +149,113 @@
     },
     "MRDFeatureMap.exclude_regions": {
         "description": "Genomic regions to exclude from the analysis, bed and vcf[.gz] files are accepted",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+            ],
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
+                "s3://<ultima-input-bucket>/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+            ]
+        }
     },
     "MRDFeatureMap.external_control_signatures": {
         "description": "Optional signatures from other individuals to be used as controls in the MRD analysis",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": [
+                "<external_control_signatures>"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [
+                "<external_control_signatures>"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
+                "<external_control_signatures>"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/mrd/Pa_67_FFPE.ann.chr20.vcf.gz"
+            ]
+        }
     },
     "MRDFeatureMap.external_matched_signatures": {
         "description": "Optional signatures matched to the patient from whom the cfDNA sample was taken, to be used as matched signatures in the MRD analysis, leave blank if running a healthy control donor",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": [
+                "<external_matched_signatures>"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [
+                "<external_matched_signatures>"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
+                "<external_matched_signatures>"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_FreshFrozen.ann.chr20.vcf.gz"
+            ]
+        }
     },
     "MRDFeatureMap.featuremap_df_file": {
         "description": "Parquet file of the FeatureMap model data generated by the SingleReadSNV pipeline",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<featuremap_df_file>.parquet",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<featuremap_df_file>.parquet",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.featuremap_df.parquet"
+        }
     },
     "MRDFeatureMap.include_regions": {
         "description": "Genomic regions to include in the analysis, bed files are accepted",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+            ],
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+            ],
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": [
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+            ],
+            "Pa_46_matched_cohort.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
+            ]
+        }
     },
     "MRDFeatureMap.mapping_quality_threshold": {
         "description": "Mapping quality threshold for reads to be included in the coverage analysis, default 0 as srsnv mapq filtering is included in srsnv_metadata_json",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": 0,
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": 0,
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": 0,
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 0,
+            "Pa_46_matched_cohort.healthomics_public.test": 0
+        }
     },
     "MRDFeatureMap.memory_extract_coverage_override": {
         "description": "Memory in GB to use for the coverage extraction task",
@@ -125,11 +267,40 @@
     },
     "MRDFeatureMap.mrd_analysis_params": {
         "description": "Parameters for the MRD analysis",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": {
+                "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
+                "read_filter_query": "filt>0 and snvq>60 and mapq>=60"
+            },
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": {
+                "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
+                "read_filter_query": "filt>0 and snvq>60 and mapq>=60"
+            },
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": {
+                "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
+                "read_filter_query": "filt>0 and snvq>60 and mapq>=60"
+            },
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": {
+                "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
+                "read_filter_query": "filt>0 and snvq>60 and mapq>=60"
+            },
+            "Pa_46_matched_cohort.healthomics_public.test": {
+                "signature_filter_query": "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)",
+                "read_filter_query": "filt>0 and snvq>40"
+            }
+        }
     },
     "MRDFeatureMap.n_synthetic_signatures": {
         "description": "Number of synthetic signatures to generate from the somatic mutation database. Set to 0 to disable generation of control signatures from the database.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": 5,
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": 5,
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": 5,
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 5,
+            "Pa_46_matched_cohort.healthomics_public.test": 5
+        }
     },
     "MRDFeatureMap.no_address_override": {
         "description": "no_address_override",
@@ -137,18 +308,66 @@
     },
     "MRDFeatureMap.preemptible_tries": {
         "description": "preemptible_tries",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": 1,
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": 1,
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": 1,
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": 1,
+            "Pa_46_matched_cohort.healthomics_public.test": 1
+        }
     },
     "MRDFeatureMap.references": {
         "description": "Reference files: fasta, dict and fai, recommended value set in the template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "Pa_46_matched_cohort.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
     },
     "MRDFeatureMap.snv_database": {
         "description": "Somatic mutation database to use for generating control signatures",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "s3://<ultima-input-bucket>/hg38/pcawg/pancan.filtered.vcf.gz",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/pancan_pcawg_2020.chr20.vcf.gz"
+        }
     },
     "MRDFeatureMap.srsnv_metadata_json": {
         "description": "Metadata json file output by the SingleReadSNV pipeline",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "<srsnv_metadata_json>.json",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "<srsnv_metadata_json>.json",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/mrd/Pa_46_333_LuNgs_08.srsnv_metadata.json"
+        }
     }
 }

@@ -169,51 +169,99 @@
     },
     "SegDupAnalysis.background_bed": {
         "description": "Background regions (non-segmental duplicated) for CNV calling, see template and `parascopy`",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz"
+        }
     },
     "SegDupAnalysis.base_file_name": {
         "description": "Prefix of the output files",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "<base_file_name>",
+            "NA24385-Z0027.healthomics_public.test": "NA24385"
+        }
     },
     "SegDupAnalysis.cloud_provider_override": {
         "description": "Cloud provider override (for running on other clouds): gcp or aws",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "segdup_template": "aws",
+            "NA24385-Z0027.healthomics_public.test": "aws"
+        }
     },
     "SegDupAnalysis.cn_model": {
         "description": "CNV model file from parascopy, see template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/segmental_duplications/parascopy_model_250205/model.tar.gz",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/parascopy_model_250205/model.tar.gz"
+        }
     },
     "SegDupAnalysis.dbsnp": {
         "description": "dbSNP reference file (for annotation)",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
+        }
     },
     "SegDupAnalysis.dbsnp_index": {
         "description": "dbSNP reference index file (for annotation)",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
+        }
     },
     "SegDupAnalysis.exome_intervals": {
         "description": "Exome intervals for variant calling (required for deepVariant, otherwise not important)",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed"
+        }
     },
     "SegDupAnalysis.homology_table": {
         "description": "Segmental duplication table (see parascopy), see template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hg38.bed.gz",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hg38.bed.gz"
+        }
     },
     "SegDupAnalysis.homology_table_index": {
         "description": "Segmental duplication table index (see parascopy), see template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hg38.bed.gz.tbi",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hg38.bed.gz.tbi"
+        }
     },
     "SegDupAnalysis.input_crai_bai": {
         "description": "Input CRAM/BAM index file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "<cram_file>.cram.crai",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
+        }
     },
     "SegDupAnalysis.input_cram_bam": {
         "description": "Input CRAM/BAM file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "<cram_file>.cram",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
+        }
     },
     "SegDupAnalysis.model_onnx": {
         "description": "DeepVariant model for variant calling on segmental duplications, see template",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx"
+        }
     },
     "SegDupAnalysis.model_serialized": {
         "description": "Serialized model for variant calling",
@@ -221,22 +269,50 @@
     },
     "SegDupAnalysis.n_threads": {
         "description": "Number of threads to use",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": 20,
+            "NA24385-Z0027.healthomics_public.test": 20
+        }
     },
     "SegDupAnalysis.no_address": {
         "description": "Start instances with no public IP address",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": true,
+            "NA24385-Z0027.healthomics_public.test": true
+        }
     },
     "SegDupAnalysis.preemptible_tries": {
         "description": "Number of preemptible tries",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "segdup_template": 3,
+            "NA24385-Z0027.healthomics_public.test": 3
+        }
     },
     "SegDupAnalysis.references": {
         "description": "Reference genome files",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "NA24385-Z0027.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
     },
     "SegDupAnalysis.segdup_regions": {
         "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template (BED file)",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hom.regions.bed",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/segmental_duplications/hom.regions.bed"
+        }
     }
 }
