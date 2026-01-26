@@ -44,7 +44,6 @@ task Demux {
     Boolean defined_downsapling_frac = defined(sorter_params.downsample_frac)
     Boolean need_samtools_view = defined(mapq_override) || defined_downsapling_frac  # if filtering or downsampling is needed, samtools view is required
 
-
     command <<<
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -103,6 +102,7 @@ task Demux {
             --input=- \
             --output-dir=~{demux_output_path} \
             --runid=~{base_file_name} \
+            --channel-id=0 \
             --nthreads ~{cpu_demux} \
             --progress \
             --reference reference_folder/~{reference_fasta_base} \
@@ -115,6 +115,7 @@ task Demux {
             ~{"--umi=" + sorter_params.umi_tag} \
             ~{align_flag} \
             $coverage_intervals_flag \
+            ~{if defined(sorter_params.single_cell_cbc_classifier) then "--cell-barcode-filter-classifier" else ""} ~{default="" sorter_params.single_cell_cbc_classifier} \
             ~{default="" sorter_params.demux_extra_args}
 
         ls -R ~{demux_output_path}/
@@ -147,7 +148,6 @@ task Sorter {
         String base_file_name
         File reference_fasta
         SorterParams sorter_params
-
         File monitoring_script
 
         Int preemptible_tries
@@ -180,11 +180,13 @@ task Sorter {
 
     Int preemptible_tries_final = if (size(demux_output, "GB") < 250) then preemptible_tries else 0
 
+
     String timestamp = "000" # use this to override sorter output timestemp (used only for the output folder structure)
     String sorter_out_dir = "sorter_output"
     String sorter_output_path = "~{sorter_out_dir}/~{base_file_name}-~{timestamp}" 
     String reference_fasta_base = basename(reference_fasta)
     
+   
     # Sorter dir strucutre:
     # <sorter_out_dir>/
     #       <run_id>_<timestamp>/
@@ -231,7 +233,6 @@ task Sorter {
             --nthreads ~{cpu} \
             --timestamp=~{timestamp} \
             --min-thread-parallelism=1 \
-            ~{if defined(sorter_params.single_cell_cbc_classifier) then "--cell-barcode-filter-classifier" else ""} ~{default="" sorter_params.single_cell_cbc_classifier} \
             ~{default="" sorter_params.sort_extra_args} \
             --progress
 

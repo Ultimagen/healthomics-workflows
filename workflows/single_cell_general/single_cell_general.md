@@ -10,60 +10,60 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
 ### Required inputs
 <p name="SingleCell.input_file">
         <b>SingleCell.input_file</b><br />
-        <i>File </i> &mdash; 
-         Input CRAM or BAM file <br /> 
+        <i>File </i> &mdash;
+         Input CRAM or BAM file <br />
 </p>
 <p name="SingleCell.base_file_name">
         <b>SingleCell.base_file_name</b><br />
-        <i>String </i> &mdash; 
-         Base file name for output files. The output files will be named <tt>[base_file_name]*.fastq.gz</tt> <br /> 
+        <i>String </i> &mdash;
+         Base file name for output files. The output files will be named <tt>[base_file_name]*.fastq.gz</tt> <br />
 </p>
 <p name="SingleCell.steps">
         <b>SingleCell.steps</b><br />
-        <i>TrimAlignSortSteps </i> &mdash; 
-         The steps to run in the workflow (trim+sort) <br /> 
+        <i>TrimAlignSortSteps </i> &mdash;
+         The steps to run in the workflow (trim+sort) <br />
 </p>
 <p name="SingleCell.ref_fastas_cram">
         <b>SingleCell.ref_fastas_cram</b><br />
-        <i>Array[File] </i> &mdash; 
-         Reference fasta files for the CRAM file <br /> 
+        <i>Array[File] </i> &mdash;
+         Reference fasta files for the CRAM file <br />
 </p>
 <p name="SingleCell.references">
         <b>SingleCell.references</b><br />
-        <i>References </i> &mdash; 
-         References for the workflow <br /> 
+        <i>References </i> &mdash;
+         References for the workflow <br />
 </p>
 <p name="SingleCell.insert_rg">
         <b>SingleCell.insert_rg</b><br />
-        <i>String </i> &mdash; 
-         Read group name for the insert reads, e.g. S1_L001_R2_001 <br /> 
+        <i>String </i> &mdash;
+         Read group name for the insert reads, e.g. S1_L001_R2_001 <br />
 </p>
 <p name="SingleCell.barcode_rg">
         <b>SingleCell.barcode_rg</b><br />
-        <i>String </i> &mdash; 
-         Read group name for the barcode reads, e.g. S1_L001_R1_001 <br /> 
+        <i>String </i> &mdash;
+         Read group name for the barcode reads, e.g. S1_L001_R1_001 <br />
 </p>
 <p name="SingleCell.qc_thresholds">
         <b>SingleCell.qc_thresholds</b><br />
-        <i>SingleCellQcThresholds </i> &mdash; 
-         Thresholds for the single cell qc <br /> 
+        <i>SingleCellQcThresholds </i> &mdash;
+         Thresholds for the single cell qc <br />
 </p>
 
 ### Required parameters
 <p name="SingleCell.no_address">
         <b>SingleCell.no_address</b><br />
-        <i>Boolean </i> &mdash; 
-         Should the instances used be without external IP address. Allows for more parallelization, but not supported with Dockerhub dockers Default: true <br /> 
+        <i>Boolean </i> &mdash;
+         Should the instances used be without external IP address. Allows for more parallelization, but not supported with Dockerhub dockers Default: true <br />
 </p>
 <p name="SingleCell.preemptible_tries">
         <b>SingleCell.preemptible_tries</b><br />
-        <i>Int </i> &mdash; 
-         Number of preemptible tries <br /> 
+        <i>Int </i> &mdash;
+         Number of preemptible tries <br />
 </p>
 <p name="SingleCell.cpu">
         <b>SingleCell.cpu</b><br />
-        <i>Int </i> &mdash; 
-         Number of CPUs to use (for Trimmer, conversion to fastq, and alignment tasks) <br /> 
+        <i>Int </i> &mdash;
+         Number of CPUs to use (for Trimmer, conversion to fastq, and alignment tasks) <br />
 </p>
 
 ### Optional inputs
@@ -108,65 +108,65 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
 ### Optional inputs
 <p name="SingleCell.create_md5_checksum_outputs">
         <b>SingleCell.create_md5_checksum_outputs</b><br />
-        <i>Boolean </i> &mdash; 
-         Create md5 checksum for requested output files <br /> 
+        <i>Boolean </i> &mdash;
+         Create md5 checksum for requested output files <br />
 </p>
 <p name="SingleCell.TrimAlignSort.aligner">
         <b>SingleCell.TrimAlignSort.aligner</b><br />
-        <i>String? </i> &mdash; 
-         Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected. <br /> 
+        <i>String? </i> &mdash;
+         Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected. <br />
 </p>
 <p name="SingleCell.TrimAlignSort.ua_parameters">
         <b>SingleCell.TrimAlignSort.ua_parameters</b><br />
-        <i>UaParameters? </i> &mdash; 
-         Parameters for the UA aligner. Mandatory if aligner is ua. <br /> 
+        <i>UaParameters? </i> &mdash;
+         Parameters for the UA aligner. Mandatory if aligner is ua. <br />
 </p>
 <p name="SingleCell.TrimAlignSort.ua_meth_parameters">
         <b>SingleCell.TrimAlignSort.ua_meth_parameters</b><br />
-        <i>UaMethParameters? </i> &mdash; 
-         Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br /> 
+        <i>UaMethParameters? </i> &mdash;
+         Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br />
 </p>
 <p name="SingleCell.TrimAlignSort.star_genome">
         <b>SingleCell.TrimAlignSort.star_genome</b><br />
-        <i>File? </i> &mdash; 
-         Star genome file. If aligner is star, supllay either star genome file or generate new genome index. <br /> 
+        <i>File? </i> &mdash;
+         Star genome file. If aligner is star, supllay either star genome file or generate new genome index. <br />
 </p>
 <p name="SingleCell.TrimAlignSort.star_genome_generate_params">
         <b>SingleCell.TrimAlignSort.star_genome_generate_params</b><br />
-        <i>StarGenomeGenerateParams? </i> &mdash; 
-         Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file. <br /> 
+        <i>StarGenomeGenerateParams? </i> &mdash;
+         Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file. <br />
 </p>
 <p name="SingleCell.TrimAlignSort.star_align_extra_args">
         <b>SingleCell.TrimAlignSort.star_align_extra_args</b><br />
-        <i>String? </i> &mdash; 
-         Extra arguments for the STAR aligner. <br /> 
+        <i>String? </i> &mdash;
+         Extra arguments for the STAR aligner. <br />
 </p>
 <p name="SingleCell.TrimAlignSort.star_align_gtf_override">
         <b>SingleCell.TrimAlignSort.star_align_gtf_override</b><br />
-        <i>File? </i> &mdash; 
-         GTF file to be used for STAR aligner. <br /> 
+        <i>File? </i> &mdash;
+         GTF file to be used for STAR aligner. <br />
 </p>
 <p name="SingleCell.TrimAlignSort.create_md5_checksum_outputs">
         <b>SingleCell.TrimAlignSort.create_md5_checksum_outputs</b><br />
-        <i>Boolean </i> &mdash; 
-         Create md5 checksum for requested output files <br /> 
+        <i>Boolean </i> &mdash;
+         Create md5 checksum for requested output files <br />
 </p>
 <p name="SingleCell.StarAlignSubSample.genome_generate_params">
         <b>SingleCell.StarAlignSubSample.genome_generate_params</b><br />
-        <i>StarGenomeGenerateParams? </i> &mdash; 
-         Parameters for generating the reference genome. <br /> 
+        <i>StarGenomeGenerateParams? </i> &mdash;
+         Parameters for generating the reference genome. <br />
 </p>
 <p name="SingleCell.StarAlignSubSample.star_align_gtf_override">
         <b>SingleCell.StarAlignSubSample.star_align_gtf_override</b><br />
-        <i>File? </i> &mdash; 
-         Override the GTF file used for STAR alignment. <br /> 
+        <i>File? </i> &mdash;
+         Override the GTF file used for STAR alignment. <br />
 </p>
 
 ### Optional parameters
 <p name="SingleCell.star_align_extra_args">
         <b>SingleCell.star_align_extra_args</b><br />
-        <i>String? </i> &mdash; 
-         Extra parameters to pass to the StarAlignment task.  See input template <br /> 
+        <i>String? </i> &mdash;
+         Extra parameters to pass to the StarAlignment task.  See input template <br />
 </p>
 </details>
 

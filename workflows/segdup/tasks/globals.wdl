@@ -20,7 +20,7 @@ workflow Globals {
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "segdup_docker": "ultimagenomics/parascopy:1.2.0_f42c9e4",
-        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.18.0"
+        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.20.0"
 }
 }
 

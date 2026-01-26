@@ -45,6 +45,9 @@ task StarSolo {
         mkdir ~{genome_dir}
         unzip ~{star_solo_params.genome} -d ~{genome_dir}
 
+        # Pre-create Solo output directory to ensure proper permissions
+        mkdir -p "~{base_file_name}.Solo.out/Gene/filtered/"
+
         STAR \
             --readFilesIn ~{insert_fastq} ~{barcode_fastq} \
             --readFilesCommand zcat \
@@ -64,9 +67,9 @@ task StarSolo {
             ~{"--sjdbGTFfile " + star_solo_params.gtf_override} \
             ~{default="" star_solo_params.extra_args} \
             --outSAMtype BAM Unsorted \
-            --outFileNamePrefix ~{base_file_name}. 
-    
-        mkdir -p "~{base_file_name}.Solo.out/Gene/filtered/"
+            --outFileNamePrefix ~{base_file_name}.
+
+        # Ensure filtered output files exist (STAR may not create them in all cases)
         touch "~{base_file_name}.Solo.out/Gene/filtered/barcodes.tsv"
         touch "~{base_file_name}.Solo.out/Gene/filtered/features.tsv"
         touch "~{base_file_name}.Solo.out/Gene/filtered/matrix.mtx"

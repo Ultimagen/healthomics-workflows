@@ -1,0 +1,62 @@
+{
+    "STRGenotyper.base_file_name": {
+        "description": "Prefix for name of all output files",
+        "optional": false
+    },
+    "STRGenotyper.cram_file": {
+        "description": "Input CRAM file for STR genotyping",
+        "optional": false
+    },
+    "STRGenotyper.cram_index": {
+        "description": "CRAM index file (.crai)",
+        "optional": false
+    },
+    "STRGenotyper.max_repeat": {
+        "description": "Maximum number of repeat units to include in auxiliary reference sequences",
+        "optional": true
+    },
+    "STRGenotyper.memory_gb_override": {
+        "description": "Optional memory allocation override in GB (default: 16)",
+        "optional": true
+    },
+    "STRGenotyper.min_repeat": {
+        "description": "Minimum number of repeat units to include in auxiliary reference sequences",
+        "optional": true
+    },
+    "STRGenotyper.min_score_ratio": {
+        "description": "Minimum ratio of alignment score to the theoretical maximum score (read_length * match_score). Alignments below this threshold are filtered out. Range: 0.0-1.0, where 1.0 requires perfect alignment.",
+        "optional": true
+    },
+    "STRGenotyper.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "STRGenotyper.no_address": {
+        "description": "no_address",
+        "optional": true
+    },
+    "STRGenotyper.preemptible_tries": {
+        "description": "preemptible_tries",
+        "optional": true
+    },
+    "STRGenotyper.ref_padding": {
+        "description": "Number of bases to extend around the STR repeat region when building auxiliary references for alignment. Larger values provide more flanking sequence context for accurate alignment.",
+        "optional": true
+    },
+    "STRGenotyper.references": {
+        "description": "Reference genome files (fasta, fasta.fai, dict) as References struct",
+        "optional": false
+    },
+    "STRGenotyper.spanning_flank_bases": {
+        "description": "Minimum number of bases that must align on each side of the STR repeat region for a read to be considered 'spanning' the locus",
+        "optional": true
+    },
+    "STRGenotyper.threads": {
+        "description": "Number of threads for parallel processing",
+        "optional": true
+    },
+    "STRGenotyper.variant_catalog": {
+        "description": "JSON file containing STR variant catalog with locus definitions",
+        "optional": false
+    }
+}

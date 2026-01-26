@@ -7,7 +7,6 @@ struct GlobalVariables {
   String ugbio_core_docker
   String ugbio_cnv_docker
   String ugbio_filtering_docker
-  String ug_jalign_docker
 }
 workflow Globals {
   input {
@@ -16,9 +15,8 @@ workflow Globals {
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ugbio_core_docker": "ultimagenomics/ugbio_core:1.18.0",
-        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.18.0",
-        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.18.0",
-        "ug_jalign_docker": "ultimagenomics/jalign:1.3.0"
+        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.20.0",
+        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.20.0"
 }
 }
 

@@ -25,7 +25,7 @@
     },
     "SomaticCNVCallingControlFREEC.cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",
-        "optional": false
+        "optional": true
     },
     "SomaticCNVCallingControlFREEC.collect_coverage_region": {
         "description": "Genomic region to limit the CNV calling to",

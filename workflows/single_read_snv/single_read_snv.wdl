@@ -41,13 +41,12 @@ input {
   Array[File] input_cram_bam_index_list
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.26.1"
+  String pipeline_version = "1.27.2"
   References references
 
   FeatureMapParams featuremap_params
   SingleReadSNVParams? single_read_snv_params
   Array[String] features
-  Int? featuremap_scatter_count_override
 
   # snv quality model include/exclude regions
   File training_regions_interval_list
@@ -62,8 +61,10 @@ input {
 
   Boolean raise_exceptions_in_report
 
-  Int? prepare_featuremap_for_training_gb
-  Int? training_memory_gb
+  Int? override_memory_gb_CreateFeatureMap
+  Int? override_memory_gb_PrepareRawFeatureMap
+  Int? override_memory_gb_PrepareRandomSampleFeatureMap
+  Int? override_memory_gb_TrainModel
   Int? preemptible_tries
   Boolean? no_address_override
   String? cloud_provider_override
@@ -109,14 +110,15 @@ meta {
         "no_address_override",
         "preemptible_tries",
         "monitoring_script_input",
-        "prepare_featuremap_for_training_gb",
-        "featuremap_scatter_count_override",
+        "override_memory_gb_PrepareRawFeatureMap",
+        "override_memory_gb_PrepareRandomSampleFeatureMap",
+        "override_memory_gb_CreateFeatureMap",
+        "override_memory_gb_TrainModel",
         "CreateTrainingRegionsBed.disk_size",
         "CreateTrainingRegionsBed.cpus",
         "TrainModel.cpus",
         "TrainModel.memory_gb",
         "TrainModel.disk_size",
-        "training_memory_gb",
         "Inference.cpus",
         "Inference.memory_gb",
         "Inference.disk_size",
@@ -408,6 +410,7 @@ parameter_meta {
       docker = global.featuremap_docker,
       preemptible_tries = preemptibles,
       monitoring_script = monitoring_script,
+      memory_gb = select_first([override_memory_gb_CreateFeatureMap, 2]),
   }
 
   Boolean sufficient_coverage_to_train_model = (mean_coverage_used >= min_coverage_to_train_model)
@@ -417,10 +420,8 @@ parameter_meta {
     # Prepare the raw featuremap for training
     SingleReadSNVParams single_read_snv_params_ = select_first([single_read_snv_params])
     # Dynamically assign memory for PrepareRawFeatureMap by mean_coverage
-    # Int memory_gb_PrepareRawFeatureMap_default = if (mean_coverage < 40.0) then 16 else if (mean_coverage < 80.0) then 128 else 256
-    # Int memory_gb_PrepareRawFeatureMap        = select_first([prepare_featuremap_for_training_gb,
-    #                                                           memory_gb_PrepareRawFeatureMap_default])
-    Int memory_gb_PrepareRawFeatureMap = select_first([prepare_featuremap_for_training_gb, 128])
+    Int memory_gb_PrepareRawFeatureMap_default = if (mean_coverage_used < 50.0) then 128 else 256
+    Int memory_gb_PrepareRawFeatureMap = select_first([override_memory_gb_PrepareRawFeatureMap, memory_gb_PrepareRawFeatureMap_default])
     Int cpu_PrepareRawFeatureMap_ = ceil(memory_gb_PrepareRawFeatureMap / 2)
     Int cpu_PrepareRawFeatureMap = if (cpu_PrepareRawFeatureMap_ > 64) then 64 else cpu_PrepareRawFeatureMap_
 
@@ -443,7 +444,7 @@ parameter_meta {
     }
 
     # Prepare the random sample featuremap for training
-    Int memory_gb_PrepareRandomSampleFeatureMap = select_first([prepare_featuremap_for_training_gb, 16])
+    Int memory_gb_PrepareRandomSampleFeatureMap = select_first([override_memory_gb_PrepareRandomSampleFeatureMap, 16])
     Int cpu_PrepareRandomSampleFeatureMap_ = ceil(memory_gb_PrepareRandomSampleFeatureMap / 2)
     Int cpu_PrepareRandomSampleFeatureMap = if (cpu_PrepareRandomSampleFeatureMap_ > 8) then 8 else cpu_PrepareRandomSampleFeatureMap_
 
@@ -486,7 +487,7 @@ parameter_meta {
             monitoring_script = monitoring_script
     }
 
-    Int memory_gb_TrainModel = select_first([training_memory_gb, 32])
+    Int memory_gb_TrainModel = select_first([override_memory_gb_TrainModel, 32])
     call SRSNVTasks.TrainModel {
         input:
             raw_filtered_featuremap_parquet = PrepareRawFeatureMap.filtered_featuremap_parquet,

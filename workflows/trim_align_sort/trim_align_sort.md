@@ -6,85 +6,85 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 ### Required inputs
 <p name="TrimAlignSort.input_cram_bam_list">
         <b>TrimAlignSort.input_cram_bam_list</b><br />
-        <i>Array[File] </i> &mdash; 
-         List of input cram or bam files to be processed. <br /> 
+        <i>Array[File] </i> &mdash;
+         List of input cram or bam files to be processed. <br />
 </p>
 <p name="TrimAlignSort.ref_fastas_cram">
         <b>TrimAlignSort.ref_fastas_cram</b><br />
-        <i>Array[File] </i> &mdash; 
-         List of references for CreateReferenceCache task. <br /> 
+        <i>Array[File] </i> &mdash;
+         List of references for CreateReferenceCache task. <br />
 </p>
 <p name="TrimAlignSort.base_file_name">
         <b>TrimAlignSort.base_file_name</b><br />
-        <i>String </i> &mdash; 
-         Base name for the output files. <br /> 
+        <i>String </i> &mdash;
+         Base name for the output files. <br />
 </p>
 <p name="TrimAlignSort.steps">
         <b>TrimAlignSort.steps</b><br />
-        <i>TrimAlignSortSteps </i> &mdash; 
-         Steps to be executed in the pipeline.Options are: trim, align, sort <br /> 
+        <i>TrimAlignSortSteps </i> &mdash;
+         Steps to be executed in the pipeline.Options are: trim, align, sort <br />
 </p>
 <p name="TrimAlignSort.references">
         <b>TrimAlignSort.references</b><br />
-        <i>References </i> &mdash; 
-         References for merging inputs into one file, alignment, and sorting. <br /> 
+        <i>References </i> &mdash;
+         References for merging inputs into one file, alignment, and sorting. <br />
 </p>
 <p name="TrimAlignSort.cpu">
         <b>TrimAlignSort.cpu</b><br />
-        <i>Int </i> &mdash; 
-         Number of cpus to be used for the tasks. <br /> 
+        <i>Int </i> &mdash;
+         Number of cpus to be used for the tasks. <br />
 </p>
 
 ### Optional inputs
 <p name="TrimAlignSort.trimmer_parameters">
         <b>TrimAlignSort.trimmer_parameters</b><br />
-        <i>TrimmerParameters? </i> &mdash; 
-         Parameters for the trimmer task. Mandatory if trim step is selected. <br /> 
+        <i>TrimmerParameters? </i> &mdash;
+         Parameters for the trimmer task. Mandatory if trim step is selected. <br />
 </p>
 <p name="TrimAlignSort.aligner">
         <b>TrimAlignSort.aligner</b><br />
-        <i>String? </i> &mdash; 
-         Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected. <br /> 
+        <i>String? </i> &mdash;
+         Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected. <br />
 </p>
 <p name="TrimAlignSort.ua_parameters">
         <b>TrimAlignSort.ua_parameters</b><br />
-        <i>UaParameters? </i> &mdash; 
-         Parameters for the UA aligner. Mandatory if aligner is ua. <br /> 
+        <i>UaParameters? </i> &mdash;
+         Parameters for the UA aligner. Mandatory if aligner is ua. <br />
 </p>
 <p name="TrimAlignSort.ua_meth_parameters">
         <b>TrimAlignSort.ua_meth_parameters</b><br />
-        <i>UaMethParameters? </i> &mdash; 
-         Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br /> 
+        <i>UaMethParameters? </i> &mdash;
+         Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br />
 </p>
 <p name="TrimAlignSort.star_genome">
         <b>TrimAlignSort.star_genome</b><br />
-        <i>File? </i> &mdash; 
-         Star genome file. If aligner is star, supllay either star genome file or generate new genome index. <br /> 
+        <i>File? </i> &mdash;
+         Star genome file. If aligner is star, supllay either star genome file or generate new genome index. <br />
 </p>
 <p name="TrimAlignSort.star_genome_generate_params">
         <b>TrimAlignSort.star_genome_generate_params</b><br />
-        <i>StarGenomeGenerateParams? </i> &mdash; 
-         Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file. <br /> 
+        <i>StarGenomeGenerateParams? </i> &mdash;
+         Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file. <br />
 </p>
 <p name="TrimAlignSort.star_align_extra_args">
         <b>TrimAlignSort.star_align_extra_args</b><br />
-        <i>String? </i> &mdash; 
-         Extra arguments for the STAR aligner. <br /> 
+        <i>String? </i> &mdash;
+         Extra arguments for the STAR aligner. <br />
 </p>
 <p name="TrimAlignSort.star_align_gtf_override">
         <b>TrimAlignSort.star_align_gtf_override</b><br />
-        <i>File? </i> &mdash; 
-         GTF file to be used for STAR aligner. <br /> 
+        <i>File? </i> &mdash;
+         GTF file to be used for STAR aligner. <br />
 </p>
 <p name="TrimAlignSort.sorter_params">
         <b>TrimAlignSort.sorter_params</b><br />
-        <i>SorterParams? </i> &mdash; 
-         Parameters for the sorter task. Mandatory if sort step is selected. <br /> 
+        <i>SorterParams? </i> &mdash;
+         Parameters for the sorter task. Mandatory if sort step is selected. <br />
 </p>
 <p name="TrimAlignSort.create_md5_checksum_outputs">
         <b>TrimAlignSort.create_md5_checksum_outputs</b><br />
-        <i>Boolean </i> &mdash; 
-         Create md5 checksum for requested output files <br /> 
+        <i>Boolean </i> &mdash;
+         Create md5 checksum for requested output files <br />
 </p>
 </details>
 

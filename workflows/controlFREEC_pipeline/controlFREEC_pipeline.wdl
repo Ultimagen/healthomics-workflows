@@ -27,12 +27,12 @@ version 1.0
 # 1.9.2 Aded GEM mappability file
 import "tasks/globals.wdl" as Globals
 import "tasks/general_tasks.wdl" as UGGeneralTasks
-import "tasks/qc_tasks.wdl" as UGQCTasks
 import "tasks/pileup_tasks.wdl" as UGPileupTasks
+import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.26.1" # !UnusedDeclaration
+        String pipeline_version = "1.27.2" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -93,7 +93,7 @@ workflow SomaticCNVCallingControlFREEC{
         Float? CNV_loss_cutoff_override
         Int min_cnv_length
         Float intersection_cutoff
-        File cnv_lcr_file
+        File? cnv_lcr_file
 
         # Used for running on other clouds (aws)
         File? monitoring_script_input
@@ -138,23 +138,6 @@ workflow SomaticCNVCallingControlFREEC{
         #@wv defined(CNV_loss_cutoff_override) -> CNV_loss_cutoff_override < 1
 
     }
-    Boolean run_createMpileup = !(defined(normal_mpileup_override))
-    Boolean run_bedgraph_to_cpn = !(defined(normal_coverage_cpn))
-    Boolean run_collect_coverage = length(select_all([normal_coverage_cpn,normal_sorter_zipped_bed_graph])) == 0
-    Array[String] collect_coverage_region_for_cov_collection = select_first([collect_coverage_region,[""]])
-    
-
-    Int mapq = select_first([mapq_override,1])
-    Int preemptible_tries = select_first([preemptible_tries_override, 1])
-    Boolean no_address = select_first([no_address_override, true ])
-    File chrLenFile = select_first([chrLenFile_override,references.ref_fasta_index])
-    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
-    String input_tumor_cram_bam_file_name = input_tumor_cram_bam_file[0]
-    String input_normal_cram_bam_file_name = input_normal_cram_bam_file[0]
-    Int maxThreads = select_first([max_threads_override,8])
-    Float CNV_gain_cutoff = select_first([CNV_gain_cutoff_override,1.03])
-    Float CNV_loss_cutoff = select_first([CNV_gain_cutoff_override,0.97])
-    Boolean output_all_controlFREEC_outputs =  select_first([output_all_controlFREEC_outputs_override,false])
 
     meta {
         description: "Runs single sample somatic CNV calling workflow based on [ControlFREEC](https://boevalab.inf.ethz.ch/FREEC/).\n\nCNVs are called based on both coverage and allele frequencies in the tumor and the matched germline sample.\n\nThe pipeline will gather coverage and allele frequencies, run controlFREEC and filter called CNVs by length and low confidence regions.\n\ncoverage will be calculted based on the input cram/bam. Alternativley, it can recieve coverage input as one of:bedGraph, cpn formats.\n\nAllele frequencies will be calculated based on the input cram/bam and a given vcf file to specify locations. Alternativley, it can recieve precalculated frequencies as mpileup format.\n\nPipeline has an option to run in High-Sensitivity-Mode which can be used for low tumor purity samples. in this case segmentation results will be outputed and filtered by their average fold change.\n\nfor High-Sensitivity-Mode fold changes for gain and loss calls can be defined by the user. (default cutoff values are [gain,loss]=[1.03,0.97])\n\nThe pipeline outputs: \n\n&nbsp;&nbsp;- calculated coverage for tumor and normal samples\n\n&nbsp;&nbsp;- calculated mpileup for tumor and normal samples\n\n&nbsp;&nbsp;- called CNVs + filtered called CNVs\n\n&nbsp;&nbsp;- controlFREEC run-summary\n\n&nbsp;&nbsp;-coverage plot that shows normalized (log scale) coverage along the genome for the germline and tumor samples.\n\n&nbsp;&nbsp;-duplications and deletions figure - showing gains and losses along the genome.\n\n&nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.\n\n<b>When Running in AWS HealthOmics this pipeline should run with</b> [static storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)\n\n<u>available templeates:</u>\n\n&nbsp;&nbsp;- controlFREEC_pipeline_bedGraph_input_template.json - use in case you have both .cram and _1.bedgraph input files.\n\n&nbsp;&nbsp;- controlFREEC_pipeline_bedGraph_and_mpileup_input_template.json - use in case you have both _1.bedgraph and precalculated .mpileup input files.\n\n&nbsp;&nbsp;- controlFREEC_pipeline_template.json - use in case you have only .cram input files.\n\n&nbsp;&nbsp;- controlFREEC_pipeline_high_sensitivity_mode_template.json - used for low tumor purity samples.\n\n"
@@ -171,11 +154,7 @@ workflow SomaticCNVCallingControlFREEC{
                 "normal_createMpileup_scatter.min_BaseQ",
                 "TumorCollectIntervalCoverages.disk_size",
                 "NormalCollectIntervalCoverages.disk_size",
-                "Globals.glob",
-                "Sentieon.Globals.glob",
-                "AnnotateVCF.Globals.glob",
-                "SingleSampleQC.Globals.glob",
-                "VariantCallingEvaluation.Globals.glob"
+                "Global.glob"
         ]}
     }
     parameter_meta {
@@ -377,7 +356,7 @@ workflow SomaticCNVCallingControlFREEC{
         cnv_lcr_file: {
             help: "UG-CNV-LCR bed file",
             type: "File",
-            category: "param_required"
+            category: "param_optional"
         }
         preemptible_tries_override: {
             help: "Number of preemptible tries",
@@ -496,8 +475,26 @@ workflow SomaticCNVCallingControlFREEC{
          }
     }
 
-    call Globals.Globals as Globals
-    GlobalVariables global = Globals.global_dockers
+    call Globals.Globals as Global
+    GlobalVariables global = Global.global_dockers
+
+    Boolean run_createMpileup = !(defined(normal_mpileup_override))
+    Boolean run_bedgraph_to_cpn = !(defined(normal_coverage_cpn))
+    Boolean run_collect_coverage = length(select_all([normal_coverage_cpn,normal_sorter_zipped_bed_graph])) == 0
+    Array[String] collect_coverage_region_for_cov_collection = select_first([collect_coverage_region,[""]])
+    
+
+    Int mapq = select_first([mapq_override,1])
+    Int preemptible_tries = select_first([preemptible_tries_override, 1])
+    Boolean no_address = select_first([no_address_override, true ])
+    File chrLenFile = select_first([chrLenFile_override,references.ref_fasta_index])
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script]) #!FileCorecion
+    String input_tumor_cram_bam_file_name = input_tumor_cram_bam_file[0] #!FileCoercion
+    String input_normal_cram_bam_file_name = input_normal_cram_bam_file[0] #!FileCoercion
+    Int maxThreads = select_first([max_threads_override,8])
+    Float CNV_gain_cutoff = select_first([CNV_gain_cutoff_override,1.03])
+    Float CNV_loss_cutoff = select_first([CNV_loss_cutoff_override,0.97])
+    Boolean output_all_controlFREEC_outputs =  select_first([output_all_controlFREEC_outputs_override,false])
 
     if(run_createMpileup){
         call UGGeneralTasks.ScatterIntervalList as ScatterIntervalList{
@@ -690,17 +687,43 @@ workflow SomaticCNVCallingControlFREEC{
         monitoring_script = monitoring_script
         }
 
+    call ControlFREECCnvsVcf {
+        input:
+            sample_name = base_file_name,
+            ref_genome_file = references.ref_fasta_index,
+            CNV_calls = runControlFREEC.tumor_CNVs,
+            segments_file = runControlFREEC.segments_file,
+            gain_cutoff = CNV_gain_cutoff,
+            loss_cutoff = CNV_loss_cutoff,
+            high_sensitivity_mode = high_sensitivity_mode,
+            min_cnv_length = min_cnv_length,
+            intersection_cutoff = intersection_cutoff,
+            cnv_lcr_file = cnv_lcr_file,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
+    }
+
+    call CnvTasks.CnvVcfToBed {
+        input:
+            input_cnv_vcf = ControlFREECCnvsVcf.annotated_cnv_vcf,
+            base_file_name = base_file_name,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
+    }
+
     call FilterControlFREECCnvs {
         input:
         sample_name = base_file_name,
-        CNV_calls = runControlFREEC.tumor_CNVs,
+        annotated_cnv_calls_bed = CnvVcfToBed.output_cnv_bed,
+        annotated_cnv_calls_vcf = ControlFREECCnvsVcf.annotated_cnv_vcf,
         segments_file = runControlFREEC.segments_file,
         gain_cutoff = CNV_gain_cutoff,
         loss_cutoff = CNV_loss_cutoff,
         high_sensitivity_mode = high_sensitivity_mode,
-        min_cnv_length = min_cnv_length,
-        intersection_cutoff = intersection_cutoff,
-        cnv_lcr_file = cnv_lcr_file,
         tumor_coverage_cpn=tumor_cpn,
         normal_coverage_cpn=normal_cpn,
         ploidy = runControlFREEC.ploidy_value,
@@ -730,7 +753,7 @@ workflow SomaticCNVCallingControlFREEC{
          File tumor_segments = runControlFREEC.segments_file
          File controlFREEC_info = runControlFREEC.controlFREEC_info
          File tumor_ratio_bedgraph = runControlFREEC.tumor_ratio_bedgraph
-         File tumor_CNVs_annotated_bed_file = FilterControlFREECCnvs.sample_cnvs_annotated_bed
+         File tumor_CNVs_annotated_bed_file = CnvVcfToBed.output_cnv_bed
          File tumor_CNVs_filtered_bed_file =  FilterControlFREECCnvs.sample_cnvs_filtered_bed
          File coverage_plot = FilterControlFREECCnvs.coverage_plot
          File dup_del_plot = FilterControlFREECCnvs.dup_del_plot
@@ -765,8 +788,7 @@ set -eo pipefail
 echo ~{out_file_name}
 echo -e "~{sep="\n" files}"
 echo -e "~{sep="\n" files}" > files.txt
-cat ~{genome_file} | cut -f1
-cat ~{genome_file} | cut -f1 > chroms_order.txt
+cut -f1 ~{genome_file} > chroms_order.txt
 python <<CODE
 import pandas as pd
 import os
@@ -798,7 +820,6 @@ task BigWigToBedGraph{
     input{
         File bigwig_file
         File genome_windows
-        File genome_file
         String docker
         Boolean no_address
         Int preemptible_tries
@@ -856,33 +877,31 @@ task BedGraphToCpn{
             echo $bedgraph
             file_basename=$(basename $bedgraph)
             echo "file_basename:"
-            echo $file_basename
+            echo "$file_basename"
 
             if [[ $bedgraph =~ \.gz$ ]];
             then
-                gzip -d -c $bedgraph > $file_basename.bedgraph;
+                gzip -d -c "$bedgraph" > "$file_basename".bedgraph;
             else
-                cp $bedgraph $file_basename.bedgraph;
+                cp "$bedgraph" "$file_basename".bedgraph;
             fi
 
             ## fetch only relevant chromosomes from bedgraph
             awk '{print $1"\t0\t"$2}' ~{genome_file} > genome_file.bed
-            bedtools intersect -a $file_basename.bedgraph -b genome_file.bed -wa > $file_basename.relevant_chrs.bedgraph
+            bedtools intersect -a "$file_basename.bedgraph" -b genome_file.bed -wa > "$file_basename.relevant_chrs.bedgraph"
 
-            bedtools map -g ~{genome_file} -a ~{genome_windows} -b $file_basename.relevant_chrs.bedgraph -c 4 -o mean | \
+            bedtools map -g ~{genome_file} -a ~{genome_windows} -b "$file_basename.relevant_chrs.bedgraph" -c 4 -o mean | \
             awk '{if($4=="."){print $1"\t"$2"\t"$3"\t"0}else{print $1"\t"$2"\t"$3"\t"$4}}' | \
-            grep -v "chrY" > $file_basename.$COUNTER.bedgraph.mean;
-            echo $file_basename.$COUNTER.bedgraph.mean
-            COUNTER=$[$COUNTER +1]
+            grep -v "chrY" > "$file_basename.$COUNTER.bedgraph.mean"
+            echo "$file_basename.$COUNTER.bedgraph.mean"            
+            COUNTER=$((COUNTER + 1))
         done
 
         echo "finished unzipping and converting bedgraph to bedgraph.mean"
-        printf "Number of files in array: %d\n" $i
-        ls -lrta
 
         if ~{multiple_bedgraph_files}
         then
-            bedtools unionbedg -i *.bedgraph.mean | \
+            bedtools unionbedg -i ./*.bedgraph.mean | \
             awk -v OFS="\t" -F "\t" 'NR>0{sum=0; for(i=4; i<=NF; i++) sum += $i; NF++; $NF=sum } 1' | \
             awk '{print $1"\t"$2"\t"$3"\t"$NF}' > ~{base_file_name}.union.bedgraph
         else
@@ -891,8 +910,7 @@ task BedGraphToCpn{
         echo "finished unionbedg"
         ls -lrta
 
-        cat ~{base_file_name}.union.bedgraph | \
-        sed 's/^chr//' > \
+        sed 's/^chr//' ~{base_file_name}.union.bedgraph > \
         ~{base_file_name}.cpn
         echo "finished converting to cpn"
         ls -lrta
@@ -925,7 +943,8 @@ task BedGraphToCpn{
         File monitoring_script
     }
     Int disk_size = ceil(3 * size(input_cram_bam,"GB") + 10)
-    String out_bedgraph = basename(input_cram_bam) + "." + region + "." + min_mapq +".bedGraph"
+    
+    String out_bedgraph = "~{basename(input_cram_bam)}.~{region}.~{min_mapq}.bedGraph"
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -992,7 +1011,7 @@ task runControlFREEC{
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -exo pipefail
 
         touch ~{sample_name}.config.txt
         touch ~{base_input_normal}_BAF.txt
@@ -1052,7 +1071,7 @@ task runControlFREEC{
         #run controlFREEC
         /freec -conf ~{sample_name}.config.txt
 
-        cat ~{base_input_tumor}_info.txt | grep "Output_Ploidy" | cut -f2 > ploidy_value.txt
+        grep "Output_Ploidy" ~{base_input_tumor}_info.txt | cut -f2 > ploidy_value.txt
     >>>
     runtime {
         preemptible: preemptible_tries
@@ -1079,21 +1098,18 @@ task runControlFREEC{
     }
 }
 
-task FilterControlFREECCnvs {
+task  ControlFREECCnvsVcf{
     input {
         String sample_name
         File segments_file
         File CNV_calls
+        File ref_genome_file
         Float gain_cutoff
         Float loss_cutoff
         Int min_cnv_length
         Float intersection_cutoff
-        File cnv_lcr_file
-        File tumor_coverage_cpn
-        File normal_coverage_cpn
-        Int ploidy
+        File? cnv_lcr_file
         Boolean high_sensitivity_mode
-        File tumor_mpileup
         String docker
         File monitoring_script
         Boolean no_address
@@ -1102,14 +1118,10 @@ task FilterControlFREECCnvs {
 
     Float CNV_calls_file_size = size(CNV_calls, "GB")
     Float segments_file_size = size(segments_file, "GB")
-    Float cnv_lcr_file_size = size(cnv_lcr_file, "GB")
     Float additional_disk = 5
-    Int disk_size = ceil(CNV_calls_file_size + segments_file_size + cnv_lcr_file_size + additional_disk)
-    String out_annotated_cnv_file = basename(segments_file)+"_CNVs.annotate.bed"
+    Int disk_size = ceil(CNV_calls_file_size + segments_file_size + additional_disk)
     String out_cnvs_file = basename(segments_file)+"_CNVs.bed"
-    String out_filtered_cnv_file = basename(segments_file)+"_CNVs.filter.bed"
-    String mpileup_basename = basename(tumor_mpileup)
-
+    String out_annotated_cnvs_vcf = basename(segments_file)+"_CNVs.annotate.vcf.gz"
     command <<<
         set -xeo pipefail
 
@@ -1126,25 +1138,73 @@ task FilterControlFREECCnvs {
             sed 's/^/chr/' ~{CNV_calls} | grep -v "neutral" | cut -f1-4 > ~{out_cnvs_file}
         fi
 
-        #annotate cnvs bed file
-        filter_sample_cnvs \
-                --input_bed_file ~{out_cnvs_file} \
-                --intersection_cutoff ~{intersection_cutoff} \
-                --cnv_lcr_file ~{cnv_lcr_file} \
-                --min_cnv_length ~{min_cnv_length} \
-                --out_directory . 
+        process_cnvs \
+            --sample_name ~{sample_name} \
+            --input_bed_file ~{out_cnvs_file} \
+            --intersection_cutoff ~{intersection_cutoff} \
+            --min_cnv_length ~{min_cnv_length} \
+            --out_directory . \
+            --fasta_index_file ~{ref_genome_file} \
+            ~{"--cnv_lcr_file " + cnv_lcr_file}
+    >>>
 
-        grep -v UG-CNV-LCR ~{out_annotated_cnv_file} | grep -v LEN > ~{out_filtered_cnv_file}
+    runtime {
+        preemptible: preemptible_tries
+        memory: "4 GB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+        noAddress: no_address
+        cpu: 1
+    }
+
+    output {
+        File annotated_cnv_vcf = "~{out_annotated_cnvs_vcf}"
+        File annotated_cnv_vcf_index = "~{out_annotated_cnvs_vcf}.tbi"
+    }
+}
+
+task FilterControlFREECCnvs {
+    input {
+        String sample_name
+        File annotated_cnv_calls_bed
+        File annotated_cnv_calls_vcf
+        File segments_file
+        Float gain_cutoff
+        Float loss_cutoff
+        File tumor_coverage_cpn
+        File normal_coverage_cpn
+        Int ploidy
+        Boolean high_sensitivity_mode
+        File tumor_mpileup
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+
+    String out_filtered_cnv_file = basename(segments_file)+"_CNVs.filter.bed"
+    Float CNV_calls_file_size = size(annotated_cnv_calls_bed, "GB") + size(annotated_cnv_calls_vcf, "GB")
+    Float segments_file_size = size(segments_file, "GB")
+    Float additional_disk = 5
+    Int disk_size = ceil(CNV_calls_file_size + segments_file_size + additional_disk)
+    String mpileup_basename = basename(tumor_mpileup)
+
+    command <<< 
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        grep -v -E 'FILTER=(UG-CNV-LCR|LEN)' ~{annotated_cnv_calls_bed} > ~{out_filtered_cnv_file}
+        bcftools view -f "PASS" ~{annotated_cnv_calls_vcf} | bcftools query -f '%CHROM\t%POS0\t%END\t%CopyNumber\n' > helper.bed
         awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{normal_coverage_cpn} | sed 's/^/chr/' > normal_coverage.cpn.bed
         awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{tumor_coverage_cpn} | sed 's/^/chr/' > tumor_coverage.cpn.bed
 
         if ~{high_sensitivity_mode}
         then
-            awk '$4>~{gain_cutoff}' ~{out_filtered_cnv_file} > ~{sample_name}.cnvs.filter.DUP.bed
-            awk '$4<~{loss_cutoff}' ~{out_filtered_cnv_file} > ~{sample_name}.cnvs.filter.DEL.bed
+            awk '$4>~{gain_cutoff}' helper.bed > ~{sample_name}.cnvs.filter.DUP.bed
+            awk '$4<~{loss_cutoff}' helper.bed > ~{sample_name}.cnvs.filter.DEL.bed
         else
-            sed 's/CN//' ~{out_filtered_cnv_file} | awk '$4>~{ploidy}' > ~{sample_name}.cnvs.filter.DUP.bed
-            sed 's/CN//' ~{out_filtered_cnv_file} | awk '$4<~{ploidy}' > ~{sample_name}.cnvs.filter.DEL.bed
+            awk '$4>~{ploidy}' helper.bed > ~{sample_name}.cnvs.filter.DUP.bed
+            awk '$4<~{ploidy}' helper.bed > ~{sample_name}.cnvs.filter.DEL.bed
         fi
 
         mkdir CNV_figures
@@ -1163,7 +1223,7 @@ task FilterControlFREECCnvs {
 
         plot_FREEC_neutral_AF \
             --mpileup ~{tumor_mpileup} \
-            --cnvs_file ~{out_filtered_cnv_file} \
+            --cnvs_file helper.bed \
             --sample_name ~{sample_name} \
             --out_directory CNV_figures
         
@@ -1179,8 +1239,6 @@ task FilterControlFREECCnvs {
         cpu: 2
     }
     output {
-        File sample_cnvs_bed = "~{out_cnvs_file}"
-        File sample_cnvs_annotated_bed = "~{out_annotated_cnv_file}"
         File sample_cnvs_filtered_bed = "~{out_filtered_cnv_file}"
         File coverage_plot = "CNV_figures/~{sample_name}.CNV.coverage.jpeg"
         File dup_del_plot = "CNV_figures/~{sample_name}.dup_del.calls.jpeg"

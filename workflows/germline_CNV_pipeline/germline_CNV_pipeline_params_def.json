@@ -39,10 +39,6 @@
         "description": "Minimum length of duplications to be considered for cn.mops calls. default=10000",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineCNVCalls.jalign_min_mismatches_override": {
-        "description": "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
-        "optional": true
-    },
     "GermlineCNVPipeline.base_file_name": {
         "description": "Sample name",
         "optional": false
@@ -75,12 +71,8 @@
         "description": "Window length on which the read counts will be aggregated, default value is 500",
         "optional": true
     },
-    "GermlineCNVPipeline.cnvpytor_mapq_override": {
-        "description": "Reads mapping-quality cutoff for coverage aggregation used in cnvpytor, default value is 0",
-        "optional": true
-    },
     "GermlineCNVPipeline.cnvpytor_window_length_override": {
-        "description": "Window length on which the read counts will be aggregated, default value is 500",
+        "description": "Window length on which the read counts will be aggregated, default value is [500,2500]",
         "optional": true
     },
     "GermlineCNVPipeline.cohort_reads_count_matrix": {
@@ -119,10 +111,6 @@
         "description": "Input sample BAI/CRAI index file",
         "optional": false
     },
-    "GermlineCNVPipeline.merged_cohort_ploidy_file": {
-        "description": "Merged cohort ploidy file in bed format",
-        "optional": false
-    },
     "GermlineCNVPipeline.monitoring_script_input": {
         "description": "monitoring_script_input",
         "optional": true
@@ -130,6 +118,10 @@
     "GermlineCNVPipeline.no_address_override": {
         "description": "no_address_override",
         "optional": true
+    },
+    "GermlineCNVPipeline.ploidy_file": {
+        "description": "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called",
+        "optional": false
     },
     "GermlineCNVPipeline.preemptible_tries_override": {
         "description": "preemptible_tries_override",

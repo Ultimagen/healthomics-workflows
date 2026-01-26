@@ -1,0 +1,31 @@
+{
+    "SomaticFeaturemap.base_file_name": "TP_HG006_HG003_vs_HG003_5pWG",
+    "SomaticFeaturemap.tumor_featuremap_vcf": "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/HG006_HG003.featuremap.vcf.gz",
+    "SomaticFeaturemap.tumor_featuremap_vcf_index": "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/HG006_HG003.featuremap.vcf.gz.tbi",
+    "SomaticFeaturemap.normal_featuremap_vcf": "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.featuremap.vcf.gz",
+    "SomaticFeaturemap.normal_featuremap_vcf_index": "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.featuremap.vcf.gz.tbi",
+    "SomaticFeaturemap.ref_tandem_repeats": "s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed",
+    "SomaticFeaturemap.input_tumor_cram_bam": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/HG006_HG003.TP.bam"
+    ],
+    "SomaticFeaturemap.input_tumor_cram_bam_index": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/HG006_HG003.TP.bam.bai"
+    ],
+    "SomaticFeaturemap.input_normal_cram_bam": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.cram"
+    ],
+    "SomaticFeaturemap.input_normal_cram_bam_index": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.cram.bai"
+    ],
+    "SomaticFeaturemap.interval_list": "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_featuremap/subsample.5p.interval_list.gz",
+    "SomaticFeaturemap.num_shards": 30,
+    "SomaticFeaturemap.pad_size": 2,
+    "SomaticFeaturemap.min_mapq_for_samtools_mpileup": 0,
+    "SomaticFeaturemap.scatter_intervals_break": 10000000,
+    "SomaticFeaturemap.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.V1.15.json"
+}

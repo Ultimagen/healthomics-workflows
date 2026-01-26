@@ -28,7 +28,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.26.1" # !UnusedDeclaration
+        String pipeline_version = "1.27.2" # !UnusedDeclaration
 
         String base_file_name
 
@@ -38,7 +38,6 @@ workflow CombineGermlineCNVCalls {
         File cnvpytor_cnvs_vcf_index
         Int cushion_size
         Int? distance_threshold_override
-        Int? jalign_min_mismatches_override
         Int? duplication_length_cutoff_for_cnmops_filter_override
 
         # jalign parameters
@@ -111,11 +110,6 @@ workflow CombineGermlineCNVCalls {
         }
         distance_threshold_override: {
             help: "Distance threshold for merging CNV calls. default=1500",
-            type: "Int",
-            category: "param_advanced"
-        }
-        jalign_min_mismatches_override: {
-            help: "Minimum number of mismatches for jalign to consider a read as supporting a CNV candidate. default=1",
             type: "Int",
             category: "param_advanced"
         }
@@ -201,20 +195,40 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "output"
         }
+        read_evidence:{
+            help: "BAM file with read evidence supporting combined CNV calls",
+            type: "File",
+            category: "output"
+        }
+        read_evidence_index:{
+            help: "Index file for the BAM with read evidence supporting combined CNV calls",
+            type: "File",
+            category: "output"
+        }
+        read_scores_csv:{
+            help: "CSV file with jalign scores for each read",
+            type: "File",
+            category: "output"  
+        }
     }
 
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
     Boolean no_address = select_first([no_address_override, true ])
     Int distance_threshold = select_first([distance_threshold_override,1500])
     Int duplication_length_cutoff_for_cnmops_filter = select_first([duplication_length_cutoff_for_cnmops_filter_override,10000])
-    Int jalign_min_mismatches = select_first([jalign_min_mismatches_override,1])
 
     call Globals.Globals as Glob
     GlobalVariables global = Glob.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script]) #!FileCoercion
+    call ValidateSameSampleName {
+        input:
+            vcf1 = cnmops_cnvs_vcf,
+            vcf2 = cnvpytor_cnvs_vcf,
+            docker = global.bcftools_docker
+    }
 
-    call ConcatAndAnnotateCallsets{
+     call ConcatAndAnnotateCallsets {
         input:
             base_file_name = base_file_name,
             cnmops_vcf = cnmops_cnvs_vcf,
@@ -232,7 +246,6 @@ workflow CombineGermlineCNVCalls {
             no_address = no_address,
             preemptible_tries = preemptible_tries
     }
-
     call AnnotateWithSplitReadsInfo {
         input:
             input_cnv_vcf = ConcatAndAnnotateCallsets.combined_cnv_calls_vcf,
@@ -257,10 +270,8 @@ workflow CombineGermlineCNVCalls {
             input_bam_file = input_bam_file,
             input_bam_file_index = input_bam_file_index,
             reference_genome = reference_genome,
-            reference_genome_index = reference_genome_index,
-            jalign_min_mismatches = jalign_min_mismatches,
-            
-            docker = global.ug_jalign_docker,
+            reference_genome_index = reference_genome_index,            
+            docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,
             preemptible_tries = preemptible_tries,
             no_address = no_address
@@ -331,6 +342,33 @@ workflow CombineGermlineCNVCalls {
         File out_sample_cnvs_bed = CnvVcfToBed.output_cnv_bed
         File out_sample_cnvs_vcf = select_first([CollapseCallset.output_vcf, RunJalignForCNVCandidates.output_vcf])
         File out_sample_cnvs_vcf_index = select_first([CollapseCallset.output_vcf_index, RunJalignForCNVCandidates.output_vcf_index])
+        File read_evidence = RunJalignForCNVCandidates.output_bam
+        File read_evidence_index = RunJalignForCNVCandidates.output_bam_index
+        File read_scores_csv = RunJalignForCNVCandidates.scores_csv
+    }
+}
+
+task ValidateSameSampleName {
+    input {
+        File vcf1
+        File vcf2
+        String docker
+    }
+    command <<<
+        set -xeo pipefail
+        sample_name_1=$(bcftools query -l ~{vcf1})
+        sample_name_2=$(bcftools query -l ~{vcf2})
+
+        if [ "$sample_name_1" != "$sample_name_2" ]; then
+            echo "Error: Sample names do not match: $sample_name_1 != $sample_name_2" >&2
+            exit 1
+        fi
+    >>>
+    runtime {
+        docker: docker
+        cpu: 1
+        memory: "1 GiB"
+        disks: "local-disk 2 HDD"
     }
 }
 
@@ -454,9 +492,6 @@ task RunJalignForCNVCandidates {
         File input_bam_file_index
         File reference_genome
         File reference_genome_index
-
-        Int jalign_min_mismatches
-
         String docker
         File monitoring_script
         Boolean no_address
@@ -472,15 +507,16 @@ task RunJalignForCNVCandidates {
     command <<<
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-                
-        python /jalign/scripts/annotate_with_jalign.py \
-                --input_cram  ~{input_bam_file} \
-                --ref_fasta ~{reference_genome}  \
-                --input_vcf  ~{input_vcf} \
-                --output_vcf ~{base_file_name}.jalign.vcf.gz \
-                --num_jobs ~{cpu} \
-                --min_mismatches ~{jalign_min_mismatches} 
+        run_jalign --tool-path /opt/para_jalign \
+                ~{input_bam_file} \
+                ~{input_vcf} \
+                ~{reference_genome} \
+                ~{base_file_name} \
+                --max-reads-per-cnv 300 \
+                --threads ~{cpu}        
         bcftools index -tf ~{base_file_name}.jalign.vcf.gz
+        samtools sort -o ~{base_file_name}.jalign.sort.bam ~{base_file_name}.jalign.bam
+        samtools index ~{base_file_name}.jalign.sort.bam
     >>>
     runtime {
         memory: "32 GiB"
@@ -494,6 +530,9 @@ task RunJalignForCNVCandidates {
     output {
         File output_vcf = "~{base_file_name}.jalign.vcf.gz"
         File output_vcf_index = "~{base_file_name}.jalign.vcf.gz.tbi"
+        File output_bam = "~{base_file_name}.jalign.sort.bam"
+        File output_bam_index = "~{base_file_name}.jalign.sort.bam.bai"
+        File scores_csv = "~{base_file_name}.jalign.csv"
         File monitoring_log = "monitoring.log"
     }
 }

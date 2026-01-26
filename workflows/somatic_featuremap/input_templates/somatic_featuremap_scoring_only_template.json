@@ -1,0 +1,23 @@
+{
+    "SomaticFeaturemap.base_file_name": "<sample_name>",
+    "SomaticFeaturemap.somatic_featuremap_given": "<somatic_featuremap_vcf_file>.vcf.gz",
+    "SomaticFeaturemap.somatic_featuremap_given_index": "<somatic_featuremap_vcf_file>.vcf.gz.tbi",
+    "SomaticFeaturemap.run_mpileup_override": false,
+    "SomaticFeaturemap.ref_tandem_repeats": "s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed",
+    "SomaticFeaturemap.interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
+    "SomaticFeaturemap.num_shards": 200,
+    "SomaticFeaturemap.pad_size": 2,
+    "SomaticFeaturemap.min_mapq_for_samtools_mpileup": 0,
+    "SomaticFeaturemap.scatter_intervals_break": 10000000,
+    "SomaticFeaturemap.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "FreshFrozen_vs_BC": {
+        "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.V1.15.json"
+    },
+    "FFPE_vs_BC": {
+        "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.FFPEV1.7.json"
+    }
+}

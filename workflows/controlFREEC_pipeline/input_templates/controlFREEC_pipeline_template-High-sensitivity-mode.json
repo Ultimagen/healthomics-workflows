@@ -33,7 +33,6 @@
     "SomaticCNVCallingControlFREEC.max_threads_override": 8,
     "SomaticCNVCallingControlFREEC.window": 1000,
     "SomaticCNVCallingControlFREEC.degree": 3,
-    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
     "SomaticCNVCallingControlFREEC.gem_mappability_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem",
     "SomaticCNVCallingControlFREEC.chrLenFile_override": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-23.genome",
     "SomaticCNVCallingControlFREEC.high_sensitivity_mode": true,
@@ -42,5 +41,6 @@
     "SomaticCNVCallingControlFREEC.normal_coverage_cpn": "<normal>.cpn",
     "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "<tumor>.pileup",
     "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>.pileup",
-    "SomaticCNVCallingControlFREEC.force_gc_content_normalization": 1
+    "SomaticCNVCallingControlFREEC.force_gc_content_normalization": 1,
+    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed"
 }

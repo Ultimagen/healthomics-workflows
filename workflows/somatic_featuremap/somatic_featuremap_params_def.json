@@ -31,6 +31,10 @@
         "description": "If true, keep non-PASS tumor candidates in the somatic featuremap.",
         "optional": true
     },
+    "SomaticFeaturemap.memory_gb_ScoreSomaticVariants": {
+        "description": "Memory in GB for ScoreSomaticVariants task.",
+        "optional": true
+    },
     "SomaticFeaturemap.min_mapq_for_samtools_mpileup": {
         "description": "Minimum mapping quality for samtools mpileup.",
         "optional": true

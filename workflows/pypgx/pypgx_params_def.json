@@ -1,0 +1,222 @@
+{
+    "PyPGx.EfficientDV.allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.annotation_intervals": {
+        "description": "List of bed files for VCF annotation",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.call_variants_cpus": {
+        "description": "Number of CPUs for call_variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.call_variants_gpu_type": {
+        "description": "GPU type for call variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.call_variants_gpus": {
+        "description": "Number of GPUs for call_variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.call_variants_threads": {
+        "description": "Number of decompression threads for call_variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.call_variants_uncompr_buf_size_gb": {
+        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.dbg_min_base_quality": {
+        "description": "Minimal base quality for local assembly of haplotypes",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.germline_vcf": {
+        "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.h_indel_allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.h_indel_vaf_to_pass": {
+        "description": "Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.hard_qual_filter": {
+        "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.input_flow_order": {
+        "description": "Flow order. If not provided, it will be extracted from the CRAM header",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.intervals_string": {
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.log_make_examples_progress": {
+        "description": "Cause make_examples to output detailed progress information (for debugging)",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.max_reads_per_partition": {
+        "description": "Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_base_quality": {
+        "description": "Minimal base quality for candidate generation",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_fraction_hmer_indels": {
+        "description": "Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_fraction_non_hmer_indels": {
+        "description": "Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_fraction_snps": {
+        "description": "Minimal fraction of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_hmer_plus_one_candidate": {
+        "description": "Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_read_count_hmer_indels": {
+        "description": "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_read_count_non_hmer_indels": {
+        "description": "Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.min_read_count_snps": {
+        "description": "Minimal number of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.model_serialized": {
+        "description": "TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.no_address_override": {
+        "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.optimization_level": {
+        "description": "Optimization level for TensorRT engine in call_variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.output_call_variants_tfrecords": {
+        "description": "Output tfrecords from call_variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.output_realignment": {
+        "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.p_error": {
+        "description": "Basecalling error for reference confidence model in gvcf",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.prioritize_alt_supporting_reads": {
+        "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.scatter_intervals_break": {
+        "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.show_bg_fields": {
+        "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.strand_bias_normalization_thresholds": {
+        "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.ug_call_variants_extra_mem": {
+        "description": "Extra memory for call_variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.ug_make_examples_cpus_override": {
+        "description": "CPU number override for make_examples step",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.ug_make_examples_extra_args": {
+        "description": "Additional arguments for make-examples tool",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.ug_make_examples_memory_override": {
+        "description": "Memory override for make_examples step",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.ug_post_processing_extra_args": {
+        "description": "Additional arguments for post-processing",
+        "optional": true
+    },
+    "PyPGx.base_file_name": {
+        "description": "Prefix for name of all output files",
+        "optional": false
+    },
+    "PyPGx.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "PyPGx.cram_file": {
+        "description": "Input (bam/cram) file",
+        "optional": false
+    },
+    "PyPGx.cram_index_file": {
+        "description": "Input (bai/crai) index file",
+        "optional": false
+    },
+    "PyPGx.exome_intervals": {
+        "description": "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
+        "optional": true
+    },
+    "PyPGx.gene_symbols": {
+        "description": "List of gene symbols to analyze",
+        "optional": false
+    },
+    "PyPGx.input_vcf_file": {
+        "description": "Input VCF file with variants. If not provided, Efficient DV will be run",
+        "optional": true
+    },
+    "PyPGx.input_vcf_index_file": {
+        "description": "Input VCF index file",
+        "optional": true
+    },
+    "PyPGx.model_onnx": {
+        "description": "TensorRT model for calling variants (onnx format)",
+        "optional": true
+    },
+    "PyPGx.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "PyPGx.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "PyPGx.preemptible_tries": {
+        "description": "preemptible_tries",
+        "optional": true
+    },
+    "PyPGx.ref_dbsnp": {
+        "description": "DbSNP vcf for the annotation of known variants",
+        "optional": true
+    },
+    "PyPGx.ref_dbsnp_index": {
+        "description": "DbSNP vcf index",
+        "optional": true
+    },
+    "PyPGx.ref_files_for_tarball": {
+        "description": "List of references for CreateReferenceCache task.",
+        "optional": false
+    },
+    "PyPGx.references": {
+        "description": "Reference files: fasta, dict and fai",
+        "optional": false
+    }
+}

@@ -27,5 +27,10 @@
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
         "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
-    "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.V1.15.json"
+    "FreshFrozen_vs_BC": {
+        "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.V1.15.json"
+    },
+    "FFPE_vs_BC": {
+        "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.FFPEV1.7.json"
+    }
 }

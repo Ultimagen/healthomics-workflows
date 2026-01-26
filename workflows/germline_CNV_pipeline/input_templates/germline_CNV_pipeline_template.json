@@ -39,7 +39,7 @@
     "GermlineCNVPipeline.filtering_model_decision_threshold": 31,
     "GermlineCNVPipeline.genome_windows": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed",
     "GermlineCNVPipeline.cohort_reads_count_matrix": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds",
-    "GermlineCNVPipeline.merged_cohort_ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
+    "GermlineCNVPipeline.ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
     "GermlineCNVPipeline.cushion_size": 1500,
     "GermlineCNVPipeline.create_md5_checksum_outputs": false
 }

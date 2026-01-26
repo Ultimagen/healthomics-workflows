@@ -24,7 +24,7 @@
         "aligned": false,
         "output_group": "{minorRG}",
         "output_path": "{RunID}/{RunID}_{minorRG}",
-        "demux_extra_args": "--cell-barcode-filter=true --cell-barcode-umi-length 12  --fastq-header-line='{instrument}:{ri}:{ri}:{ri}:{camera}:{ring}:{tile}:{xpos}:{ypos}:{segment-num}:{first-flow-signal}:{filtered}:{RSQ}:{barcode-seq}:{umis}:{bead-index}' --fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false",
+        "demux_extra_args": "--cell-barcode-umi-length 12  --fastq-header-line='{instrument}:{ri}:{ri}:{ri}:{camera}:{ring}:{tile}:{xpos}:{ypos}:{segment-num}:{first-flow-signal}:{filtered}:{RSQ}:{barcode-seq}:{umis}:{bead-index}' --fastq-underscores-for-missing-fields=true --trimmed-tags=rg --sample-nr-reads=1000000 --output-format={fm} --sort=false",
         "single_cell_cbc_classifier": "s3://ultimagen-workflow-resources-us-east-1/single_cell/class_suspicious_cells/cbc_classifier_params_10x_v1.json"
     },
     "SingleCell.star_genome": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/STAR_hg38_cr_2.7.8a.zip",

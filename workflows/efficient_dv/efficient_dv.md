@@ -6,278 +6,278 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 ### Required inputs
 <p name="EfficientDV.base_file_name">
         <b>EfficientDV.base_file_name</b><br />
-        <i>String </i> &mdash; 
-         Prefix for name of all output files <br /> 
+        <i>String </i> &mdash;
+         Prefix for name of all output files <br />
 </p>
 <p name="EfficientDV.cram_files">
         <b>EfficientDV.cram_files</b><br />
-        <i>Array[File] </i> &mdash; 
-         Input cram files. Multiple files are merged. <br /> 
+        <i>Array[File] </i> &mdash;
+         Input cram files. Multiple files are merged. <br />
 </p>
 <p name="EfficientDV.cram_index_files">
         <b>EfficientDV.cram_index_files</b><br />
-        <i>Array[File] </i> &mdash; 
-         Input cram index files. <br /> 
+        <i>Array[File] </i> &mdash;
+         Input cram index files. <br />
 </p>
 
 ### Required parameters
 <p name="EfficientDV.make_gvcf">
         <b>EfficientDV.make_gvcf</b><br />
-        <i>Boolean </i> &mdash; 
-         Whether to generate a gvcf. Default: False <br /> 
+        <i>Boolean </i> &mdash;
+         Whether to generate a gvcf. Default: False <br />
 </p>
 <p name="EfficientDV.is_somatic">
         <b>EfficientDV.is_somatic</b><br />
-        <i>Boolean </i> &mdash; 
-         Enable somatic calling mode, which enables somatic-specific post-processing options <br /> 
+        <i>Boolean </i> &mdash;
+         Enable somatic calling mode, which enables somatic-specific post-processing options <br />
 </p>
 
 ### Required references
 <p name="EfficientDV.references">
         <b>EfficientDV.references</b><br />
-        <i>References </i> &mdash; 
-         Reference files: fasta, dict and fai, recommended value set in the template <br /> 
+        <i>References </i> &mdash;
+         Reference files: fasta, dict and fai, recommended value set in the template <br />
 </p>
 <p name="EfficientDV.model_onnx">
         <b>EfficientDV.model_onnx</b><br />
-        <i>File </i> &mdash; 
-         TensorRT model for calling variants (onnx format) <br /> 
+        <i>File </i> &mdash;
+         TensorRT model for calling variants (onnx format) <br />
 </p>
 <p name="EfficientDV.exome_intervals">
         <b>EfficientDV.exome_intervals</b><br />
-        <i>File </i> &mdash; 
-         A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome. <br /> 
+        <i>File </i> &mdash;
+         A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome. <br />
 </p>
 <p name="EfficientDV.ref_dbsnp">
         <b>EfficientDV.ref_dbsnp</b><br />
-        <i>File </i> &mdash; 
-         DbSNP vcf for the annotation of known variants <br /> 
+        <i>File </i> &mdash;
+         DbSNP vcf for the annotation of known variants <br />
 </p>
 <p name="EfficientDV.ref_dbsnp_index">
         <b>EfficientDV.ref_dbsnp_index</b><br />
-        <i>File </i> &mdash; 
-         DbSNP vcf index <br /> 
+        <i>File </i> &mdash;
+         DbSNP vcf index <br />
 </p>
 
 ### Optional inputs
 <p name="EfficientDV.background_cram_files">
         <b>EfficientDV.background_cram_files</b><br />
-        <i>Array[File] </i> &mdash; 
-         Background (normal sample) cram files for somatic calling <br /> 
+        <i>Array[File] </i> &mdash;
+         Background (normal sample) cram files for somatic calling <br />
 </p>
 <p name="EfficientDV.background_cram_index_files">
         <b>EfficientDV.background_cram_index_files</b><br />
-        <i>Array[File] </i> &mdash; 
-         Background (normal sample) cram index files for somatic calling <br /> 
+        <i>Array[File] </i> &mdash;
+         Background (normal sample) cram index files for somatic calling <br />
 </p>
 
 ### Optional parameters
 <p name="EfficientDV.show_bg_fields">
         <b>EfficientDV.show_bg_fields</b><br />
-        <i>Boolean </i> &mdash; 
-         Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling. <br /> 
+        <i>Boolean </i> &mdash;
+         Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling. <br />
 </p>
 <p name="EfficientDV.scatter_intervals_break">
         <b>EfficientDV.scatter_intervals_break</b><br />
-        <i>Int </i> &mdash; 
-         The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals. <br /> 
+        <i>Int </i> &mdash;
+         The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals. <br />
 </p>
 <p name="EfficientDV.target_intervals">
         <b>EfficientDV.target_intervals</b><br />
-        <i>File? </i> &mdash; 
-         Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used. <br /> 
+        <i>File? </i> &mdash;
+         Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used. <br />
 </p>
 <p name="EfficientDV.intervals_string">
         <b>EfficientDV.intervals_string</b><br />
-        <i>String? </i> &mdash; 
-         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used. <br /> 
+        <i>String? </i> &mdash;
+         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used. <br />
 </p>
 <p name="EfficientDV.min_fraction_hmer_indels">
         <b>EfficientDV.min_fraction_hmer_indels</b><br />
-        <i>Float </i> &mdash; 
-         Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant <br /> 
+        <i>Float </i> &mdash;
+         Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant <br />
 </p>
 <p name="EfficientDV.min_fraction_non_hmer_indels">
         <b>EfficientDV.min_fraction_non_hmer_indels</b><br />
-        <i>Float </i> &mdash; 
-         Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant <br /> 
+        <i>Float </i> &mdash;
+         Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant <br />
 </p>
 <p name="EfficientDV.min_fraction_snps">
         <b>EfficientDV.min_fraction_snps</b><br />
-        <i>Float </i> &mdash; 
-         Minimal fraction of reads, that support a snp, required to  generate a candidate variant <br /> 
+        <i>Float </i> &mdash;
+         Minimal fraction of reads, that support a snp, required to  generate a candidate variant <br />
 </p>
 <p name="EfficientDV.min_read_count_snps">
         <b>EfficientDV.min_read_count_snps</b><br />
-        <i>Int </i> &mdash; 
-         Minimal number of reads, that support a snp, required to  generate a candidate variant <br /> 
+        <i>Int </i> &mdash;
+         Minimal number of reads, that support a snp, required to  generate a candidate variant <br />
 </p>
 <p name="EfficientDV.min_read_count_hmer_indels">
         <b>EfficientDV.min_read_count_hmer_indels</b><br />
-        <i>Int </i> &mdash; 
-         Minimal number of reads, that support an h-mer indel, required to generate a candidate variant <br /> 
+        <i>Int </i> &mdash;
+         Minimal number of reads, that support an h-mer indel, required to generate a candidate variant <br />
 </p>
 <p name="EfficientDV.min_read_count_non_hmer_indels">
         <b>EfficientDV.min_read_count_non_hmer_indels</b><br />
-        <i>Int </i> &mdash; 
-         Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant <br /> 
+        <i>Int </i> &mdash;
+         Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant <br />
 </p>
 <p name="EfficientDV.min_base_quality">
         <b>EfficientDV.min_base_quality</b><br />
-        <i>Int </i> &mdash; 
-         Minimal base quality for candidate generation <br /> 
+        <i>Int </i> &mdash;
+         Minimal base quality for candidate generation <br />
 </p>
 <p name="EfficientDV.pileup_min_mapping_quality">
         <b>EfficientDV.pileup_min_mapping_quality</b><br />
-        <i>Int </i> &mdash; 
-         Minimal mapping quality to be included in image (the input to the CNN) <br /> 
+        <i>Int </i> &mdash;
+         Minimal mapping quality to be included in image (the input to the CNN) <br />
 </p>
 <p name="EfficientDV.candidate_min_mapping_quality">
         <b>EfficientDV.candidate_min_mapping_quality</b><br />
-        <i>Int </i> &mdash; 
-         Minimal mapping quality for candidate generation <br /> 
+        <i>Int </i> &mdash;
+         Minimal mapping quality for candidate generation <br />
 </p>
 <p name="EfficientDV.min_hmer_plus_one_candidate">
         <b>EfficientDV.min_hmer_plus_one_candidate</b><br />
-        <i>Int </i> &mdash; 
-         Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions <br /> 
+        <i>Int </i> &mdash;
+         Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions <br />
 </p>
 <p name="EfficientDV.max_reads_per_partition">
         <b>EfficientDV.max_reads_per_partition</b><br />
-        <i>Int </i> &mdash; 
-         Maximal number of reads that are stored in memory when analyzing an active region <br /> 
+        <i>Int </i> &mdash;
+         Maximal number of reads that are stored in memory when analyzing an active region <br />
 </p>
 <p name="EfficientDV.dbg_min_base_quality">
         <b>EfficientDV.dbg_min_base_quality</b><br />
-        <i>Int </i> &mdash; 
-         Minimal base quality for local assembly of haplotypes <br /> 
+        <i>Int </i> &mdash;
+         Minimal base quality for local assembly of haplotypes <br />
 </p>
 <p name="EfficientDV.prioritize_alt_supporting_reads">
         <b>EfficientDV.prioritize_alt_supporting_reads</b><br />
-        <i>Boolean </i> &mdash; 
-         Generate an image with all available alt-supporting reads, and only then add non-supporting reads <br /> 
+        <i>Boolean </i> &mdash;
+         Generate an image with all available alt-supporting reads, and only then add non-supporting reads <br />
 </p>
 <p name="EfficientDV.p_error">
         <b>EfficientDV.p_error</b><br />
-        <i>Float </i> &mdash; 
-         Basecalling error for reference confidence model in gvcf <br /> 
+        <i>Float </i> &mdash;
+         Basecalling error for reference confidence model in gvcf <br />
 </p>
 <p name="EfficientDV.output_realignment">
         <b>EfficientDV.output_realignment</b><br />
-        <i>Boolean </i> &mdash; 
-         Output haplotypes and re-aligned reads to a bam file. Default: false. <br /> 
+        <i>Boolean </i> &mdash;
+         Output haplotypes and re-aligned reads to a bam file. Default: false. <br />
 </p>
 <p name="EfficientDV.ug_make_examples_extra_args">
         <b>EfficientDV.ug_make_examples_extra_args</b><br />
-        <i>String? </i> &mdash; 
-         Additional arguments for make-examples tool <br /> 
+        <i>String? </i> &mdash;
+         Additional arguments for make-examples tool <br />
 </p>
 <p name="EfficientDV.log_make_examples_progress">
         <b>EfficientDV.log_make_examples_progress</b><br />
-        <i>Boolean </i> &mdash; 
-         Cause make_examples to output detailed progress information (for debugging) <br /> 
+        <i>Boolean </i> &mdash;
+         Cause make_examples to output detailed progress information (for debugging) <br />
 </p>
 <p name="EfficientDV.germline_vcf">
         <b>EfficientDV.germline_vcf</b><br />
-        <i>File? </i> &mdash; 
-         Germline vcf file in order to generate haplotypes that incorporate germline variants <br /> 
+        <i>File? </i> &mdash;
+         Germline vcf file in order to generate haplotypes that incorporate germline variants <br />
 </p>
 <p name="EfficientDV.optimization_level">
         <b>EfficientDV.optimization_level</b><br />
-        <i>Int? </i> &mdash; 
-         Optimization level for TensorRT engine in call_variants <br /> 
+        <i>Int? </i> &mdash;
+         Optimization level for TensorRT engine in call_variants <br />
 </p>
 <p name="EfficientDV.output_call_variants_tfrecords">
         <b>EfficientDV.output_call_variants_tfrecords</b><br />
-        <i>Boolean </i> &mdash; 
-         Output tfrecords from call_variants <br /> 
+        <i>Boolean </i> &mdash;
+         Output tfrecords from call_variants <br />
 </p>
 <p name="EfficientDV.min_variant_quality_hmer_indels">
         <b>EfficientDV.min_variant_quality_hmer_indels</b><br />
-        <i>Int </i> &mdash; 
-         Minimal h-mer indel quality in order to be labeled as PASS <br /> 
+        <i>Int </i> &mdash;
+         Minimal h-mer indel quality in order to be labeled as PASS <br />
 </p>
 <p name="EfficientDV.min_variant_quality_non_hmer_indels">
         <b>EfficientDV.min_variant_quality_non_hmer_indels</b><br />
-        <i>Int </i> &mdash; 
-         Minimal non-h-mer indel quality in order to be labeled as PASS <br /> 
+        <i>Int </i> &mdash;
+         Minimal non-h-mer indel quality in order to be labeled as PASS <br />
 </p>
 <p name="EfficientDV.min_variant_quality_snps">
         <b>EfficientDV.min_variant_quality_snps</b><br />
-        <i>Int </i> &mdash; 
-         Minimal snp variant quality in order to be labeled as PASS <br /> 
+        <i>Int </i> &mdash;
+         Minimal snp variant quality in order to be labeled as PASS <br />
 </p>
 <p name="EfficientDV.min_variant_quality_exome_hmer_indels">
         <b>EfficientDV.min_variant_quality_exome_hmer_indels</b><br />
-        <i>Int </i> &mdash; 
-         Minimal non-h-mer indel quality in order to be labeled as PASS <br /> 
+        <i>Int </i> &mdash;
+         Minimal non-h-mer indel quality in order to be labeled as PASS <br />
 </p>
 <p name="EfficientDV.hard_qual_filter">
         <b>EfficientDV.hard_qual_filter</b><br />
-        <i>Int </i> &mdash; 
-         Any variant with QUAL < hard_qual_filter will be discarded from the VCF file <br /> 
+        <i>Int </i> &mdash;
+         Any variant with QUAL < hard_qual_filter will be discarded from the VCF file <br />
 </p>
 <p name="EfficientDV.allele_frequency_ratio">
         <b>EfficientDV.allele_frequency_ratio</b><br />
-        <i>Float? </i> &mdash; 
-         Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering <br /> 
+        <i>Float? </i> &mdash;
+         Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering <br />
 </p>
 <p name="EfficientDV.h_indel_vaf_to_pass">
         <b>EfficientDV.h_indel_vaf_to_pass</b><br />
-        <i>Float? </i> &mdash; 
-         Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio <br /> 
+        <i>Float? </i> &mdash;
+         Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio <br />
 </p>
 <p name="EfficientDV.h_indel_allele_frequency_ratio">
         <b>EfficientDV.h_indel_allele_frequency_ratio</b><br />
-        <i>Float? </i> &mdash; 
-         Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering <br /> 
+        <i>Float? </i> &mdash;
+         Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering <br />
 </p>
 <p name="EfficientDV.ug_post_processing_extra_args">
         <b>EfficientDV.ug_post_processing_extra_args</b><br />
-        <i>String </i> &mdash; 
-         Additional arguments for post-processing <br /> 
+        <i>String </i> &mdash;
+         Additional arguments for post-processing <br />
 </p>
 <p name="EfficientDV.input_flow_order">
         <b>EfficientDV.input_flow_order</b><br />
-        <i>String? </i> &mdash; 
-         Flow order. If not provided, it will be extracted from the CRAM header <br /> 
+        <i>String? </i> &mdash;
+         Flow order. If not provided, it will be extracted from the CRAM header <br />
 </p>
 <p name="EfficientDV.call_variants_gpu_type">
         <b>EfficientDV.call_variants_gpu_type</b><br />
-        <i>String </i> &mdash; 
-         GPU type for call variants <br /> 
+        <i>String </i> &mdash;
+         GPU type for call variants <br />
 </p>
 <p name="EfficientDV.call_variants_gpus">
         <b>EfficientDV.call_variants_gpus</b><br />
-        <i>Int </i> &mdash; 
-         Number of GPUs for call_variants <br /> 
+        <i>Int </i> &mdash;
+         Number of GPUs for call_variants <br />
 </p>
 <p name="EfficientDV.call_variants_cpus">
         <b>EfficientDV.call_variants_cpus</b><br />
-        <i>Int </i> &mdash; 
-         Number of CPUs for call_variants <br /> 
+        <i>Int </i> &mdash;
+         Number of CPUs for call_variants <br />
 </p>
 <p name="EfficientDV.call_variants_threads">
         <b>EfficientDV.call_variants_threads</b><br />
-        <i>Int </i> &mdash; 
-         Number of decompression threads for call_variants <br /> 
+        <i>Int </i> &mdash;
+         Number of decompression threads for call_variants <br />
 </p>
 <p name="EfficientDV.call_variants_uncompr_buf_size_gb">
         <b>EfficientDV.call_variants_uncompr_buf_size_gb</b><br />
-        <i>Int </i> &mdash; 
-         Memory buffer allocated for each uncompression thread in calll_variants <br /> 
+        <i>Int </i> &mdash;
+         Memory buffer allocated for each uncompression thread in calll_variants <br />
 </p>
 
 ### Optional reference files
 <p name="EfficientDV.model_serialized">
         <b>EfficientDV.model_serialized</b><br />
-        <i>File? </i> &mdash; 
-         TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br /> 
+        <i>File? </i> &mdash;
+         TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br />
 </p>
 <p name="EfficientDV.annotation_intervals">
         <b>EfficientDV.annotation_intervals</b><br />
-        <i>Array[File]? </i> &mdash; 
-         List of bed files for VCF annotation <br /> 
+        <i>Array[File]? </i> &mdash;
+         List of bed files for VCF annotation <br />
 </p>
 </details>
 

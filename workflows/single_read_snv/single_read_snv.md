@@ -14,52 +14,52 @@ The following input templates are available for different kinds of input data:
 ### Required inputs
 <p name="SingleReadSNV.input_cram_bam_list">
         <b>SingleReadSNV.input_cram_bam_list</b><br />
-        <i>Array[File] </i> &mdash; 
-         Input CRAM file/s <br /> 
+        <i>Array[File] </i> &mdash;
+         Input CRAM file/s <br />
 </p>
 <p name="SingleReadSNV.input_cram_bam_index_list">
         <b>SingleReadSNV.input_cram_bam_index_list</b><br />
-        <i>Array[File] </i> &mdash; 
-         Input CRAM index file/s <br /> 
+        <i>Array[File] </i> &mdash;
+         Input CRAM index file/s <br />
 </p>
 <p name="SingleReadSNV.base_file_name">
         <b>SingleReadSNV.base_file_name</b><br />
-        <i>String </i> &mdash; 
-         Base file name for output files. The output files will be named [base_file_name].with_ml_qual.vcf.gz <br /> 
+        <i>String </i> &mdash;
+         Base file name for output files. The output files will be named [base_file_name].with_ml_qual.vcf.gz <br />
 </p>
 
 ### Required parameters
 <p name="SingleReadSNV.featuremap_params">
         <b>SingleReadSNV.featuremap_params</b><br />
-        <i>FeatureMapParams </i> &mdash; 
-         FeatureMap parameters, recommended value set in the template. <br /> 
+        <i>FeatureMapParams </i> &mdash;
+         FeatureMap parameters, recommended value set in the template. <br />
 </p>
 <p name="SingleReadSNV.features">
         <b>SingleReadSNV.features</b><br />
-        <i>Array[String] </i> &mdash; 
-         Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template. <br /> 
+        <i>Array[String] </i> &mdash;
+         Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template. <br />
 </p>
 <p name="SingleReadSNV.training_regions_interval_list">
         <b>SingleReadSNV.training_regions_interval_list</b><br />
-        <i>File </i> &mdash; 
-         Genomic regions to include in the training set, the recommended value is set in the template <br /> 
+        <i>File </i> &mdash;
+         Genomic regions to include in the training set, the recommended value is set in the template <br />
 </p>
 <p name="SingleReadSNV.xgboost_params_file">
         <b>SingleReadSNV.xgboost_params_file</b><br />
-        <i>File </i> &mdash; 
-         XGBoost parameters file for training the SNV quality model, recommended value set in the template. <br /> 
+        <i>File </i> &mdash;
+         XGBoost parameters file for training the SNV quality model, recommended value set in the template. <br />
 </p>
 <p name="SingleReadSNV.min_coverage_to_train_model">
         <b>SingleReadSNV.min_coverage_to_train_model</b><br />
-        <i>Float </i> &mdash; 
-         Minimum coverage to train the ML model, needed as label assignment (true/false SNV) is unreliable at low coverages, the recommended value is set in the template <br /> 
+        <i>Float </i> &mdash;
+         Minimum coverage to train the ML model, needed as label assignment (true/false SNV) is unreliable at low coverages, the recommended value is set in the template <br />
 </p>
 
 ### Required references
 <p name="SingleReadSNV.references">
         <b>SingleReadSNV.references</b><br />
-        <i>References </i> &mdash; 
-         Reference files: fasta, dict and fai, recommended value set in the template <br /> 
+        <i>References </i> &mdash;
+         Reference files: fasta, dict and fai, recommended value set in the template <br />
 </p>
 
 ### Optional inputs
@@ -89,35 +89,35 @@ The following input templates are available for different kinds of input data:
 ### Optional inputs
 <p name="SingleReadSNV.sorter_json_stats_file_list">
         <b>SingleReadSNV.sorter_json_stats_file_list</b><br />
-        <i>Array[File]? </i> &mdash; 
-         (Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases. <br /> 
+        <i>Array[File]? </i> &mdash;
+         (Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases. <br />
 </p>
 <p name="SingleReadSNV.random_sample_trinuc_freq">
         <b>SingleReadSNV.random_sample_trinuc_freq</b><br />
-        <i>File? </i> &mdash; 
-         (Optional) CSV or TSV file with trinucleotide frequencies for the random sample. If provided, the random sample featuremap will be sampled according to the given trinucleotide frequency. If not provided, sampling is uniform. <br /> 
+        <i>File? </i> &mdash;
+         (Optional) CSV or TSV file with trinucleotide frequencies for the random sample. If provided, the random sample featuremap will be sampled according to the given trinucleotide frequency. If not provided, sampling is uniform. <br />
 </p>
 <p name="SingleReadSNV.create_md5_checksum_outputs">
         <b>SingleReadSNV.create_md5_checksum_outputs</b><br />
-        <i>Boolean </i> &mdash; 
-         Create md5 checksum for requested output files <br /> 
+        <i>Boolean </i> &mdash;
+         Create md5 checksum for requested output files <br />
 </p>
 <p name="SingleReadSNV.mean_coverage">
         <b>SingleReadSNV.mean_coverage</b><br />
-        <i>Float? </i> &mdash; 
-         (Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file_list. <br /> 
+        <i>Float? </i> &mdash;
+         (Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file_list. <br />
 </p>
 <p name="SingleReadSNV.total_aligned_bases">
         <b>SingleReadSNV.total_aligned_bases</b><br />
-        <i>String? </i> &mdash; 
-         (Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list. <br /> 
+        <i>String? </i> &mdash;
+         (Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list. <br />
 </p>
 
 ### Optional parameters
 <p name="SingleReadSNV.single_read_snv_params">
         <b>SingleReadSNV.single_read_snv_params</b><br />
-        <i>SingleReadSNVParams? </i> &mdash; 
-         SingleReadSNV parameters, recommended value set in the template. <br /> 
+        <i>SingleReadSNVParams? </i> &mdash;
+         SingleReadSNV parameters, recommended value set in the template. <br />
 </p>
 </details>
 

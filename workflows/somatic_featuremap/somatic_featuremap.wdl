@@ -34,7 +34,7 @@ import "tasks/pileup_tasks.wdl" as UGPileupTasks
 workflow SomaticFeaturemap {
 
     input {
-        String pipeline_version = "1.26.1" # !UnusedDeclaration
+        String pipeline_version = "1.27.2" # !UnusedDeclaration
 
         String base_file_name
         File? tumor_featuremap_vcf
@@ -64,6 +64,7 @@ workflow SomaticFeaturemap {
         File? interval_list
         Int? num_shards
         Int? scatter_intervals_break=100
+        Int? memory_gb_ScoreSomaticVariants
         String dummy_input_for_call_caching = ""
 
         References? references
@@ -234,6 +235,11 @@ workflow SomaticFeaturemap {
             type: "Struct",
             category: "input_required"
         }
+        memory_gb_ScoreSomaticVariants: {
+            help: "Memory in GB for ScoreSomaticVariants task.",
+            type: "Int?",
+            category: "input_optional"
+        }
         somatic_featuremap: {
             help: "Output somatic featuremap pileup file.",
             type: "File",
@@ -326,6 +332,7 @@ workflow SomaticFeaturemap {
     Boolean no_address = select_first([no_address_override, true ])
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
     Boolean run_mpileup = select_first([run_mpileup_override, true])
+    Int memory_gb_ScoreSomaticVariants_ = select_first([memory_gb_ScoreSomaticVariants, 8])
 
     call Globals.Globals as Globals
       GlobalVariables global = Globals.global_dockers
@@ -466,6 +473,7 @@ workflow SomaticFeaturemap {
                 ref_tandem_repeats = ref_tandem_repeats,
                 reference_fai = references_variable.ref_fasta_index,
                 docker = global.ugbio_featuremap_docker,
+                memory_gb = memory_gb_ScoreSomaticVariants_,
                 no_address = no_address,
                 preemptible_tries = preemptible_tries,
                 monitoring_script = monitoring_script
@@ -617,6 +625,7 @@ task ScoreSomaticVariants {
         File interval_list
         File ref_tandem_repeats
         File reference_fai
+        Int? memory_gb
         String docker
         File monitoring_script
         Boolean no_address
@@ -649,7 +658,7 @@ task ScoreSomaticVariants {
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: "8 GB"
+        memory:  "~{memory_gb} GB"
         disks: "local-disk 100 HDD"
         docker: docker
         noAddress: no_address

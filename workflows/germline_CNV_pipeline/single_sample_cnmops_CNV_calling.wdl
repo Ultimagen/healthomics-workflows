@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.26.1" # !UnusedDeclaration
+        String pipeline_version = "1.27.2" # !UnusedDeclaration
 
         String base_file_name
 
@@ -53,7 +53,7 @@ workflow SingleSampleCnmopsCNVCalling {
         File? genome_windows
 
         File cohort_reads_count_matrix
-        File? merged_cohort_ploidy_file
+        File? ploidy_file
         String? chrX_name
         String? chrY_name
         Boolean? cap_coverage_override
@@ -171,8 +171,8 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "File",
             category: "input_required"
          }
-        merged_cohort_ploidy_file: {
-            help : "Cohort ploidy file indicating 1 for male and 2 for female, per sample. The number of lines should be the same as the number of samples in cohort + current_sample. if not given, defaults to 2 for all samples.",
+        ploidy_file: {
+            help : "X chromosome ploidy in the cohort. 1 for male and 2 for female, per sample. The number of lines should be the same as the number of samples in cohort + current_sample. if not given, defaults to 2 for all samples.",
             type: "File",
             category: "input_optional"
         }
@@ -366,7 +366,7 @@ workflow SingleSampleCnmopsCNVCalling {
         input:
             merged_cohort_reads_count_matrix = AddCountsToCohortMatrix.merged_cohort_reads_count_matrix,
             min_width_value = min_width_value,
-            ploidy = merged_cohort_ploidy_file,
+            ploidy = ploidy_file,
             chrX_name = chrX_name,
             chrY_name = chrY_name,
             cap_coverage = cap_coverage,

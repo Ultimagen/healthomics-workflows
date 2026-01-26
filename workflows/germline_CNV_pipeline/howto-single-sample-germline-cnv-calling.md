@@ -35,10 +35,12 @@ The following required files are publicly available:
 	s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds
     s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy
 	s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed
-    s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.4/ug_cnv_lcr.bed
+    s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed
 
 **Note:** For male samples use 
     s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_male.ploidy
+    The ploidy file contains single number per row that indicates the expected ploidy of the X chromosome. The sample being 
+    called corresponds to the **last** number in the ploidy file. 
 	
 ML filtering model can be found here: 
     
@@ -149,7 +151,7 @@ These scripts generate files: `{sample_name}.cov.bed` and `coverage.cohort.bed`
 grep "{sample_name}" cohort.cnmops.cnvs.csv > {sample_name}.cnvs.csv
 awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' {sample_name}.cnvs.csv > {sample_name}.cnvs.bed
 
-process_cnmops_cnvs \
+process_cnvs \
 	--sample_name {sample_name} \
 	--input_bed_file {sample_name}.cnvs.bed \
 	--intersection_cutoff 0.5 \
@@ -164,25 +166,35 @@ process_cnmops_cnvs \
 This produces the result: `{sample_name}.cnvs.annotate.vcf.gz`
 
 ### Run cnvpytor
-use ugbio_cnv docker
+To improve robustness of the results it is recommended to run CNVPytor with two window sizes: 500 and 2500 bases. 
+
+This is an example of one run, should be run twice. Use `ugbio_cnv` docker
 ```
-        cnvpytor -root ~{sample_name}.pytor \
-            -rd ~{input_bam} \
+        cnvpytor -root {sample_name}.pytor \
+            -rd {input_bam} \
             -chrom chr1 chr2 .... chrY \
             -T Homo_sapiens_assembly38.fasta \ 
         
-        cnvpytor -root ~{sample_name}.pytor \
-            -his 500
+        cnvpytor -root {sample_name}.pytor \
+            -his <window_size>
 
-        cnvpytor -root ~{sample_name}.pytor \
-            -partition 500
+        cnvpytor -root {sample_name}.pytor \
+            -partition <window_size>
         
 		## output VCF
-        cnvpytor -root ~{sample_name}.pytor  -view 500 <<EOF
-                set print_filename ~{sample_name}.500.CNV.vcf
+        cnvpytor -root {sample_name}.pytor  -view <window_size> <<EOF
+                set print_filename {sample_name}.<window_size>.CNV.vcf
                 print calls
                 quit 
         EOF
+```
+
+The callsets from the two window sizes are combined using `ugbio_cnv` docker. 
+```
+        combine_cnmops_cnvpytor_cnv_calls concat \
+            --cnvpytor_vcf vcf1 vcf2 \
+            --output_vcf {sample_name}.cnvpytor.cnv_calls.vcf.gz \
+            --fasta_index Homo_sapiens_assembly38.fasta.fai
 ```
 
 ### Combine, annotate and filter cn.mops and cnvpytor callsets
@@ -229,22 +241,30 @@ analyze_cnv_breakpoint_reads \
 
 #### Run `jalign`
 
+This task re-aligns reads that are close to the CNV breakpoints to check how many reads can support the breakpoint. For deletion, it looks for the reads
+that span the whole CNV. For the duplication, this looks for the reads that can align with the pattern consistent with the duplication.
+
 For this task - use `jalign` docker. Note that this tasks requires a 
 large machine (~32 CPU recommended), which is expected to take about 1-2 hours. 
 
 ```
-python /jalign/scripts/annotate_with_jalign.py \
-    --input_cram {input_bam_file} \
-    --ref_fasta Homo_sapiens_assembly38.fasta \
-    --input_vcf {sample_name}.split.annotated.vcf.gz \
-    --output_vcf {sample_name}.jalign.vcf.gz \
-    --num_jobs 32 \
-    --min_mismatches 1
+run_jalign --tool-path /opt/para_jalign \
+    {input_bam_file} \
+    {sample_name}.split.annotated.vcf.gz \
+    Homo_sapiens_assembly38.fasta \
+    {sample_name} \
+    --max-reads-per-cnv 300 \
+    --threads 32
 bcftools index -tf {sample_name}.jalign.vcf.gz
+samtools sort -o {sample_name}.jalign.sort.bam {sample_name}.jalign.bam
+samtools index {sample_name}.jalign.sort.bam
 ```
 Output files:
 - **VCF file**: {sample_name}.jalign.vcf.gz - Final combined CNV calls with all annotations
 - **VCF index file**: {sample_name}.jalign.vcf.gz.tbi - Corresponding index to output VCF
+- **BAM file**: {sample_name}.jalign.sort.bam - Sorted BAM file with read evidence supporting CNV calls
+- **BAM index file**: {sample_name}.jalign.sort.bam.bai - Index for the BAM file
+- **CSV file**: {sample_name}.jalign.csv - CSV file with jalign scores for each read
 
 #### Filter calls
 

@@ -34,7 +34,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.26.1" # !UnusedDeclaration
+        String pipeline_version = "1.27.2" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -54,16 +54,15 @@ workflow GermlineCNVPipeline {
         Array[File] bed_graph
         File genome_windows
         File cohort_reads_count_matrix
-        File merged_cohort_ploidy_file
+        File ploidy_file
         Int? cnmops_min_width_value_override
         Int? cnmops_min_cnv_length_override
         Float? cnmops_intersection_cutoff_override
         Boolean? disable_mod_cnv
 
         #cnvpytor params
-        Int? cnvpytor_window_length_override
-        Int? cnvpytor_mapq_override
-
+        Array[Int]? cnvpytor_window_length_override
+        
         Int cushion_size
         
         Boolean? skip_figure_generation
@@ -188,8 +187,8 @@ workflow GermlineCNVPipeline {
             type: "File",
             category: "input_required"
         }
-        merged_cohort_ploidy_file: {
-            help : "Merged cohort ploidy file in bed format",
+        ploidy_file: {
+            help : "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called",
             type: "File",
             category: "input_required"
         }
@@ -215,13 +214,8 @@ workflow GermlineCNVPipeline {
             category: "param_advanced"
         }
         cnvpytor_window_length_override: {
-            help: "Window length on which the read counts will be aggregated, default value is 500",
-            type: "Int",
-            category: "param_advanced"
-        }
-        cnvpytor_mapq_override: {
-            help : "Reads mapping-quality cutoff for coverage aggregation used in cnvpytor, default value is 0",
-            type: "Int",
+            help: "Window length on which the read counts will be aggregated, default value is [500,2500]",
+            type: "Array[Int]",
             category: "param_advanced"
         }
         skip_figure_generation: {
@@ -285,6 +279,21 @@ workflow GermlineCNVPipeline {
             type: "File",
             category: "output"
         }
+        combine_read_evidence: {
+            help: "BAM file with read evidence supporting combined CNV calls",
+            type: "File",
+            category: "output"
+        }
+        combine_read_evidence_index: {
+            help: "Index file for the BAM with read evidence supporting combined CNV calls",
+            type: "File",
+            category: "output"
+        }
+        combine_read_scores_csv: {
+            help: "CSV file with jalign scores for each read",
+            type: "File",
+            category: "output"
+        }
         md5_checksums_json: {
             help: "json file that will contain md5 checksums for requested output files",
             type: "File",
@@ -298,8 +307,7 @@ workflow GermlineCNVPipeline {
     Int cnmops_min_cnv_length = select_first([cnmops_min_cnv_length_override, 0])
     Float cnmops_intersection_cutoff = select_first([cnmops_intersection_cutoff_override, 0.5])
     Boolean enable_mod_cnv = select_first([disable_mod_cnv, true])
-    Int cnvpytor_window_length = select_first([cnvpytor_window_length_override, 500])
-    Int cnvpytor_mapq = select_first([cnvpytor_mapq_override, 0])
+    Array[Int] cnvpytor_window_lengths = select_first([cnvpytor_window_length_override, [500,2500]])
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
     Boolean no_address = select_first([no_address_override, true ])
     Boolean skip_figure_generation_value = select_first([skip_figure_generation, false])
@@ -321,7 +329,7 @@ workflow GermlineCNVPipeline {
             bed_graph = bed_graph,
             genome_windows = genome_windows,
             cohort_reads_count_matrix = cohort_reads_count_matrix,
-            merged_cohort_ploidy_file = merged_cohort_ploidy_file,
+            ploidy_file = ploidy_file,
             min_width_value = cnmops_min_width_value,
             min_cnv_length = cnmops_min_cnv_length,
             intersection_cutoff = cnmops_intersection_cutoff,
@@ -341,8 +349,7 @@ workflow GermlineCNVPipeline {
         reference_genome = reference_genome,
         reference_genome_index = reference_genome_index,
         ref_seq_names = ref_seq_names,
-        window_length = cnvpytor_window_length,
-        mapq = cnvpytor_mapq,
+        window_lengths = cnvpytor_window_lengths,
         preemptible_tries_override = preemptible_tries,
         no_address_override = no_address,
         monitoring_script_input = monitoring_script
@@ -399,7 +406,9 @@ workflow GermlineCNVPipeline {
         File combined_cnv_calls_bed = CombineCNVCalls.out_sample_cnvs_bed
         File combined_cnv_calls_bed_vcf = combined_cnv_calls_bed_vcf_
         File combined_cnv_calls_bed_vcf_index = combined_cnv_calls_bed_vcf_index_
-
+        File combine_read_evidence = CombineCNVCalls.read_evidence
+        File combine_read_evidence_index = CombineCNVCalls.read_evidence_index
+        File combine_read_scores_csv = CombineCNVCalls.read_scores_csv
         File? md5_checksums_json = MergeMd5sToJson.md5_json
     }
 }

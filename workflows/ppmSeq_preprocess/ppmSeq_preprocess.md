@@ -14,89 +14,89 @@ The following input templates are available for different input data:
 ### Required inputs
 <p name="ppmSeqPreprocess.input_cram_bam_list">
         <b>ppmSeqPreprocess.input_cram_bam_list</b><br />
-        <i>Array[File] </i> &mdash; 
-         Input CRAM or BAM file list <br /> 
+        <i>Array[File] </i> &mdash;
+         Input CRAM or BAM file list <br />
 </p>
 <p name="ppmSeqPreprocess.base_file_name">
         <b>ppmSeqPreprocess.base_file_name</b><br />
-        <i>String </i> &mdash; 
-         Base file name for output files. <br /> 
+        <i>String </i> &mdash;
+         Base file name for output files. <br />
 </p>
 <p name="ppmSeqPreprocess.adapter_version">
         <b>ppmSeqPreprocess.adapter_version</b><br />
-        <i>String </i> &mdash; 
-         ppmSeq adapter version <br /> 
+        <i>String </i> &mdash;
+         ppmSeq adapter version <br />
 </p>
 
 ### Required parameters
 <p name="ppmSeqPreprocess.trimmer_parameters">
         <b>ppmSeqPreprocess.trimmer_parameters</b><br />
-        <i>TrimmerParameters </i> &mdash; 
-         Trimmer parameters <br /> 
+        <i>TrimmerParameters </i> &mdash;
+         Trimmer parameters <br />
 </p>
 <p name="ppmSeqPreprocess.ua_parameters">
         <b>ppmSeqPreprocess.ua_parameters</b><br />
-        <i>UaParameters </i> &mdash; 
-         UA alignment parameters <br /> 
+        <i>UaParameters </i> &mdash;
+         UA alignment parameters <br />
 </p>
 <p name="ppmSeqPreprocess.sorter_params">
         <b>ppmSeqPreprocess.sorter_params</b><br />
-        <i>SorterParams </i> &mdash; 
-         Sorter parameters <br /> 
+        <i>SorterParams </i> &mdash;
+         Sorter parameters <br />
 </p>
 
 ### Required references
 <p name="ppmSeqPreprocess.ref_fastas_cram">
         <b>ppmSeqPreprocess.ref_fastas_cram</b><br />
-        <i>Array[File] </i> &mdash; 
-         Reference fasta file for cache tarball <br /> 
+        <i>Array[File] </i> &mdash;
+         Reference fasta file for cache tarball <br />
 </p>
 <p name="ppmSeqPreprocess.references">
         <b>ppmSeqPreprocess.references</b><br />
-        <i>References </i> &mdash; 
-         Reference files <br /> 
+        <i>References </i> &mdash;
+         Reference files <br />
 </p>
 
 ### Optional inputs
 <p name="ppmSeqPreprocess.ppmSeq_analysis_extra_args">
         <b>ppmSeqPreprocess.ppmSeq_analysis_extra_args</b><br />
-        <i>String? </i> &mdash; 
-         Extra arguments for ppmSeq analysis <br /> 
+        <i>String? </i> &mdash;
+         Extra arguments for ppmSeq analysis <br />
 </p>
 <p name="ppmSeqPreprocess.create_md5_checksum_outputs">
         <b>ppmSeqPreprocess.create_md5_checksum_outputs</b><br />
-        <i>Boolean </i> &mdash; 
-         Create md5 checksum for requested output files <br /> 
+        <i>Boolean </i> &mdash;
+         Create md5 checksum for requested output files <br />
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters">
         <b>ppmSeqPreprocess.TrimAlignSort.ua_meth_parameters</b><br />
-        <i>UaMethParameters? </i> &mdash; 
-         Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br /> 
+        <i>UaMethParameters? </i> &mdash;
+         Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br />
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.star_genome">
         <b>ppmSeqPreprocess.TrimAlignSort.star_genome</b><br />
-        <i>File? </i> &mdash; 
-         Star genome file. If aligner is star, supllay either star genome file or generate new genome index. <br /> 
+        <i>File? </i> &mdash;
+         Star genome file. If aligner is star, supllay either star genome file or generate new genome index. <br />
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.star_genome_generate_params">
         <b>ppmSeqPreprocess.TrimAlignSort.star_genome_generate_params</b><br />
-        <i>StarGenomeGenerateParams? </i> &mdash; 
-         Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file. <br /> 
+        <i>StarGenomeGenerateParams? </i> &mdash;
+         Parameters for generating the star genome. Mandatory if aligner is star and not given star genome file. <br />
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.star_align_extra_args">
         <b>ppmSeqPreprocess.TrimAlignSort.star_align_extra_args</b><br />
-        <i>String? </i> &mdash; 
-         Extra arguments for the STAR aligner. <br /> 
+        <i>String? </i> &mdash;
+         Extra arguments for the STAR aligner. <br />
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.star_align_gtf_override">
         <b>ppmSeqPreprocess.TrimAlignSort.star_align_gtf_override</b><br />
-        <i>File? </i> &mdash; 
-         GTF file to be used for STAR aligner. <br /> 
+        <i>File? </i> &mdash;
+         GTF file to be used for STAR aligner. <br />
 </p>
 <p name="ppmSeqPreprocess.TrimAlignSort.create_md5_checksum_outputs">
         <b>ppmSeqPreprocess.TrimAlignSort.create_md5_checksum_outputs</b><br />
-        <i>Boolean </i> &mdash; 
-         Create md5 checksum for requested output files <br /> 
+        <i>Boolean </i> &mdash;
+         Create md5 checksum for requested output files <br />
 </p>
 </details>
 

@@ -132,16 +132,19 @@ generate_controlFREEC_config \
 /freec -conf {sample_name}.config.txt
 ```
 
-#### Filter ControlFREEC called CNVs by length and low confidence regions
+#### Process ControlFREEC called CNVs - convert them to VCF and filter by length and low confidence regions
 from inside ugbio_cnv docker image:
 ```
 #convert to bedfile
 cat {tumor}_CNVs | sed 's/^/chr/' | cut -f1-4 > {tumor}.cnvs.bed
 
-#annotate cnvs bed file
-filter_sample_cnvs \
+#annotate cnvs bed file and convert to VCF
+process_cnvs \
+	--sample_name {sample_name} \
 	--input_bed_file {tumor}.cnvs.bed \
 	--intersection_cutoff 0.5 \
 	--cnv_lcr_file ug_cnv_lcr.bed \
-	--min_cnv_length 10000
+	--min_cnv_length 10000 \
+	--out_directory . \
+	--fasta_index_file Homo_sapiens_assembly38.fasta.fai
 ```

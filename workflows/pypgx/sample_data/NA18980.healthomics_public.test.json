@@ -1,0 +1,46 @@
+{
+    "PyPGx.base_file_name": "NA18980.level_a",
+    "PyPGx.cram_file": "s3://ultimagen-workflow-resources-us-east-1/sample_data/pypgx/NA18980.level_a.cram",
+    "PyPGx.cram_index_file": "s3://ultimagen-workflow-resources-us-east-1/sample_data/pypgx/NA18980.level_a.cram.crai",
+    "PyPGx.gene_symbols": [
+        "ABCG2",
+        "CACNA1S",
+        "CFTR",
+        "CYP2B6",
+        "CYP2C19",
+        "CYP2C9",
+        "CYP2D6",
+        "CYP3A5",
+        "CYP4F2",
+        "DPYD",
+        "G6PD",
+        "IFNL3",
+        "IFNL4",
+        "NAT2",
+        "NUDT15",
+        "RYR1",
+        "SLCO1B1",
+        "TPMT",
+        "UGT1A1",
+        "VKORC1",
+        "MT-RNR1"
+    ],
+    "PyPGx.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "PyPGx.ref_files_for_tarball": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+    ],
+    "PyPGx.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx",
+    "PyPGx.exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
+    "PyPGx.ref_dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
+    "PyPGx.ref_dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
+    "PyPGx.cloud_provider_override": "aws"
+}

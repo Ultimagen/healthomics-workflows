@@ -15,10 +15,6 @@
         "description": "FeatureMap parameters, recommended value set in the template.",
         "optional": false
     },
-    "SingleReadSNV.featuremap_scatter_count_override": {
-        "description": "featuremap_scatter_count_override",
-        "optional": true
-    },
     "SingleReadSNV.features": {
         "description": "Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template.",
         "optional": false
@@ -47,6 +43,22 @@
         "description": "no_address_override",
         "optional": true
     },
+    "SingleReadSNV.override_memory_gb_CreateFeatureMap": {
+        "description": "override_memory_gb_CreateFeatureMap",
+        "optional": true
+    },
+    "SingleReadSNV.override_memory_gb_PrepareRandomSampleFeatureMap": {
+        "description": "override_memory_gb_PrepareRandomSampleFeatureMap",
+        "optional": true
+    },
+    "SingleReadSNV.override_memory_gb_PrepareRawFeatureMap": {
+        "description": "override_memory_gb_PrepareRawFeatureMap",
+        "optional": true
+    },
+    "SingleReadSNV.override_memory_gb_TrainModel": {
+        "description": "override_memory_gb_TrainModel",
+        "optional": true
+    },
     "SingleReadSNV.pre_trained_model_files": {
         "description": "Pre-trained ML model json files, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
         "optional": true
@@ -57,10 +69,6 @@
     },
     "SingleReadSNV.preemptible_tries": {
         "description": "preemptible_tries",
-        "optional": true
-    },
-    "SingleReadSNV.prepare_featuremap_for_training_gb": {
-        "description": "prepare_featuremap_for_training_gb",
         "optional": true
     },
     "SingleReadSNV.raise_exceptions_in_report": {
@@ -85,10 +93,6 @@
     },
     "SingleReadSNV.total_aligned_bases": {
         "description": "(Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list.",
-        "optional": true
-    },
-    "SingleReadSNV.training_memory_gb": {
-        "description": "training_memory_gb",
         "optional": true
     },
     "SingleReadSNV.training_regions_interval_list": {

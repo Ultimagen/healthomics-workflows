@@ -16,68 +16,68 @@ The steps of the pipeline are as following:
 ### Required inputs
 <p name="SVPipeline.base_file_name">
         <b>SVPipeline.base_file_name</b><br />
-        <i>String </i> &mdash; 
-         Base file name for the output files (to be used as the prefix) <br /> 
+        <i>String </i> &mdash;
+         Base file name for the output files (to be used as the prefix) <br />
 </p>
 <p name="SVPipeline.references">
         <b>SVPipeline.references</b><br />
-        <i>References </i> &mdash; 
-         Reference files: fasta, dict and fai, recommended value set in the template <br /> 
+        <i>References </i> &mdash;
+         Reference files: fasta, dict and fai, recommended value set in the template <br />
 </p>
 <p name="SVPipeline.ua_references">
         <b>SVPipeline.ua_references</b><br />
-        <i>UaParameters </i> &mdash; 
-         UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template <br /> 
+        <i>UaParameters </i> &mdash;
+         UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template <br />
 </p>
 <p name="SVPipeline.wgs_calling_interval_list">
         <b>SVPipeline.wgs_calling_interval_list</b><br />
-        <i>File </i> &mdash; 
-         interval list defining the region to perform variant calling on, recommended value set in the template <br /> 
+        <i>File </i> &mdash;
+         interval list defining the region to perform variant calling on, recommended value set in the template <br />
 </p>
 <p name="SVPipeline.min_base">
         <b>SVPipeline.min_base</b><br />
-        <i>Int </i> &mdash; 
-         Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template <br /> 
+        <i>Int </i> &mdash;
+         Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template <br />
 </p>
 <p name="SVPipeline.min_mapq">
         <b>SVPipeline.min_mapq</b><br />
-        <i>Int </i> &mdash; 
-         Assembly parameter: Minimum mapping quality. Default value in template <br /> 
+        <i>Int </i> &mdash;
+         Assembly parameter: Minimum mapping quality. Default value in template <br />
 </p>
 <p name="SVPipeline.max_num_haps">
         <b>SVPipeline.max_num_haps</b><br />
-        <i>Int? </i> &mdash; 
-         Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report <br /> 
+        <i>Int? </i> &mdash;
+         Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report <br />
 </p>
 <p name="SVPipeline.realign_mapq">
         <b>SVPipeline.realign_mapq</b><br />
-        <i>Int </i> &mdash; 
-         Realignment parameter: Below this value we skip realignment on the supplementary alignment <br /> 
+        <i>Int </i> &mdash;
+         Realignment parameter: Below this value we skip realignment on the supplementary alignment <br />
 </p>
 <p name="SVPipeline.homopolymer_length">
         <b>SVPipeline.homopolymer_length</b><br />
-        <i>Int </i> &mdash; 
-         Realignment parameter: do realignment on homopolymeres longer than this value <br /> 
+        <i>Int </i> &mdash;
+         Realignment parameter: do realignment on homopolymeres longer than this value <br />
 </p>
 <p name="SVPipeline.is_somatic">
         <b>SVPipeline.is_somatic</b><br />
-        <i>Boolean </i> &mdash; 
-         run in somatic mode or in germline mode <br /> 
+        <i>Boolean </i> &mdash;
+         run in somatic mode or in germline mode <br />
 </p>
 <p name="SVPipeline.reference_name">
         <b>SVPipeline.reference_name</b><br />
-        <i>String </i> &mdash; 
-         Can be 38 or 19 <br /> 
+        <i>String </i> &mdash;
+         Can be 38 or 19 <br />
 </p>
 <p name="SVPipeline.run_ua">
         <b>SVPipeline.run_ua</b><br />
-        <i>Boolean </i> &mdash; 
-         Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not <br /> 
+        <i>Boolean </i> &mdash;
+         Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not <br />
 </p>
 <p name="SVPipeline.num_shards">
         <b>SVPipeline.num_shards</b><br />
-        <i>Int </i> &mdash; 
-         Relevant for scatter tasks, which are CreateAssembly and gridss.AnnotateVariants <br /> 
+        <i>Int </i> &mdash;
+         Relevant for scatter tasks, which are CreateAssembly and gridss.AnnotateVariants <br />
 </p>
 
 ### Optional inputs
@@ -182,8 +182,8 @@ The steps of the pipeline are as following:
 ### Optional inputs
 <p name="SVPipeline.create_md5_checksum_outputs">
         <b>SVPipeline.create_md5_checksum_outputs</b><br />
-        <i>Boolean </i> &mdash; 
-         Create md5 checksum for requested output files <br /> 
+        <i>Boolean </i> &mdash;
+         Create md5 checksum for requested output files <br />
 </p>
 </details>
 
@@ -194,52 +194,52 @@ The steps of the pipeline are as following:
 <p name="SVPipeline.max_reads_per_partition">
         <b>SVPipeline.max_reads_per_partition</b><br />
         <i>Int &mdash; Default: None</i><br />
-         Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region 
+         Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region
 </p>
 <p name="SVPipeline.max_reads_per_working_area">
         <b>SVPipeline.max_reads_per_working_area</b><br />
         <i>Int &mdash; Default: None</i><br />
-         Rematching parameter: Maximal number of reads that are stored in memory when rematching reads to haplotypes (similar to max_reads_per_partition in assembly) 
+         Rematching parameter: Maximal number of reads that are stored in memory when rematching reads to haplotypes (similar to max_reads_per_partition in assembly)
 </p>
 <p name="SVPipeline.config_file_string">
         <b>SVPipeline.config_file_string</b><br />
         <i>String &mdash; Default: None</i><br />
-         Gridss config file content 
+         Gridss config file content
 </p>
 <p name="SVPipeline.create_assembly_memory_override">
         <b>SVPipeline.create_assembly_memory_override</b><br />
         <i>Int? &mdash; Default: None</i><br />
-         memory override for create_assembly task 
+         memory override for create_assembly task
 </p>
 <p name="SVPipeline.rematching_memory_override">
         <b>SVPipeline.rematching_memory_override</b><br />
         <i>Int? &mdash; Default: None</i><br />
-         memory override for rematching task 
+         memory override for rematching task
 </p>
 <p name="SVPipeline.annotate_variants_cpu_override">
         <b>SVPipeline.annotate_variants_cpu_override</b><br />
         <i>Int? &mdash; Default: None</i><br />
-         cpu override for annotate_variants task 
+         cpu override for annotate_variants task
 </p>
 <p name="SVPipeline.annotate_variants_memory_override">
         <b>SVPipeline.annotate_variants_memory_override</b><br />
         <i>Int? &mdash; Default: None</i><br />
-         memory override for annotate_variants task 
+         memory override for annotate_variants task
 </p>
 <p name="SVPipeline.convert_vcf_format_memory_override">
         <b>SVPipeline.convert_vcf_format_memory_override</b><br />
         <i>Int? &mdash; Default: None</i><br />
-         memory override for convert_vcf_format task 
+         memory override for convert_vcf_format task
 </p>
 <p name="SVPipeline.germline_link_variants_memory_override">
         <b>SVPipeline.germline_link_variants_memory_override</b><br />
         <i>Int? &mdash; Default: None</i><br />
-         memory override for germline_link_variants task 
+         memory override for germline_link_variants task
 </p>
 <p name="SVPipeline.scatter_intervals_break">
         <b>SVPipeline.scatter_intervals_break</b><br />
         <i>Int &mdash; Default: None</i><br />
-         Maximal resolution for scattering intervals 
+         Maximal resolution for scattering intervals
 </p>
 </details>
 
