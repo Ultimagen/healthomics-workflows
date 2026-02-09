@@ -440,7 +440,15 @@
     },
     "EfficientDV.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "efficient_dv_template-WGS-somatic-FFPE-v1_3-100X-tumor-40X-80X-normal": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "efficient_dv_template-WGS-germline-v1_9-solaris": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "efficient_dv_template-WES-somatic-v0_1-500x-tumor-120X-normal": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "efficient_dv_template-WGS-somatic-matched-samples-v1_3-40X-200X": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "WGS.somatic.031865-COLO829.v1_3.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "WGS.germline.v1_9.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "EfficientDV.no_address_override": {
         "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",

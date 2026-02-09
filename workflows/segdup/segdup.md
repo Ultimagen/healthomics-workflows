@@ -51,6 +51,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>String? </i> &mdash; 
          Cloud provider override (for running on other clouds): gcp or aws <br /> 
 </p>
+<p name="SegDupAnalysis.monitoring_script_input">
+        <b>SegDupAnalysis.monitoring_script_input</b><br />
+        <i>File? </i> &mdash; 
+         Monitoring script override for AWS HealthOmics workflow templates multi-region support <br /> 
+</p>
 <p name="SegDupAnalysis.preemptible_tries">
         <b>SegDupAnalysis.preemptible_tries</b><br />
         <i>Int </i> &mdash; 

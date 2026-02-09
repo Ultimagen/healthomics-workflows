@@ -384,6 +384,11 @@ workflow SomaticCNVCallingControlFREEC{
             type: "Int",
             category: "param_optional"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
         tumor_segments: {
             help: "controlFREEC segmentation for tumor sample",
             type: "File",

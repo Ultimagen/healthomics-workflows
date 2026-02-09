@@ -43,5 +43,6 @@
     ],
     "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph": [
         "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic/HCC1395.normal_0.chr19.bedGraph.gz"
-    ]
+    ],
+    "SomaticCNVCallingControlFREEC.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

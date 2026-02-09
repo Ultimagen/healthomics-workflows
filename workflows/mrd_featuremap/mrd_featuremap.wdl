@@ -225,6 +225,11 @@ workflow MRDFeatureMap {
            type: "Boolean",
            category: "input_optional"
       }
+      monitoring_script_input: {
+          help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+          type: "File",
+          category: "input_optional"
+      }
       references: {
           help: "Reference files: fasta, dict and fai, recommended value set in the template",
           type: "References",

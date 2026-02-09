@@ -92,6 +92,11 @@ input{
             help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
             category: "optional"
         }
+        monitoring_script_input: {
+            type: "File",
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            category: "input_optional"
+        }
         output_hla: {
             type: "File",
             help: "HLA genotyping output file",

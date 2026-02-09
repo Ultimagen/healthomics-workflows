@@ -43,5 +43,7 @@
         "extra_args": "--histogram %1.%2.%3.%4.%5.histogram.csv",
         "failure_read_group": "unmatched",
         "cram_reference": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta"
-    }
+    },
+    "ppmSeqPreprocess.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
+    "ppmSeqPreprocess.ref_cache_script_input": "s3://ultimagen-workflow-resources-us-east-1/scripts/seq_cache_populate.pl"
 }

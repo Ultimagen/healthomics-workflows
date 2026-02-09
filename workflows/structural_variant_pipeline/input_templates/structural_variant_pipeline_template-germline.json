@@ -49,5 +49,6 @@
         "ref_min": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.min",
         "ref_path_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/GRCh38.path_list.txt"
     },
-    "SVPipeline.cloud_provider_override": "aws"
+    "SVPipeline.cloud_provider_override": "aws",
+    "SVPipeline.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

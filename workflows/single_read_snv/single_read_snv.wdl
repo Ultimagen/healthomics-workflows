@@ -242,6 +242,11 @@ parameter_meta {
         help: "Number of times to retry preemptible instances, default: 1",
         category: "optional"
     }
+    monitoring_script_input: {
+        type: "File",
+        help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+        category: "input_optional"
+    }
     featuremap: {
         type: "File",
         help: "FeatureMap VCF file with SNVQ values",

@@ -35,5 +35,6 @@
     ],
     "MRDFeatureMap.external_control_signatures": [
         "s3://ultimagen-workflow-resources-us-east-1/sample_data/mrd/Pa_67_FFPE.ann.chr20.vcf.gz"
-    ]
+    ],
+    "MRDFeatureMap.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

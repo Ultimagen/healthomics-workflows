@@ -234,6 +234,11 @@ workflow GermlineCNVPipeline {
            type: "Boolean",
            category: "input_optional"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
         cnmops_cnv_calls_bed: {
             help: "CNMOPS CNV calls in bed format",
             type: "File",

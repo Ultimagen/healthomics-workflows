@@ -40,5 +40,6 @@
     ],
     "EfficientDV.keep_duplicates": true,
     "EfficientDV.add_ins_size_channel": true,
-    "EfficientDV.cloud_provider_override": "aws"
+    "EfficientDV.cloud_provider_override": "aws",
+    "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

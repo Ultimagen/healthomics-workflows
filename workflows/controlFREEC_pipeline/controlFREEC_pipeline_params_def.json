@@ -308,7 +308,14 @@
     },
     "SomaticCNVCallingControlFREEC.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "controlFREEC_pipeline_template-Bedgraph-and-mpileup-input": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "controlFREEC_pipeline_template-Bedgraph-input": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "controlFREEC_pipeline_template-High-sensitivity-mode": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "controlFREEC_pipeline_template-Cram-input": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "HCC1395.chr19.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "SomaticCNVCallingControlFREEC.naive_normalization": {
         "description": "Whether to run controlFREEC with naive normalization mode (Rather than using FREEC Polynomial fitting)",

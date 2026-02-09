@@ -41,5 +41,6 @@
     "GermlineCNVPipeline.cohort_reads_count_matrix": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds",
     "GermlineCNVPipeline.merged_cohort_ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
     "GermlineCNVPipeline.cushion_size": 1500,
-    "GermlineCNVPipeline.create_md5_checksum_outputs": false
+    "GermlineCNVPipeline.create_md5_checksum_outputs": false,
+    "GermlineCNVPipeline.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

@@ -346,7 +346,13 @@
     },
     "SingleReadSNV.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "single_read_snv_template-Standard-WG": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "single_read_snv_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "single_read_snv_template-ppmSeq": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "ppmSeq.402572_CL10377.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "SingleReadSNV.no_address_override": {
         "description": "no_address_override",

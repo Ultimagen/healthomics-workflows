@@ -90,7 +90,13 @@
     },
     "ppmSeqPreprocess.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "ppmSeq_preprocess_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "ppmSeq_preprocess_template-ppmSeq": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "ppmSeq.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "ppmSeqPreprocess.no_address": {
         "description": "no_address",
@@ -114,6 +120,16 @@
             "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": 1,
             "ppmSeq_preprocess_template-ppmSeq": 1,
             "ppmSeq.healthomics_public.test": 1
+        }
+    },
+    "ppmSeqPreprocess.ref_cache_script_input": {
+        "description": "ref_cache_script_input",
+        "optional": true,
+        "useCase": {
+            "ppmSeq_preprocess_template-ppmSeq_legacy_v5": "s3://<ultima-input-bucket>/scripts/seq_cache_populate.pl",
+            "ppmSeq_preprocess_template-ppmSeq_post_native_adapter_trimming": "s3://<ultima-input-bucket>/scripts/seq_cache_populate.pl",
+            "ppmSeq_preprocess_template-ppmSeq": "s3://<ultima-input-bucket>/scripts/seq_cache_populate.pl",
+            "ppmSeq.healthomics_public.test": "s3://<ultima-input-bucket>/scripts/seq_cache_populate.pl"
         }
     },
     "ppmSeqPreprocess.ref_fastas_cram": {

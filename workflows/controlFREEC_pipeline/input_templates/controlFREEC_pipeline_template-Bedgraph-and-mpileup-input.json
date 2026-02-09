@@ -45,5 +45,6 @@
         "<normal>_1.bedGraph.gz"
     ],
     "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "<tumor>_minipileup.pileup",
-    "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>_minipileup.pileup"
+    "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>_minipileup.pileup",
+    "SomaticCNVCallingControlFREEC.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

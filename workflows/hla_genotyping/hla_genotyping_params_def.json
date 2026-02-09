@@ -41,7 +41,11 @@
     },
     "HLAGenotyping.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "hla_genotyping_template": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "HLAGenotyping.no_address_override": {
         "description": "no_address_override",

@@ -55,5 +55,6 @@
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,
     "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
-    "EfficientDV.cloud_provider_override": "aws"
+    "EfficientDV.cloud_provider_override": "aws",
+    "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

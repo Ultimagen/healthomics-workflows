@@ -63,6 +63,7 @@ workflow ppmSeqPreprocess {
     # Used for running on other clouds (aws)
     File? monitoring_script_input
     String? cloud_provider_override
+    String? ref_cache_script_input
 
     Boolean create_md5_checksum_outputs = false
 
@@ -102,6 +103,7 @@ workflow ppmSeqPreprocess {
             "no_address",
             "preemptible_tries",
             "monitoring_script_input",
+            "ref_cache_script_input",
             "cpu",
             "ppmSeqQC.cpu",
             "ppmSeqQC.memory_gb",
@@ -168,6 +170,16 @@ workflow ppmSeqPreprocess {
        help: "Create md5 checksum for requested output files",
        type: "Boolean",
        category: "input_optional"
+    }
+    ref_cache_script_input: {
+        help: "Reference cache script override for AWS HealthOmics workflow templates multi-region support",
+        type: "String",
+        category: "input_optional"
+    }
+    monitoring_script_input: {
+        help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+        type: "File",
+        category: "input_optional"
     }
     trimmer_histogram_csv_out: {
       help: "Trimmer histogram csv output",
@@ -255,6 +267,8 @@ workflow ppmSeqPreprocess {
   call Globals.Globals as Globals
   GlobalVariables global = Globals.global_dockers
 
+  File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+
   call TrimAlignSortSubWF.TrimAlignSort as TrimAlignSort {
     input:
         input_cram_bam_list = input_cram_bam_list,
@@ -269,7 +283,8 @@ workflow ppmSeqPreprocess {
         no_address =          no_address,
         preemptible_tries =   preemptible_tries,
         cpu =                 cpu,
-        monitoring_script_input = monitoring_script_input
+        monitoring_script_input = monitoring_script_input,
+        ref_cache_script_input = ref_cache_script_input
   }
   File trimmer_histogram_csv_out = select_first([select_first([TrimAlignSort.trimmer_histogram])[0]])  # convert Array[File?]? to File
   Array[File?] trimmer_histogram_csv_extra_out_arr = select_first([TrimAlignSort.trimmer_histogram_extra])  # convert Array[File?]? to Array[File]
@@ -291,7 +306,7 @@ workflow ppmSeqPreprocess {
         base_file_name =                      base_file_name,
         ppmSeq_analysis_extra_args = ppmSeq_analysis_extra_args,
         docker =                              global.ugbio_ppmseq_docker,
-        monitoring_script =                   global.monitoring_script, # !FileCoercion
+        monitoring_script =                   monitoring_script,
   }
 
     File output_cram_bam_                 = select_first([TrimAlignSort.output_cram_bam])

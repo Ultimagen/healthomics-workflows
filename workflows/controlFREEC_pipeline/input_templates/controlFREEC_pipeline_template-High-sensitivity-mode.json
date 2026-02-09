@@ -42,5 +42,6 @@
     "SomaticCNVCallingControlFREEC.normal_coverage_cpn": "<normal>.cpn",
     "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "<tumor>.pileup",
     "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>.pileup",
-    "SomaticCNVCallingControlFREEC.force_gc_content_normalization": 1
+    "SomaticCNVCallingControlFREEC.force_gc_content_normalization": 1,
+    "SomaticCNVCallingControlFREEC.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

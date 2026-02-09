@@ -378,6 +378,11 @@ workflow SVPipeline {
            type: "Boolean",
            category: "input_optional"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
         output_vcf: {
             type: "File",
             help: "Final VCF",

@@ -115,7 +115,7 @@ workflow EfficientDV {
     Int? ug_make_examples_cpus_override
     Int preemptible_tries = 1
     Int? ug_call_variants_extra_mem
-    String call_variants_gpu_type = "nvidia-l4" # For AWS
+    String call_variants_gpu_type = "nvidia-tesla-t4-a10g" # For AWS
     Int call_variants_gpus = 1
     Int call_variants_cpus = 8
     Int call_variants_threads = 8
@@ -463,6 +463,11 @@ workflow EfficientDV {
     no_address_override: {
       help: "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
       category: "param_advanced"
+    }
+    monitoring_script_input: {
+      help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+      type: "File",
+      category: "input_optional"
     }
     call_variants_uncompr_buf_size_gb: {
       help: "Memory buffer allocated for each uncompression thread in calll_variants",

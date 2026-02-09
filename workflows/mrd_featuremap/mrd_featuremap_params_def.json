@@ -263,7 +263,14 @@
     },
     "MRDFeatureMap.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "Pa_46_matched_cohort.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "MRDFeatureMap.mrd_analysis_params": {
         "description": "Parameters for the MRD analysis",

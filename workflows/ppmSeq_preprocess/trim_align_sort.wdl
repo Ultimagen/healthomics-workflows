@@ -66,6 +66,7 @@ workflow TrimAlignSort {
 
         # Used for running on other clouds (aws)
         File? monitoring_script_input
+        String? ref_cache_script_input
         String dummy_input_for_call_caching = ""
 
         Boolean create_md5_checksum_outputs = false
@@ -232,6 +233,11 @@ workflow TrimAlignSort {
             help: "Number of cpus to be used for the tasks.",
             type: "Int",
             category: "input_required"
+        }
+        ref_cache_script_input: {
+            help: "Reference cache script override for AWS HealthOmics workflow templates multi-region support",
+            type: "String",
+            category: "input_optional"
         }
         create_md5_checksum_outputs: {
             help: "Create md5 checksum for requested output files",
@@ -438,6 +444,7 @@ workflow TrimAlignSort {
     GlobalVariables global = Globals.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+    String ref_cache_script = select_first([ref_cache_script_input, global.ref_cache_script])
 
     Boolean trim = select_first([steps.trim, false])
     Boolean align = select_first([steps.align, false])
@@ -446,7 +453,7 @@ workflow TrimAlignSort {
     call UGAlignment.CreateReferenceCache {
         input:
             references = ref_fastas_cram,
-            cache_populate_script = global.ref_cache_script, #!StringCoercion
+            cache_populate_script = ref_cache_script,
             preemptible_tries = preemptible_tries,
             docker = global.perl_docker,
             dummy_input_for_call_caching = dummy_input_for_call_caching

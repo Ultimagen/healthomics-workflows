@@ -186,7 +186,12 @@
     },
     "GermlineCNVPipeline.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "germline_CNV_pipeline_template": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "germline_CNV_pipeline_template.hg19": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "GermlineCNVPipeline.no_address_override": {
         "description": "no_address_override",

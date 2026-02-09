@@ -267,6 +267,14 @@
         "description": "Serialized model for variant calling",
         "optional": true
     },
+    "SegDupAnalysis.monitoring_script_input": {
+        "description": "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+        "optional": true,
+        "useCase": {
+            "segdup_template": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "NA24385-Z0027.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
+    },
     "SegDupAnalysis.n_threads": {
         "description": "Number of threads to use",
         "optional": false,

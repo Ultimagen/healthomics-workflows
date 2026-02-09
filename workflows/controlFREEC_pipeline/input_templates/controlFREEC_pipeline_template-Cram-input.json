@@ -62,5 +62,6 @@
         "chr21",
         "chr22",
         "chrX"
-    ]
+    ],
+    "SomaticCNVCallingControlFREEC.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }
