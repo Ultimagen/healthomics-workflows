@@ -491,6 +491,7 @@ workflow TrimAlignSort {
                     references              = references,
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
+                    monitoring_script_input = monitoring_script_input,
             }
         }
 
@@ -504,6 +505,7 @@ workflow TrimAlignSort {
                     cache_tarball           = CreateReferenceCache.cache_tarball,
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
+                    monitoring_script_input = monitoring_script_input,
             }
         }
 

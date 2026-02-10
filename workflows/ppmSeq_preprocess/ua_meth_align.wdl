@@ -33,10 +33,15 @@ workflow UAMethAlignment {
         Boolean no_address
         Int preemptible_tries
 
+        # Used for running on other clouds (aws)
+        File? monitoring_script_input
+
         #@wv not defined(ua_meth_parameters) -> defined(references)
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
+
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
     Int cpu_default = 40 
     if (defined(ua_meth_parameters.index_c2t)) {
@@ -50,7 +55,7 @@ workflow UAMethAlignment {
                 references          = select_first([references]),
                 preemptible_tries   = preemptible_tries,
                 ua_docker           = global.ua_docker,
-                monitoring_script   = global.monitoring_script, # !FileCoercion
+                monitoring_script   = monitoring_script,
                 no_address          = no_address,
         }
     }
@@ -72,7 +77,7 @@ workflow UAMethAlignment {
             use_v_aware_alignment   = ua_meth_parameters.v_aware_alignment_flag,
             UaMethIntensiveMode     = UaMethIntensiveMode,
             no_address              = no_address,
-            monitoring_script       = global.monitoring_script,  # !FileCoercion
+            monitoring_script       = monitoring_script,
             preemptible_tries       = preemptible_tries,
             ua_docker               = global.ua_docker,
             memory_gb               = ua_meth_parameters.memory_gb,

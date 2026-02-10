@@ -552,7 +552,7 @@ workflow SVPipeline {
     if(run_giraffe){
         call AlignmentTasks.ConvertCramOrBamToUBam as ConvertToUbam {
             input:
-                monitoring_script = global.monitoring_script, # !FileCoercion
+                monitoring_script = monitoring_script,
                 input_file = MergeBams.output_bam,
                 base_file_name = base_file_name,
                 preemptible_tries = preemptibles,
