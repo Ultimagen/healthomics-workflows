@@ -520,7 +520,8 @@ workflow TrimAlignSort {
                     base_file_name          = base_file_name + ".star.aln",
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
-                    cpu                     = cpu
+                    cpu                     = cpu,
+                    monitoring_script_input = monitoring_script_input,
             }
         }
         Array[File] align_output_list = [select_first([UAAlignment.ua_output_bam, UAMethAlignment.ua_output_bam ,StarAlignment.output_bam])]
