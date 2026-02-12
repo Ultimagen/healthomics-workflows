@@ -44,11 +44,19 @@ workflow STRGenotyper {
         Int min_repeat = 1
         Int max_repeat = 100
         Float min_score_ratio = 0.85
-        Int spanning_flank_bases = 5
+        Int spanning_flank_bases = 10
+        Int min_mapping_quality = 1
         
         # Resource configuration
         Int threads = 8
         Int? memory_gb_override
+        
+        # Output options (set to false to skip CSV outputs for large catalogs)
+        Boolean output_detailed_csv = true
+        Boolean output_summary_csv = true
+        
+        # Genotype calling options
+        Boolean haploid = false
         
         # Runtime parameters
         Int preemptible_tries = 1
@@ -127,6 +135,11 @@ workflow STRGenotyper {
             type: "Int",
             category: "param_optional"
         }
+        min_mapping_quality: {
+            help: "Minimum mapping quality for reads to be included in analysis",
+            type: "Int",
+            category: "param_optional"
+        }
         threads: {
             help: "Number of threads for parallel processing",
             type: "Int",
@@ -137,19 +150,34 @@ workflow STRGenotyper {
             type: "Int",
             category: "param_advanced"
         }
+        output_detailed_csv: {
+            help: "Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O.",
+            type: "Boolean",
+            category: "param_optional"
+        }
+        output_summary_csv: {
+            help: "Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O.",
+            type: "Boolean",
+            category: "param_optional"
+        }
+        haploid: {
+            help: "Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms.",
+            type: "Boolean",
+            category: "param_optional"
+        }
         preemptible_tries: {
             help: "Number of preemptible tries before running on non-preemptible",
             type: "Int",
             category: "param_advanced"
         }
-        detailed_csv: {
-            help: "Detailed per-read alignment results in CSV format, containing alignment scores, repeat counts, and read metadata for each alignment",
-            type: "File",
+        detailed_csv_files: {
+            help: "Detailed per-read alignment results in CSV format, containing alignment scores, repeat counts, and read metadata for each alignment. Empty array if output_detailed_csv=false.",
+            type: "Array[File]",
             category: "output"
         }
-        summary_csv: {
-            help: "Per-locus summary statistics in CSV format, aggregating alignment results across all reads for each STR locus",
-            type: "File",
+        summary_csv_files: {
+            help: "Per-locus summary statistics in CSV format, aggregating alignment results across all reads for each STR locus. Empty array if output_summary_csv=false.",
+            type: "Array[File]",
             category: "output"
         }
         genotypes_bed: {
@@ -187,6 +215,10 @@ workflow STRGenotyper {
             max_repeat_count = max_repeat,
             min_score_ratio = min_score_ratio,
             spanning_flank_bases = spanning_flank_bases,
+            min_mapping_quality = min_mapping_quality,
+            output_detailed_csv = output_detailed_csv,
+            output_summary_csv = output_summary_csv,
+            haploid = haploid,
             threads = threads,
             memory_gb = memory_gb,
             disk_gb = disk_gb,
@@ -197,8 +229,8 @@ workflow STRGenotyper {
     }
     
     output {
-        File detailed_csv = GenotypeSTR.detailed_csv
-        File summary_csv = GenotypeSTR.summary_csv
+        Array[File] detailed_csv_files = GenotypeSTR.detailed_csv_files
+        Array[File] summary_csv_files = GenotypeSTR.summary_csv_files
         File genotypes_bed = GenotypeSTR.genotypes_bed
         File genotypes_vcf = GenotypeSTR.genotypes_vcf
         File genotypes_vcf_index = GenotypeSTR.genotypes_vcf_index
@@ -219,6 +251,11 @@ task GenotypeSTR {
         Int max_repeat_count
         Float min_score_ratio
         Int spanning_flank_bases
+        Int min_mapping_quality
+        
+        Boolean output_detailed_csv
+        Boolean output_summary_csv
+        Boolean haploid
         
         Int threads
         Int memory_gb
@@ -249,15 +286,19 @@ task GenotypeSTR {
             --max-repeat ~{max_repeat_count} \
             --min-score-ratio ~{min_score_ratio} \
             --spanning-flank-bases ~{spanning_flank_bases} \
+            --min-mapping-quality ~{min_mapping_quality} \
             --threads ~{threads} \
             --output-dir ./results \
-            --output-prefix ~{base_file_name}
+            --output-prefix ~{base_file_name} \
+            ~{if output_detailed_csv then "" else "--skip-detailed-csv"} \
+            ~{if output_summary_csv then "" else "--skip-summary-csv"} \
+            ~{if haploid then "--haploid" else ""}
     >>>
     
     output {
         File monitoring_log = "monitoring.log"
-        File detailed_csv = "results/~{base_file_name}_detailed.csv"
-        File summary_csv = "results/~{base_file_name}_summary.csv"
+        Array[File] detailed_csv_files = glob("results/*_detailed.csv")
+        Array[File] summary_csv_files = glob("results/*_summary.csv")
         File genotypes_bed = "results/~{base_file_name}_genotypes.bed"
         File genotypes_vcf = "results/~{base_file_name}_genotypes.vcf.gz"
         File genotypes_vcf_index = "results/~{base_file_name}_genotypes.vcf.gz.tbi"

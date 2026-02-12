@@ -12,6 +12,10 @@
     "STRGenotyper.min_repeat": 1,
     "STRGenotyper.max_repeat": 100,
     "STRGenotyper.min_score_ratio": 0.85,
-    "STRGenotyper.spanning_flank_bases": 5,
-    "STRGenotyper.threads": 8
+    "STRGenotyper.spanning_flank_bases": 10,
+    "STRGenotyper.min_mapping_quality": 1,
+    "STRGenotyper.threads": 8,
+    "STRGenotyper.output_detailed_csv": true,
+    "STRGenotyper.output_summary_csv": true,
+    "STRGenotyper.haploid": false
 }

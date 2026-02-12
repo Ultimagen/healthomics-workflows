@@ -8,7 +8,7 @@ workflow Globals {
   input {
   GlobalVariables glob ={
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
-        "str_genotyper_docker": "ultimagenomics/str_genotyper:1.0.1_f7ae986"
+        "str_genotyper_docker": "ultimagenomics/str_genotyper:1.0.2_7384c62"
 }
 }
 

@@ -40,7 +40,7 @@ task ExtractSampleNameFlowOrder{
 
     command <<<
         set -ex
-        set -o pipefail
+        set -xo pipefail
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
@@ -152,7 +152,7 @@ task AggregateMetricsAndConvertToJson {
     }
 
     command <<<
-    set -eo pipefail
+    set -xeo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
     collect_existing_metrics \
@@ -251,7 +251,7 @@ task ScatterIntervalList {
     command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     echo ~{dummy_input_for_call_caching}
-    set -eo pipefail
+    set -xeo pipefail
     mkdir out
     gatk --java-options '-Xms4g' \
       IntervalListTools \
@@ -298,7 +298,7 @@ task IntervalListOfGenome {
     File monitoring_script
   }
   command <<<
-    set -e
+    set -xe
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
     grep -v '[ME_-]' ~{ref_fai} | awk '{print $1"\t"1"\t"$2"\t+\t."}' > modifai
@@ -334,7 +334,7 @@ task IntervalListFromString {
     File monitoring_script
   }
   command <<<
-    set -e
+    set -xe
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
     echo "~{intervals_string}" | tr ':-' '\t\t' | sed 's/;/\n/g' | awk '{print $0 "\t+\t. intersection ACGTmer.1"}' > interval.tsv
@@ -366,7 +366,7 @@ task IntervalListTotalLength {
 
   }
    command <<<
-    set -e
+    set -xe
     bash ~{monitoring_script} | tee monitoring.log >&2 &
     grep -v @ ~{interval_list} | awk '{sum+=$3-$2}; END {printf "%0.f\n", sum}' > sum.txt
     cat sum.txt
@@ -395,7 +395,7 @@ task FastaLengthFromIndex {
 
   }
    command <<<
-     set -e
+     set -xe
      bash ~{monitoring_script} >&2 &
      awk '{sum+=$2} END {printf "%0.f\n", sum}' ~{fasta_index} > sum.txt
   >>>
@@ -425,7 +425,7 @@ task ConcatMetricsJsons {
     }
 
     command <<<
-    set -eo pipefail
+    set -xeo pipefail
 
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
@@ -540,7 +540,7 @@ task ToFastq {
     }
     String output_fq_name = base_file_name + ".fq.gz"
     command <<<
-        set -eo pipefail
+        set -xeo pipefail
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
@@ -583,7 +583,7 @@ task ConcatHtmls {
 
     }
     command <<<
-        set -eo pipefail
+        set -xeo pipefail
 
         start=$(date +%s)
 
@@ -636,7 +636,7 @@ task ZipAndIndexVcf{
     }
     String output_vcf = basename(input_vcf) + ".gz"
     command <<<
-        set -eo pipefail
+        set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         bcftools view -O z -o ~{output_vcf} ~{input_vcf}
@@ -676,7 +676,7 @@ task RenameSampleInBam {
     String basename = basename(input_cram_bam, extension)
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -xeo pipefail
         samtools view -H ~{input_cram_bam} -@ ~{cpus} | sed "s/SM:[^\t]*/SM:~{name}/g" | samtools reheader - ~{input_cram_bam} > ~{basename}~{extension}
         samtools index ~{basename}~{extension}
     >>>
@@ -748,7 +748,7 @@ task MergeBams {
         Boolean no_address
     }
     command<<<
-        set -eo pipefail
+        set -xeo pipefail
         bash ~{monitoring_script} > monitoring.log &
         samtools merge -c -@ 8 ~{output_prefix}.bam ~{sep=' ' inputs}
         samtools index ~{output_prefix}.bam
@@ -784,7 +784,7 @@ task MergeVCFs {
   # See https://github.com/broadinstitute/picard/issues/789 for relevant GatherVcfs ticket
   command {
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    set -eo pipefail
+    set -xeo pipefail
     gatk --java-options '-Xms9000m' \
       MergeVcfs \
       INPUT=~{sep=' INPUT=' input_vcfs} \
@@ -818,7 +818,7 @@ task ConcatVcfs{
     }
     command {
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -xeo pipefail
         bcftools concat ~{sep=' ' input_vcfs} | bcftools sort -T . -Oz -o ~{output_vcf_name} - 
         bcftools index -t ~{output_vcf_name}
     }
@@ -847,14 +847,12 @@ task FilterVcfWithBcftools {
         Array[File]? exclude_regions
         Array[File]? include_regions
         Int preemptible_tries = 1
-        Int disk_size = ceil((size(input_vcf, "GB") + size(select_first([include_regions, []]), "GB") + size(select_first([exclude_regions, []]), "GB")) * 2 + 10)
+        Int disk_size = ceil((size(input_vcf, "GB") * 3 + size(select_first([include_regions, []]), "GB") + size(select_first([exclude_regions, []]), "GB")) * 2 + 10)
         Int memory_gb = 4 + ceil(ceil(size(select_first([include_regions, []]), "GB") + size(select_first([exclude_regions, []]), "GB")) * 0.25)
-        Int cpus = 1 + length(select_first([include_regions, []])) + length(select_first([exclude_regions, []]))  # a process for each bcftools command
+        Int cpus = 4
     }
         String output_base_name = select_first([base_file_name, basename(input_vcf, ".vcf.gz")])
         String output_vcf_filename = output_base_name + ".filtered.vcf.gz"
-        Boolean defined_include_regions = length(select_first([include_regions, []])) > 0
-        Boolean defined_exclude_regions = length(select_first([exclude_regions, []])) > 0
     
     meta {
         description : "Filter input vcf file using bcftools, with 'bcftools view' args and with genomic regions to include and/or exclude."
@@ -910,7 +908,7 @@ task FilterVcfWithBcftools {
             category: "input_optional"
         }
         cpus: {
-            help: "Number of cpus to use for this task. Default is 1.",
+            help: "Number of cpus to use for this task. Default is 4.",
             type: "Int",
             category: "input_optional"
         }
@@ -922,16 +920,28 @@ task FilterVcfWithBcftools {
     }
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -xeo pipefail
 
-        bcftools view \
-            --threads ~{cpus} \
-            ~{bcftools_extra_args} \
-            ~{input_vcf} \
-            ~{true=" | bcftools view - -T " false="" defined_include_regions}~{sep=" | bcftools view - -T " include_regions} \
-            ~{true=" | bcftools view - -T ^" false="" defined_exclude_regions}~{sep=" | bcftools view - -T ^" exclude_regions} \
-            -Oz \
-            -o ~{output_vcf_filename}
+        # Chain with temp BCF to avoid one long pipeline (ARG_MAX). Each step is a short command.
+        TEMP_BCF="filter_temp.bcf"
+        TEMP_BCF2="filter_temp2.bcf"
+
+        bcftools view --threads ~{cpus} ~{bcftools_extra_args} ~{input_vcf} -Ou -o "$TEMP_BCF"
+
+        INCLUDE_REGIONS=(~{sep=" " include_regions})
+        for f in "${INCLUDE_REGIONS[@]}"; do
+            bcftools view --threads ~{cpus} "$TEMP_BCF" -T "$f" -Ou -o "$TEMP_BCF2"
+            mv "$TEMP_BCF2" "$TEMP_BCF"
+        done
+
+        EXCLUDE_REGIONS=(~{sep=" " exclude_regions})
+        for f in "${EXCLUDE_REGIONS[@]}"; do
+            bcftools view --threads ~{cpus} "$TEMP_BCF" -T ^"$f" -Ou -o "$TEMP_BCF2"
+            mv "$TEMP_BCF2" "$TEMP_BCF"
+        done
+
+        bcftools view --threads ~{cpus} "$TEMP_BCF" -Oz -o ~{output_vcf_filename}
+        rm -f "$TEMP_BCF"
         bcftools index -t ~{output_vcf_filename}
     >>>
     output {
@@ -1045,7 +1055,7 @@ task VcfToIntervalListAndBed {
         Boolean no_address
     }
     command <<< 
-        set -eo pipefail
+        set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         gatk VcfToIntervalList \
@@ -1092,7 +1102,7 @@ task BedToIntervalList {
     }
 
     command <<< 
-        set -eo pipefail
+        set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         gatk BedToIntervalList \

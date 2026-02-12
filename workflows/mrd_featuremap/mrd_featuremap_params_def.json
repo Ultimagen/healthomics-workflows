@@ -4,7 +4,7 @@
         "optional": true
     },
     "MRDFeatureMap.FilterControlSignatures.cpus": {
-        "description": "Number of cpus to use for this task. Default is 1.",
+        "description": "Number of cpus to use for this task. Default is 4.",
         "optional": true
     },
     "MRDFeatureMap.FilterControlSignatures.disk_size": {
@@ -24,7 +24,7 @@
         "optional": true
     },
     "MRDFeatureMap.FilterDb.cpus": {
-        "description": "Number of cpus to use for this task. Default is 1.",
+        "description": "Number of cpus to use for this task. Default is 4.",
         "optional": true
     },
     "MRDFeatureMap.FilterDb.disk_size": {
@@ -40,7 +40,7 @@
         "optional": true
     },
     "MRDFeatureMap.FilterMatched.cpus": {
-        "description": "Number of cpus to use for this task. Default is 1.",
+        "description": "Number of cpus to use for this task. Default is 4.",
         "optional": true
     },
     "MRDFeatureMap.FilterMatched.disk_size": {

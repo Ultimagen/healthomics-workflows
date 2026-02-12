@@ -11,12 +11,20 @@
         "description": "CRAM index file (.crai)",
         "optional": false
     },
+    "STRGenotyper.haploid": {
+        "description": "Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms.",
+        "optional": true
+    },
     "STRGenotyper.max_repeat": {
         "description": "Maximum number of repeat units to include in auxiliary reference sequences",
         "optional": true
     },
     "STRGenotyper.memory_gb_override": {
         "description": "Optional memory allocation override in GB (default: 16)",
+        "optional": true
+    },
+    "STRGenotyper.min_mapping_quality": {
+        "description": "Minimum mapping quality for reads to be included in analysis",
         "optional": true
     },
     "STRGenotyper.min_repeat": {
@@ -33,6 +41,14 @@
     },
     "STRGenotyper.no_address": {
         "description": "no_address",
+        "optional": true
+    },
+    "STRGenotyper.output_detailed_csv": {
+        "description": "Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O.",
+        "optional": true
+    },
+    "STRGenotyper.output_summary_csv": {
+        "description": "Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O.",
         "optional": true
     },
     "STRGenotyper.preemptible_tries": {

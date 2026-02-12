@@ -145,7 +145,7 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
 <p name="MRDFeatureMap.FilterMatched.cpus">
         <b>MRDFeatureMap.FilterMatched.cpus</b><br />
         <i>Int </i> &mdash;
-         Number of cpus to use for this task. Default is 1. <br />
+         Number of cpus to use for this task. Default is 4. <br />
 </p>
 <p name="MRDFeatureMap.FilterControlSignatures.base_file_name">
         <b>MRDFeatureMap.FilterControlSignatures.base_file_name</b><br />
@@ -165,7 +165,7 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
 <p name="MRDFeatureMap.FilterControlSignatures.cpus">
         <b>MRDFeatureMap.FilterControlSignatures.cpus</b><br />
         <i>Int </i> &mdash;
-         Number of cpus to use for this task. Default is 1. <br />
+         Number of cpus to use for this task. Default is 4. <br />
 </p>
 <p name="MRDFeatureMap.FilterDb.base_file_name">
         <b>MRDFeatureMap.FilterDb.base_file_name</b><br />
@@ -190,7 +190,7 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
 <p name="MRDFeatureMap.FilterDb.cpus">
         <b>MRDFeatureMap.FilterDb.cpus</b><br />
         <i>Int </i> &mdash;
-         Number of cpus to use for this task. Default is 1. <br />
+         Number of cpus to use for this task. Default is 4. <br />
 </p>
 
 ### Optional reference files

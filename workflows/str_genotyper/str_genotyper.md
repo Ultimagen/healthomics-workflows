@@ -56,24 +56,44 @@ Alignment-based STR genotype caller using Smith-Waterman alignment
         <i>Int </i> &mdash;
          Minimum number of bases that must align on each side of the STR repeat region for a read to be considered 'spanning' the locus <br />
 </p>
+<p name="STRGenotyper.min_mapping_quality">
+        <b>STRGenotyper.min_mapping_quality</b><br />
+        <i>Int </i> &mdash;
+         Minimum mapping quality for reads to be included in analysis <br />
+</p>
 <p name="STRGenotyper.threads">
         <b>STRGenotyper.threads</b><br />
         <i>Int </i> &mdash;
          Number of threads for parallel processing <br />
 </p>
+<p name="STRGenotyper.output_detailed_csv">
+        <b>STRGenotyper.output_detailed_csv</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O. <br />
+</p>
+<p name="STRGenotyper.output_summary_csv">
+        <b>STRGenotyper.output_summary_csv</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O. <br />
+</p>
+<p name="STRGenotyper.haploid">
+        <b>STRGenotyper.haploid</b><br />
+        <i>Boolean </i> &mdash;
+         Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms. <br />
+</p>
 </details>
 
 
 ## Outputs
-<p name="STRGenotyper.detailed_csv">
-        <b>STRGenotyper.detailed_csv</b><br />
-        <i>File</i><br />
-        Detailed per-read alignment results in CSV format, containing alignment scores, repeat counts, and read metadata for each alignment
+<p name="STRGenotyper.detailed_csv_files">
+        <b>STRGenotyper.detailed_csv_files</b><br />
+        <i>Array[File]</i><br />
+        Detailed per-read alignment results in CSV format, containing alignment scores, repeat counts, and read metadata for each alignment. Empty array if output_detailed_csv=false.
 </p>
-<p name="STRGenotyper.summary_csv">
-        <b>STRGenotyper.summary_csv</b><br />
-        <i>File</i><br />
-        Per-locus summary statistics in CSV format, aggregating alignment results across all reads for each STR locus
+<p name="STRGenotyper.summary_csv_files">
+        <b>STRGenotyper.summary_csv_files</b><br />
+        <i>Array[File]</i><br />
+        Per-locus summary statistics in CSV format, aggregating alignment results across all reads for each STR locus. Empty array if output_summary_csv=false.
 </p>
 <p name="STRGenotyper.genotypes_bed">
         <b>STRGenotyper.genotypes_bed</b><br />

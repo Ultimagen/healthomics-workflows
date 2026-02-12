@@ -25,7 +25,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.27.2" # !UnusedDeclaration
+        String pipeline_version = "1.27.3" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
