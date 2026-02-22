@@ -6,7 +6,8 @@
 
 ## Prerequisites
 - `Python 3.8+`
--  Use your favorite python env to install the needed packages listed in: `requirements.txt`
+- Docker
+- Use your favorite python env to install the needed packages listed in: `requirements.txt`
 
 ## Create HealthOmics Workflow
 
@@ -58,6 +59,8 @@ To successfully run this script, you need the following AWS permissions:
 `ecr:CompleteLayerUpload`
 `ecr:InitiateLayerUpload`
 `ecr:UploadLayerPart`
+`ecr:GetAuthorizationToken`
+`ecr:DescribeImages`
 #### S3 Permissions
 `s3:ListBucket`
 `s3:GetObject`
@@ -86,6 +89,8 @@ To successfully run this script, you need the following AWS permissions:
         "ecr:CompleteLayerUpload",
         "ecr:InitiateLayerUpload",
         "ecr:UploadLayerPart",
+        "ecr:GetAuthorizationToken",
+        "ecr:DescribeImages",
         "s3:ListBucket",
         "s3:GetObject",
         "s3:PutObject",
@@ -142,7 +147,7 @@ The script accepts the following command line arguments:
 
 ```bash
 python invoke_healthomics_run.py \
---workflow-name germline_CNV_pipeline \
+--omics-workflow-name germline_CNV_pipeline \
 --workflow-version 1.18.3 \
 --run-id DATA-8079 \
 --input-params-file germline_CNV_pipeline_input.json \
