@@ -193,27 +193,96 @@
     },
     "PyPGx.base_file_name": {
         "description": "Prefix for name of all output files",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "pypgx_template": "<base_file_name>",
+            "NA18980.healthomics_public.test": "NA18980.level_a"
+        }
     },
     "PyPGx.cloud_provider_override": {
         "description": "cloud_provider_override",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "pypgx_template": "aws",
+            "NA18980.healthomics_public.test": "aws"
+        }
     },
     "PyPGx.cram_file": {
         "description": "Input (bam/cram) file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "pypgx_template": "<cram_file>.cram",
+            "NA18980.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/pypgx/NA18980.level_a.cram"
+        }
     },
     "PyPGx.cram_index_file": {
         "description": "Input (bai/crai) index file",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "pypgx_template": "<cram_file>.cram.crai",
+            "NA18980.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/pypgx/NA18980.level_a.cram.crai"
+        }
     },
     "PyPGx.exome_intervals": {
         "description": "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "NA18980.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/annotation_intervals/exome.twist.bed"
+        }
     },
     "PyPGx.gene_symbols": {
         "description": "List of gene symbols to analyze",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "pypgx_template": [
+                "ABCG2",
+                "CACNA1S",
+                "CFTR",
+                "CYP2B6",
+                "CYP2C19",
+                "CYP2C9",
+                "CYP2D6",
+                "CYP3A4",
+                "CYP3A5",
+                "CYP4F2",
+                "DPYD",
+                "G6PD",
+                "IFNL3",
+                "IFNL4",
+                "NAT2",
+                "NUDT15",
+                "RYR1",
+                "SLCO1B1",
+                "TPMT",
+                "UGT1A1",
+                "UGT2B17",
+                "VKORC1",
+                "MT-RNR1"
+            ],
+            "NA18980.healthomics_public.test": [
+                "ABCG2",
+                "CACNA1S",
+                "CFTR",
+                "CYP2B6",
+                "CYP2C19",
+                "CYP2C9",
+                "CYP2D6",
+                "CYP3A5",
+                "CYP4F2",
+                "DPYD",
+                "G6PD",
+                "IFNL3",
+                "IFNL4",
+                "NAT2",
+                "NUDT15",
+                "RYR1",
+                "SLCO1B1",
+                "TPMT",
+                "UGT1A1",
+                "VKORC1",
+                "MT-RNR1"
+            ]
+        }
     },
     "PyPGx.input_vcf_file": {
         "description": "Input VCF file with variants. If not provided, Efficient DV will be run",
@@ -225,11 +294,18 @@
     },
     "PyPGx.model_onnx": {
         "description": "TensorRT model for calling variants (onnx format)",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "NA18980.healthomics_public.test": "s3://<ultima-input-bucket>/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx"
+        }
     },
     "PyPGx.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "pypgx_template": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "NA18980.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "PyPGx.no_address_override": {
         "description": "no_address_override",
@@ -241,18 +317,54 @@
     },
     "PyPGx.ref_dbsnp": {
         "description": "DbSNP vcf for the annotation of known variants",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "NA18980.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf"
+        }
     },
     "PyPGx.ref_dbsnp_index": {
         "description": "DbSNP vcf index",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "NA18980.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx"
+        }
     },
     "PyPGx.ref_files_for_tarball": {
         "description": "List of references for CreateReferenceCache task.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "pypgx_template": [
+                "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://<ultima-input-bucket>/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://<ultima-input-bucket>/ref_cram/hg19.ucsc.fa",
+                "s3://<ultima-input-bucket>/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                "s3://<ultima-input-bucket>/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+            ],
+            "NA18980.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "s3://<ultima-input-bucket>/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
+                "s3://<ultima-input-bucket>/hg19/v0/Homo_sapiens_assembly19.fasta",
+                "s3://<ultima-input-bucket>/ref_cram/hg19.ucsc.fa",
+                "s3://<ultima-input-bucket>/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+                "s3://<ultima-input-bucket>/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+            ]
+        }
     },
     "PyPGx.references": {
         "description": "Reference files: fasta, dict and fai",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "pypgx_template": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "NA18980.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
     }
 }

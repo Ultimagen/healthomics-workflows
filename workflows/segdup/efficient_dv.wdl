@@ -126,7 +126,7 @@ workflow EfficientDV {
     Int? ug_make_examples_cpus_override
     Int preemptible_tries = 1
     Int? ug_call_variants_extra_mem
-    String call_variants_gpu_type = "nvidia-l4" # For AWS
+    String call_variants_gpu_type = "nvidia-tesla-t4-a10g" # For AWS
     Int call_variants_gpus = 1
     Int call_variants_cpus = 8
     Int call_variants_threads = 8

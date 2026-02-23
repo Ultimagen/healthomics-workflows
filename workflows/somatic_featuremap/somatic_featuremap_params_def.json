@@ -1,7 +1,12 @@
 {
     "SomaticFeaturemap.base_file_name": {
         "description": "Sample name",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": "<sample_name>",
+            "somatic_featuremap_template": "<sample_name>",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "TP_HG006_HG003_vs_HG003_5pWG"
+        }
     },
     "SomaticFeaturemap.dummy_input_for_call_caching": {
         "description": "Dummy input for call caching.",
@@ -9,23 +14,60 @@
     },
     "SomaticFeaturemap.input_normal_cram_bam": {
         "description": "Input normal CRAM/BAM file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_normal_cram_bam_file>"
+            ],
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.cram"
+            ]
+        }
     },
     "SomaticFeaturemap.input_normal_cram_bam_index": {
         "description": "Input normal CRAM/BAM index file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_normal_cram_bam_index_file>"
+            ],
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.cram.bai"
+            ]
+        }
     },
     "SomaticFeaturemap.input_tumor_cram_bam": {
         "description": "Input tumor CRAM/BAM file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_tumor_cram_bam_file>"
+            ],
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/HG006_HG003.TP.bam"
+            ]
+        }
     },
     "SomaticFeaturemap.input_tumor_cram_bam_index": {
         "description": "Input tumor CRAM/BAM index file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": [
+                "<input_tumor_cram_bam_index_file>"
+            ],
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": [
+                "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/HG006_HG003.TP.bam.bai"
+            ]
+        }
     },
     "SomaticFeaturemap.interval_list": {
         "description": "Input interval list file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
+            "somatic_featuremap_template": "s3://<ultima-input-bucket>/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/subsample.5p.interval_list.gz"
+        }
     },
     "SomaticFeaturemap.keep_non_pass_tumor_candidates_override": {
         "description": "If true, keep non-PASS tumor candidates in the somatic featuremap.",
@@ -37,11 +79,21 @@
     },
     "SomaticFeaturemap.min_mapq_for_samtools_mpileup": {
         "description": "Minimum mapping quality for samtools mpileup.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": 0,
+            "somatic_featuremap_template": 0,
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": 0
+        }
     },
     "SomaticFeaturemap.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "somatic_featuremap_template": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "SomaticFeaturemap.no_address_override": {
         "description": "no_address_override",
@@ -49,19 +101,37 @@
     },
     "SomaticFeaturemap.normal_featuremap_vcf": {
         "description": "Input normal featuremap VCF file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<normal_vcf_file>",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.featuremap.vcf.gz"
+        }
     },
     "SomaticFeaturemap.normal_featuremap_vcf_index": {
         "description": "Input normal featuremap VCF index file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<normal_vcf_file>.tbi",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/sim_028059.normal_in_tumor.featuremap.vcf.gz.tbi"
+        }
     },
     "SomaticFeaturemap.num_shards": {
         "description": "Number of shards for splitting the interval list.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": 200,
+            "somatic_featuremap_template": 30,
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": 30
+        }
     },
     "SomaticFeaturemap.pad_size": {
         "description": "Size of padding to add to the positions of variants defined as tumor-PASS in somatic-pileup-featuremap.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": 2,
+            "somatic_featuremap_template": 2,
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": 2
+        }
     },
     "SomaticFeaturemap.preemptible_tries_override": {
         "description": "preemptible_tries_override",
@@ -69,38 +139,85 @@
     },
     "SomaticFeaturemap.ref_tandem_repeats": {
         "description": "Reference tandem repeats file.",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": "s3://<ultima-input-bucket>/hg38/tandem_repeats.hg38.bed",
+            "somatic_featuremap_template": "s3://<ultima-input-bucket>/hg38/tandem_repeats.hg38.bed",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/hg38/tandem_repeats.hg38.bed"
+        }
     },
     "SomaticFeaturemap.references": {
         "description": "Input reference genome file, index file and dict.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "somatic_featuremap_template": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
     },
     "SomaticFeaturemap.run_mpileup_override": {
         "description": "If true, run the mpileup step.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": false
+        }
     },
     "SomaticFeaturemap.scatter_intervals_break": {
         "description": "Break scatter intervals at multiples of this value.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": 10000000,
+            "somatic_featuremap_template": 10000000,
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": 10000000
+        }
     },
     "SomaticFeaturemap.sfm_xgb_model": {
         "description": "XGBoost model file for somatic featuremap pileup scoring.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/somatic_featuremap/sfm.xgb_model.V1.15.json"
+        }
     },
     "SomaticFeaturemap.somatic_featuremap_given": {
         "description": "If provided, use this somatic featuremap file instead of generating a new one.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": "<somatic_featuremap_vcf_file>.vcf.gz"
+        }
     },
     "SomaticFeaturemap.somatic_featuremap_given_index": {
         "description": "If provided, use this somatic featuremap index file instead of generating a new one.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_scoring_only_template": "<somatic_featuremap_vcf_file>.vcf.gz.tbi"
+        }
     },
     "SomaticFeaturemap.tumor_featuremap_vcf": {
         "description": "Input tumor featuremap VCF file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<tumor_vcf_file>",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/HG006_HG003.featuremap.vcf.gz"
+        }
     },
     "SomaticFeaturemap.tumor_featuremap_vcf_index": {
         "description": "Input tumor featuremap VCF index file.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "somatic_featuremap_template": "<tumor_vcf_file>.tbi",
+            "2Giab_HG006_HG003_vs_HG003_5pWG_FreshFrozen_model.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/somatic_featuremap/HG006_HG003.featuremap.vcf.gz.tbi"
+        }
     }
 }

@@ -1,23 +1,43 @@
 {
     "STRGenotyper.base_file_name": {
         "description": "Prefix for name of all output files",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "str_genotyper_template": "<base_file_name>",
+            "HG002.healthomics_public.test": "NA24385"
+        }
     },
     "STRGenotyper.cram_file": {
         "description": "Input CRAM file for STR genotyping",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "str_genotyper_template": "<cram_file>.cram",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram"
+        }
     },
     "STRGenotyper.cram_index": {
         "description": "CRAM index file (.crai)",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "str_genotyper_template": "<cram_file>.cram.crai",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/germline/NA24385-Z0027.cram.crai"
+        }
     },
     "STRGenotyper.haploid": {
         "description": "Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": false,
+            "HG002.healthomics_public.test": false
+        }
     },
     "STRGenotyper.max_repeat": {
         "description": "Maximum number of repeat units to include in auxiliary reference sequences",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": 100,
+            "HG002.healthomics_public.test": 100
+        }
     },
     "STRGenotyper.memory_gb_override": {
         "description": "Optional memory allocation override in GB (default: 16)",
@@ -25,19 +45,35 @@
     },
     "STRGenotyper.min_mapping_quality": {
         "description": "Minimum mapping quality for reads to be included in analysis",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": 1,
+            "HG002.healthomics_public.test": 1
+        }
     },
     "STRGenotyper.min_repeat": {
         "description": "Minimum number of repeat units to include in auxiliary reference sequences",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": 1,
+            "HG002.healthomics_public.test": 1
+        }
     },
     "STRGenotyper.min_score_ratio": {
         "description": "Minimum ratio of alignment score to the theoretical maximum score (read_length * match_score). Alignments below this threshold are filtered out. Range: 0.0-1.0, where 1.0 requires perfect alignment.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": 0.85,
+            "HG002.healthomics_public.test": 0.85
+        }
     },
     "STRGenotyper.monitoring_script_input": {
         "description": "monitoring_script_input",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": "s3://<ultima-input-bucket>/monitor_1.0.sh",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/monitor_1.0.sh"
+        }
     },
     "STRGenotyper.no_address": {
         "description": "no_address",
@@ -45,11 +81,19 @@
     },
     "STRGenotyper.output_detailed_csv": {
         "description": "Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": true,
+            "HG002.healthomics_public.test": true
+        }
     },
     "STRGenotyper.output_summary_csv": {
         "description": "Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": true,
+            "HG002.healthomics_public.test": true
+        }
     },
     "STRGenotyper.preemptible_tries": {
         "description": "preemptible_tries",
@@ -57,22 +101,50 @@
     },
     "STRGenotyper.ref_padding": {
         "description": "Number of bases to extend around the STR repeat region when building auxiliary references for alignment. Larger values provide more flanking sequence context for accurate alignment.",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": 500,
+            "HG002.healthomics_public.test": 500
+        }
     },
     "STRGenotyper.references": {
         "description": "Reference genome files (fasta, fasta.fai, dict) as References struct",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "str_genotyper_template": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            },
+            "HG002.healthomics_public.test": {
+                "ref_fasta": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta",
+                "ref_fasta_index": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+                "ref_dict": "s3://<ultima-input-bucket>/hg38/v0/Homo_sapiens_assembly38.dict"
+            }
+        }
     },
     "STRGenotyper.spanning_flank_bases": {
         "description": "Minimum number of bases that must align on each side of the STR repeat region for a read to be considered 'spanning' the locus",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": 10,
+            "HG002.healthomics_public.test": 10
+        }
     },
     "STRGenotyper.threads": {
         "description": "Number of threads for parallel processing",
-        "optional": true
+        "optional": true,
+        "useCase": {
+            "str_genotyper_template": 8,
+            "HG002.healthomics_public.test": 8
+        }
     },
     "STRGenotyper.variant_catalog": {
         "description": "JSON file containing STR variant catalog with locus definitions",
-        "optional": false
+        "optional": false,
+        "useCase": {
+            "str_genotyper_template": "<variant_catalog>.json",
+            "HG002.healthomics_public.test": "s3://<ultima-input-bucket>/sample_data/str_genotyper/clinical_variant_catalog.json"
+        }
     }
 }
