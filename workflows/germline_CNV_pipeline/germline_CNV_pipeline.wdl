@@ -30,11 +30,12 @@ import "single_sample_CNVpytor_calling.wdl" as SingleSampleCNVpytorCalling
 import "combine_germline_CNV_calls.wdl" as CombineGermlineCNVCalls
 import "tasks/globals.wdl" as Globals
 import "tasks/general_tasks.wdl" as UGGeneralTasks
+import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -79,7 +80,7 @@ workflow GermlineCNVPipeline {
         #@wv reference_genome == prefix(reference_genome_index)
         #@wv suffix(reference_genome) in {'.fasta', '.fa', '.fna'}
         #@wv suffix(reference_genome_index) == '.fai'
-        #@wv suffix(filtering_model) == '.pkl'
+        #@wv defined(filtering_model) -> suffix(filtering_model) == '.pkl'
     }
 
     meta {
@@ -228,6 +229,11 @@ workflow GermlineCNVPipeline {
            type: "Boolean",
            category: "input_optional"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
         cnmops_cnv_calls_bed: {
             help: "CNMOPS CNV calls in bed format",
             type: "File",
@@ -291,6 +297,21 @@ workflow GermlineCNVPipeline {
         }
         combine_read_scores_csv: {
             help: "CSV file with jalign scores for each read",
+            type: "File",
+            category: "output"
+        }
+        combined_coverage_plot: {
+            help: "CNV coverage plot for combined calls in JPEG format (only generated if skip_figure_generation is false)",
+            type: "File",
+            category: "output"
+        }
+        combined_dup_del_plot: {
+            help: "Duplication and deletion calls plot for combined calls in JPEG format (only generated if skip_figure_generation is false)",
+            type: "File",
+            category: "output"
+        }
+        combined_copy_number_plot: {
+            help: "Copy number calls plot for combined calls in JPEG format (only generated if skip_figure_generation is false)",
             type: "File",
             category: "output"
         }
@@ -368,7 +389,6 @@ workflow GermlineCNVPipeline {
             cushion_size = cushion_size,
             reference_genome = reference_genome,
             reference_genome_index = reference_genome_index,
-            cnv_lcr_file = ug_cnv_lcr_file,
             skip_filtering = skip_filtering,
             filtering_model = filtering_model,
             filtering_model_decision_threshold = filtering_model_decision_threshold,
@@ -379,6 +399,22 @@ workflow GermlineCNVPipeline {
 
     File combined_cnv_calls_bed_vcf_ = CombineCNVCalls.out_sample_cnvs_vcf
     File combined_cnv_calls_bed_vcf_index_ = CombineCNVCalls.out_sample_cnvs_vcf_index
+    
+    # Generate CNV plots after filtering and BED output (only if not skipped)
+    if (!skip_figure_generation_value) {
+        call CnvTasks.PlotCNVResults {
+            input:
+                input_cnv_vcf = combined_cnv_calls_bed_vcf_,
+                input_cnv_vcf_index = combined_cnv_calls_bed_vcf_index_,
+                sample_norm_coverage_file = CnmopsCNVCalling.out_sample_norm_coverage_bed,
+                base_file_name = base_file_name,
+                docker = global.ugbio_cnv_docker,
+                monitoring_script = monitoring_script,
+                no_address = no_address,
+                preemptible_tries = preemptible_tries
+        }
+    }
+    
     if (create_md5_checksum_outputs) {
         Array[File] output_files = [combined_cnv_calls_bed_vcf_, combined_cnv_calls_bed_vcf_index_]
 
@@ -409,6 +445,9 @@ workflow GermlineCNVPipeline {
         File combine_read_evidence = CombineCNVCalls.read_evidence
         File combine_read_evidence_index = CombineCNVCalls.read_evidence_index
         File combine_read_scores_csv = CombineCNVCalls.read_scores_csv
+        File? combined_coverage_plot = PlotCNVResults.coverage_plot
+        File? combined_dup_del_plot = PlotCNVResults.dup_del_plot
+        File? combined_copy_number_plot = PlotCNVResults.copy_number_plot
         File? md5_checksums_json = MergeMd5sToJson.md5_json
     }
 }

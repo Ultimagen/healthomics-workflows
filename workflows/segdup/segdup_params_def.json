@@ -43,8 +43,24 @@
         "description": "Minimal base quality for local assembly of haplotypes",
         "optional": true
     },
+    "SegDupAnalysis.DV.ensemble_reference_rows": {
+        "description": "Number of reference rows for ensemble inference",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ensemble_size": {
+        "description": "Size of the ensemble for inference",
+        "optional": true
+    },
     "SegDupAnalysis.DV.germline_vcf": {
         "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.gq_bins": {
+        "description": "GQ bins to use instead of a fixed resolution (overrides gq_resolution)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.gq_resolution_override": {
+        "description": "Override for gq resolution (default: 5)",
         "optional": true
     },
     "SegDupAnalysis.DV.h_indel_allele_frequency_ratio": {
@@ -127,12 +143,24 @@
         "description": "Basecalling error for reference confidence model in gvcf",
         "optional": true
     },
+    "SegDupAnalysis.DV.pangenome_haplotypes": {
+        "description": "Optional pangenome haplotypes cram file",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.pangenome_haplotypes_index": {
+        "description": "Optional pangenome haplotypes cram index file",
+        "optional": true
+    },
     "SegDupAnalysis.DV.pileup_min_mapping_quality": {
         "description": "Minimal mapping quality to be included in image (the input to the CNN)",
         "optional": true
     },
     "SegDupAnalysis.DV.prioritize_alt_supporting_reads": {
         "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.random_seed": {
+        "description": "Random seed for ensemble inference",
         "optional": true
     },
     "SegDupAnalysis.DV.scatter_intervals_break": {
@@ -143,8 +171,16 @@
         "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
         "optional": true
     },
+    "SegDupAnalysis.DV.shuffle_all_samples": {
+        "description": "Whether to shuffle all samples during inference",
+        "optional": true
+    },
     "SegDupAnalysis.DV.strand_bias_normalization_thresholds": {
         "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.strong_call_threshold": {
+        "description": "Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference",
         "optional": true
     },
     "SegDupAnalysis.DV.ug_call_variants_extra_mem": {
@@ -217,6 +253,10 @@
     },
     "SegDupAnalysis.model_serialized": {
         "description": "Serialized model for variant calling",
+        "optional": true
+    },
+    "SegDupAnalysis.monitoring_script_input": {
+        "description": "monitoring_script_input",
         "optional": true
     },
     "SegDupAnalysis.n_threads": {

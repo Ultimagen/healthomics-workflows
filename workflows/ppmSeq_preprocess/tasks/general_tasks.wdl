@@ -1211,3 +1211,83 @@ task ConcatFiles{
         File out_merged_file = "~{out_file_name}"
     }
 }
+
+# Calculate median coverage across genomic regions using samtools bedcov.
+# Given multiple cram files, sum up their coverages.
+# Handles both AWS and non-AWS cloud providers with different optimization strategies. 
+task CalculateCoverage {
+
+  input {
+    File ref
+    File ref_index
+    File ref_dict
+    Array[File] crams
+    Array[File] cram_indices
+    File quick_coverage_bed
+    String cloud_provider
+    String docker
+    File monitoring_script
+    Int preemptible_tries
+  }
+
+  Int disk_size = ceil(1.5 * size(crams, "GB") + 20)
+
+  parameter_meta {
+    crams: {
+        localization_optional: true
+    }
+  }
+
+  command <<<
+    set -xeo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    # Function to calculate median from coverage values
+    # Sums coverage across all CRAM files (columns 4+) then calculates median
+    calculate_median() {
+      awk '{
+        # Sum coverage from all files (columns 4 onwards)
+        total_cov = 0;
+        for(i=4; i<=NF; i++) total_cov += $i;
+        if(total_cov > 0) print total_cov;
+      }' | sort -n | awk 'BEGIN{c=0} {a[c++]=$1} END{if(c==0) print 0; else if(c%2) print a[int(c/2)]; else print (a[int(c/2)-1]+a[int(c/2)])/2}'
+    }
+
+    # Convert BED to interval list for GATK PrintReads
+    gatk BedToIntervalList -I ~{quick_coverage_bed} -O coverage_regions.interval_list -SD ~{ref_dict} 2>&1
+
+    if [[ "~{cloud_provider}" != "aws" ]]; then
+      # Extract only the coverage estimation regions
+      gatk --java-options "-Xms1G" PrintReads \
+          -I ~{sep=' -I ' crams} \
+          -L coverage_regions.interval_list \
+          -R ~{ref} \
+          -O /dev/stdout | \
+          samtools view -b -o coverage.bam -
+      samtools index coverage.bam
+    fi
+
+    # Calculate median coverage
+    if [[ "~{cloud_provider}" != "aws" ]]; then
+      median_cov=$(samtools bedcov ~{quick_coverage_bed} coverage.bam --reference ~{ref} | calculate_median)
+    else
+      median_cov=$(samtools bedcov ~{quick_coverage_bed} ~{sep=' ' crams} --reference ~{ref} | calculate_median)
+    fi
+
+    echo "Calculated median coverage: $median_cov"
+    printf "%.0f" "$median_cov" > median_coverage.txt
+  >>>
+
+  runtime {
+    memory: "4 GB"
+    cpu: 2
+    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+    preemptible: preemptible_tries
+  }
+
+  output {
+    File monitoring_log = "monitoring.log"
+    Int median_coverage = read_int("median_coverage.txt")
+  }
+}

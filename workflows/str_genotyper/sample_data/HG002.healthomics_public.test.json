@@ -17,5 +17,6 @@
     "STRGenotyper.threads": 8,
     "STRGenotyper.output_detailed_csv": true,
     "STRGenotyper.output_summary_csv": true,
-    "STRGenotyper.haploid": false
+    "STRGenotyper.haploid": false,
+    "STRGenotyper.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

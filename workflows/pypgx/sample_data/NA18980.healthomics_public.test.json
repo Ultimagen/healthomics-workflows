@@ -42,5 +42,6 @@
     "PyPGx.exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
     "PyPGx.ref_dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
     "PyPGx.ref_dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
-    "PyPGx.cloud_provider_override": "aws"
+    "PyPGx.cloud_provider_override": "aws",
+    "PyPGx.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

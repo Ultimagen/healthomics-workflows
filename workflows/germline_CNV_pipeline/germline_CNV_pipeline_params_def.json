@@ -31,14 +31,6 @@
         "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
         "optional": true
     },
-    "GermlineCNVPipeline.CombineCNVCalls.distance_threshold_override": {
-        "description": "Distance threshold for merging CNV calls. default=1500",
-        "optional": true
-    },
-    "GermlineCNVPipeline.CombineCNVCalls.duplication_length_cutoff_for_cnmops_filter_override": {
-        "description": "Minimum length of duplications to be considered for cn.mops calls. default=10000",
-        "optional": true
-    },
     "GermlineCNVPipeline.base_file_name": {
         "description": "Sample name",
         "optional": false

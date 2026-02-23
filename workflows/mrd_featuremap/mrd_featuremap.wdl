@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -224,6 +224,11 @@ workflow MRDFeatureMap {
            help: "Create md5 checksum for requested output files",
            type: "Boolean",
            category: "input_optional"
+      }
+      monitoring_script_input: {
+          help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+          type: "File",
+          category: "input_optional"
       }
       references: {
           help: "Reference files: fasta, dict and fai, recommended value set in the template",

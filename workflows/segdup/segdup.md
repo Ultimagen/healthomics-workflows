@@ -138,6 +138,16 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Float </i> &mdash;
          Basecalling error for reference confidence model in gvcf <br />
 </p>
+<p name="SegDupAnalysis.DV.gq_resolution_override">
+        <b>SegDupAnalysis.DV.gq_resolution_override</b><br />
+        <i>Int? </i> &mdash;
+         Override for gq resolution (default: 5) <br />
+</p>
+<p name="SegDupAnalysis.DV.gq_bins">
+        <b>SegDupAnalysis.DV.gq_bins</b><br />
+        <i>Array[Int]? </i> &mdash;
+         GQ bins to use instead of a fixed resolution (overrides gq_resolution) <br />
+</p>
 <p name="SegDupAnalysis.DV.output_realignment">
         <b>SegDupAnalysis.DV.output_realignment</b><br />
         <i>Boolean </i> &mdash;
@@ -158,6 +168,16 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>File? </i> &mdash;
          Germline vcf file in order to generate haplotypes that incorporate germline variants <br />
 </p>
+<p name="SegDupAnalysis.DV.pangenome_haplotypes">
+        <b>SegDupAnalysis.DV.pangenome_haplotypes</b><br />
+        <i>File? </i> &mdash;
+         Optional pangenome haplotypes cram file <br />
+</p>
+<p name="SegDupAnalysis.DV.pangenome_haplotypes_index">
+        <b>SegDupAnalysis.DV.pangenome_haplotypes_index</b><br />
+        <i>File? </i> &mdash;
+         Optional pangenome haplotypes cram index file <br />
+</p>
 <p name="SegDupAnalysis.DV.optimization_level">
         <b>SegDupAnalysis.DV.optimization_level</b><br />
         <i>Int? </i> &mdash;
@@ -167,6 +187,31 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
          Output tfrecords from call_variants <br />
+</p>
+<p name="SegDupAnalysis.DV.strong_call_threshold">
+        <b>SegDupAnalysis.DV.strong_call_threshold</b><br />
+        <i>Float </i> &mdash;
+         Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference <br />
+</p>
+<p name="SegDupAnalysis.DV.ensemble_size">
+        <b>SegDupAnalysis.DV.ensemble_size</b><br />
+        <i>Int </i> &mdash;
+         Size of the ensemble for inference <br />
+</p>
+<p name="SegDupAnalysis.DV.ensemble_reference_rows">
+        <b>SegDupAnalysis.DV.ensemble_reference_rows</b><br />
+        <i>Int </i> &mdash;
+         Number of reference rows for ensemble inference <br />
+</p>
+<p name="SegDupAnalysis.DV.random_seed">
+        <b>SegDupAnalysis.DV.random_seed</b><br />
+        <i>Int </i> &mdash;
+         Random seed for ensemble inference <br />
+</p>
+<p name="SegDupAnalysis.DV.shuffle_all_samples">
+        <b>SegDupAnalysis.DV.shuffle_all_samples</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to shuffle all samples during inference <br />
 </p>
 <p name="SegDupAnalysis.DV.min_variant_quality_hmer_indels">
         <b>SegDupAnalysis.DV.min_variant_quality_hmer_indels</b><br />

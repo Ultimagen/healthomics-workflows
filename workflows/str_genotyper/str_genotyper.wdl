@@ -195,6 +195,11 @@ workflow STRGenotyper {
             type: "File",
             category: "output"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
     }
 
     call Globals.Globals as GlobalsCall

@@ -19,5 +19,6 @@
     },
     "FFPE_vs_BC": {
         "SomaticFeaturemap.sfm_xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_featuremap/sfm.xgb_model.FFPEV1.7.json"
-    }
+    },
+    "SomaticFeaturemap.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

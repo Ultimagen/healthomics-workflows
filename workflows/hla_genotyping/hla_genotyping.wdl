@@ -25,7 +25,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow HLAGenotyping {
 input{
-    String pipeline_version = "1.27.3" # !UnusedDeclaration
+    String pipeline_version = "1.28.0" # !UnusedDeclaration
     String base_file_name
 
     File input_cram_bam
@@ -91,6 +91,11 @@ input{
             type: "String",
             help: "Cloud provider to use for the workflow. Currently supported: aws, gcp default: gcp",
             category: "optional"
+        }
+        monitoring_script_input: {
+            type: "File",
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            category: "input_optional"
         }
         output_hla: {
             type: "File",

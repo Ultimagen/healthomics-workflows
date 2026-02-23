@@ -62,12 +62,13 @@ workflow PyPGx {
         version: "1.0"
         WDL_AID: {exclude: ["pipeline_version",
                 "cloud_provider_override",
-                "monitoring_script_input",
                 "no_address_override",
+                "monitoring_script_input",
                 "DepthOfCoverage.disk_size",
                 "Globals.glob",
                 "preemptible_tries",
-                "CreateReferenceCache.disk_size"
+                "CreateReferenceCache.disk_size",
+                "CreateReferenceCache.cache_populate_script_path"
                 ]
         }
     }
@@ -179,6 +180,11 @@ workflow PyPGx {
             help: "Results for each gene",
             category: "output"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
      }
 
 
@@ -193,9 +199,8 @@ workflow PyPGx {
     call UGAlignment.CreateReferenceCache {
         input:
             references = ref_files_for_tarball,
-            cache_populate_script = global.ref_cache_script, #!StringCoercion
             preemptible_tries = preemptible_tries,
-            docker = global.perl_docker,
+            docker = global.ugbio_core_docker,
             dummy_input_for_call_caching = ""
     }
 
@@ -243,7 +248,7 @@ workflow PyPGx {
             add_ins_size_channel = true,
             cloud_provider_override = cloud_provider,
             monitoring_script_input = monitoring_script,
-            preemptible_tries = preemptible_tries
+            preemptible_tries = preemptible_tries,
         }
     }
 

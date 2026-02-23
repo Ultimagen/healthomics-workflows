@@ -32,5 +32,6 @@
     "MRDFeatureMap.create_md5_checksum_outputs": false,
     "MRDFeatureMap.external_control_signatures": [
         "<external_control_signatures>"
-    ]
+    ],
+    "MRDFeatureMap.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

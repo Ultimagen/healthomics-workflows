@@ -32,7 +32,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.27.3" # !UnusedDeclaration
+    String pipeline_version = "1.28.0" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -169,6 +169,11 @@ workflow ppmSeqPreprocess {
        type: "Boolean",
        category: "input_optional"
     }
+    monitoring_script_input: {
+        help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+        type: "File",
+        category: "input_optional"
+    }
     trimmer_histogram_csv_out: {
       help: "Trimmer histogram csv output",
       type: "File",
@@ -255,6 +260,8 @@ workflow ppmSeqPreprocess {
   call Globals.Globals as Globals
   GlobalVariables global = Globals.global_dockers
 
+  File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+
   call TrimAlignSortSubWF.TrimAlignSort as TrimAlignSort {
     input:
         input_cram_bam_list = input_cram_bam_list,
@@ -291,7 +298,7 @@ workflow ppmSeqPreprocess {
         base_file_name =                      base_file_name,
         ppmSeq_analysis_extra_args = ppmSeq_analysis_extra_args,
         docker =                              global.ugbio_ppmseq_docker,
-        monitoring_script =                   global.monitoring_script, # !FileCoercion
+        monitoring_script =                   monitoring_script,
   }
 
     File output_cram_bam_                 = select_first([TrimAlignSort.output_cram_bam])

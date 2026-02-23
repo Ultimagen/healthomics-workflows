@@ -41,11 +41,16 @@ struct AlignmentReferences {
 }
 
 struct GiraffeReferences {
-  References references
   File ref_gbz
   File ref_dist
   File ref_min
-  File ref_path_list
+  File ref_zipcodes
+  File ref_paths
+  String prefix_to_strip
+  File? ref_hapl
+  File? ref_gbz_for_haplotypes
+  File? alignment_reference_fasta_for_haplotypes
+  File? alignment_reference_fasta_index_for_haplotypes
 }
 
 # BWA-METH alignment

@@ -30,6 +30,7 @@
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
     "EfficientDV.normalize_strand_bias": false,
+    "EfficientDV.strong_call_threshold": 1.1,
     "EfficientDV.background_cram_files": [
         "<normal_cram_file>.cram"
     ],
@@ -53,5 +54,6 @@
         80
     ],
     "EfficientDV.ug_make_examples_memory_override": 4,
-    "EfficientDV.cloud_provider_override": "aws"
+    "EfficientDV.cloud_provider_override": "aws",
+    "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -246,6 +246,11 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "File",
             category: "output"
         }
+        out_sample_norm_coverage_bed: {
+            help: "Normalized coverage bed file for the sample",
+            type: "File",
+            category: "output"
+        }
         out_sample_reads_count : {
             help: "GenomicRanges object of the sample's reads count in rds file format",
             type: "File",
@@ -410,10 +415,23 @@ workflow SingleSampleCnmopsCNVCalling {
             preemptible_tries = preemptible_tries
     }
 
+
+
     scatter (vcf_file in zip(sample_names, ProcessCnmopsCnvs.sample_cnvs_vcf)) {
+        call CnvTasks.AddCIPOS { 
+            input:
+                input_vcf = vcf_file.right,
+                base_file_name = base_file_name,
+                window_size = window_length,
+                docker = global.ugbio_cnv_docker,
+                monitoring_script = monitoring_script,
+                no_address = no_address,
+                preemptible_tries = preemptible_tries
+        }
+
         call CnvTasks.CnvVcfToBed {
             input:
-                input_cnv_vcf = vcf_file.right,
+                input_cnv_vcf = AddCIPOS.output_vcf,
                 base_file_name = vcf_file.left,
                 docker = global.ugbio_cnv_docker,
                 monitoring_script = monitoring_script,
@@ -429,6 +447,7 @@ workflow SingleSampleCnmopsCNVCalling {
         File out_sample_cnvs_vcf = ProcessCnmopsCnvs.sample_cnvs_vcf[0]
         File out_sample_cnvs_vcf_index = ProcessCnmopsCnvs.sample_cnvs_vcf_index[0]
         File out_sample_cnvs_bed = CnvVcfToBed.output_cnv_bed[0]
+        File out_sample_norm_coverage_bed = ExtractNormalizedReadCount.sample_reads_count_bed[0]
         Array[File] out_coverage_plot_files = ProcessCnmopsCnvs.coverage_plot
         Array[File] out_dup_del_plot_files = ProcessCnmopsCnvs.dup_del_plot
         Array[File] out_copy_number_plot_files = ProcessCnmopsCnvs.copy_number_plot

@@ -1,0 +1,39 @@
+{
+    "GiraffeAlignment.base_file_name": "test_giraffe",
+    "GiraffeAlignment.input_cram_list": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/006919-UGAv3-49-CAGCCTCAGCGTGAT-4x.cram"
+    ],
+    "GiraffeAlignment.reads_per_split": 20000000,
+    "GiraffeAlignment.ref_files_for_tarball": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/on_tool/hg38_Lambda_pUC19_simple.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
+        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+    ],
+    "GiraffeAlignment.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "GiraffeAlignment.sorter_params": {
+        "mark_duplicates": true,
+        "aligned": true,
+        "mark_duplicates_ends_read_uncertainty": 0
+    },
+    "GiraffeAlignment.giraffe_parameters": {
+        "ref_gbz": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.gbz",
+        "ref_dist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.dist",
+        "ref_min": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.shortread.withzip.min",
+        "ref_zipcodes": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.shortread.zipcodes",
+        "ref_paths": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/GRCh38h0h.path_list.txt",
+        "prefix_to_strip": "GRCh38#0#",
+        "ref_hapl": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.hapl",
+        "ref_gbz_for_haplotypes": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.gbz",
+        "alignment_reference_fasta_for_haplotypes": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hg38.primary.fa",
+        "alignment_reference_fasta_index_for_haplotypes": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hg38.primary.fa.fai"
+    },
+    "GiraffeAlignment.output_haplotypes_cram": true,
+    "GiraffeAlignment.preemptible_tries": 2
+}

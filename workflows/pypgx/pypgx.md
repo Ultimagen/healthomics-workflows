@@ -145,6 +145,16 @@ Runs pharmacogenomics analysis on several genes.
         <i>Float </i> &mdash;
          Basecalling error for reference confidence model in gvcf <br />
 </p>
+<p name="PyPGx.EfficientDV.gq_resolution_override">
+        <b>PyPGx.EfficientDV.gq_resolution_override</b><br />
+        <i>Int? </i> &mdash;
+         Override for gq resolution (default: 5) <br />
+</p>
+<p name="PyPGx.EfficientDV.gq_bins">
+        <b>PyPGx.EfficientDV.gq_bins</b><br />
+        <i>Array[Int]? </i> &mdash;
+         GQ bins to use instead of a fixed resolution (overrides gq_resolution) <br />
+</p>
 <p name="PyPGx.EfficientDV.output_realignment">
         <b>PyPGx.EfficientDV.output_realignment</b><br />
         <i>Boolean </i> &mdash;
@@ -165,6 +175,16 @@ Runs pharmacogenomics analysis on several genes.
         <i>File? </i> &mdash;
          Germline vcf file in order to generate haplotypes that incorporate germline variants <br />
 </p>
+<p name="PyPGx.EfficientDV.pangenome_haplotypes">
+        <b>PyPGx.EfficientDV.pangenome_haplotypes</b><br />
+        <i>File? </i> &mdash;
+         Optional pangenome haplotypes cram file <br />
+</p>
+<p name="PyPGx.EfficientDV.pangenome_haplotypes_index">
+        <b>PyPGx.EfficientDV.pangenome_haplotypes_index</b><br />
+        <i>File? </i> &mdash;
+         Optional pangenome haplotypes cram index file <br />
+</p>
 <p name="PyPGx.EfficientDV.optimization_level">
         <b>PyPGx.EfficientDV.optimization_level</b><br />
         <i>Int? </i> &mdash;
@@ -174,6 +194,31 @@ Runs pharmacogenomics analysis on several genes.
         <b>PyPGx.EfficientDV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
          Output tfrecords from call_variants <br />
+</p>
+<p name="PyPGx.EfficientDV.strong_call_threshold">
+        <b>PyPGx.EfficientDV.strong_call_threshold</b><br />
+        <i>Float </i> &mdash;
+         Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference <br />
+</p>
+<p name="PyPGx.EfficientDV.ensemble_size">
+        <b>PyPGx.EfficientDV.ensemble_size</b><br />
+        <i>Int </i> &mdash;
+         Size of the ensemble for inference <br />
+</p>
+<p name="PyPGx.EfficientDV.ensemble_reference_rows">
+        <b>PyPGx.EfficientDV.ensemble_reference_rows</b><br />
+        <i>Int </i> &mdash;
+         Number of reference rows for ensemble inference <br />
+</p>
+<p name="PyPGx.EfficientDV.random_seed">
+        <b>PyPGx.EfficientDV.random_seed</b><br />
+        <i>Int </i> &mdash;
+         Random seed for ensemble inference <br />
+</p>
+<p name="PyPGx.EfficientDV.shuffle_all_samples">
+        <b>PyPGx.EfficientDV.shuffle_all_samples</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to shuffle all samples during inference <br />
 </p>
 <p name="PyPGx.EfficientDV.hard_qual_filter">
         <b>PyPGx.EfficientDV.hard_qual_filter</b><br />

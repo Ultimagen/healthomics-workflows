@@ -41,7 +41,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -152,11 +152,11 @@ workflow SVPipeline {
             "AlignWithUA.memory_gb",
             "ConvertToUbam.cache_tarball",
             "ConvertToUbam.disk_size",
-            "AlignWithGiraffe.in_prefix_to_strip",
             "SortGiraffeAlignment.disk_size",
             "SortGiraffeAlignment.gitc_path",
             "IndexGiraffeAlignment.disk_size",
-            "MergeMd5sToJson.output_json"
+            "MergeMd5sToJson.output_json",
+            "AlignWithGiraffe.threads"
             ]}
     }
     parameter_meta {
@@ -378,6 +378,11 @@ workflow SVPipeline {
            type: "Boolean",
            category: "input_optional"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
         output_vcf: {
             type: "File",
             help: "Final VCF",
@@ -547,7 +552,7 @@ workflow SVPipeline {
     if(run_giraffe){
         call AlignmentTasks.ConvertCramOrBamToUBam as ConvertToUbam {
             input:
-                monitoring_script = global.monitoring_script, # !FileCoercion
+                monitoring_script = monitoring_script,
                 input_file = MergeBams.output_bam,
                 base_file_name = base_file_name,
                 preemptible_tries = preemptibles,
@@ -559,6 +564,7 @@ workflow SVPipeline {
             input:
                 input_bam = ConvertToUbam.unmapped_bam,
                 output_bam_basename = base_file_name,
+                references = references,
                 giraffe_references = select_first([giraffe_parameters]),
                 monitoring_script = monitoring_script,
                 preemptible_tries = preemptibles,
@@ -953,6 +959,8 @@ task CreateAssembly {
             --bed interval.bed \
             --min-base ~{min_base} \
             --min-mapq ~{min_mapq} \
+            --median-coverage 1 \
+            --background-median-coverage 1 \
             --max-reads-per-region ~{max_reads_per_partition} \
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
             ~{"--min-mismatch-count '" + min_mismatch_count + "'"} \
@@ -996,6 +1004,8 @@ task CreateAssembly {
             --bed interval.bed \
             --min-base ~{min_base} \
             --min-mapq ~{min_mapq} \
+            --median-coverage 1 \
+            --background-median-coverage 1 \
             --max-reads-per-region ~{max_reads_per_partition} \
             ~{"--min-feature-length '" + min_sc_indel_size + "'"} \
             ~{"--min-mismatch-count '" + min_mismatch_count + "'"} \

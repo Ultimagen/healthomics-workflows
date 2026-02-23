@@ -89,11 +89,11 @@ task SamSplitter {
 task CreateReferenceCache {
     input {
         Array[File] references
-        File cache_populate_script
+        String docker
         Int preemptible_tries
+        String cache_populate_script_path = "/usr/local/bin/seq_cache_populate.pl"
         Int disk_size = ceil(3 * size(references, "GB") + 20)
 
-        String docker
         String dummy_input_for_call_caching # !UnusedDeclaration
     }
 
@@ -102,7 +102,7 @@ task CreateReferenceCache {
         mkdir cache
 
         for file in ~{sep=' ' references}; do
-            perl ~{cache_populate_script} -root cache ${file}
+            perl ~{cache_populate_script_path} -root cache ${file}
         done
 
         tar -zcf cache.tgz cache
@@ -623,25 +623,25 @@ task SamToFastqAndGiraffeAndMba {
     input {
         File input_bam
         String output_bam_basename
+        References references
         GiraffeReferences giraffe_references
-        String in_prefix_to_strip = "GRCh38."
         File monitoring_script
         Boolean no_address
         # The merged bam can be bigger than only the aligned bam,
         # so account for the output size by multiplying the input size by 3.5.
         Int preemptible_tries
         String docker
-
+        Int threads = 16
     }
-    Int disk_size = ceil(4.5*size(input_bam,"GB") + 
-        size(giraffe_references.references.ref_fasta,"GB") +
+    Int disk_size = ceil(3*size(input_bam,"GB") + 
+        size(references.ref_fasta,"GB") +
         size(giraffe_references.ref_gbz,"GB") +
         size(giraffe_references.ref_dist,"GB") +
         size(giraffe_references.ref_min,"GB") +
         80)
-    Int threads = 16
+
     command <<<
-        set -eo pipefail
+        set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         java -Xms5000m -jar /usr/gitc/picard.jar \
@@ -654,46 +654,40 @@ task SamToFastqAndGiraffeAndMba {
         echo "Writing FASTQ complete."
 
         vg giraffe \
-        --progress \
-        --sample ~{output_bam_basename} \
-        --output-format gaf \
-        -f ~{output_bam_basename}.fq \
-        -Z ~{giraffe_references.ref_gbz} \
-        -d ~{giraffe_references.ref_dist} \
-        -m ~{giraffe_references.ref_min} \
-        -t ~{threads} | gzip > ~{output_bam_basename}.gaf.gz
+         --fastq-in ~{output_bam_basename}.fq \
+         --output-format BAM \
+         -Z ~{giraffe_references.ref_gbz} \
+         -d ~{giraffe_references.ref_dist} \
+         -z ~{giraffe_references.ref_zipcodes} \
+         -m ~{giraffe_references.ref_min} \
+         --ref-paths ~{giraffe_references.ref_paths} \
+         --parameter-preset default \
+         --progress \
+         --threads ~{threads} \
+         > vg.bam
 
         echo "Giraffe alignment complete."
 
-            vg surject \
-            -F ~{giraffe_references.ref_path_list} \
-            -x ~{giraffe_references.ref_gbz} \
-            -t ~{threads} \
-            --bam-output --gaf-input \
-            --sample ~{output_bam_basename} \
-            --prune-low-cplx \
-            ~{output_bam_basename}.gaf.gz > ~{output_bam_basename}.vg.unsorted.bam
-        #| samtools sort -@ ~{threads} -n -O BAM -o ~{output_bam_basename}.vg.bam
-        #/dev/stdin
-
-        echo "Conversion GAF to BAM complete."
-
-        if [ ~{in_prefix_to_strip} != "" ]
+        if [ "~{giraffe_references.prefix_to_strip}" != "" ]
         then
-            # patch the SQ fields from the dict into a new header
-                samtools view -H ~{output_bam_basename}.vg.unsorted.bam | grep ^@HD > new_header.sam
-                grep ^@SQ ~{giraffe_references.references.ref_dict} | awk '{print $1 "\t" $2 "\t" $3}' >> new_header.sam
-                samtools view -H ~{output_bam_basename}.vg.unsorted.bam  | grep -v ^@HD | grep -v ^@SQ >> new_header.sam
+            # Escape regex special chars for sed search pattern and the '/' delimiter
+            # Escapes: ], [, ^, ., $, *, /  (sufficient for sed basic regex)
+            escaped_prefix=$(printf '%s' "~{giraffe_references.prefix_to_strip}" | sed -e 's/[][^.$*\/]/\\&/g')
 
-                cat <(cat new_header.sam) <(samtools view ~{output_bam_basename}.vg.unsorted.bam) | \
-                    sed -e "s/~{in_prefix_to_strip}//g"  | \
-                    samtools sort --threads ~{threads} -n -O BAM -o ~{output_bam_basename}.vg.bam
+            # Build the new header with the chromosome names from the reference dict file
+            samtools view -H vg.bam | grep '^@HD' > new_header.sam
+            grep '^@SQ' ~{references.ref_dict} >> new_header.sam
+            samtools view -H vg.bam | grep -v '^@HD' | grep -v '^@SQ' >> new_header.sam
+
+            # Stream header + reads, strip prefix globally and convert to BAM
+            cat <(cat new_header.sam) <(samtools view vg.bam) \
+            | sed -e "s/${escaped_prefix}//g" \
+            | samtools view -b -@ ~{threads} -o vg.chrom_fix.bam -
         else
-            samtools sort --threads ~{threads} ~{output_bam_basename}.vg.unsorted.bam -O BAM -o ~{output_bam_basename}.vg.bam
-
+            samtools view -b -@ ~{threads} -o vg.chrom_fix.bam vg.bam
         fi
 
-        echo "Fixing header + qsort complete"
+        echo "Fixing header + sort complete"
 
         java -Xms3000m -jar /usr/gitc/picard.jar \
             MergeBamAlignment \
@@ -708,10 +702,10 @@ task SamToFastqAndGiraffeAndMba {
             ATTRIBUTES_TO_REVERSE=ti \
             ATTRIBUTES_TO_REVERSE=tp \
             ATTRIBUTES_TO_REVERSE=t0 \
-            ALIGNED_BAM=~{output_bam_basename}.vg.bam \
+            ALIGNED_BAM=vg.chrom_fix.bam \
             UNMAPPED_BAM=~{input_bam} \
             OUTPUT=~{output_bam_basename}.bam \
-            REFERENCE_SEQUENCE=~{giraffe_references.references.ref_fasta} \
+            REFERENCE_SEQUENCE=~{references.ref_fasta} \
             SORT_ORDER="queryname" \
             IS_BISULFITE_SEQUENCE=false \
             CLIP_ADAPTERS=false \
@@ -734,8 +728,8 @@ task SamToFastqAndGiraffeAndMba {
     >>>
     runtime {
         preemptible: preemptible_tries
-        memory: "80 GB"
-        cpu: "16"
+        memory: "64 GB"
+        cpu: threads
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address

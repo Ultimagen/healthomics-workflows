@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.27.3" # !UnusedDeclaration
+    String pipeline_version = "1.28.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -67,6 +67,8 @@ workflow EfficientDV {
     Int dbg_min_base_quality = 0 # Minimal base quality during the assembly process
     Boolean prioritize_alt_supporting_reads = false
     Float p_error = 0.005
+    Int? gq_resolution_override
+    Array[Int]? gq_bins
     Array[Int] optimal_coverages = [ 50 ]
     Boolean cap_at_optimal_coverage = false
     Boolean output_realignment = false
@@ -79,6 +81,8 @@ workflow EfficientDV {
     Array[Float]? strand_bias_normalization_thresholds
 
     File? germline_vcf
+    File? pangenome_haplotypes
+    File? pangenome_haplotypes_index
 
     # Background files (for somatic calling)
     Array[File] background_cram_files = []
@@ -89,6 +93,13 @@ workflow EfficientDV {
     File? model_serialized
     Int? optimization_level
     Boolean output_call_variants_tfrecords = false
+    
+    # Ensemble inference args
+    Float strong_call_threshold = 0.995
+    Int ensemble_size = 0 # Size of the ensemble for inference. If 0, then no ensemble inference is performed
+    Int ensemble_reference_rows = 5
+    Int random_seed = 42
+    Boolean shuffle_all_samples = false
 
     # PostProcessing args
     Int min_variant_quality_hmer_indels = 5
@@ -154,7 +165,9 @@ workflow EfficientDV {
    #@wv len(optimal_coverages) == 1 + (len(background_cram_files) > 0)
    #@wv is_somatic -> len(background_cram_files) > 0
    #@wv is_somatic -> defined(allele_frequency_ratio)
-   
+   #@wv defined(pangenome_haplotypes) <-> defined(pangenome_haplotypes_index)
+   #@wv defined(gq_bins) -> not defined(gq_resolution_override)
+   #@wv defined(gq_resolution_override) -> not defined(gq_bins)
   }
   meta {
       description:"Performs variant calling on an input cram, using a re-write of (DeepVariant)[https://www.nature.com/articles/nbt.4235] which is adapted for Ultima Genomics data. There are three stages to the variant calling: (1) make_examples - Looks for “active regions” with potential candidates. Within these regions, it performs local assembly (haplotypes), re-aligns the reads, and defines candidate variant. Images of the reads in the vicinity of the candidates are saved as protos in a tfrecord format. (2) call_variants - Collects the images from make_examples and uses a deep learning model to infer the statistics of each variant (i.e. quality, genotype likelihoods etc.). (3) post_process - Uses the output of call_variants to generate a vcf and annotates it."
@@ -164,14 +177,9 @@ workflow EfficientDV {
               "cloud_provider_override",
               "monitoring_script_input",
               "dummy_input_for_call_caching",
-              "UGCallVariants.disk_size",
               "UGPostProcessing.disk_size",
               "MergeRealignedCrams.cache_tarball",
-              "Globals.glob",
-              "Sentieon.Globals.glob",
-              "AnnotateVCF.Globals.glob",
-              "SingleSampleQC.Globals.glob",
-              "VariantCallingEvaluation.Globals.glob",
+              "Glob.glob",
               "QCReport.disk_size",
               "UGMakeExamples.count_candidates_with_dvtools"
           ]}
@@ -320,6 +328,16 @@ workflow EfficientDV {
       help: "Basecalling error for reference confidence model in gvcf",
       category: "param_optional"
     }
+    gq_resolution_override: {
+      type: "Int",
+      help: "Override for gq resolution (default: 5)",
+      category: "param_optional"
+    }
+    gq_bins: {
+      type: "Array[Int]",
+      help: "GQ bins to use instead of a fixed resolution (overrides gq_resolution)",
+      category: "param_optional"
+    }
     optimal_coverages: {
       type: "Array[Int]",
       help: "Each sample is downsampled to the \"optimal coverage\" (dictated by the coverage of the training set). Downsampling method is determined by cap_at_optimal_coverage.",
@@ -371,6 +389,14 @@ workflow EfficientDV {
     germline_vcf:{
       help: "Germline vcf file in order to generate haplotypes that incorporate germline variants",
       category: "param_optional"
+    }
+    pangenome_haplotypes: {
+        category: "param_optional",
+        help: "Optional pangenome haplotypes cram file"
+    }
+    pangenome_haplotypes_index: {
+        category: "param_optional",
+        help: "Optional pangenome haplotypes cram index file"
     }
     model_onnx: {
       help: "TensorRT model for calling variants (onnx format)",
@@ -464,6 +490,11 @@ workflow EfficientDV {
       help: "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
       category: "param_advanced"
     }
+    monitoring_script_input: {
+      help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+      type: "File",
+      category: "input_optional"
+    }
     call_variants_uncompr_buf_size_gb: {
       help: "Memory buffer allocated for each uncompression thread in calll_variants",
       category: "param_optional"
@@ -514,10 +545,10 @@ workflow EfficientDV {
       help: "The tfrecords that call_variants outputs",
       category: "output"
     }
-    # output_model_serialized: {  # uncomment to save serialized model
-    #   help: "Output model serialized",
-    #   category: "output"
-    # }
+    call_variants_output_tfrecords_final: {
+      help: "The final merged tfrecord that call_variants outputs",
+      category: "output"
+    }
     output_gvcf: {
       help: "Variant in each position (gvcf file)",
       category: "output"
@@ -574,14 +605,50 @@ workflow EfficientDV {
       type: "Int",
       category: "output"
     }
+    num_weak_candidates: {
+      help: "Number of weak candidates that were re-called with ensemble inference",
+      type: "Array[File]",
+      category: "output"
+    }
+    num_weak_candidates_as_int: {
+      help: "Number of weak candidates that were re-called with ensemble inference (as an integer)",
+      type: "Int",
+      category: "output"
+    }
+
+    strong_call_threshold: {
+      type: "Float",
+      help: "Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference",
+      category: "param_optional"
+    }
+    ensemble_size: {
+      type: "Int",
+      help: "Size of the ensemble for inference",
+      category: "param_optional"
+    }
+    ensemble_reference_rows: {
+      type: "Int", 
+      help: "Number of reference rows for ensemble inference",
+      category: "param_optional"
+    }
+    random_seed: {
+      type: "Int",
+      help: "Random seed for ensemble inference",
+      category: "param_optional"
+    }
+    shuffle_all_samples: {
+      type: "Boolean",
+      help: "Whether to shuffle all samples during inference",
+      category: "param_optional"
+    }
   }
   String cloud_provider = select_first([cloud_provider_override, 'gcp'])
   Float ug_make_examples_memory = select_first([ug_make_examples_memory_override, 4])
   Int ug_make_examples_cpus = select_first([ug_make_examples_cpus_override, 2])
   Boolean no_address = select_first([no_address_override, true])
 
-  call Globals.Globals as Globals
-  GlobalVariables global = Globals.global_dockers
+  call Globals.Globals as Glob
+  GlobalVariables global = Glob.global_dockers
 
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
   if (!defined(target_intervals)){
@@ -642,6 +709,46 @@ workflow EfficientDV {
       monitoring_script = monitoring_script
   }
 
+  call UGDVTasks.GenerateQuickCoverageBed {
+    input:
+      target_intervals = interval_list,
+      ref_dict = references.ref_dict,
+      docker = global.broad_gatk_docker,
+      monitoring_script = monitoring_script,
+      preemptible_tries = preemptible_tries,
+      num_points = 2000
+  }
+
+  call UGGeneralTasks.CalculateCoverage {
+    input:
+      ref = references.ref_fasta,
+      ref_index = references.ref_fasta_index,
+      ref_dict = references.ref_dict,
+      crams = cram_files,
+      cram_indices = cram_index_files,
+      quick_coverage_bed = GenerateQuickCoverageBed.quick_coverage_bed,
+      cloud_provider = cloud_provider,
+      docker = global.broad_gatk_docker,
+      monitoring_script = monitoring_script,
+      preemptible_tries = preemptible_tries
+  }
+
+  if (length(background_cram_files) > 0) {
+    call UGGeneralTasks.CalculateCoverage as CalculateBackgroundCoverage {
+      input:
+        ref = references.ref_fasta,
+        ref_index = references.ref_fasta_index,
+        ref_dict = references.ref_dict,
+        crams = background_cram_files,
+        cram_indices = background_cram_index_files,
+        quick_coverage_bed = GenerateQuickCoverageBed.quick_coverage_bed,
+        cloud_provider = cloud_provider,
+        docker = global.broad_gatk_docker,
+        monitoring_script = monitoring_script,
+        preemptible_tries = preemptible_tries
+    }
+  }
+  Int gq_resolution = select_first([gq_resolution_override, 5])
   scatter (interval in ScatterIntervalList.out){
     call UGDVTasks.UGMakeExamples {
       input:
@@ -655,7 +762,11 @@ workflow EfficientDV {
         cram_index_files = cram_index_files,
         background_cram_files = background_cram_files,
         background_cram_index_files = background_cram_index_files,
+        median_coverage = CalculateCoverage.median_coverage,
+        background_median_coverage = select_first([CalculateBackgroundCoverage.median_coverage, 0]),
         germline_vcf = germline_vcf,
+        pangenome_haplotypes = pangenome_haplotypes,
+        pangenome_haplotypes_index = pangenome_haplotypes_index,
         min_base_quality = min_base_quality,
         pileup_min_mapping_quality = pileup_min_mapping_quality,
         min_read_count_snps = min_read_count_snps,
@@ -670,6 +781,8 @@ workflow EfficientDV {
         assembly_min_base_quality  = dbg_min_base_quality,
         make_gvcf = make_gvcf,
         p_error = p_error,
+        gq_resolution = gq_resolution,
+        gq_bins = gq_bins,
         single_strand_filter = single_strand_filter,
         min_fraction_single_strand_non_snps = min_fraction_single_strand_non_snps,
         keep_duplicates = keep_duplicates,
@@ -694,7 +807,7 @@ workflow EfficientDV {
 
   Array[File] examples_array = flatten(UGMakeExamples.output_examples)
 
-  call UGDVTasks.UGCallVariants {
+  call UGDVTasks.UGCallVariants as CallVariantNoEnsemble{
     input:
       examples = examples_array,
       model_onnx = model_onnx,
@@ -709,7 +822,48 @@ workflow EfficientDV {
       monitoring_script = monitoring_script,
       call_variants_extra_mem = ug_call_variants_extra_mem,
       optimization_level = optimization_level,
-      no_address = no_address
+      no_address = no_address,
+      ensemble_size = 0,# no ensemble 
+      reference_rows = ensemble_reference_rows,
+      random_seed = random_seed,
+      sample_heights = if length(background_cram_files) > 0 || defined(pangenome_haplotypes) then [100, 100] else [100],
+      shuffle_all_samples = shuffle_all_samples
+  }
+  
+  if (ensemble_size > 0) {
+    call UGDVTasks.UGSplitBoundaryCalls {
+      input: 
+        examples = examples_array,
+        boundary_threshold = strong_call_threshold,
+        calls    = CallVariantNoEnsemble.output_records, 
+        docker = global.ug_make_examples_docker, 
+        monitoring_script = monitoring_script,
+        no_address = no_address,
+        preemptible_tries = preemptible_tries
+    }
+
+    call UGDVTasks.UGCallVariants as CallVariantsBoundary {
+      input:
+        examples = select_first([UGSplitBoundaryCalls.boundary_examples]),
+        model_onnx = model_onnx,
+        model_serialized = model_serialized,
+        is_somatic = is_somatic,
+        docker = global.ug_call_variants_docker,
+        call_variants_uncompr_buf_size_gb = call_variants_uncompr_buf_size_gb,
+        gpu_type = call_variants_gpu_type,
+        num_gpus = call_variants_gpus,
+        num_cpus = call_variants_cpus,
+        num_threads = call_variants_threads,
+        monitoring_script = monitoring_script,
+        call_variants_extra_mem = ug_call_variants_extra_mem,
+        optimization_level = optimization_level,
+        no_address = no_address,
+        ensemble_size = ensemble_size,# ensemble on boundary records
+        reference_rows = ensemble_reference_rows,
+        random_seed = random_seed,
+        sample_heights = if length(background_cram_files) > 0 || defined(pangenome_haplotypes) then [100, 100] else [100],
+        shuffle_all_samples = shuffle_all_samples
+    }
   }
 
   if (make_gvcf){
@@ -735,9 +889,14 @@ workflow EfficientDV {
   Array[File] background_cram_files_for_post_processing = if  recalibrate_vaf then background_cram_files else []
   Array[File] background_cram_index_files_for_post_processing = if recalibrate_vaf then background_cram_index_files else []
   
+  # Use conditional logic for called_records based on ensemble_size
+  Array[File] final_called_records = if ensemble_size == 0 
+    then CallVariantNoEnsemble.output_records 
+    else flatten([select_first([UGSplitBoundaryCalls.strong_calls, []]), select_first([CallVariantsBoundary.output_records, []])])
+  
   call UGDVTasks.UGPostProcessing {
     input:
-      called_records = UGCallVariants.output_records,
+      called_records = final_called_records,
       cram_files = cram_files_for_post_processing,
       cram_index_files = cram_index_files_for_post_processing,
       background_cram_files = background_cram_files_for_post_processing,
@@ -782,7 +941,10 @@ workflow EfficientDV {
   }
 
   if (output_call_variants_tfrecords){
-    Array[File] call_variants_output_tfrecords_maybe = UGCallVariants.output_records
+    Array[File] call_variants_output_tfrecords_maybe = CallVariantNoEnsemble.output_records
+    Array[File] call_variants_output_tfrecords_final_maybe = if ensemble_size == 0 
+      then CallVariantNoEnsemble.output_records 
+      else flatten([select_first([UGSplitBoundaryCalls.strong_calls, []]), select_first([CallVariantsBoundary.output_records, []])])
   }
 
   File raw_output_vcf = UGPostProcessing.vcf_file
@@ -838,13 +1000,14 @@ workflow EfficientDV {
 
   output 
   {
-    File nvidia_smi_log     = UGCallVariants.nvidia_smi_log
+    File nvidia_smi_log     = CallVariantNoEnsemble.nvidia_smi_log
     # File output_model_serialized   = UGCallVariants.output_model_serialized # uncomment to output the serilized model
     File output_vcf         = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf])
     File output_vcf_index   = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf_index, raw_output_vcf_index])
     File vcf_no_ref_calls   = RemoveRefCalls.output_vcf
     File vcf_no_ref_calls_index = RemoveRefCalls.output_vcf_index
     Array[File]? call_variants_output_tfrecords = call_variants_output_tfrecords_maybe
+    Array[File]? call_variants_output_tfrecords_final = call_variants_output_tfrecords_final_maybe
     File? output_gvcf       = gvcf_maybe
     File? output_gvcf_index = gvcf_index_maybe
     File? output_gvcf_hcr   = gvcf_hcr_maybe
@@ -854,7 +1017,9 @@ workflow EfficientDV {
     File report_html        = QCReport.qc_report
     File qc_h5              = QCReport.qc_h5
     File qc_metrics_h5      = QCReport.qc_metrics_h5
-    Array[File] num_candidates   = UGCallVariants.num_candidates
-    Int num_candidates_as_int    = UGCallVariants.num_candidates_as_int
+    Array[File] num_candidates   = CallVariantNoEnsemble.num_candidates
+    Int num_candidates_as_int    = CallVariantNoEnsemble.num_candidates_as_int
+    Array[File] num_weak_candidates = select_first([CallVariantsBoundary.num_candidates, []])
+    Int num_weak_candidates_as_int = select_first([CallVariantsBoundary.num_candidates_as_int, 0])
   }
 }

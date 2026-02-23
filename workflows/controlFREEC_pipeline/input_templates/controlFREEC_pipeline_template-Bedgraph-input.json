@@ -43,5 +43,6 @@
     "SomaticCNVCallingControlFREEC.normal_sorter_zipped_bed_graph": [
         "<normal>_1.bedGraph.gz"
     ],
-    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed"
+    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+    "SomaticCNVCallingControlFREEC.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

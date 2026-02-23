@@ -16,11 +16,12 @@ version 1.0
 
 # DESCRIPTION
 # Combine cn.mops and cnvpytor CNV calls for a single sample.:
-# 1. seperate deletions and duplications cnv calls.
-# 3. Runs jalign (an internal tool detecting alternative alignments supporting a CNV candidate) for deletion candidates. 
-# 4. combines calls from all tools and filters them based on the intersection with UG-CNV-LCR regions.
-
-# CHANGELOG in reverse chronological order
+# 1. Concatenate CNV calls from cn.mops and cnvpytor.
+# 2. Annotate with gap information.
+# 3. Annotate with split-read information.
+# 4. Run jalign (an internal tool detecting alternative alignments supporting a CNV candidate) for CNV candidates.
+# 5. Filter (apply ML model that returns confidence to variants - and places it on QUAL/TREE_SCORE)
+# 6. Collapse the combined callset.(merge close PASS-filter CNVs)
 
 import "tasks/globals.wdl" as Globals
 import "tasks/single_sample_vc_tasks.wdl" as Filtering
@@ -28,7 +29,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -37,8 +38,6 @@ workflow CombineGermlineCNVCalls {
         File cnvpytor_cnvs_vcf
         File cnvpytor_cnvs_vcf_index
         Int cushion_size
-        Int? distance_threshold_override
-        Int? duplication_length_cutoff_for_cnmops_filter_override
 
         # jalign parameters
         File input_bam_file
@@ -46,7 +45,6 @@ workflow CombineGermlineCNVCalls {
         File reference_genome
         File reference_genome_index
         
-        File? cnv_lcr_file
         File? filtering_model 
         Int? filtering_model_decision_threshold
         Boolean skip_filtering
@@ -108,16 +106,6 @@ workflow CombineGermlineCNVCalls {
             type: "File",
             category: "input_required"
         }
-        distance_threshold_override: {
-            help: "Distance threshold for merging CNV calls. default=1500",
-            type: "Int",
-            category: "param_advanced"
-        }
-        duplication_length_cutoff_for_cnmops_filter_override: {
-            help: "Minimum length of duplications to be considered for cn.mops calls. default=10000",
-            type: "Int",
-            category: "param_advanced"
-        }
         input_bam_file: {
             help: "Input sample BAM/CRAM file.",
             type: "File",
@@ -143,11 +131,6 @@ workflow CombineGermlineCNVCalls {
             help : "Fai index of the fasta file",
             type: "File",
             category: "ref_required"
-        }
-        cnv_lcr_file: {
-            help: "UG-CNV-LCR bed file",
-            type: "File",
-            category: "input_optional"
         }
         filtering_model: {
             help: "CNV filtering model file, set in template, can be removed, the callset is not filtered if not provided",
@@ -214,8 +197,6 @@ workflow CombineGermlineCNVCalls {
 
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
     Boolean no_address = select_first([no_address_override, true ])
-    Int distance_threshold = select_first([distance_threshold_override,1500])
-    Int duplication_length_cutoff_for_cnmops_filter = select_first([duplication_length_cutoff_for_cnmops_filter_override,10000])
 
     call Globals.Globals as Glob
     GlobalVariables global = Glob.global_dockers
@@ -228,19 +209,15 @@ workflow CombineGermlineCNVCalls {
             docker = global.bcftools_docker
     }
 
-     call ConcatAndAnnotateCallsets {
+    call ConcatAndAnnotateCallsets {
         input:
             base_file_name = base_file_name,
             cnmops_vcf = cnmops_cnvs_vcf,
             cnmops_vcf_index = cnmops_cnvs_vcf_index,
             cnvpytor_vcf = cnvpytor_cnvs_vcf,
             cnvpytor_vcf_index = cnvpytor_cnvs_vcf_index,
-            distance_threshold_for_cnmops_dups = distance_threshold,
-            duplication_length_cutoff_for_cnmops_filter = duplication_length_cutoff_for_cnmops_filter,
             reference_genome = reference_genome,
             reference_genome_index = reference_genome_index,
-            ug_cnv_lcr_bed = cnv_lcr_file,
-            overlap_fraction_for_annotation = 0.5,
             docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,
             no_address = no_address,
@@ -296,6 +273,8 @@ workflow CombineGermlineCNVCalls {
         "JALIGN_DEL_SUPPORT",
         "JALIGN_DUP_SUPPORT_STRONG",
         "JALIGN_DEL_SUPPORT_STRONG",
+        "DUP_READS_MEDIAN_INSERT_SIZE",
+        "DEL_READS_MEDIAN_INSERT_SIZE",
         "SVTYPE",
         "SVLEN",
     ]
@@ -379,50 +358,28 @@ task ConcatAndAnnotateCallsets {
         File cnmops_vcf_index
         File cnvpytor_vcf
         File cnvpytor_vcf_index
-        Int distance_threshold_for_cnmops_dups
-        Int duplication_length_cutoff_for_cnmops_filter
         File reference_genome
         File reference_genome_index
-        File? ug_cnv_lcr_bed
-        Float overlap_fraction_for_annotation
         String docker
         File monitoring_script
         Boolean no_address
         Int preemptible_tries
     }
-    Boolean ug_cnv_lcr_provided = defined(ug_cnv_lcr_bed)
     command <<<
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         combine_cnmops_cnvpytor_cnv_calls concat \
+            --make_ids_unique \
             --cnmops_vcf ~{cnmops_vcf} \
             --cnvpytor_vcf ~{cnvpytor_vcf} \
             --output_vcf ~{base_file_name}.step1.vcf.gz \
-            --fasta_index ~{reference_genome_index}
-
-        combine_cnmops_cnvpytor_cnv_calls filter_cnmops_dups \
-            --combined_calls ~{base_file_name}.step1.vcf.gz \
-            --combined_calls_annotated ~{base_file_name}.step2.vcf.gz \
-            --filtered_length ~{duplication_length_cutoff_for_cnmops_filter} \
-            --distance_threshold ~{distance_threshold_for_cnmops_dups} 
-
+            --fasta_index ~{reference_genome_index} 
+            
         combine_cnmops_cnvpytor_cnv_calls annotate_gaps \
-            --calls_vcf ~{base_file_name}.step2.vcf.gz \
-            --output_vcf ~{base_file_name}.step3.vcf.gz \
-            --ref_fasta ~{reference_genome}
-
-        if ~{ug_cnv_lcr_provided} ; then
-            combine_cnmops_cnvpytor_cnv_calls annotate_regions \
-            --input_vcf ~{base_file_name}.step3.vcf.gz \
+            --calls_vcf ~{base_file_name}.step1.vcf.gz \
             --output_vcf ~{base_file_name}.combined.vcf.gz \
-            --annotation_bed ~{ug_cnv_lcr_bed} \
-            --overlap_fraction ~{overlap_fraction_for_annotation} \
-            --genome ~{reference_genome_index}
-        else
-            cp ~{base_file_name}.step3.vcf.gz ~{base_file_name}.combined.vcf.gz
-            cp ~{base_file_name}.step3.vcf.gz.tbi ~{base_file_name}.combined.vcf.gz.tbi
-        fi 
+            --ref_fasta ~{reference_genome}
          
     >>>
     runtime {
@@ -459,7 +416,7 @@ task AnnotateWithSplitReadsInfo {
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        analyze_cnv_breakpoint_reads \
+        combine_cnmops_cnvpytor_cnv_calls analyze_breakpoint_reads \
             --bam-file ~{input_cram_bam_file} \
             --vcf-file ~{input_cnv_vcf} \
             --reference-fasta ~{reference_genome} \

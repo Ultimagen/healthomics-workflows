@@ -31,8 +31,24 @@
         "description": "Minimal base quality for local assembly of haplotypes",
         "optional": true
     },
+    "PyPGx.EfficientDV.ensemble_reference_rows": {
+        "description": "Number of reference rows for ensemble inference",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.ensemble_size": {
+        "description": "Size of the ensemble for inference",
+        "optional": true
+    },
     "PyPGx.EfficientDV.germline_vcf": {
         "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.gq_bins": {
+        "description": "GQ bins to use instead of a fixed resolution (overrides gq_resolution)",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.gq_resolution_override": {
+        "description": "Override for gq resolution (default: 5)",
         "optional": true
     },
     "PyPGx.EfficientDV.h_indel_allele_frequency_ratio": {
@@ -119,8 +135,20 @@
         "description": "Basecalling error for reference confidence model in gvcf",
         "optional": true
     },
+    "PyPGx.EfficientDV.pangenome_haplotypes": {
+        "description": "Optional pangenome haplotypes cram file",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.pangenome_haplotypes_index": {
+        "description": "Optional pangenome haplotypes cram index file",
+        "optional": true
+    },
     "PyPGx.EfficientDV.prioritize_alt_supporting_reads": {
         "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.random_seed": {
+        "description": "Random seed for ensemble inference",
         "optional": true
     },
     "PyPGx.EfficientDV.scatter_intervals_break": {
@@ -131,8 +159,16 @@
         "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
         "optional": true
     },
+    "PyPGx.EfficientDV.shuffle_all_samples": {
+        "description": "Whether to shuffle all samples during inference",
+        "optional": true
+    },
     "PyPGx.EfficientDV.strand_bias_normalization_thresholds": {
         "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.strong_call_threshold": {
+        "description": "Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference",
         "optional": true
     },
     "PyPGx.EfficientDV.ug_call_variants_extra_mem": {

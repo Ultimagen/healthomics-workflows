@@ -366,9 +366,7 @@ task ProcessCnmopsCnvs {
                         --out_directory . \
                         --sample_norm_coverage_file "$desired_file" \
                         --cohort_avg_coverage_file ~{cohort_norm_avg_coverage_file} \
-                        --fasta_index_file ~{ref_genome_file}
-
-                                        
+                        --fasta_index_file ~{ref_genome_file}                                        
                 else
                     #convert bed file to vcf
                     process_cnvs \
@@ -379,7 +377,7 @@ task ProcessCnmopsCnvs {
                         --out_directory . \
                         --sample_norm_coverage_file "$desired_file" \
                         --cohort_avg_coverage_file ~{cohort_norm_avg_coverage_file} \
-                        --fasta_index_file ~{ref_genome_file}
+                        --fasta_index_file ~{ref_genome_file} 
                 fi
 
                 bcftools view -i "INFO/SVTYPE='DEL'" $sample_name.cnvs.annotate.vcf.gz | \
@@ -426,6 +424,43 @@ task ProcessCnmopsCnvs {
         File monitoring_log = "monitoring.log"
     }
 }
+
+task AddCIPOS {
+    input {
+        String base_file_name
+        File input_vcf
+        Int window_size 
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+    command <<<
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        add_cipos_to_vcf --input_vcf ~{input_vcf} \
+                        --window_size ~{window_size} \
+                        --output_vcf ~{base_file_name}.~{window_size}.cipos.vcf.gz
+                                                                                                                                                                        
+        bcftools index -t ~{base_file_name}.~{window_size}.cipos.vcf.gz                                                                                                                                  
+    >>>
+
+    runtime {
+        preemptible: preemptible_tries
+        memory: "4 GB"
+        disks: "local-disk 4 HDD"
+        docker: docker
+        noAddress: no_address
+        cpu: 1
+    }
+    output {
+        File output_vcf = "~{base_file_name}.~{window_size}.cipos.vcf.gz"
+        File output_vcf_index = "~{base_file_name}.~{window_size}.cipos.vcf.gz.tbi"
+        File monitoring_log = "monitoring.log"
+    }    
+}
+
 
 
 task UniqReads {
@@ -623,7 +658,13 @@ task CnvVcfToBed {
         set -xeo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        bcftools query -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n' ~{input_cnv_vcf} > ~{base_file_name}.cnv.bed
+        if bcftools view -h ~{input_cnv_vcf} | grep -q '^##FORMAT=<ID=CN,'; then
+            bcftools query \
+                -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER;CN=[%CN]\n' ~{input_cnv_vcf} > ~{base_file_name}.cnv.bed
+        else
+            bcftools query \
+                -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n' ~{input_cnv_vcf} > ~{base_file_name}.cnv.bed
+        fi
     >>>
     runtime {
         preemptible: preemptible_tries
@@ -639,3 +680,64 @@ task CnvVcfToBed {
     }
 }
 
+
+task PlotCNVResults {
+    input {
+        File input_cnv_vcf
+        File input_cnv_vcf_index
+        File sample_norm_coverage_file
+        String base_file_name
+        
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+    
+    Int disk_size = ceil(size(sample_norm_coverage_file, "GB") + size(input_cnv_vcf, "GB") + 10)
+    
+    command <<<
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        if bcftools view -h ~{input_cnv_vcf} | grep -q '^##FORMAT=<ID=CN,'; then
+            query_str='%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER;CN=[%CN]\n'
+        else
+            query_str='%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n'
+        fi
+
+        # Extract DEL and DUP calls from the VCF (PASS only)
+        bcftools view -f "PASS" -i "INFO/SVTYPE='DEL'" ~{input_cnv_vcf} | \
+            bcftools query -f "$query_str" - > ~{base_file_name}.DEL.bed
+        
+        bcftools view -f "PASS" -i "INFO/SVTYPE='DUP'" ~{input_cnv_vcf} | \
+            bcftools query -f "$query_str" - > ~{base_file_name}.DUP.bed
+        
+        # Prepare coverage file for plotting (columns 1-3, 5)
+        cut -f1-3,5 ~{sample_norm_coverage_file} > ~{base_file_name}.cov.for_plot.bed
+        
+        # Generate plots
+        plot_cnv_results \
+            --germline_coverage ~{base_file_name}.cov.for_plot.bed \
+            --duplication_cnv_calls ~{base_file_name}.DUP.bed \
+            --deletion_cnv_calls ~{base_file_name}.DEL.bed \
+            --sample_name ~{base_file_name} \
+            --out_directory CNV_figures \
+            --vcf-like
+    >>>
+    
+    runtime {
+        preemptible: preemptible_tries
+        memory: "4 GiB"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        noAddress: no_address
+        cpu: 2
+    }
+    
+    output {
+        File coverage_plot = "CNV_figures/~{base_file_name}.CNV.coverage.jpeg"
+        File dup_del_plot = "CNV_figures/~{base_file_name}.dup_del.calls.jpeg"
+        File copy_number_plot = "CNV_figures/~{base_file_name}.CNV.calls.jpeg"
+        File monitoring_log = "monitoring.log"
+    }
+}

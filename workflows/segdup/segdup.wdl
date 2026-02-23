@@ -26,7 +26,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -42,9 +42,12 @@ workflow SegDupAnalysis {
         File exome_intervals
         File dbsnp
         File dbsnp_index
+        # Used for running on other clouds (aws)
         String? cloud_provider_override
+        File? monitoring_script_input
         Int preemptible_tries = 3
         Boolean no_address = true
+        
         # winval validations
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv suffix(input_cram_bam) in {".bam", ".cram"}
@@ -61,6 +64,7 @@ workflow SegDupAnalysis {
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
+                    "monitoring_script_input",
                     "Globals.glob",
                     "DV.FilterVCF.ref_fasta",
                     "DV.FilterVCF.ref_fasta_idx",
@@ -153,6 +157,11 @@ workflow SegDupAnalysis {
             type: "String",
             category: "input_optional"
         }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
+        }
         preemptible_tries: {
             help: "Number of preemptible tries",
             type: "Int",
@@ -197,6 +206,8 @@ workflow SegDupAnalysis {
     call GlobalsWDL.Globals as Globals
     GlobalVariables global = Globals.global_dockers
 
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+
     call PoolReads {
         input:
             base_file_name = base_file_name,
@@ -208,7 +219,7 @@ workflow SegDupAnalysis {
             homology_table_index = homology_table_index, 
             segdup_regions = segdup_regions,
             preemptible_tries = preemptible_tries,
-            monitoring_script = global.monitoring_script    #!FileCoercion
+            monitoring_script = monitoring_script
     }
 
     call CallCNV {
@@ -224,12 +235,12 @@ workflow SegDupAnalysis {
             base_file_name = base_file_name,
             n_threads = n_threads, 
             preemptible_tries = preemptible_tries,
-            monitoring_script = global.monitoring_script   #!FileCoercion
+            monitoring_script = monitoring_script
     }
 
     call UGGeneral.BedToIntervalList {
         input:
-            monitoring_script = global.monitoring_script,  #!FileCoercion
+            monitoring_script = monitoring_script,
             input_file = segdup_regions,
             reference_dict = references.ref_dict,
             base_file_name = base_file_name, 
@@ -266,6 +277,7 @@ workflow SegDupAnalysis {
 
             # Used for running on other clouds (aws)
             cloud_provider_override = cloud_provider_override,
+            monitoring_script_input = monitoring_script_input,
             preemptible_tries = preemptible_tries
     }
 
@@ -280,7 +292,7 @@ workflow SegDupAnalysis {
             dv_vcf_index = DV.output_vcf_index, 
             cn_model = CallCNV.cnv_results, 
             references  = references,
-            monitoring_script = global.monitoring_script,  #!FileCoercion
+            monitoring_script = monitoring_script,
             segdup_docker = global.segdup_docker,
             n_threads = n_threads,
             preemptible_tries = preemptible_tries,

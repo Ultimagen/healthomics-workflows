@@ -32,7 +32,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -144,10 +144,10 @@ workflow SomaticCNVCallingControlFREEC{
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
-                "monitoring_script_input",
                 "cloud_provider_override",
                 "no_address_override",
                 "dummy_input_for_call_caching",
+                "monitoring_script_input",
                 "tumor_createMpileup_scatter.max_depth",
                 "tumor_createMpileup_scatter.min_BaseQ",
                 "normal_createMpileup_scatter.max_depth",
@@ -362,6 +362,11 @@ workflow SomaticCNVCallingControlFREEC{
             help: "Number of preemptible tries",
             type: "Int",
             category: "param_optional"
+        }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
         }
         tumor_segments: {
             help: "controlFREEC segmentation for tumor sample",
@@ -1219,7 +1224,8 @@ task FilterControlFREECCnvs {
             --duplication_cnv_calls ~{sample_name}.cnvs.filter.DUP.bed \
             --deletion_cnv_calls ~{sample_name}.cnvs.filter.DEL.bed \
             --sample_name ~{sample_name} \
-            --out_directory CNV_figures
+            --out_directory CNV_figures \
+            --neutral_ploidy ~{ploidy}
 
         plot_FREEC_neutral_AF \
             --mpileup ~{tumor_mpileup} \

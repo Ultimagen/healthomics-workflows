@@ -35,7 +35,7 @@ The following required files are publicly available:
 	s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds
     s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy
 	s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed
-    s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed
+    s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed (used for cn.mops annotation only)
 
 **Note:** For male samples use 
     s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_male.ploidy
@@ -56,32 +56,22 @@ Finally, we apply simple ML model to filter candidates according to the length, 
 * for running cnmops, cnvpytor, and post processing use ugbio_cnv docker: <br>
 	Pull **ugbio_cnv** docker image :
 	```
-	docker pull ultimagenomics/ugbio_cnv:1.18.0
+	docker pull ultimagenomics/ugbio_cnv:1.21.0
 	```
 	Run docker in interactive mode: 
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.18.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.21.0 /bin/bash
 	```	
 for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/germline_CNV_pipeline/tasks/globals.wdl)
 
-* for running jalign use jalign docker: <br>
-    Pull **jalign** docker image :
-	```
-	docker pull ultimagenomics/jalign:1.1.0
-	```
-	Run docker in interactive mode: 
-	```
-	docker run -it -v /data:/data ultimagenomics/jalign:1.1.0 /bin/bash
-	```
-for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/germline_CNV_pipeline/tasks/globals.wdl)
 
 * For running ML-based filtering - use **ugbio_filtering** docker image. 
 	```
-	docker pull ultimagenomics/ugbio_filtering:1.18.0
+	docker pull ultimagenomics/ugbio_filtering:1.21.0
 	```
 	Run docker in interactive mode: 
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.18.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.21.0 /bin/bash
 	```	
 
 
@@ -194,17 +184,16 @@ The callsets from the two window sizes are combined using `ugbio_cnv` docker.
         combine_cnmops_cnvpytor_cnv_calls concat \
             --cnvpytor_vcf vcf1 vcf2 \
             --output_vcf {sample_name}.cnvpytor.cnv_calls.vcf.gz \
-            --fasta_index Homo_sapiens_assembly38.fasta.fai
+            --fasta_index Homo_sapiens_assembly38.fasta.fai \
+            --make_ids_unique
 ```
 
 ### Combine, annotate and filter cn.mops and cnvpytor callsets
 
 #### Annotate candidates: 
 The following annotations are applied: 
-1. cn.mops duplications called shorter than 10Kb are marked as SHORT_CNMOPS_DUPLICATION
-2. Close cn.mops duplication calls (distance less than 1,500 bp) are combined
-3. Percentage of N bases in the CNV is recorded
-4. UG-CNV-LCR regions annotations are added 
+1. Percentage of N bases in the CNV is recorded
+2. Split read support is added
    
    ```
     # Concatenate cn.mops and cnvpytor VCF files
@@ -212,39 +201,31 @@ The following annotations are applied:
 		--cnmops_vcf {cnmops_vcf} \
 		--cnvpytor_vcf {cnvpytor_vcf} \
 		--output_vcf {sample_name}.step1.vcf.gz \
-		--fasta_index Homo_sapiens_assembly38.fasta.fai
-
-	# Filter short cn.mops duplications, merge adjacent ones
-	combine_cnmops_cnvpytor_cnv_calls filter_cnmops_dups \
-		--combined_calls {sample_name}.step1.vcf.gz \
-		--combined_calls_annotated {sample_name}.step2.vcf.gz \
-		--filtered_length 10000 \
-		--distance_threshold 1500
+		--fasta_index Homo_sapiens_assembly38.fasta.fai \
+        --make_ids_unique
 
 	# Annotate with gaps information
 	combine_cnmops_cnvpytor_cnv_calls annotate_gaps \
-		--calls_vcf {sample_name}.step2.vcf.gz \
-		--output_vcf {sample_name}.step3.vcf.gz \
+		--calls_vcf {sample_name}.step1.vcf.gz \
+		--output_vcf {sample_name}.combined.vcf.gz \
 		--ref_fasta Homo_sapiens_assembly38.fasta
 
 	
-#### Add annotations of the split read support 
+    # Add annotations of the split read support 
+    analyze_cnv_breakpoint_reads \
+        --bam-file {input_cram_bam_file} \
+        --vcf-file {sample_name}.combined.vcf.gz \
+        --reference-fasta Homo_sapiens_assembly38.fasta \
+        --cushion 1500 \
+        --output-file {sample_name}.split.annotated.vcf.gz
+    ```
 
-```
-analyze_cnv_breakpoint_reads \
-    --bam-file {input_cram_bam_file} \
-    --vcf-file {sample_name}.combined.vcf.gz \
-    --reference-fasta Homo_sapiens_assembly38.fasta \
-    --cushion 1500 \
-    --output-file {sample_name}.split.annotated.vcf.gz
-```
+#### Run jump alignment
 
-#### Run `jalign`
-
-This task re-aligns reads that are close to the CNV breakpoints to check how many reads can support the breakpoint. For deletion, it looks for the reads
+This task re-aligns reads that are close to the CNV breakpoints to check how many reads can be aligned in a way that supports the breakpoint. For deletion, it looks for the reads
 that span the whole CNV. For the duplication, this looks for the reads that can align with the pattern consistent with the duplication.
 
-For this task - use `jalign` docker. Note that this tasks requires a 
+For this task - use `ugbio_cnv` docker. Note that this tasks requires a 
 large machine (~32 CPU recommended), which is expected to take about 1-2 hours. 
 
 ```
@@ -295,6 +276,8 @@ The following annotations list should be provided for the current model:
         "JALIGN_DEL_SUPPORT",
         "JALIGN_DUP_SUPPORT_STRONG",
         "JALIGN_DEL_SUPPORT_STRONG",
+        "DUP_READS_MEDIAN_INSERT_SIZE",
+        "DEL_READS_MEDIAN_INSERT_SIZE",
         "SVTYPE",
         "SVLEN",
     ]
@@ -306,7 +289,7 @@ They should be provided in the following form:
 	filter_variants_pipeline --input_file {sample_name}.jalign.vcf.gz \
 			--model_file {input_model} \
             {custom_annotations}
-			--decision_threshold 26
+			--decision_threshold 31
 			--overwrite_qual_tag
 			--output_file {sample_name}.filtered.vcf.gz
 

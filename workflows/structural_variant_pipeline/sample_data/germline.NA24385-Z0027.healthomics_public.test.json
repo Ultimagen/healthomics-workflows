@@ -37,17 +37,15 @@
     "SVPipeline.is_somatic": false,
     "SVPipeline.min_indel_sc_size_to_include": "10",
     "SVPipeline.min_mismatch_count_to_include": "5",
-    "SVPipeline.run_giraffe": true,
+    "SVPipeline.run_giraffe": false,
     "SVPipeline.giraffe_parameters": {
-        "references": {
-            "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-            "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-            "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-        },
-        "ref_gbz": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.gbz",
-        "ref_dist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.dist",
-        "ref_min": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.0-mc-chm13-minaf.0.1.min",
-        "ref_path_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/GRCh38.path_list.txt"
+        "ref_gbz": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.gbz",
+        "ref_dist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.dist",
+        "ref_min": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.shortread.withzip.min",
+        "ref_zipcodes": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.d9.shortread.zipcodes",
+        "ref_paths": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/GRCh38h0h.path_list.txt",
+        "prefix_to_strip": "GRCh38#0#"
     },
-    "SVPipeline.cloud_provider_override": "aws"
+    "SVPipeline.cloud_provider_override": "aws",
+    "SVPipeline.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

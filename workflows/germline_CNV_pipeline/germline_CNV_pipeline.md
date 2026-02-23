@@ -201,6 +201,21 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>File</i><br />
         CSV file with jalign scores for each read
 </p>
+<p name="GermlineCNVPipeline.combined_coverage_plot">
+        <b>GermlineCNVPipeline.combined_coverage_plot</b><br />
+        <i>File?</i><br />
+        CNV coverage plot for combined calls in JPEG format (only generated if skip_figure_generation is false)
+</p>
+<p name="GermlineCNVPipeline.combined_dup_del_plot">
+        <b>GermlineCNVPipeline.combined_dup_del_plot</b><br />
+        <i>File?</i><br />
+        Duplication and deletion calls plot for combined calls in JPEG format (only generated if skip_figure_generation is false)
+</p>
+<p name="GermlineCNVPipeline.combined_copy_number_plot">
+        <b>GermlineCNVPipeline.combined_copy_number_plot</b><br />
+        <i>File?</i><br />
+        Copy number calls plot for combined calls in JPEG format (only generated if skip_figure_generation is false)
+</p>
 <p name="GermlineCNVPipeline.md5_checksums_json">
         <b>GermlineCNVPipeline.md5_checksums_json</b><br />
         <i>File?</i><br />

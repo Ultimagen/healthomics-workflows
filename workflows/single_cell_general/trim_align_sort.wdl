@@ -35,7 +35,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File] ref_fastas_cram
         String base_file_name
@@ -129,12 +129,15 @@ workflow TrimAlignSort {
             "monitoring_script_input",
             "Globals.glob",
             "CreateReferenceCache.disk_size",
+            "CreateReferenceCache.cache_populate_script_path",
             "Trimmer.disk_size",
             "UAAlignment.Globals.glob",
             "UAAlignment.BuildUaIndex.disk_size",
             "UAAlignment.AlignWithUA.v_aware_vcf",
             "UAAlignment.AlignWithUA.disk_size",
             "UAAlignment.AlignWithUA.cpu",
+            "UAAlignment.monitoring_script_input",
+            "UAMethAlignment.monitoring_script_input",
             "UAMethAlignment.UaMethIntensiveMode",
             "UAMethAlignment.Globals.glob",
             "UAMethAlignment.BuildUaMethIndex.disk_size",
@@ -232,6 +235,11 @@ workflow TrimAlignSort {
             help: "Number of cpus to be used for the tasks.",
             type: "Int",
             category: "input_required"
+        }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_optional"
         }
         create_md5_checksum_outputs: {
             help: "Create md5 checksum for requested output files",
@@ -446,9 +454,8 @@ workflow TrimAlignSort {
     call UGAlignment.CreateReferenceCache {
         input:
             references = ref_fastas_cram,
-            cache_populate_script = global.ref_cache_script, #!StringCoercion
             preemptible_tries = preemptible_tries,
-            docker = global.perl_docker,
+            docker = global.ugbio_core_docker,
             dummy_input_for_call_caching = dummy_input_for_call_caching
     }
 
@@ -484,6 +491,7 @@ workflow TrimAlignSort {
                     references              = references,
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
+                    monitoring_script_input = monitoring_script_input,
             }
         }
 
@@ -497,6 +505,7 @@ workflow TrimAlignSort {
                     cache_tarball           = CreateReferenceCache.cache_tarball,
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
+                    monitoring_script_input = monitoring_script_input,
             }
         }
 
@@ -511,7 +520,8 @@ workflow TrimAlignSort {
                     base_file_name          = base_file_name + ".star.aln",
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
-                    cpu                     = cpu
+                    cpu                     = cpu,
+                    monitoring_script_input = monitoring_script_input,
             }
         }
         Array[File] align_output_list = [select_first([UAAlignment.ua_output_bam, UAMethAlignment.ua_output_bam ,StarAlignment.output_bam])]

@@ -15,6 +15,8 @@ task UGMakeExamples{
     Array[File] background_cram_index_files
 
     File? germline_vcf
+    File? pangenome_haplotypes
+    File? pangenome_haplotypes_index
 
     Int min_base_quality
     Int pileup_min_mapping_quality
@@ -31,6 +33,8 @@ task UGMakeExamples{
     Int assembly_min_base_quality
     Boolean make_gvcf
     Float p_error = 0
+    Int gq_resolution = 5
+    Array[Int]? gq_bins
     Boolean prioritize_alt_supporting_reads    
     Array[Int] optimal_coverages
     Boolean cap_at_optimal_coverage
@@ -44,6 +48,10 @@ task UGMakeExamples{
     Boolean count_candidates_with_dvtools = false
     Boolean normalize_strand_bias = false
     Array[Float]? strand_bias_normalization_thresholds
+
+    # Pre-calculated median coverage values
+    Int median_coverage
+    Int background_median_coverage
 
     String docker
     File monitoring_script
@@ -97,7 +105,8 @@ task UGMakeExamples{
   Boolean defined_background = length(background_cram_files) > 0
 
   Array[Float] strand_bias_normalization_thresholds_defined = select_first([strand_bias_normalization_thresholds, [0.5,0.5]])
-
+  Array[Int] gq_bins_defined = select_first([gq_bins, []])
+  
   parameter_meta {
       cram_files: {
           localization_optional: true
@@ -190,6 +199,17 @@ task UGMakeExamples{
     #shellcheck disable=SC2034
     st_bias_norm_thresholds_string="--strand-bias-threshold-to-normalize ~{sep=',' strand_bias_normalization_thresholds_defined}"
 
+    gq_bins_str=' --gq-thresholds "~{sep=',' gq_bins_defined}"'
+    gq_resolution_str="--gq-resolution ~{gq_resolution}"
+    if ~{make_gvcf}; then
+      if "~{defined(gq_bins)}" ; then
+        gvcf_extra_args="$gq_bins_str"
+      else
+        gvcf_extra_args="$gq_resolution_str"
+      fi
+    else
+      gvcf_extra_args=""
+    fi
     # parallel processing: run the tool in different process, each on a different interval part
     pids=()
     for interval_part in $(find . -name "interval_*.bed" | sort); do
@@ -200,6 +220,8 @@ task UGMakeExamples{
         --output "~{output_prefix}_$part_number" \
         --reference ~{references.ref_fasta} \
         --bed "$interval_part" \
+        --median-coverage ~{median_coverage} \
+        --background-median-coverage ~{background_median_coverage} \
         --min-base-quality ~{min_base_quality} \
         --min-mapq ~{pileup_min_mapping_quality} \
         --cgp-min-count-snps ~{min_read_count_snps} \
@@ -215,7 +237,7 @@ task UGMakeExamples{
         --assembly-min-base-quality ~{assembly_min_base_quality} \
         ~{true="--realigned-sam" false="" output_realignment} \
         ~{true="--somatic" false="" is_somatic} \
-        ~{if make_gvcf then "--gvcf  --p-error ~{p_error}" else ""} \
+        ~{if make_gvcf then "--gvcf --p-error ~{p_error} $gvcf_extra_args" else ""} \
         --optimal-coverages "~{sep=";" optimal_coverages}" \
         ~{true="--cap-at-optimal-coverage " false="" cap_at_optimal_coverage} \
         ~{true="--prioritize-alt-supporting-reads " false="" prioritize_alt_supporting_reads} \
@@ -229,6 +251,7 @@ task UGMakeExamples{
         ~{extra_args} \
         ~{true="--progress" false="" log_progress} \
         ~{if defined(germline_vcf) then "--region-haplotypes-vcf ~{germline_vcf}" else ""} \
+        ~{if defined(pangenome_haplotypes) then "--exp-pangenome-haps ~{pangenome_haplotypes}" else ""} \
          &
         
       # Save the PID of the process
@@ -309,11 +332,21 @@ task UGCallVariants{
     Int num_cpus
     Int num_threads
     File monitoring_script
-    Int disk_size = ceil(1.05*size(examples, 'GB') + 10)
     Int? call_variants_extra_mem
     Int? optimization_level
     Boolean no_address = true
+    
+    # Ensemble parameters
+    Int ensemble_size = 0
+    Int random_seed = 42
+    Int reference_rows = 5
+    
+    # Multi-sample parameters
+    Array[Int] sample_heights  # Height of each sample (e.g., [100,100] or [100])
+    Boolean shuffle_all_samples = false
   }
+
+  Int disk_size = ceil(1.05*size(examples, 'GB') + 10)
   Int num_examples = length(examples)
   Int extra_mem = select_first([call_variants_extra_mem, 8])
   Int builder_optimization_level  = select_first([optimization_level, if is_somatic then 5 else 1])
@@ -344,6 +377,12 @@ task UGCallVariants{
       "gpuid = 0\n" \
       "[debug]" \
       "logFileFolder = .\n" \
+      "[ensemble]" \
+      "ensembleSize = ~{ensemble_size}" \
+      "randomSeed = ~{random_seed}" \
+      "referenceRows = ~{reference_rows}" \
+      "sampleHeights = ~{sep=',' sample_heights}" \
+      "shuffleAllSamples = ~{true='true' false='false' shuffle_all_samples}\n" \
       "[general]" \
       "tfrecord = 1" \
       "compressed = 1" \
@@ -385,6 +424,56 @@ output {
     File output_model_serialized = "~{onnx_base_name}.serialized"
   }
 }
+
+task UGSplitBoundaryCalls {
+  input {
+    Array[File] examples
+    Array[File] calls
+    Float boundary_threshold
+    String docker
+    File monitoring_script
+    Int preemptible_tries
+    Boolean no_address
+  }
+  Int disk_size = ceil(1.1*size(examples, 'GB') + 1.1*size(calls, 'GB') + 10)
+  command <<<
+    set -exo pipefail
+    examples_file=~{write_lines(examples)}
+    calls_file=~{write_lines(calls)}
+    
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+    mkdir boundary_examples
+    mkdir strong_calls
+    sort -t "." -k2,2n $calls_file > sorted_calls.txt
+    paste -d "\t" $examples_file sorted_calls.txt > input_pairs.txt
+    cat input_pairs.txt
+    while IFS=$'\t' read -r example call; do
+      example_basename=$(basename "$example")
+      echo "[$(date +%T)] Processing line $((++line_count)) of $(wc -l < input_pairs.txt)"
+      call_basename=$(basename "$call")
+      dvtools --infile "$call" --op ensembleSplit --filetype cvo \
+      --ensembleSplitThreshold ~{boundary_threshold} \
+      --ensembleSplitInputDV "$example" \
+      --outfile "strong_calls/${call_basename}" \
+      --ensembleSplitOutputDV "boundary_examples/${example_basename}"
+    done < input_pairs.txt
+
+  >>>
+  runtime {
+    memory: "8 GB"
+    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+    preemptible: preemptible_tries
+    noAddress: no_address
+    cpu: 2
+  }
+  output {
+    Array[File] strong_calls = glob("strong_calls/*.gz")
+    Array[File] boundary_examples = glob("boundary_examples/*.tfrecord.gz")
+    File monitoring_log = "monitoring.log"
+  } 
+}
+
 
 task UGPostProcessing{
   input{
@@ -596,5 +685,96 @@ task QCReport{
     File qc_h5     = '~{output_prefix}.h5'
     File qc_report = '~{output_prefix}_report.html'
     File qc_metrics_h5 = '~{output_prefix}_metrics.h5'
+  }
+}
+
+task GenerateQuickCoverageBed {
+  input {
+    File target_intervals
+    File ref_dict
+    String docker
+    File monitoring_script
+    Int preemptible_tries
+    Int num_points = 2000
+  }
+
+  Int disk_size = 10
+
+  command <<<
+    set -xeo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    # Convert interval list to BED format
+    gatk IntervalListToBed -I ~{target_intervals} -O target_intervals.bed
+
+    # Calculate total length of intervals
+    total_length=$(awk '{sum += $3 - $2} END {printf "%.0f\n", sum}' target_intervals.bed)
+    echo "Total interval length: $total_length"
+    
+    # Calculate average distance between points
+    if [[ $total_length -eq 0 ]]; then
+      echo "Error: No intervals found"
+      exit 1
+    fi
+    
+    avg_distance=$(echo "scale=0; $total_length / ~{num_points}" | bc -l)
+    if [[ $avg_distance -eq 0 ]]; then
+      avg_distance=1
+    fi
+    echo "Average distance between points: $avg_distance"
+    
+    # Generate uniformly distributed points
+    export AVG_DISTANCE=$avg_distance
+    export NUM_POINTS=~{num_points}
+    
+    python3 << 'EOF'
+import os
+
+avg_distance = int(os.environ['AVG_DISTANCE'])
+num_points = int(os.environ['NUM_POINTS'])
+
+points_generated = 0
+with open('target_intervals.bed', 'r') as f, open('quick_coverage.bed', 'w') as out:
+    for line in f:
+        if line.strip():
+            parts = line.strip().split('\t')
+            chrom = parts[0]
+            start = int(parts[1])
+            end = int(parts[2])
+            
+            # Generate points at avg_distance intervals within this interval
+            current_pos = start
+            while current_pos < end and points_generated < num_points:
+                # Write bed format: chr start end (where start = end - 1 for single position)
+                out.write(f"{chrom}\t{current_pos}\t{current_pos + 1}\n")
+                points_generated += 1
+                current_pos += avg_distance
+            
+            if points_generated >= num_points:
+                break
+
+print(f"Generated {points_generated} coverage points")
+EOF
+
+    # Ensure we have a valid output file
+    if [[ ! -s quick_coverage.bed ]]; then
+      echo "Error: Failed to generate coverage bed file"
+      exit 1
+    fi
+    
+    echo "Successfully generated $(wc -l < quick_coverage.bed) coverage points"
+  >>>
+
+  runtime {
+    docker: docker
+    memory: "2 GB"
+    cpu: 1
+    disks: "local-disk " + disk_size + " HDD"
+    preemptible: preemptible_tries
+  }
+
+  output {
+    File quick_coverage_bed = "quick_coverage.bed"
+    File monitoring_log = "monitoring.log"
   }
 }

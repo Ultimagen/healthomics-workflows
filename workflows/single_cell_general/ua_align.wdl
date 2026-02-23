@@ -31,11 +31,16 @@ workflow UAAlignment {
         Boolean no_address
         Int preemptible_tries
 
+        # Used for running on other clouds (aws)
+        File? monitoring_script_input
+
         #@wv not defined(ua_parameters['ua_index']) -> defined(references)
         #@wv suffix(ua_parameters['ref_alt']) == '.alt'
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
+
+    File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
     if (! defined(ua_parameters.ua_index)){
         call AlignTasks.BuildUaIndex {
@@ -43,7 +48,7 @@ workflow UAAlignment {
                 references          = select_first([references]),
                 preemptible_tries   = preemptible_tries,
                 ua_docker           = global.ua_docker,
-                monitoring_script   = global.monitoring_script, # !FileCoercion
+                monitoring_script   = monitoring_script,
                 no_address          = no_address,
                 dummy_input_for_call_caching = "",
         }
@@ -61,7 +66,7 @@ workflow UAAlignment {
             use_v_aware_alignment   = ua_parameters.v_aware_alignment_flag,
             no_address              = no_address,
             cache_tarball           = cache_tarball,
-            monitoring_script       = global.monitoring_script, # !FileCoercion
+            monitoring_script       = monitoring_script,
             preemptible_tries       = preemptible_tries,
             ua_docker               = global.ua_docker,
             cpu                     = ua_parameters.cpus,

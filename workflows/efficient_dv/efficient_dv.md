@@ -162,6 +162,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Float </i> &mdash;
          Basecalling error for reference confidence model in gvcf <br />
 </p>
+<p name="EfficientDV.gq_resolution_override">
+        <b>EfficientDV.gq_resolution_override</b><br />
+        <i>Int? </i> &mdash;
+         Override for gq resolution (default: 5) <br />
+</p>
+<p name="EfficientDV.gq_bins">
+        <b>EfficientDV.gq_bins</b><br />
+        <i>Array[Int]? </i> &mdash;
+         GQ bins to use instead of a fixed resolution (overrides gq_resolution) <br />
+</p>
 <p name="EfficientDV.output_realignment">
         <b>EfficientDV.output_realignment</b><br />
         <i>Boolean </i> &mdash;
@@ -182,6 +192,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>File? </i> &mdash;
          Germline vcf file in order to generate haplotypes that incorporate germline variants <br />
 </p>
+<p name="EfficientDV.pangenome_haplotypes">
+        <b>EfficientDV.pangenome_haplotypes</b><br />
+        <i>File? </i> &mdash;
+         Optional pangenome haplotypes cram file <br />
+</p>
+<p name="EfficientDV.pangenome_haplotypes_index">
+        <b>EfficientDV.pangenome_haplotypes_index</b><br />
+        <i>File? </i> &mdash;
+         Optional pangenome haplotypes cram index file <br />
+</p>
 <p name="EfficientDV.optimization_level">
         <b>EfficientDV.optimization_level</b><br />
         <i>Int? </i> &mdash;
@@ -191,6 +211,31 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
          Output tfrecords from call_variants <br />
+</p>
+<p name="EfficientDV.strong_call_threshold">
+        <b>EfficientDV.strong_call_threshold</b><br />
+        <i>Float </i> &mdash;
+         Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference <br />
+</p>
+<p name="EfficientDV.ensemble_size">
+        <b>EfficientDV.ensemble_size</b><br />
+        <i>Int </i> &mdash;
+         Size of the ensemble for inference <br />
+</p>
+<p name="EfficientDV.ensemble_reference_rows">
+        <b>EfficientDV.ensemble_reference_rows</b><br />
+        <i>Int </i> &mdash;
+         Number of reference rows for ensemble inference <br />
+</p>
+<p name="EfficientDV.random_seed">
+        <b>EfficientDV.random_seed</b><br />
+        <i>Int </i> &mdash;
+         Random seed for ensemble inference <br />
+</p>
+<p name="EfficientDV.shuffle_all_samples">
+        <b>EfficientDV.shuffle_all_samples</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to shuffle all samples during inference <br />
 </p>
 <p name="EfficientDV.min_variant_quality_hmer_indels">
         <b>EfficientDV.min_variant_quality_hmer_indels</b><br />
@@ -313,6 +358,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Array[File]?</i><br />
         The tfrecords that call_variants outputs
 </p>
+<p name="EfficientDV.call_variants_output_tfrecords_final">
+        <b>EfficientDV.call_variants_output_tfrecords_final</b><br />
+        <i>Array[File]?</i><br />
+        The final merged tfrecord that call_variants outputs
+</p>
 <p name="EfficientDV.output_gvcf">
         <b>EfficientDV.output_gvcf</b><br />
         <i>File?</i><br />
@@ -367,6 +417,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.num_candidates_as_int</b><br />
         <i>Int</i><br />
         Number of candidates that call_variants processed (as an integer)
+</p>
+<p name="EfficientDV.num_weak_candidates">
+        <b>EfficientDV.num_weak_candidates</b><br />
+        <i>Array[File]</i><br />
+        Number of weak candidates that were re-called with ensemble inference
+</p>
+<p name="EfficientDV.num_weak_candidates_as_int">
+        <b>EfficientDV.num_weak_candidates_as_int</b><br />
+        <i>Int</i><br />
+        Number of weak candidates that were re-called with ensemble inference (as an integer)
 </p>
 
 <hr />

@@ -42,5 +42,6 @@
     "SomaticCNVCallingControlFREEC.tumor_mpileup_override": "<tumor>.pileup",
     "SomaticCNVCallingControlFREEC.normal_mpileup_override": "<normal>.pileup",
     "SomaticCNVCallingControlFREEC.force_gc_content_normalization": 1,
-    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed"
+    "SomaticCNVCallingControlFREEC.cnv_lcr_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed",
+    "SomaticCNVCallingControlFREEC.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

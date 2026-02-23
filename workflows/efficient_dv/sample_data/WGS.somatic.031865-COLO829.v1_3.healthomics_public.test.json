@@ -31,6 +31,7 @@
     ],
     "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
     "EfficientDV.normalize_strand_bias": false,
+    "EfficientDV.strong_call_threshold": 1.1,
     "EfficientDV.background_cram_files": [
         "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic/normal.031865-Lb_2212-Z0134-CTTCAGCATACAGAT.cram"
     ],
@@ -55,5 +56,6 @@
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,
     "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
-    "EfficientDV.cloud_provider_override": "aws"
+    "EfficientDV.cloud_provider_override": "aws",
+    "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

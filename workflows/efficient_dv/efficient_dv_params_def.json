@@ -71,12 +71,28 @@
         "description": "dummy_input_for_call_caching",
         "optional": true
     },
+    "EfficientDV.ensemble_reference_rows": {
+        "description": "Number of reference rows for ensemble inference",
+        "optional": true
+    },
+    "EfficientDV.ensemble_size": {
+        "description": "Size of the ensemble for inference",
+        "optional": true
+    },
     "EfficientDV.exome_intervals": {
         "description": "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
         "optional": false
     },
     "EfficientDV.germline_vcf": {
         "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "EfficientDV.gq_bins": {
+        "description": "GQ bins to use instead of a fixed resolution (overrides gq_resolution)",
+        "optional": true
+    },
+    "EfficientDV.gq_resolution_override": {
+        "description": "Override for gq resolution (default: 5)",
         "optional": true
     },
     "EfficientDV.h_indel_allele_frequency_ratio": {
@@ -215,6 +231,14 @@
         "description": "Basecalling error for reference confidence model in gvcf",
         "optional": true
     },
+    "EfficientDV.pangenome_haplotypes": {
+        "description": "Optional pangenome haplotypes cram file",
+        "optional": true
+    },
+    "EfficientDV.pangenome_haplotypes_index": {
+        "description": "Optional pangenome haplotypes cram index file",
+        "optional": true
+    },
     "EfficientDV.pileup_min_mapping_quality": {
         "description": "Minimal mapping quality to be included in image (the input to the CNN)",
         "optional": true
@@ -225,6 +249,10 @@
     },
     "EfficientDV.prioritize_alt_supporting_reads": {
         "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "EfficientDV.random_seed": {
+        "description": "Random seed for ensemble inference",
         "optional": true
     },
     "EfficientDV.recalibrate_vaf": {
@@ -251,12 +279,20 @@
         "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
         "optional": true
     },
+    "EfficientDV.shuffle_all_samples": {
+        "description": "Whether to shuffle all samples during inference",
+        "optional": true
+    },
     "EfficientDV.single_strand_filter": {
         "description": "Whether to filter out non snp candidates that are on a single strand. Reduces the number of candidates and hence the cost. Most useful for somatic calling.",
         "optional": false
     },
     "EfficientDV.strand_bias_normalization_thresholds": {
         "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
+    },
+    "EfficientDV.strong_call_threshold": {
+        "description": "Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference",
         "optional": true
     },
     "EfficientDV.target_intervals": {

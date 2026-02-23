@@ -1,0 +1,74 @@
+{
+    "GiraffeAlignment.HaplotypeSampling.diploid_sampling": {
+        "description": "Use diploid sampling strategy (default: true)",
+        "optional": true
+    },
+    "GiraffeAlignment.HaplotypeSampling.include_reference": {
+        "description": "Include reference in sampled haplotypes (default: true)",
+        "optional": true
+    },
+    "GiraffeAlignment.HaplotypeSampling.kmer_length": {
+        "description": "K-mer length for KMC counting (default: 29)",
+        "optional": true
+    },
+    "GiraffeAlignment.HaplotypeSampling.minimap2_preset": {
+        "description": "Minimap2 preset for alignment (default: asm5)",
+        "optional": true
+    },
+    "GiraffeAlignment.HaplotypeSampling.num_haplotypes": {
+        "description": "Number of haplotypes to sample (default: 32)",
+        "optional": true
+    },
+    "GiraffeAlignment.HaplotypeSampling.step_size": {
+        "description": "Sliding window step size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GiraffeAlignment.HaplotypeSampling.window_size": {
+        "description": "Sliding window size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GiraffeAlignment.base_file_name": {
+        "description": "Base name for all output files. Should not contain spaces, #, or comma characters.",
+        "optional": false
+    },
+    "GiraffeAlignment.dummy_input_for_call_caching": {
+        "description": "dummy_input_for_call_caching",
+        "optional": true
+    },
+    "GiraffeAlignment.giraffe_parameters": {
+        "description": "Giraffe graph reference bundle (GBZ/DIST/MIN/ZIPCODES/PATH_LIST) plus linear reference (FASTA/FAI/DICT).",
+        "optional": false
+    },
+    "GiraffeAlignment.input_cram_list": {
+        "description": "List of input CRAM/BAM files to align using vg giraffe. All files in the list are processed together.",
+        "optional": false
+    },
+    "GiraffeAlignment.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "GiraffeAlignment.output_haplotypes_cram": {
+        "description": "When true, run haplotype sampling and output a haplotype CRAM.",
+        "optional": true
+    },
+    "GiraffeAlignment.preemptible_tries": {
+        "description": "Number of preemptible retries for scatter tasks.",
+        "optional": true
+    },
+    "GiraffeAlignment.reads_per_split": {
+        "description": "Approximate number of reads per split chunk for parallel processing.",
+        "optional": true
+    },
+    "GiraffeAlignment.ref_files_for_tarball": {
+        "description": "List of reference FASTA files used to build the reference cache.",
+        "optional": false
+    },
+    "GiraffeAlignment.references": {
+        "description": "Linear reference genome (FASTA, FAI, DICT) used for read processing and downstream sorting/markdup.",
+        "optional": false
+    },
+    "GiraffeAlignment.sorter_params": {
+        "description": "Parameters for sorting and marking duplicates.",
+        "optional": false
+    }
+}

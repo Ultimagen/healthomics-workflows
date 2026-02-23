@@ -21,11 +21,12 @@ version 1.0
 
 import "tasks/globals.wdl" as Globals
 import "tasks/general_tasks.wdl" as UGGeneralTasks
+import "tasks/cnv_calling_tasks.wdl" as CNVTasks
 
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.27.3" # !UnusedDeclaration
+        String pipeline_version = "1.28.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -140,12 +141,23 @@ workflow SingleSampleCNVpytorCalling {
                 no_address = no_address,
                 preemptible_tries = preemptible_tries
         }
+
+        call CNVTasks.AddCIPOS { 
+            input:
+                input_vcf = RunCNVpytor.cnvpytor_cnv_calls_vcf,
+                base_file_name = base_file_name,
+                window_size = window_size,
+                docker = global.ugbio_cnv_docker,
+                monitoring_script = monitoring_script,
+                no_address = no_address,
+                preemptible_tries = preemptible_tries
+        }
     }
 
     call CombineCNVVcfs { 
         input:
             base_file_name = base_file_name,
-            cnv_vcfs = RunCNVpytor.cnvpytor_cnv_calls_vcf,
+            cnv_vcfs = AddCIPOS.output_vcf,
             reference_fasta_index = reference_genome_index,
             docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,
@@ -244,6 +256,7 @@ task RunCNVpytor {
     }
 }
 
+
 task CombineCNVVcfs {
     input {
         String base_file_name
@@ -261,7 +274,8 @@ task CombineCNVVcfs {
         combine_cnmops_cnvpytor_cnv_calls concat \
             --cnvpytor_vcf ~{sep=" " cnv_vcfs} \
             --output_vcf ~{base_file_name}.cnvpytor.cnv_calls.vcf.gz \
-            --fasta_index ~{reference_fasta_index}
+            --fasta_index ~{reference_fasta_index} \
+            --make_ids_unique
     >>>
 
     runtime {
