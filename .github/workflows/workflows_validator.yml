@@ -32,3 +32,14 @@ jobs:
 
     - name: Validate docker images
       run: python scripts/healthomics_wf/utils/validate_globals_docker_images.py workflows
+
+  validate-genome-resources:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: pip install boto3
+
+    - name: Validate genome resources
+      run: python scripts/healthomics_wf/utils/validate_genome_resources.py workflows
