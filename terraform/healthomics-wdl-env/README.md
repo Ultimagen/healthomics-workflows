@@ -99,14 +99,13 @@ If `cross_aws_account` is provided, the input bucket is configured to allow read
 The `init.sh` script configures the Terraform backend with S3 state storage.
 
 ```bash
-./init.sh <terraform_bucket_name> [unused] [project_name]
+./init.sh <terraform_bucket_name> [project_name]
 ```
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `terraform_bucket_name` | Yes | - | S3 bucket name for storing Terraform state |
-| `unused` | No | - | Reserved parameter (not used) |
-| `project_name` | No | `healthomics-workflows` | Project name used in state key path |
+| Parameter               | Required | Default                 | Description                                  |
+|-------------------------|----------|-------------------------|----------------------------------------------|
+| `terraform_bucket_name` | Yes      | -                       | S3 bucket name for storing Terraform state   |
+| `project_name`          | No       | `healthomics-workflows` | Project name used in state key path          |
 
 The script:
 1. Retrieves the current AWS account ID
