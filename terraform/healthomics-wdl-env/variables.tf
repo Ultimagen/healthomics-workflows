@@ -7,7 +7,7 @@ variable "aws_region" {
   type        = string
 }
 variable "project" {
-  description = "Project Name. Will be used as prefix for s3 buckets and tags for aws resources"
+  description = "Project Name. Will be used as prefix for s3 buckets"
   type        = string
 }
 variable "custom_tags" {
@@ -15,7 +15,7 @@ variable "custom_tags" {
   type = map(string)
 }
 variable "omics_accessible_buckets" {
-  description = "List of s3 bucket to have read access from omics"
+  description = "List of s3 buckets to have read access from omics"
   type = list(string)
 }
 variable "cross_aws_account" {
