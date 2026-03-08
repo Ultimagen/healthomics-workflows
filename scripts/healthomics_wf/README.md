@@ -32,7 +32,8 @@ The script accepts the following command line arguments:
 - `--s3-bucket`: Bucket name to copy resources files to. This bucket must be accessible by the OmicsRole. If using the [Terraform module](../../terraform/healthomics-wdl-env), ensure this bucket is included in the `omics_accessible_buckets` variable.
 
 ##### Optional Arguments
-- `--input-template`: Input template JSON file path to localize (optional). If empty, it will localize all input templates.
+
+- `--input-template`: Input template JSON file name to localize (file name as it appears under `input_templates/` folder). If empty, it will localize all input templates.
 - `--use-dynamodb`: Add this flag for storing the version workflow in dynamodb table (Relevant when omics environment was created using the terraform code that shared in this repository)
 - `--omics-workflow-name`: Name for the generated omics workflow (optional). If empty, it will use the `workflow` argument.
 - `--aws-profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.
