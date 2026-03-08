@@ -3,11 +3,11 @@ variable "aws_shared_account_id" {
   type        = string
 }
 variable "aws_region" {
-  description = "The AWS region where the modules will be deployed."
+  description = "The AWS region where the modules will be deployed"
   type        = string
 }
 variable "project" {
-  description = "Project Name"
+  description = "Project Name. Will be used as prefix for s3 buckets and tags for aws resources"
   type        = string
 }
 variable "custom_tags" {
