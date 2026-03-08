@@ -1,7 +1,8 @@
 # Table of Contents
-1. [Prerequisites](#Prerequisites)
-2. [Create HealthOmics Workflow](#Create-HealthOmics-Workflow)
-3. [Create HealthOmics Workflow](#Invoke-HealthOmics-Run)
+
+1. [Prerequisites](#prerequisites)
+2. [Create HealthOmics Workflow](#create-healthomics-workflow)
+3. [Invoke HealthOmics Run](#invoke-healthomics-run)
 
 
 ## Prerequisites
@@ -28,7 +29,8 @@ The script accepts the following command line arguments:
 
 - `workflow`: Workflow to create (folder under workflows).
 - `--aws-region`: AWS region for ECR images.
-- `--s3-bucket`: Bucket name to copy resources files to. This bucket must be accessed by the service role that will be used to run the workflow.
+- `--s3-bucket`: Bucket name to copy resources files to. This bucket must be accessible by the OmicsRole. If using the [Terraform module](../../terraform/healthomics-wdl-env), ensure this bucket is included in the `omics_accessible_buckets` variable.
+
 ##### Optional Arguments
 - `--input-template`: Input template JSON file path to localize (optional). If empty, it will localize all input templates.
 - `--use-dynamodb`: Add this flag for storing the version workflow in dynamodb table (Relevant when omics environment was created using the terraform code that shared in this repository)
@@ -67,10 +69,14 @@ To successfully run this script, you need the following AWS permissions:
 `s3:PutObject`
 #### HealthOmics Permissions
 `omics:CreateWorkflow`
+`omics:CreateWorkflowVersion`
 `omics:GetWorkflow`
+`omics:GetWorkflowVersion`
 `omics:ListWorkflows`
-#### Dynamodb Permissions
+
+#### DynamoDB Permissions
 `dynamodb:PutItem`
+`dynamodb:GetItem`
 
 ### Example IAM Policy
 ```json
@@ -95,7 +101,9 @@ To successfully run this script, you need the following AWS permissions:
         "s3:GetObject",
         "s3:PutObject",
         "omics:CreateWorkflow",
+        "omics:CreateWorkflowVersion",
         "omics:GetWorkflow",
+        "omics:GetWorkflowVersion",
         "omics:ListWorkflows"
       ],
       "Resource": "*"
@@ -103,7 +111,8 @@ To successfully run this script, you need the following AWS permissions:
     {
       "Effect": "Allow",
       "Action": [
-        "dynamodb:PutItem"
+        "dynamodb:PutItem",
+        "dynamodb:GetItem"
       ],
       "Resource": "arn:aws:dynamodb:AWS_REGION:AWS_ACCOUNT:table/OmicsWorkflows"
     }
@@ -114,44 +123,49 @@ To successfully run this script, you need the following AWS permissions:
 ## Invoke HealthOmics Run
 
 ### Overview
-The purpose of `invoke_healthomics_run.py` script is
-to start a specific version of AWS HealthOmics private workflow
-that deployed using the `create_healthomics_workflow.py` script,
-and it's versioning is managed using dynamodb.
+
+The `invoke_healthomics_run.py` script starts an AWS HealthOmics private workflow
+that was deployed using `create_healthomics_workflow.py` with the `--use-dynamodb` flag.
 
 ### Usage
 
-
 #### Command Line Arguments
 
-The script accepts the following command line arguments:
-   parser.add_argument("--omics-workflow-name", required=True, help="Workflow name")
-    parser.add_argument("--workflow-version", required=True, help="Workflow version")
-    parser.add_argument("--run-id", required=True, help="Run ID")
-    parser.add_argument("--input-params-file", required=True, help="Path to the JSON file for InputParams")
-    parser.add_argument("--long-run", action='store_true', help="mark the run as long and run it under 'long' run group. By default, will run under 'standard' run group")
-    parser.add_argument("--cache-behavior", help="HealthOmics cache behavior")
-    parser.add_argument("--aws-region", help="AWS region", default="us-east-1")
-    parser.add_argument("--aws-profile", help="AWS CLI profile", required=False)
+##### Required Arguments
+
 - `--omics-workflow-name`: Workflow name to run.
-- `--workflow-version`: Workflow version (one of healthomics-workflows release [tags](https://github.com/Ultimagen/healthomics-workflows/tags)).
 - `--run-id`: Run ID for the run.
 - `--input-params-file`: Path to the JSON file for InputParams.
-##### Optional Arguments
-- `--long-run`: mark the run as long and run it under 'long' run group. By default, will run under 'standard' run group.
-- `--aws-region`: AWS region (default=us-east-1).
-- `--cache-behavior`: HealthOmics cache behavior (CACHE_ALWAYS/CACHE_ON_FAILURE) (By default, will use CACHE_ON_FAILURE)
-- `--aws-profile`: AWS CLI profile (optional). If empty, it will use the current session's credentials.
 
-#### Example Command
+##### Optional Arguments
+
+- `--workflow-version`: Workflow version. If not provided, the latest version from DynamoDB will be used automatically.
+- `--long-run`: Mark the run as long and run it under 'long' run group. By default, will run under 'standard' run group.
+- `--aws-region`: AWS region (default: us-east-1).
+- `--cache-behavior`: HealthOmics cache behavior (`CACHE_ALWAYS` or `CACHE_ON_FAILURE`). Default: `CACHE_ON_FAILURE`.
+- `--aws-profile`: AWS CLI profile. If empty, it will use the current session's credentials.
+
+#### Example Commands
+
+Using latest version (recommended):
 
 ```bash
 python invoke_healthomics_run.py \
---omics-workflow-name germline_CNV_pipeline \
---workflow-version 1.18.3 \
---run-id DATA-8079 \
---input-params-file germline_CNV_pipeline_input.json \
---aws-region eu-west-1
+  --omics-workflow-name germline_CNV_pipeline \
+  --run-id DATA-8079 \
+  --input-params-file germline_CNV_pipeline_input.json \
+  --aws-region eu-west-1
+```
+
+Using specific version:
+
+```bash
+python invoke_healthomics_run.py \
+  --omics-workflow-name germline_CNV_pipeline \
+  --workflow-version 1.18.3 \
+  --run-id DATA-8079 \
+  --input-params-file germline_CNV_pipeline_input.json \
+  --aws-region eu-west-1
 ```
 
 ### AWS Permissions
@@ -159,4 +173,5 @@ python invoke_healthomics_run.py \
 To successfully run this script, you need the following AWS permissions:
 
 `lambda:InvokeFunction`
+`dynamodb:Scan` (required when `--workflow-version` is not provided, to find the latest version)
 `dynamodb:GetItem`

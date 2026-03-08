@@ -20,7 +20,7 @@ resource "aws_lambda_function" "lambda_function" {
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.12"
   timeout          = 60
-  depends_on = [aws_cloudwatch_log_group.lambda_log_group]
+  depends_on       = [aws_cloudwatch_log_group.lambda_log_group]
   environment {
     variables = {
       OMICS_ROLE_ARN           = var.omics_role_arn

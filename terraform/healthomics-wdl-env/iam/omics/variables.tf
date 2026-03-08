@@ -4,12 +4,14 @@ variable "aws_account_id" {
 }
 
 variable "project" {
-  type = string
+  description = "Project name used in IAM role naming"
+  type        = string
 }
 
 variable "aws_shared_account_id" {
-  description = "aws shared account ID"
+  description = "AWS account ID with shared ECR images. Optional - if empty, cross-account ECR access is not configured."
   type        = string
+  default     = ""
 }
 
 variable "aws_region" {
@@ -18,27 +20,33 @@ variable "aws_region" {
 }
 
 variable "omics_inputs_bucket" {
-  type = string
+  description = "Name of the S3 bucket for workflow inputs (granted read access)"
+  type        = string
 }
 
 variable "omics_outputs_bucket" {
-  type = string
+  description = "Name of the S3 bucket for workflow outputs (granted read/write access)"
+  type        = string
 }
 
 variable "omics_cache_bucket" {
-  type = string
+  description = "Name of the S3 bucket for WDL cache (granted read/write access)"
+  type        = string
 }
 
 variable "bioinfo_resources_bucket" {
-  type = string
+  description = "Name of the S3 bucket for bioinformatics resources (granted read access)"
+  type        = string
 }
 
 variable "broad_references_public_bucket" {
-  type    = string
-  default = "broad-references"
+  description = "Name of the Broad Institute public references bucket (granted read access)"
+  type        = string
+  default     = "broad-references"
 }
 
 variable "accessible_buckets_list" {
-  type = list(string)
+  description = "List of additional S3 bucket names to grant read access to the OmicsRole"
+  type        = list(string)
 }
 

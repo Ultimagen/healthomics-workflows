@@ -9,26 +9,31 @@ variable "aws_region" {
 }
 
 variable "project" {
-  type = string
+  description = "Project name used as prefix for S3 bucket names"
+  type        = string
 }
 variable "inputs_bucket_suffix" {
-  type    = string
-  default = "runs-data"
+  description = "Suffix for the workflow inputs S3 bucket name"
+  type        = string
+  default     = "runs-data"
 }
 
 variable "outputs_bucket_suffix" {
-  type    = string
-  default = "outputs"
+  description = "Suffix for the workflow outputs S3 bucket name"
+  type        = string
+  default     = "outputs"
 }
 
 variable "bioinfo_resources_bucket_suffix" {
-  type    = string
-  default = "bioinfo-resources"
+  description = "Suffix for the bioinformatics resources S3 bucket name"
+  type        = string
+  default     = "bioinfo-resources"
 }
 
 variable "cache_bucket_suffix" {
-  type    = string
-  default = "wdl-cache"
+  description = "Suffix for the WDL cache S3 bucket name"
+  type        = string
+  default     = "wdl-cache"
 }
 
 variable "input_bucket_archive_days" {
@@ -68,9 +73,12 @@ variable "cache_on_failure_prefix" {
 }
 
 variable "custom_tags" {
-  type = map(string)
+  description = "Map of key-value tags to apply to all S3 buckets"
+  type        = map(string)
 }
 
 variable "cross_aws_account_id" {
-  type    = string
+  description = "AWS account ID granted read/write access to the input bucket. Optional - if empty, cross-account access is not configured."
+  type        = string
+  default     = ""
 }
