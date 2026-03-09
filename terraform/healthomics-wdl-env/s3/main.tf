@@ -224,14 +224,16 @@ resource "aws_s3_bucket_lifecycle_configuration" "cache_buckets_lifecycle" {
 }
 
 resource "aws_s3_bucket_policy" "allow_write_access_from_another_account" {
+  count  = var.cross_aws_account_id != "" ? 1 : 0
   bucket = aws_s3_bucket.pipelines-input-bucket.id
-  policy = data.aws_iam_policy_document.allow_write_access_from_another_account.json
+  policy = data.aws_iam_policy_document.allow_write_access_from_another_account[0].json
 }
 
 data "aws_iam_policy_document" "allow_write_access_from_another_account" {
+  count = var.cross_aws_account_id != "" ? 1 : 0
   statement {
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = [var.cross_aws_account_id]
     }
 
@@ -246,7 +248,6 @@ data "aws_iam_policy_document" "allow_write_access_from_another_account" {
       "s3:DeleteObject",
       "s3:PutObjectAcl",
       "s3:ListMultipartUploadParts"
-
     ]
 
     resources = [

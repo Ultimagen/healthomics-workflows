@@ -5,11 +5,11 @@ resource "aws_iam_role" "omics_role" {
 
 data "aws_iam_policy_document" "assume_role_policy" {
   statement {
-    sid = "OmicsAssumeRole"
+    sid     = "OmicsAssumeRole"
     actions = ["sts:AssumeRole"]
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["omics.amazonaws.com"]
     }
 
@@ -33,11 +33,11 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 
   statement {
-    sid = "EC2AssumeRole"
+    sid     = "EC2AssumeRole"
     actions = ["sts:AssumeRole"]
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["ec2.amazonaws.com"]
     }
   }
@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "read_only_buckets" {
         var.bioinfo_resources_bucket,
         var.accessible_buckets_list,
         var.broad_references_public_bucket
-      ]))
+    ]))
   }
   statement {
     sid = "GetObjects"
@@ -77,7 +77,7 @@ data "aws_iam_policy_document" "read_only_buckets" {
         var.bioinfo_resources_bucket,
         var.accessible_buckets_list,
         var.broad_references_public_bucket
-      ]))
+    ]))
   }
 }
 
@@ -129,10 +129,12 @@ resource "aws_iam_policy" "omics_policy" {
                 "ecr:GetDownloadUrlForLayer",
                 "ecr:BatchCheckLayerAvailability"
             ],
-            "Resource": [
-                "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/*",
-                "arn:aws:ecr:${var.aws_region}:${var.aws_shared_account_id}:repository/*"
-            ]
+            "Resource": ${var.aws_shared_account_id != "" ? jsonencode([
+  "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/*",
+  "arn:aws:ecr:${var.aws_region}:${var.aws_shared_account_id}:repository/*"
+  ]) : jsonencode([
+  "arn:aws:ecr:${var.aws_region}:${var.aws_account_id}:repository/*"
+])}
         },
         {
             "Effect": "Allow",

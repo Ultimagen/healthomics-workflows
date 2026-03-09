@@ -1,5 +1,7 @@
 variable "custom_tags" {
-  type = map(string)
+  description = "Map of key-value tags to apply to HealthOmics run groups"
+  type        = map(string)
+  default     = {}
 }
 variable "standard_run_group_name" {
   description = "Name of run group for running standard omics runs"

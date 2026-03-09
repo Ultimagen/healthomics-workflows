@@ -40,12 +40,15 @@ Key features:
 Refer to the [terraform/healthomics-wdl-env/README.md](terraform/healthomics-wdl-env/README.md) for detailed usage instructions and module configuration options.
 
 ## Deploying Private Workflow
-### To localize workflow resources and create a private workflow in AWS HealthOmics:
-- [use this script](scripts/healthomics_wf/create_healthomics_workflow.py) that localizes the necessary resources and create a private workflow on AWS HealthOmics. After running it your workflow [is ready to run](#running-private-workflow).
+
+To localize workflow resources and create a private workflow in AWS HealthOmics:
+
+- [use this script](scripts/healthomics_wf/create_healthomics_workflow.py) that localizes the necessary resources and create a private workflow on AWS HealthOmics. See [scripts/healthomics_wf/README.md](scripts/healthomics_wf/README.md) for detailed usage instructions. After running it your workflow [is ready to run](#running-private-workflow).
 - Alternatively, follow [this section](#Deploying-Private-workflow-manual-way) to do it manually.
 
 ## Running Private Workflow
-In case you chose to build your environment with the healthomics-wdl-env terraform module, and you've deployed the workflow by running the script, you can run your workflow easily using [this script](scripts/healthomics_wf/invoke_healthomics_run.py) that invokes the StartOmicsRun lambda.
+
+If you built your environment with the healthomics-wdl-env terraform module and deployed the workflow using the script with `--use-dynamodb`, you can run your workflow using [invoke_healthomics_run.py](scripts/healthomics_wf/invoke_healthomics_run.py) that invokes the StartOmicsRun lambda. See [scripts/healthomics_wf/README.md](scripts/healthomics_wf/README.md) for detailed usage instructions.
 
 Alternatively, follow [this section](#Running-Private-workflow-manual-way) to do it manually.
 

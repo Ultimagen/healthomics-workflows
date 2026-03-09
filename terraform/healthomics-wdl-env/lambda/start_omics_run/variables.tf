@@ -7,29 +7,40 @@ variable "aws_region" {
   type        = string
 }
 variable "omics_role_arn" {
-  type = string
+  description = "ARN of the IAM role to be assumed by HealthOmics runs"
+  type        = string
 }
 variable "omics_outputs_bucket" {
-  type = string
+  description = "Name of the S3 bucket for workflow outputs"
+  type        = string
 }
 
 variable "omics_cache_bucket" {
-  type = string
+  description = "Name of the S3 bucket for WDL execution cache"
+  type        = string
 }
-variable "project" {}
+variable "project" {
+  description = "Project name used in Lambda function naming"
+  type        = string
+}
 
 variable "custom_tags" {
-  type = map(string)
+  description = "Map of key-value tags to apply to Lambda resources"
+  type        = map(string)
+  default     = {}
 }
 
 variable "omics_standard_run_group_id" {
-  type = string
+  description = "ID of the standard HealthOmics run group (5-day max duration)"
+  type        = string
 }
 
 variable "omics_long_run_group_id" {
-  type = string
+  description = "ID of the long HealthOmics run group (no duration limit)"
+  type        = string
 }
 
 variable "dynamodb_table" {
-  type = string
+  description = "Name of the DynamoDB table containing workflow metadata"
+  type        = string
 }
