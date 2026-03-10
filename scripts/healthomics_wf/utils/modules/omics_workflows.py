@@ -87,12 +87,14 @@ def create_omics_workflow(aws_region, omics_workflow_name, workflow_root, workfl
     logging.info(f"  Workflow Name:    {omics_workflow_name}")
     logging.info(f"  Workflow Version: {workflow_version}")
     logging.info(f"  Workflow ID:      {workflow_id}")
+    logging.info(f"  AWS Region:       {aws_region}")
     logging.info("=" * 60)
     if use_dynamodb:
         logging.info("To invoke this workflow, run:")
         logging.info(f"  python invoke_healthomics_run.py --omics-workflow-name {omics_workflow_name} \\")
         logging.info(f"    --workflow-version {workflow_version} --run-id <your-run-id> \\")
-        logging.info(f"    --input-params-file <params.json>")
+        logging.info(f"    --input-params-file <params.json> \\")
+        logging.info(f"    --aws-region {aws_region}")
         logging.info("(--workflow-version is optional; latest version will be used if omitted)")
 
     return workflow_id
