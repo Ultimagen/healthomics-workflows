@@ -95,7 +95,7 @@ def lambda_handler(event, context):
 
     request_id = context.aws_request_id
     role_arn = os.environ['OMICS_ROLE_ARN']
-    output_s3_path = f"s3://{os.environ['OMICS_OUTPUTS_BUCKET']}/{workflow_name}"
+    output_s3_path = f"s3://{os.environ['OMICS_OUTPUTS_BUCKET']}/{workflow_name}/{run_id}/"
     cache_s3_bucket = os.environ['OMICS_CACHE_BUCKET']
 
     workflow_id = _get_workflow_from_dynamodb(workflow_version, workflow_name)
