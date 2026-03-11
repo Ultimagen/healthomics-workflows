@@ -55,6 +55,7 @@ To successfully run this script, you need the following AWS permissions:
 #### ECR Permissions
 `ecr:DescribeRepositories`
 `ecr:CreateRepository`
+`ecr:SetRepositoryPolicy`
 `ecr:BatchCheckLayerAvailability`
 `ecr:BatchGetImage`
 `ecr:GetDownloadUrlForLayer`
@@ -89,6 +90,7 @@ To successfully run this script, you need the following AWS permissions:
       "Action": [
         "ecr:DescribeRepositories",
         "ecr:CreateRepository",
+        "ecr:SetRepositoryPolicy",
         "ecr:BatchCheckLayerAvailability",
         "ecr:BatchGetImage",
         "ecr:GetDownloadUrlForLayer",
