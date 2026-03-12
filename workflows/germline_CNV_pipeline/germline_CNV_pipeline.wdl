@@ -35,7 +35,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.28.1" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file

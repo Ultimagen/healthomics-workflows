@@ -35,7 +35,7 @@ workflow HaplotypeSampling {
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.28.0"   #!UnusedDeclaration
+        String pipeline_version = "1.28.1"   #!UnusedDeclaration
         # Resource parameters
         Int index_cores = 32
         Int index_mem_gb = 64
@@ -493,16 +493,16 @@ task Minimap2Align {
             -O CRAM \
             --reference ~{reference_fasta} \
             --output-fmt-option embed_ref=1 \
-            -o ~{sample_name}.cram \
+            -o ~{sample_name}.haplotypes.cram \
             -
 
         # Create index for the CRAM file
-        samtools index ~{sample_name}.cram
+        samtools index ~{sample_name}.haplotypes.cram
     >>>
 
     output {
-        File output_cram = "~{sample_name}.cram"
-        File output_cram_index = "~{sample_name}.cram.crai"
+        File output_cram = "~{sample_name}.haplotypes.cram"
+        File output_cram_index = "~{sample_name}.haplotypes.cram.crai"
         File monitoring_log = "monitoring.log"
     }
 

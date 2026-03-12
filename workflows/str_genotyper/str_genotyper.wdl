@@ -30,7 +30,7 @@ import "tasks/structs.wdl"
 
 workflow STRGenotyper {
     input {
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.28.1" # !UnusedDeclaration
         # Required inputs
         String base_file_name
         File cram_file
@@ -76,7 +76,8 @@ workflow STRGenotyper {
         author: "Ultima Genomics"
         version: "1.0"
         WDL_AID: {
-            exclude: [
+            exclude: [ 
+                "pipeline_version",
                 "GlobalsCall.glob",
                 "no_address",
                 "preemptible_tries",

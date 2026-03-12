@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.28.1" # !UnusedDeclaration
 
         String base_file_name
 
@@ -444,8 +444,8 @@ workflow SingleSampleCnmopsCNVCalling {
         File out_sample_reads_count = sample_reads_count_file
         File? out_sample_merged_bedGraph = ConvertBedGraphToGranges.merged_bedGraph
         File? out_sample_reads_count_hdf5 = SingleSampleReadsCount.out_reads_count_hdf5
-        File out_sample_cnvs_vcf = ProcessCnmopsCnvs.sample_cnvs_vcf[0]
-        File out_sample_cnvs_vcf_index = ProcessCnmopsCnvs.sample_cnvs_vcf_index[0]
+        File out_sample_cnvs_vcf = AddCIPOS.output_vcf[0]
+        File out_sample_cnvs_vcf_index = AddCIPOS.output_vcf_index[0]
         File out_sample_cnvs_bed = CnvVcfToBed.output_cnv_bed[0]
         File out_sample_norm_coverage_bed = ExtractNormalizedReadCount.sample_reads_count_bed[0]
         Array[File] out_coverage_plot_files = ProcessCnmopsCnvs.coverage_plot

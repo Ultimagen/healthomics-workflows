@@ -32,7 +32,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.28.0" # !UnusedDeclaration
+    String pipeline_version = "1.28.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs

@@ -174,6 +174,13 @@ task UGMakeExamples{
     touch background.cram
     touch background.cram.crai
 
+    # Link the haplotypes cram and index into the same directory, as the tool expects the haplotypes cram and index to be in the same directory with the same prefix as the input cram
+    if [ "~{defined(pangenome_haplotypes)}" == "true" ]
+    then
+      ln -s "~{pangenome_haplotypes}" "$(basename ~{pangenome_haplotypes})"
+      ln -s "~{pangenome_haplotypes_index}" "$(basename ~{pangenome_haplotypes_index})"
+    fi
+
     # Process interval file
     grep -v @ ~{interval} | awk 'BEGIN{OFS="\t"}{print $1,$2-1,$3}' >> interval.bed
 
@@ -251,7 +258,7 @@ task UGMakeExamples{
         ~{extra_args} \
         ~{true="--progress" false="" log_progress} \
         ~{if defined(germline_vcf) then "--region-haplotypes-vcf ~{germline_vcf}" else ""} \
-        ~{if defined(pangenome_haplotypes) then "--exp-pangenome-haps ~{pangenome_haplotypes}" else ""} \
+        ~{if defined(pangenome_haplotypes) then "--exp-pangenome-haps $(basename ~{pangenome_haplotypes})" else ""} \
          &
         
       # Save the PID of the process
