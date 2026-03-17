@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+
+ACTION="$1"
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  echo "Run this script with: source ./aws-assume-role <assume|unassume|status> ..." >&2
+  exit 1
+fi
+
+usage() {
+  echo "Usage:" >&2
+  echo "  source ./aws-assume-role assume <role-arn> [session-name-optional]" >&2
+  echo "  source ./aws-assume-role unassume" >&2
+  echo "  source ./aws-assume-role status" >&2
+}
+
+fail() {
+  echo "$1" >&2
+  return 1
+}
+
+require_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    fail "Required command not found: $cmd"
+    return 1
+  fi
+}
+
+generate_session_name() {
+  local user_name
+  local session_base
+
+  user_name="${USER:-$(id -un 2>/dev/null || echo user)}"
+  session_base="${user_name}-$(date +%Y%m%d%H%M%S)"
+
+  # Keep only RoleSessionName-safe characters and cap length for AWS limits.
+  echo "$session_base" | tr -cd 'A-Za-z0-9+=,.@_-' | cut -c1-64
+}
+
+backup_env_var() {
+  local current_name="$1"
+  local prev_set_name="$2"
+  local prev_value_name="$3"
+  local backup_exists
+  local current_is_set
+  local current_value
+
+  # If a backup marker already exists, keep the original snapshot.
+  eval "backup_exists=\${$prev_set_name+x}"
+  if [ -n "$backup_exists" ]; then
+    return 0
+  fi
+
+  eval "current_is_set=\${$current_name+x}"
+  if [ -z "$current_is_set" ]; then
+    export "$prev_set_name=0"
+    unset "$prev_value_name"
+    return 0
+  fi
+
+  eval "current_value=\${$current_name}"
+
+  export "$prev_set_name=1"
+  export "$prev_value_name=$current_value"
+}
+
+backup_previous_credentials() {
+  backup_env_var "AWS_PROFILE" "AWS_PREV_PROFILE_SET" "AWS_PREV_PROFILE"
+  backup_env_var "AWS_ACCESS_KEY_ID" "AWS_PREV_ACCESS_KEY_ID_SET" "AWS_PREV_ACCESS_KEY_ID"
+  backup_env_var "AWS_SECRET_ACCESS_KEY" "AWS_PREV_SECRET_ACCESS_KEY_SET" "AWS_PREV_SECRET_ACCESS_KEY"
+  backup_env_var "AWS_SESSION_TOKEN" "AWS_PREV_SESSION_TOKEN_SET" "AWS_PREV_SESSION_TOKEN"
+}
+
+restore_env_var() {
+  local target_name="$1"
+  local prev_set_name="$2"
+  local prev_value_name="$3"
+  local prev_set_state
+  local prev_value
+
+  eval "prev_set_state=\${$prev_set_name-}"
+  if [ "$prev_set_state" = "1" ]; then
+    eval "prev_value=\${$prev_value_name-}"
+    export "$target_name=$prev_value"
+  else
+    # Covers both explicitly-unset original state (0) and missing markers.
+    unset "$target_name"
+  fi
+}
+
+restore_previous_credentials() {
+  restore_env_var "AWS_PROFILE" "AWS_PREV_PROFILE_SET" "AWS_PREV_PROFILE"
+  restore_env_var "AWS_ACCESS_KEY_ID" "AWS_PREV_ACCESS_KEY_ID_SET" "AWS_PREV_ACCESS_KEY_ID"
+  restore_env_var "AWS_SECRET_ACCESS_KEY" "AWS_PREV_SECRET_ACCESS_KEY_SET" "AWS_PREV_SECRET_ACCESS_KEY"
+  restore_env_var "AWS_SESSION_TOKEN" "AWS_PREV_SESSION_TOKEN_SET" "AWS_PREV_SESSION_TOKEN"
+  unset AWS_SECURITY_TOKEN
+}
+
+clear_credential_backups() {
+  unset AWS_PREV_PROFILE_SET AWS_PREV_PROFILE
+  unset AWS_PREV_ACCESS_KEY_ID_SET AWS_PREV_ACCESS_KEY_ID
+  unset AWS_PREV_SECRET_ACCESS_KEY_SET AWS_PREV_SECRET_ACCESS_KEY
+  unset AWS_PREV_SESSION_TOKEN_SET AWS_PREV_SESSION_TOKEN
+}
+
+assume_role() {
+  local role_arn="$1"
+  local session_name="$2"
+  local creds
+  local new_access_key_id
+  local new_secret_access_key
+  local new_session_token
+
+  if [ -z "$role_arn" ]; then
+    usage
+    fail "Missing role ARN."
+    return 1
+  fi
+
+  require_command aws || return 1
+  require_command jq || return 1
+
+  if [ -z "$session_name" ]; then
+    session_name="$(generate_session_name)"
+  fi
+
+  if ! creds=$(aws sts assume-role --role-arn "$role_arn" --role-session-name "$session_name" --output json); then
+    fail "Error assuming role."
+    return 1
+  fi
+
+  new_access_key_id=$(jq -r '.Credentials.AccessKeyId // empty' <<<"$creds")
+  new_secret_access_key=$(jq -r '.Credentials.SecretAccessKey // empty' <<<"$creds")
+  new_session_token=$(jq -r '.Credentials.SessionToken // empty' <<<"$creds")
+
+  if [ -z "$new_access_key_id" ] || [ -z "$new_secret_access_key" ] || [ -z "$new_session_token" ]; then
+    fail "Failed to parse credentials from assume-role response. Ensure jq is installed and AWS CLI output is valid."
+    return 1
+  fi
+
+  backup_previous_credentials
+
+  AWS_ACCESS_KEY_ID="$new_access_key_id"
+  AWS_SECRET_ACCESS_KEY="$new_secret_access_key"
+  AWS_SESSION_TOKEN="$new_session_token"
+
+  export AWS_ACCESS_KEY_ID
+  export AWS_SECRET_ACCESS_KEY
+  export AWS_SESSION_TOKEN
+  unset AWS_PROFILE
+
+  echo "AWS credentials exported for role: $role_arn"
+  echo "Session name: $session_name"
+}
+
+unassume_role() {
+  restore_previous_credentials
+  clear_credential_backups
+
+  echo "Temporary credentials cleared. Restored previous AWS credential variables when available."
+}
+
+get_current_identity() {
+  local account
+  local arn
+  local user_id
+
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "AWS CLI is not installed or not in PATH."
+    return 1
+  fi
+
+  account=$(aws sts get-caller-identity --query 'Account' --output text 2>/dev/null)
+  arn=$(aws sts get-caller-identity --query 'Arn' --output text 2>/dev/null)
+  user_id=$(aws sts get-caller-identity --query 'UserId' --output text 2>/dev/null)
+
+  if [ -n "$account" ] && [ "$account" != "None" ] && [ "$account" != "null" ]; then
+    echo "Current AWS identity:"
+    echo "  Account: $account"
+    echo "  ARN: $arn"
+    echo "  UserId: $user_id"
+  else
+    echo "No valid AWS credentials detected in the current shell context."
+  fi
+}
+
+case "$ACTION" in
+  assume)
+    assume_role "$2" "$3"
+    ;;
+  unassume)
+    unassume_role
+    ;;
+  status)
+    get_current_identity
+    ;;
+  ""|-h|--help|help)
+    usage
+    ;;
+  *)
+    usage
+    fail "Unknown command: $ACTION"
+    ;;
+esac
