@@ -83,10 +83,10 @@ restore_env_var() {
   if [ "$prev_set_state" = "1" ]; then
     eval "prev_value=\${$prev_value_name-}"
     export "$target_name=$prev_value"
-  else
-    # Covers both explicitly-unset original state (0) and missing markers.
+  elif [ "$prev_set_state" = "0" ]; then
     unset "$target_name"
   fi
+  # If prev_set_state is "" (no backup marker), no assume was run — leave unchanged.
 }
 
 restore_previous_credentials() {
@@ -107,7 +107,7 @@ clear_credential_backups() {
 assume_role() {
   local role_arn="$1"
   local session_name="$2"
-  local creds
+  local creds_text
   local new_access_key_id
   local new_secret_access_key
   local new_session_token
@@ -119,23 +119,24 @@ assume_role() {
   fi
 
   require_command aws || return 1
-  require_command jq || return 1
 
   if [ -z "$session_name" ]; then
     session_name="$(generate_session_name)"
   fi
 
-  if ! creds=$(aws sts assume-role --role-arn "$role_arn" --role-session-name "$session_name" --output json); then
+  if ! creds_text=$(aws sts assume-role \
+    --role-arn "$role_arn" \
+    --role-session-name "$session_name" \
+    --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' \
+    --output text); then
     fail "Error assuming role."
     return 1
   fi
 
-  new_access_key_id=$(jq -r '.Credentials.AccessKeyId // empty' <<<"$creds")
-  new_secret_access_key=$(jq -r '.Credentials.SecretAccessKey // empty' <<<"$creds")
-  new_session_token=$(jq -r '.Credentials.SessionToken // empty' <<<"$creds")
+  read -r new_access_key_id new_secret_access_key new_session_token <<<"$creds_text"
 
   if [ -z "$new_access_key_id" ] || [ -z "$new_secret_access_key" ] || [ -z "$new_session_token" ]; then
-    fail "Failed to parse credentials from assume-role response. Ensure jq is installed and AWS CLI output is valid."
+    fail "Failed to parse credentials from assume-role response. Ensure AWS CLI output is valid."
     return 1
   fi
 
@@ -162,6 +163,7 @@ unassume_role() {
 }
 
 get_current_identity() {
+  local identity_text
   local account
   local arn
   local user_id
@@ -171,9 +173,12 @@ get_current_identity() {
     return 1
   fi
 
-  account=$(aws sts get-caller-identity --query 'Account' --output text 2>/dev/null)
-  arn=$(aws sts get-caller-identity --query 'Arn' --output text 2>/dev/null)
-  user_id=$(aws sts get-caller-identity --query 'UserId' --output text 2>/dev/null)
+  if ! identity_text=$(aws sts get-caller-identity --query '[Account,Arn,UserId]' --output text 2>/dev/null); then
+    echo "No valid AWS credentials detected in the current shell context."
+    return 0
+  fi
+
+  read -r account arn user_id <<<"$identity_text"
 
   if [ -n "$account" ] && [ "$account" != "None" ] && [ "$account" != "null" ]; then
     echo "Current AWS identity:"
