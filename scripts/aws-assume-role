@@ -54,15 +54,17 @@ backup_env_var() {
 
   eval "current_is_set=\${$current_name+x}"
   if [ -z "$current_is_set" ]; then
-    export "$prev_set_name=0"
+    export -n "$prev_set_name" "$prev_value_name" 2>/dev/null || true
+    eval "$prev_set_name=0"
     unset "$prev_value_name"
     return 0
   fi
 
   eval "current_value=\${$current_name}"
 
-  export "$prev_set_name=1"
-  export "$prev_value_name=$current_value"
+  export -n "$prev_set_name" "$prev_value_name" 2>/dev/null || true
+  eval "$prev_set_name=1"
+  printf -v "$prev_value_name" '%s' "$current_value"
 }
 
 backup_previous_credentials() {
@@ -81,6 +83,7 @@ restore_env_var() {
   local prev_value
 
   eval "prev_set_state=\${$prev_set_name-}"
+
   if [ "$prev_set_state" = "1" ]; then
     eval "prev_value=\${$prev_value_name-}"
     export "$target_name=$prev_value"
