@@ -104,6 +104,7 @@ tool \
   --max-reads-per-region 1500 \
   --assembly-min-base-quality 0 \
   --optimal-coverages 50 \
+  --median-coverage <median_coverage> \
   --add-ins-size-channel
 ```
 
@@ -111,7 +112,7 @@ The input cram files and the corresponding index files are provided to `--input`
 
 The `--output` argument is the prefix for the output files (including tfrecords).
 
-The `--optimal-coverages` and `--add-ins-size-channel` are parameters which affect the way images are produced, and should be aligned with the model. `optimal-coverages` is related to how reads are internally downsampled before the image is produced, and `add-ins-size-channel` adds a channel with the length of the insertion.
+The `--optimal-coverages` and `--add-ins-size-channel` are parameters which affect the way images are produced, and should be aligned with the model. `optimal-coverages` is related to how reads are internally downsampled before the image is produced, and `add-ins-size-channel` adds a channel with the length of the insertion. `--median-coverage` provides `make_examples` with the actual sequencing depth of the sample, used alongside `--optimal-coverages` to control read downsampling.
 
 The program will output a sam file with the re-aligned reads unless the argument `--no-realigned-sam` is provided. Note that these files are very large, so provide a large disk space if you want to save the re-aligned reads.
 
@@ -248,6 +249,7 @@ tool \
   --assembly-min-base-quality 0 \
   --gvcf --p-error 0.005 \
   --optimal-coverages 50 \
+  --median-coverage <median_coverage> \
   --cycle-examples-min 100000 \
   --keep-duplicates \
   --add-ins-size-channel \

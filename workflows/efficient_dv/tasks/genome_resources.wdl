@@ -1,0 +1,47 @@
+version 1.0
+
+# Auto-generated genome resources file
+# Do not edit manually - regenerate using: wdls make-genome-resources target=<target>
+
+struct GenomeResources {
+  File efficient_dv_target_intervals
+  File exome_intervals
+  File ref_dict
+  File ref_fasta
+  File ref_fasta_index
+}
+
+workflow GenomeResourcesWorkflow {
+  output {
+    Map[String, GenomeResources] resources = {
+      "b37": {
+        "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/wgs_calling_regions.v1.interval_list",
+        "exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg19/annotation_intervals/exome.twist.hg19.sort.bed",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.dict",
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta.fai"
+},
+      "hg38": {
+        "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
+        "exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict",
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai"
+},
+      "hg38_nist_v3": {
+        "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3/wgs_calling_regions.hg38.interval_list",
+        "exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3/annotation_intervals/exome.twist.bed",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3/GRCh38_GIABv3.dict",
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3/GRCh38_GIABv3.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3/GRCh38_GIABv3.fasta.fai"
+},
+      "hg38_taps": {
+        "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/regions/wgs_calling_regions.hg38_Lambda_pUC19.interval_list",
+        "exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/251015/hg38_Lambda_pUC19.dict",
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/251015/hg38_Lambda_pUC19.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/251015/hg38_Lambda_pUC19.fasta.fai"
+}
+    }
+  }
+}

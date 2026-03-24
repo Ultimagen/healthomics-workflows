@@ -1,0 +1,90 @@
+{
+    "SomaticSNVfind.annotation_files": {
+        "description": "Annotation files for featuremap generation: dbSNP, gnomAD, and UG High Confidence Regions with their indices. Required for full pipeline mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.base_file_name": {
+        "description": "Sample name",
+        "optional": false
+    },
+    "SomaticSNVfind.featuremap_params": {
+        "description": "FeatureMap parameters for snvfind. Required for full pipeline mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.input_somatic_snvfind_vcf": {
+        "description": "Pre-existing somatic featuremap VCF file. When provided, runs classifier-only mode (skips featuremap generation).",
+        "optional": true
+    },
+    "SomaticSNVfind.input_somatic_snvfind_vcf_index": {
+        "description": "Index file for pre-existing somatic featuremap VCF. Required when input_somatic_snvfind_vcf is provided.",
+        "optional": true
+    },
+    "SomaticSNVfind.interval_list": {
+        "description": "Input interval list file for scattering.",
+        "optional": false
+    },
+    "SomaticSNVfind.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "SomaticSNVfind.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "SomaticSNVfind.normal_cram_index_list": {
+        "description": "Array of input normal CRAM index files, matching the order of normal_crams. Required for full pipeline mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.normal_crams": {
+        "description": "Array of input normal CRAM files. All files must have the same sample name. Required for full pipeline mode, not needed for classifier-only mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.normal_single_read_snv_model": {
+        "description": "Normal SingleReadSNVModel struct containing model_metadata and model_fold_files. Required for full pipeline mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.num_shards": {
+        "description": "Number of shards for splitting the interval list.",
+        "optional": false
+    },
+    "SomaticSNVfind.override_memory_gb_CreateFeatureMap": {
+        "description": "Override memory in GB for the CreateFeatureMap task, default: 2 (GiB). If an out of memory error occurs in the CreateFeatureMap task, try increasing this value, e.g. double it.",
+        "optional": true
+    },
+    "SomaticSNVfind.preemptible_tries_override": {
+        "description": "preemptible_tries_override",
+        "optional": true
+    },
+    "SomaticSNVfind.references": {
+        "description": "Input reference genome file, index file and dict.",
+        "optional": false
+    },
+    "SomaticSNVfind.scatter_intervals_break": {
+        "description": "Break scatter intervals at multiples of this value.",
+        "optional": true
+    },
+    "SomaticSNVfind.tandem_repeats_bed": {
+        "description": "Reference tandem repeats file.",
+        "optional": false
+    },
+    "SomaticSNVfind.tumor_cram_index_list": {
+        "description": "Array of input tumor CRAM index files, matching the order of tumor_crams. Required for full pipeline mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.tumor_crams": {
+        "description": "Array of input tumor CRAM files. All files must have the same sample name. Required for full pipeline mode, not needed for classifier-only mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.tumor_single_read_snv_model": {
+        "description": "Tumor SingleReadSNVModel struct containing model_metadata and model_fold_files. Required for full pipeline mode.",
+        "optional": true
+    },
+    "SomaticSNVfind.xgb_model": {
+        "description": "XGBoost model file for somatic featuremap classification.",
+        "optional": false
+    },
+    "SomaticSNVfind.xgb_proba_threshold": {
+        "description": "XGBoost probability threshold for somatic featuremap classification.",
+        "optional": true
+    }
+}

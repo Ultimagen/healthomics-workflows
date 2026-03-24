@@ -12,23 +12,9 @@
     "EfficientDV.is_somatic": false,
     "EfficientDV.single_strand_filter": false,
     "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
-    "EfficientDV.references": {
-        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-    },
+    "EfficientDV.reference_genome": "hg38",
     "EfficientDV.preemptible_tries": 2,
-    "EfficientDV.ref_dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
-    "EfficientDV.ref_dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
     "EfficientDV.cap_at_optimal_coverage": false,
-    "EfficientDV.exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
-    "EfficientDV.annotation_intervals": [
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed"
-    ],
-    "EfficientDV.target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list",
     "EfficientDV.normalize_strand_bias": false,
     "EfficientDV.strong_call_threshold": 0.995,
     "EfficientDV.shuffle_all_samples": false,

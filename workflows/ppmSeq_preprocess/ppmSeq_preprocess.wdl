@@ -32,7 +32,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 workflow ppmSeqPreprocess {
   input {
     # Workflow args
-    String pipeline_version = "1.28.1" # !UnusedDeclaration
+    String pipeline_version = "1.29.1" # !UnusedDeclaration
 
     # Data inputs
     Array[File] input_cram_bam_list
@@ -41,8 +41,8 @@ workflow ppmSeqPreprocess {
     String adapter_version
     String? ppmSeq_analysis_extra_args  # extra args for python ugvc ppmSeq_analysis
 
-    # References
-    References references
+    # Genome type selector
+    String reference_genome = "hg38"
     
     # trimmer parameters
     TrimmerParameters trimmer_parameters
@@ -70,14 +70,11 @@ workflow ppmSeqPreprocess {
     # base_file_name
     #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
 
-    # adapter version 
+    # adapter version
     #@wv adapter_version in {"v1", "legacy_v5", "legacy_v5_start", "legacy_v5_end", "dmbl"}
 
-    # references
-    #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa'}
-    #@wv suffix(references['ref_dict']) == '.dict'
-    #@wv suffix(references['ref_fasta_index']) == '.fai'
-    #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
+    # reference_genome
+    #@wv reference_genome in {"hg38"}
 
     ## Trimmer checks
     #@wv 'trim' in steps and steps['trim'] -> defined(trimmer_parameters)
@@ -85,8 +82,6 @@ workflow ppmSeqPreprocess {
 
     ## UA
     #@wv 'align' in steps and steps['align'] -> defined(ua_parameters)
-    #@wv 'align' in steps and steps['align'] and 'ua_index' in ua_parameters -> suffix(ua_parameters['ua_index']) == '.uai'
-    #@wv 'align' in steps and steps['align'] -> suffix(ua_parameters['ref_alt']) == '.alt'
 
     #@wv 'align' in steps and steps['align'] 
     #@wv 'trim' in steps and steps['trim'] 
@@ -144,10 +139,10 @@ workflow ppmSeqPreprocess {
       type: "String",
       category: "input_optional"
     }
-    references: {
-      help: "Reference files",
-      type: "References",
-      category: "ref_required"
+    reference_genome: {
+      help: "Genome type for resource selection (hg38)",
+      type: "String",
+      category: "input_required"
     }
     trimmer_parameters: {
       help: "Trimmer parameters",
@@ -267,7 +262,7 @@ workflow ppmSeqPreprocess {
         input_cram_bam_list = input_cram_bam_list,
         base_file_name =      base_file_name,
         steps =               steps,
-        references =          references,
+        reference_genome =         reference_genome,
         ref_fastas_cram =     ref_fastas_cram,
         trimmer_parameters =  trimmer_parameters,
         aligner =             "ua",

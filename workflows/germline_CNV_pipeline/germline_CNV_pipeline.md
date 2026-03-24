@@ -24,11 +24,6 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>Array[File] </i> &mdash;
          Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data). <br />
 </p>
-<p name="GermlineCNVPipeline.genome_windows">
-        <b>GermlineCNVPipeline.genome_windows</b><br />
-        <i>File </i> &mdash;
-         Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix. <br />
-</p>
 <p name="GermlineCNVPipeline.cohort_reads_count_matrix">
         <b>GermlineCNVPipeline.cohort_reads_count_matrix</b><br />
         <i>File </i> &mdash;
@@ -186,13 +181,23 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>File</i><br />
         Index of the combined CNV calls in vcf format
 </p>
-<p name="GermlineCNVPipeline.combine_read_evidence">
-        <b>GermlineCNVPipeline.combine_read_evidence</b><br />
+<p name="GermlineCNVPipeline.split_read_evidence">
+        <b>GermlineCNVPipeline.split_read_evidence</b><br />
+        <i>File</i><br />
+        BAM file with split read evidence supporting combined CNV calls
+</p>
+<p name="GermlineCNVPipeline.split_read_evidence_index">
+        <b>GermlineCNVPipeline.split_read_evidence_index</b><br />
+        <i>File</i><br />
+        Index file for the BAM with split read evidence supporting combined CNV calls
+</p>
+<p name="GermlineCNVPipeline.realign_read_evidence">
+        <b>GermlineCNVPipeline.realign_read_evidence</b><br />
         <i>File</i><br />
         BAM file with read evidence supporting combined CNV calls
 </p>
-<p name="GermlineCNVPipeline.combine_read_evidence_index">
-        <b>GermlineCNVPipeline.combine_read_evidence_index</b><br />
+<p name="GermlineCNVPipeline.realign_read_evidence_index">
+        <b>GermlineCNVPipeline.realign_read_evidence_index</b><br />
         <i>File</i><br />
         Index file for the BAM with read evidence supporting combined CNV calls
 </p>

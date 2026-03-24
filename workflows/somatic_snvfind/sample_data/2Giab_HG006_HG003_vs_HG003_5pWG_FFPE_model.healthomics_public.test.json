@@ -1,0 +1,61 @@
+{
+    "SomaticSNVfind.base_file_name": "TP_HG006_HG003_vs_HG003_5pWG",
+    "SomaticSNVfind.tumor_crams": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_snvfind/HG006_HG003.TP.bam"
+    ],
+    "SomaticSNVfind.tumor_cram_index_list": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_snvfind/HG006_HG003.TP.bam.bai"
+    ],
+    "SomaticSNVfind.normal_crams": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_snvfind/sim_028059.normal_in_tumor.SM_renamed.cram"
+    ],
+    "SomaticSNVfind.normal_cram_index_list": [
+        "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_snvfind/sim_028059.normal_in_tumor.SM_renamed.cram.bai"
+    ],
+    "SomaticSNVfind.references": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    },
+    "SomaticSNVfind.interval_list": "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_snvfind/subsample.5p.interval_list.gz",
+    "SomaticSNVfind.num_shards": 5,
+    "SomaticSNVfind.tandem_repeats_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed",
+    "SomaticSNVfind.xgb_proba_threshold": 0.6,
+    "SomaticSNVfind.scatter_intervals_break": 10000000,
+    "SomaticSNVfind.annotation_files": {
+        "dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.dbsnp138.bcf",
+        "dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.dbsnp138.bcf.csi",
+        "gnomad": "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.bcf",
+        "gnomad_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.bcf.csi",
+        "ug_hcr": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed.gz",
+        "ug_hcr_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed.gz.tbi"
+    },
+    "SomaticSNVfind.featuremap_params": {
+        "generate_random_sample": false,
+        "min_mapq": 1,
+        "score_limit": 100,
+        "exclude_nan_scores": true,
+        "surrounding_quality_size": 20,
+        "reference_context_size": 3,
+        "somatic_filter_mode": true,
+        "pileup_window_width": 2
+    },
+    "SomaticSNVfind.tumor_single_read_snv_model": {
+        "model_metadata": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.srsnv_metadata.json",
+        "model_fold_files": [
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.model_fold_0.json",
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.model_fold_1.json",
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.model_fold_2.json"
+        ]
+    },
+    "SomaticSNVfind.normal_single_read_snv_model": {
+        "model_metadata": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_Buffycoat.Lb_744.runs_021145_021151_cov30.srsnv_metadata.json",
+        "model_fold_files": [
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_Buffycoat.Lb_744.runs_021145_021151_cov30.model_fold_0.json",
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_Buffycoat.Lb_744.runs_021145_021151_cov30.model_fold_1.json",
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_Buffycoat.Lb_744.runs_021145_021151_cov30.model_fold_2.json"
+        ]
+    },
+    "SomaticSNVfind.xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/sfm.xgb_model.FFPEV1.9.json",
+    "SomaticSNVfind.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+}

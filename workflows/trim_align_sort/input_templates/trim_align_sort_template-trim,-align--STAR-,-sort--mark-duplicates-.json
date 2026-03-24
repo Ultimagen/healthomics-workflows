@@ -4,19 +4,7 @@
         "<input_bam_or_cram_2>.cram"
     ],
     "TrimAlignSort.base_file_name": "<base_file_name>",
-    "TrimAlignSort.ref_fastas_cram": [
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
-        "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
-        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
-        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
-        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
-    ],
-    "TrimAlignSort.references": {
-        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta",
-        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.fasta.fai",
-        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/rna-seq/Homo_sapiens_assembly38_noALT_noHLA_noDecoy_ERCC.dict"
-    },
+    "TrimAlignSort.reference_genome": "hg38_rna_seq",
     "TrimAlignSort.preemptible_tries": 1,
     "TrimAlignSort.no_address": true,
     "TrimAlignSort.cpu": 32,
@@ -27,7 +15,7 @@
         "sort": true
     },
     "TrimAlignSort.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.30/public/trim_align_sort/trim-ILMN-adapters.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.50/public/trim_align_sort/trim-ILMN-adapters.json",
         "untrimmed_reads_action": "discard",
         "format": "trim ILMN adapters"
     },

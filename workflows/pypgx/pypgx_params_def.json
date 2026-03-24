@@ -1,4 +1,8 @@
 {
+    "PyPGx.EfficientDV.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
     "PyPGx.EfficientDV.allele_frequency_ratio": {
         "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
         "optional": true
@@ -68,7 +72,7 @@
         "optional": true
     },
     "PyPGx.EfficientDV.intervals_string": {
-        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals.",
         "optional": true
     },
     "PyPGx.EfficientDV.log_make_examples_progress": {
@@ -207,10 +211,6 @@
         "description": "Input (bai/crai) index file",
         "optional": false
     },
-    "PyPGx.exome_intervals": {
-        "description": "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
-        "optional": true
-    },
     "PyPGx.gene_symbols": {
         "description": "List of gene symbols to analyze",
         "optional": false
@@ -251,8 +251,8 @@
         "description": "List of references for CreateReferenceCache task.",
         "optional": false
     },
-    "PyPGx.references": {
-        "description": "Reference files: fasta, dict and fai",
+    "PyPGx.reference_genome": {
+        "description": "Genome type selector. The workflow currently supports only hg38.",
         "optional": false
     }
 }

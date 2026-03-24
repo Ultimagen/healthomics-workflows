@@ -100,87 +100,45 @@ task FeatureMapIntersectWithSignatures {
   input {
     File featuremap
     File featuremap_index
-    Array[File]? matched_signatures
-    Array[File]? matched_signatures_indexes
-    Array[File]? control_signatures
-    Array[File]? control_signatures_indexes
-    Array[File]? db_signatures
-    Array[File]? matched_signatures_indices
-    Array[File]? control_signatures_indices
-    Array[File]? db_signatures_indices
+    File signature
+    File signature_index
+    String signature_type
     String docker
     Float disk_size
     Int memory_gb
     Int cpus
     File monitoring_script
   }
-  Boolean is_defined_matched_signatures = defined(matched_signatures)
-  Boolean is_defined_control_signatures = defined(control_signatures)
-  Boolean is_defined_db_signatures = defined(db_signatures)
-  Int tmp_cpus_featuremap_to_dataframe = round(memory_gb / 4)
-  Int cpus_featuremap_to_dataframe = if tmp_cpus_featuremap_to_dataframe < 1 then 1 else tmp_cpus_featuremap_to_dataframe
+  String featuremap_base = sub(basename(featuremap), "\\..*", "")
+  String signature_base = sub(basename(signature), "\\..*", "")
+  String output_vcf_basename = featuremap_base + "." + signature_base + "." + signature_type + ".intersection"
   command <<<
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
+    featuremap_base=$(basename ~{featuremap})
+    signature_base=$(basename ~{signature})
+    output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.~{signature_type}.intersection.vcf.gz"
 
-    # run intersections
-    if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_matched_signatures} ]]
-    then
-        echo "******** Processing matched signatures ********"
-        echo "******** Run intersections ********"
-        for signature in ~{sep=" " matched_signatures}
-        do
-          featuremap_base=$(basename ~{featuremap})
-          signature_base=$(basename "$signature")
-          signature_type="matched"
-          output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
-          bcftools isec -n=2 -w1 ~{featuremap} "$signature" -Oz -o "$output_vcf" && bcftools index -t "$output_vcf"
-        done
+    echo "******** making sure files are in the same directory as their index ********"
+    mkdir signatures_dir/
+    cp ~{signature} signatures_dir/${signature_base}.vcf.gz
+    cp ~{signature_index} signatures_dir/${signature_base}.vcf.gz.tbi
+    mkdir featuremap_dir/
+    cp ~{featuremap} featuremap_dir/${featuremap_base}.vcf.gz
+    cp ~{featuremap_index} featuremap_dir/${featuremap_base}.vcf.gz.tbi
+
+    echo "******** Run intersection ********"
+    bcftools isec -n=2 -w1 featuremap_dir/${featuremap_base}.vcf.gz signatures_dir/${signature_base}.vcf.gz -Oz -o "$output_vcf" --threads ~{cpus} --write-index=tbi
+
+    echo "******** Converting to dataframe ********"
+    number_of_lines=$(bcftools view "$output_vcf" -H | wc -l)
+    if [[ $number_of_lines -eq 0 ]]; then
+      echo "Skipping empty VCF: $output_vcf"
+      touch "${output_vcf%.vcf.gz}.parquet"
+    else
+      featuremap_to_dataframe --in "$output_vcf" --out "${output_vcf%.vcf.gz}.parquet" --jobs ~{cpus} --drop-format AD GT
     fi
-
-    if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_control_signatures} ]]
-    then
-        echo "******** Processing control signatures ********"
-        echo "******** Run intersections ********"
-        for signature in ~{sep=" " control_signatures}
-        do
-          featuremap_base=$(basename ~{featuremap})
-          signature_base=$(basename "$signature")
-          signature_type="control"
-          output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
-          bcftools isec -n=2 -w1 ~{featuremap} "$signature" -Oz -o "$output_vcf" && bcftools index -t "$output_vcf"
-        done
-    fi
-
-    if [[ -z ~{default='"skip"' true='""' false='"skip"' is_defined_db_signatures} ]]
-    then
-        echo "******** Processing db control signatures ********"
-        echo "******** Run intersections ********"
-        for signature in ~{sep=" " db_signatures}
-        do
-          featuremap_base=$(basename ~{featuremap})
-          signature_base=$(basename "$signature")
-          signature_type="db_control"
-          output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
-          bcftools isec -n=2 -w1 ~{featuremap} "$signature" -Oz -o "$output_vcf" && bcftools index -t "$output_vcf"
-        done
-    fi
-
-    echo "******** 2/2 Converting to dataframes ********"
-    find *.intersection.vcf.gz | \
-    for signature_vcf in $(cat) 
-      do
-        # check if vcf is empty
-        number_of_lines=$(bcftools view "$signature_vcf" -H | wc -l)
-        if [[ $number_of_lines -eq 0 ]]; then
-          echo "Skipping empty VCF: $signature_vcf"
-          continue
-        fi
-        output_parquet="${signature_vcf%.vcf.gz}.parquet"
-        echo "Converting $signature_vcf to dataframe: $output_parquet"
-        featuremap_to_dataframe --in "$signature_vcf" --out "$output_parquet" --jobs ~{cpus_featuremap_to_dataframe} --drop-format AD GT
-      done
 
     echo "******** DONE ********"
   >>>
@@ -191,11 +149,11 @@ task FeatureMapIntersectWithSignatures {
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker
   }
-  output{
+  output {
     File monitoring_log = "monitoring.log"
-    Array[File] intersected_featuremaps = glob("*.intersection.vcf.gz")
-    Array[File] intersected_featuremaps_indices = glob("*.intersection.vcf.gz.tbi")
-    Array[File] intersected_featuremaps_parquet = glob("*.parquet")
+    File intersected_featuremap = output_vcf_basename + ".vcf.gz"
+    File intersected_featuremap_index = output_vcf_basename + ".vcf.gz.tbi"
+    File intersected_featuremap_parquet = output_vcf_basename + ".parquet"
   }
 }
 
@@ -339,50 +297,6 @@ task ExtractCoverageOverVcfFiles {
       disks: "local-disk " + ceil(disk_size) + " HDD"
       docker: docker
     }
-}
-
-task AddAggregatedVariablesAndXgbScoreToPileupFeaturemap
-{
-  input {
-    File featuremap_pileup_vcf
-    File featuremap_pileup_vcf_index
-    String output_basename
-    String? filter_string
-    File interval_list
-    File? model 
-    Int memory_gb
-    Int cpus
-    Int preemptibles    
-    File monitoring_script
-    String docker
-  }
-  Int disk_size = ceil(4*size(featuremap_pileup_vcf,"GB"))
-  Boolean is_defined_filter_string = defined(filter_string)
-  command <<<
-  set -eo pipefail
-  bash ~{monitoring_script} | tee monitoring.log >&2 &
-  
-  add_aggregate_params_and_xgb_score_to_pileup_featuremap \
-    -f ~{featuremap_pileup_vcf} \
-    ~{true="-filter_string " false="" defined(filter_string)}~{filter_string} \
-    -o ~{output_basename} \
-    -i ~{interval_list} \
-    -m ~{model}
-  
-  >>>
-  runtime {
-    preemptible: "~{preemptibles}"
-    cpu: "~{cpus}"
-    memory: "~{memory_gb} GB"
-    disks: "local-disk " + ceil(disk_size) + " HDD"
-    docker: docker
-  }
-
-  output {
-    File monitoring_log = "monitoring.log"
-    File pileup_xgb_file = "~{output_basename}.vcf.gz"
-    File pileup_xgb_file_index = "~{output_basename}.vcf.gz.tbi"
-  }    
 }
 
 task PadVcf {

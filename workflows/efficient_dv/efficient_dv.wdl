@@ -26,19 +26,22 @@ import "tasks/structs.wdl" as Structs
 import "tasks/general_tasks.wdl" as UGGeneralTasks
 import "tasks/efficient_dv_tasks.wdl" as UGDVTasks
 import "tasks/globals.wdl" as Globals
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 import "tasks/single_sample_vc_tasks.wdl" as VCTasks
 import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.28.1" # !UnusedDeclaration
+    String pipeline_version = "1.29.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
     Array[File] cram_files
     Array[File] cram_index_files
-    References references
+
+    # Genome resources
+    String reference_genome = "hg38"
 
     Boolean make_gvcf
     Boolean recalibrate_vaf
@@ -48,7 +51,7 @@ workflow EfficientDV {
     # Scatter interval list args
     Int num_shards = 40
     Int scatter_intervals_break = 10000000 # Maximal resolution for scattering intervals
-    File? target_intervals
+    File? override_target_intervals  # Override default genome-specific target intervals
     String? intervals_string
 
     # Make examples args
@@ -116,17 +119,16 @@ workflow EfficientDV {
 
     # Annotation args
     String? input_flow_order
-    File exome_intervals
     Array[File]? annotation_intervals
-    File ref_dbsnp
-    File ref_dbsnp_index
+    File? ref_dbsnp
+    File? ref_dbsnp_index
 
     # Runtime args
     Float? ug_make_examples_memory_override
     Int? ug_make_examples_cpus_override
     Int preemptible_tries = 1
     Int? ug_call_variants_extra_mem
-    String call_variants_gpu_type = "nvidia-l4" # For AWS
+    String call_variants_gpu_type = "nvidia-t4-a10g-l4" # For AWS
     Int call_variants_gpus = 1
     Int call_variants_cpus = 8
     Int call_variants_threads = 8
@@ -153,10 +155,7 @@ workflow EfficientDV {
    #@wv cloud_provider_override == "gcp" -> suffix(cram_index_files) <= {".crai", ".bai", ".csi"}
    #@wv prefix(cram_index_files) == cram_files
    #@wv len(cram_files) >= 0
-   #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa'}
-   #@wv suffix(references['ref_dict']) == '.dict'
-   #@wv suffix(references['ref_fasta_index']) == '.fai'
-   #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
+   #@wv reference_genome in {"hg38", "b37", "hg38_taps", "hg38_nist_v3"}
    #@wv len(background_cram_files) == len(background_cram_index_files)
    #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
    #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".csi"}
@@ -212,11 +211,12 @@ workflow EfficientDV {
       category: "input_optional"
     }
 
-    references: {
-      type: "References",
-      help: "Reference files: fasta, dict and fai, recommended value set in the template",
-      category: "ref_required"
+    reference_genome: {
+      type: "String",
+      help: "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3. Default to hg38",
+      category: "input_optional"
     }
+
     make_gvcf: {
       type: "Boolean",
       help: "Whether to generate a gvcf. Default: False",
@@ -241,9 +241,9 @@ workflow EfficientDV {
       help: "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
       category: "param_optional"
     }
-    target_intervals: {
+    override_target_intervals: {
       type: "File",
-      help: "Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used.",
+      help: "Override default genome-specific target intervals. If not provided, uses genome-specific default intervals.",
       category: "param_optional"
     }
     show_bg_fields: {
@@ -252,7 +252,7 @@ workflow EfficientDV {
     }
     intervals_string: {
       type: "String",
-      help: "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
+      help: "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals.",
       category: "param_optional"
     }
     min_fraction_snps: {
@@ -454,21 +454,17 @@ workflow EfficientDV {
       help: "Flow order. If not provided, it will be extracted from the CRAM header",
       category: "param_optional"
     }
-    exome_intervals: {
-      help: "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
-      category: "ref_required"
-    }
     annotation_intervals: {
       help: "List of bed files for VCF annotation",
       category: "ref_optional"
     }
     ref_dbsnp: {
       help: "DbSNP vcf for the annotation of known variants",
-      category: "ref_required"
+      category: "ref_optional"
     }
     ref_dbsnp_index: {
       help: "DbSNP vcf index",
-      category: "ref_required"
+      category: "ref_optional"
     }
     ug_post_processing_extra_args: {
       help: "Additional arguments for post-processing",
@@ -651,18 +647,19 @@ workflow EfficientDV {
   GlobalVariables global = Glob.global_dockers
 
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
-  if (!defined(target_intervals)){
-    call UGGeneralTasks.IntervalListOfGenome as IntervalListOfGenome{
-      input:
-        ref_fai = references.ref_fasta_index,
-        ref_dict = references.ref_dict,
-        disk_size = 1,
-        preemptible_tries = preemptible_tries,
-        docker = global.ubuntu_docker,
-        monitoring_script = monitoring_script,
-        no_address = no_address
-    }
+
+  call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
+  References references = object {
+    ref_fasta: GenomeResources.resources[reference_genome].ref_fasta,
+    ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
+    ref_dict: GenomeResources.resources[reference_genome].ref_dict
   }
+
+  File exome_intervals = GenomeResources.resources[reference_genome].exome_intervals
+
+  # Get target intervals: use override if provided, otherwise use genome-specific default
+  File target_intervals = select_first([override_target_intervals, GenomeResources.resources[reference_genome].efficient_dv_target_intervals])
 
   if (defined(intervals_string)){
     call UGGeneralTasks.IntervalListFromString{
@@ -678,7 +675,7 @@ workflow EfficientDV {
     }
   }
 
-  File interval_list = select_first([IntervalListFromString.interval_list, IntervalListOfGenome.interval_list, target_intervals])
+  File interval_list = select_first([IntervalListFromString.interval_list, target_intervals])
 
   String output_prefix = base_file_name #basename(cram_files[0], ".cram")
 

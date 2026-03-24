@@ -37,19 +37,20 @@ import 'tasks/structs.wdl'
 import 'tasks/globals.wdl' as Globals
 import 'tasks/alignment_tasks.wdl' as AlignmentTasks
 import "tasks/general_tasks.wdl" as UGGeneralTasks
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.28.1" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
         Array[File] input_germline_crams_indexes = []
         Array[File] input_tumor_crams = []
         Array[File] input_tumor_crams_indexes = []
-        References references
-        UaParameters ua_references
+        String reference_genome = "hg38"
+        UaParameters ua_parameters
         GiraffeReferences? giraffe_parameters
         File wgs_calling_interval_list
         Int min_base
@@ -96,6 +97,7 @@ workflow SVPipeline {
         Boolean create_md5_checksum_outputs = false
 
         # Winval validations
+        #@wv reference_genome in {"hg38", "b37"}
         #@wv min_base >= 0
         #@wv min_mapq >= 0
         #@wv max_num_haps >= 0
@@ -185,14 +187,14 @@ workflow SVPipeline {
             help: "Input CRAM index for the tumor (in case of matched T/N calling)",
             category: "optional"
         }
-        references: {
-            type: "References",
-            help: "Reference files: fasta, dict and fai, recommended value set in the template",
+        reference_genome: {
+            type: "String",
+            help: "Genome type selector. Supported values: hg38, b37",
             category: "required"
         }
-        ua_references: {
+        ua_parameters: {
             type: "UaParameters",
-            help: "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
+            help: "UA parameters: v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
             category: "required"
         }
         giraffe_parameters: {
@@ -455,6 +457,17 @@ workflow SVPipeline {
     call Globals.Globals as Glob
     GlobalVariables global = Glob.global_dockers
 
+    # Get genome resources based on reference_genome
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
+    # Construct References struct from genome resources for tasks that still need it
+    References references = object {
+        ref_fasta: GenomeResources.resources[reference_genome].ref_fasta,
+        ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
+        ref_dict: GenomeResources.resources[reference_genome].ref_dict,
+        ref_alt: GenomeResources.resources[reference_genome].ref_alt
+    }
+
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
 
@@ -537,13 +550,13 @@ workflow SVPipeline {
             input:
                 input_bams = CreateAssembly.assembly,
                 output_bam_basename = base_file_name +"_assembly_file_ua_aligned",
-                ua_index = select_first([ua_references.ua_index]),
-                ref_alt = ua_references.ref_alt,
+                ua_index = GenomeResources.resources[reference_genome].ua_index,
+                ref_alt = GenomeResources.resources[reference_genome].ref_alt,
                 monitoring_script = monitoring_script,
                 preemptible_tries = preemptibles,
                 ua_docker = global.ua_docker,
-                extra_args = ua_references.ua_extra_args,
-                use_v_aware_alignment =  ua_references.v_aware_alignment_flag,
+                extra_args = ua_parameters.ua_extra_args,
+                use_v_aware_alignment = ua_parameters.v_aware_alignment_flag,
                 no_address = no_address
         }
 

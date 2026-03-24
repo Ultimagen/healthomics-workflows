@@ -91,10 +91,6 @@
         "description": "Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent",
         "optional": true
     },
-    "GermlineCNVPipeline.genome_windows": {
-        "description": "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix.",
-        "optional": false
-    },
     "GermlineCNVPipeline.input_bam_file": {
         "description": "Input sample BAM/CRAM file",
         "optional": false

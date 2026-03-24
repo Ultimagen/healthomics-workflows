@@ -23,6 +23,7 @@ version 1.0
 # 1.5.0 Initial commit
 
 import "tasks/globals.wdl" as Globals
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 import "tasks/structs.wdl" as Structs
 import "tasks/general_tasks.wdl" as UGGeneralTasks
 import "tasks/alignment_tasks.wdl" as UGAlignment
@@ -35,12 +36,14 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.28.1" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
         Array[File] input_cram_bam_list
-        Array[File] ref_fastas_cram
+        Array[File]? ref_fastas_cram
         String base_file_name
         TrimAlignSortSteps steps
-        References references
+
+        # Reference genome selector
+        String reference_genome = "hg38"
 
         # trimmer parameters
         TrimmerParameters? trimmer_parameters
@@ -77,12 +80,7 @@ workflow TrimAlignSort {
         #@wv len(input_cram_bam_list) > 0
         #@wv suffix(input_cram_bam_list) <= {".bam", ".cram"}
         #@wv 'trim' in steps or 'align' in steps or 'sort' in steps -> (steps['trim'] or steps['align'] or steps['sort'])
-        #@wv defined(references) -> len(references) == 3
-        #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa','.fna'}
-        #@wv suffix(references['ref_dict']) == '.dict'
-        #@wv suffix(references['ref_fasta_index']) == '.fai'
-        #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
-        #@wv prefix(references['ref_dict']) == prefix(references['ref_fasta'])
+        #@wv reference_genome in {"hg38", "b37", "b37_ancient_dna", "hg38_taps", "hg38_nist_v3", "mm10", "mm10_methyl", "mm39", "hg38_rna_seq"}
 
         ## Trimmer checks
         #@wv 'trim' in steps and steps['trim'] -> defined(trimmer_parameters)
@@ -95,8 +93,6 @@ workflow TrimAlignSort {
         #@wv 'align' in steps and steps['align'] -> defined(aligner) and aligner in {"ua", "ua-meth", "star"}
         ## UA
         #@wv 'align' in steps and steps['align'] and aligner == "ua" -> defined(ua_parameters)
-        #@wv 'align' in steps and steps['align'] and aligner == "ua" and 'ua_index' in ua_parameters -> suffix(ua_parameters['ua_index']) == '.uai'
-        #@wv 'align' in steps and steps['align'] and aligner == "ua" and 'ref_alt' in ua_parameters -> suffix(ua_parameters['ref_alt']) == '.alt'
         ## UA-meth
         #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) and 'index_g2a' in ua_meth_parameters -> suffix(ua_meth_parameters['index_g2a']) == '.g2a'
         #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) and 'index_c2t' in ua_meth_parameters -> suffix(ua_meth_parameters['index_c2t']) == '.c2t'
@@ -167,9 +163,9 @@ workflow TrimAlignSort {
             category: "input_required"
         }
         ref_fastas_cram: {
-            help: "List of references for CreateReferenceCache task.",
-            type: "String",
-            category: "input_required"
+            help: "List of references for CreateReferenceCache task. Optional - if not provided, cache_tarball will not be created.",
+            type: "Array[File]",
+            category: "input_optional"
         }
         base_file_name: {
             help: "Base name for the output files.",
@@ -181,10 +177,10 @@ workflow TrimAlignSort {
             type: "String",
             category: "input_required"
         }
-        references: {
-            help: "References for merging inputs into one file, alignment, and sorting.",
+        reference_genome: {
             type: "String",
-            category: "input_required"
+            help: "Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38",
+            category: "input_optional"
         }
         trimmer_parameters: {
             help: "Parameters for the trimmer task. Mandatory if trim step is selected.",
@@ -447,16 +443,30 @@ workflow TrimAlignSort {
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
+    References references = object {
+        ref_fasta: GenomeResources.resources[reference_genome].ref_fasta,
+        ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
+        ref_dict: GenomeResources.resources[reference_genome].ref_dict,
+        ref_alt: GenomeResources.resources[reference_genome].ref_alt
+    }
+
+    File? genome_ua_index = GenomeResources.resources[reference_genome].ua_index
+
     Boolean trim = select_first([steps.trim, false])
     Boolean align = select_first([steps.align, false])
     Boolean sort = select_first([steps.sort, false])
 
-    call UGAlignment.CreateReferenceCache {
-        input:
-            references = ref_fastas_cram,
-            preemptible_tries = preemptible_tries,
-            docker = global.ugbio_core_docker,
-            dummy_input_for_call_caching = dummy_input_for_call_caching
+    # Only create reference cache if ref_fastas_cram is provided
+    if (defined(ref_fastas_cram)) {
+        call UGAlignment.CreateReferenceCache {
+            input:
+                references = select_first([ref_fastas_cram]),
+                preemptible_tries = preemptible_tries,
+                docker = global.ugbio_core_docker,
+                dummy_input_for_call_caching = dummy_input_for_call_caching
+        }
     }
 
     if (trim) {
@@ -486,6 +496,7 @@ workflow TrimAlignSort {
                 input:
                     input_files             = input_for_alignment_list,
                     base_file_name          = base_file_name,
+                    ua_index_input          = genome_ua_index,
                     cache_tarball           = CreateReferenceCache.cache_tarball,
                     ua_parameters           = select_first([ua_parameters]),
                     references              = references,
@@ -495,16 +506,22 @@ workflow TrimAlignSort {
             }
         }
 
-        if (aligner_override == "ua-meth" ){
+        if (aligner_override == "ua-meth"){
+            # Get optional methylation indices from selected genome resources
+            File? ua_meth_c2t_file = GenomeResources.resources[reference_genome].ua_meth_index_c2t
+            File? ua_meth_g2a_file = GenomeResources.resources[reference_genome].ua_meth_index_g2a
+
             call UaMethAlignWorkflow.UAMethAlignment {
                 input:
-                    input_files             = input_for_alignment_list,
-                    base_file_name          = base_file_name,
-                    ua_meth_parameters      = select_first([ua_meth_parameters]),
-                    references              = references,
-                    cache_tarball           = CreateReferenceCache.cache_tarball,
-                    preemptible_tries       = preemptible_tries,
-                    no_address              = no_address,
+                    input_files                 = input_for_alignment_list,
+                    base_file_name              = base_file_name,
+                    ua_meth_index_c2t_input     = ua_meth_c2t_file,
+                    ua_meth_index_g2a_input     = ua_meth_g2a_file,
+                    ua_meth_parameters          = select_first([ua_meth_parameters]),
+                    references                  = references,
+                    cache_tarball               = CreateReferenceCache.cache_tarball,
+                    preemptible_tries           = preemptible_tries,
+                    no_address                  = no_address,
                     monitoring_script_input = monitoring_script_input,
             }
         }
@@ -537,12 +554,16 @@ workflow TrimAlignSort {
         }
     }
     if (sort) {
+        # Get optional coverage_intervals from selected genome resources
+        File? coverage_intervals_file = GenomeResources.resources[reference_genome].trim_align_sort_coverage_intervals
+
         call SortTasks.Demux {
             input:
                 input_cram_bam_list= input_for_sort_list,
                 cache_tarball      = CreateReferenceCache.cache_tarball,
                 base_file_name     = base_file_name,
                 reference_fasta    = references.ref_fasta,
+                coverage_intervals = coverage_intervals_file,
                 sorter_params      = select_first([sorter_params]),
                 monitoring_script  = monitoring_script,  # !FileCoercion
                 docker             = global.sorter_docker,
@@ -556,6 +577,7 @@ workflow TrimAlignSort {
                 max_region_size    = Demux.max_region_size,
                 base_file_name     = base_file_name,
                 reference_fasta    = references.ref_fasta,
+                coverage_intervals = coverage_intervals_file,
                 sorter_params      = select_first([sorter_params]),
                 monitoring_script  = monitoring_script,  # !FileCoercion
                 docker             = global.sorter_docker,

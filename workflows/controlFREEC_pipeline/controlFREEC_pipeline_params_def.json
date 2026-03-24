@@ -7,6 +7,10 @@
         "description": "Loss cutoff for CNV filtering. Default is 0.97",
         "optional": true
     },
+    "SomaticCNVCallingControlFREEC.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
     "SomaticCNVCallingControlFREEC.base_file_name": {
         "description": "Base file name used for some output files",
         "optional": false

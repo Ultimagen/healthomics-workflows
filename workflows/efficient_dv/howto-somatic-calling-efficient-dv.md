@@ -92,6 +92,8 @@ tool \
   --max-reads-per-region 1500 \
   --assembly-min-base-quality 0 \
   --optimal-coverages '200;200' \
+  --median-coverage <tumor_median_coverage> \
+  --background-median-coverage <background_median_coverage> \
   --single-strand-filter \
   --keep-duplicates \
   --add-ins-size-channel
@@ -101,7 +103,7 @@ The input cram files and the corresponding index files are provided to `--input`
 
 The `--output` argument is the prefix for the output files (including tfrecords).
 
-The argument `optimal-coverages` (and the related argument `cap-at-optimal-coverage`) determine how reads are internally downsampled before image generation. The same values are used in the training of the model and the inference. Hence, their values are tightly linked to which model is used. The argument `add-ins-size-channel` adds a channel with the length of the insertion, and should also be aligned with the model.
+The argument `optimal-coverages` (and the related argument `cap-at-optimal-coverage`) determine how reads are internally downsampled before image generation. The same values are used in the training of the model and the inference. Hence, their values are tightly linked to which model is used. The argument `add-ins-size-channel` adds a channel with the length of the insertion, and should also be aligned with the model. `--median-coverage` and `--background-median-coverage` provide `make_examples` with the actual sequencing depth of the tumor and normal samples, respectively, used alongside `--optimal-coverages` to control read downsampling.
 
 The `single-strand-filter` reduces the number of candidates, therby reducing compute costs, at a negligible effect on recall.
 
@@ -256,6 +258,7 @@ gs://concordanz/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wg
 LowQual
 QUAL < 10 and VARIANT_TYPE=='snp' and not vc.isFiltered()
 ```
+4. Update `--median-coverage` and `--background-median-coverage` in the make_examples step to match the actual tumor and normal sample coverages.
 
 ### WGS somatic calling for SNV signature detection 
 Calling somatic variants for SNV signature detection from a coverage of 40x of tumor and normal samples. The same model as in WGS somatic calling is used, but with slight modifications to the coverages and candidate generation thresholds in the make_examples step:
@@ -264,6 +267,8 @@ Calling somatic variants for SNV signature detection from a coverage of 40x of t
   --cgp-min-fraction-hmer-indels 1.1 \
   --cgp-min-fraction-non-hmer-indels 1.1 \
   --optimal-coverages "40;40" \
+  --median-coverage <tumor_median_coverage> \
+  --background-median-coverage <background_median_coverage> \
 ```
 
 ### Somatic calling from deep sequencing of whole exome
@@ -274,6 +279,8 @@ Calling from deep whole exome sequencing, at a coverage of 500x for tumor and at
   --cgp-min-fraction-hmer-indels 0.02 \
   --cgp-min-fraction-non-hmer-indels 0.02 \
   --optimal-coverages "500;120" \
+  --median-coverage <tumor_median_coverage> \
+  --background-median-coverage <background_median_coverage> \
   --max-reads-per-region 6500 \
   --prioritize-alt-supporting-reads \
   --normalize-strand-bias \

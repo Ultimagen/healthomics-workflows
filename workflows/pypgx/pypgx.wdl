@@ -24,11 +24,12 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 import "tasks/structs.wdl" as Structs
 import "efficient_dv.wdl" as UGEfficientDV
 import "tasks/globals.wdl" as Globals
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 import "tasks/alignment_tasks.wdl" as UGAlignment
 
 workflow PyPGx {
     input {
-        String pipeline_version = "1.28.1" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
         String base_file_name
         File cram_file
         File cram_index_file
@@ -36,11 +37,11 @@ workflow PyPGx {
         File? input_vcf_file
         File? input_vcf_index_file
 
-        References references
+        # Genome type selector (hg38)
+        String reference_genome = "hg38"
 
         # EfficientDV parameters
         File? model_onnx
-        File? exome_intervals
         File? ref_dbsnp
         File? ref_dbsnp_index
 
@@ -54,6 +55,7 @@ workflow PyPGx {
 
         ##@wv suffix(cram_file) <= {".bam", ".cram"}
         ##@wv suffix(cram_index_file) <= {".bai", ".crai"}
+        ##@wv reference_genome in {"hg38"}
 
     }
 
@@ -94,10 +96,9 @@ workflow PyPGx {
             type: "Array[String]",
             category: "input_required"
         }
-        references: {
-            type: "References",
-            help: "Reference files: fasta, dict and fai",
-            category: "ref_required"
+        reference_genome: {
+            help: "Genome type selector. The workflow currently supports only hg38.",
+            category: "param_required"
         }
         input_vcf_file: {
             help: "Input VCF file with variants. If not provided, Efficient DV will be run",
@@ -115,10 +116,6 @@ workflow PyPGx {
         }
         model_onnx: {
             help: "TensorRT model for calling variants (onnx format)",
-            category: "input_optional"
-        }
-        exome_intervals: {
-            help: "A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome.",
             category: "input_optional"
         }
         ref_dbsnp: {
@@ -197,6 +194,9 @@ workflow PyPGx {
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
+    # Get genome resources based on reference_genome
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
     call UGAlignment.CreateReferenceCache {
         input:
             references = ref_files_for_tarball,
@@ -210,7 +210,7 @@ workflow PyPGx {
         call ExtractGeneIntervals {
             input:
                 gene_symbols = gene_symbols,
-                ref_dict = references.ref_dict,
+                ref_dict = GenomeResources.resources[reference_genome].ref_dict,
                 monitoring_script = monitoring_script,
                 no_address = no_address,
                 docker = global.pypgx_docker,
@@ -224,18 +224,17 @@ workflow PyPGx {
             cram_index_files = [cram_index_file],
             background_cram_files = [],
             background_cram_index_files = [],
-            references = select_first([references]),
+            reference_genome = reference_genome,
             make_gvcf = false,
             recalibrate_vaf = false,
             is_somatic = false,
             candidate_min_mapping_quality = 0, # Set to 0 so variants will be called also in regions of high homology such as CYP2D6
             pileup_min_mapping_quality = 0, # Set to 0 so variants will be called also in regions of high homology such as CYP2D6
             keep_duplicates = true,
-            target_intervals = ExtractGeneIntervals.interval_list,
+            override_target_intervals = ExtractGeneIntervals.interval_list,
             model_onnx = select_first([model_onnx]),
-            exome_intervals = select_first([exome_intervals]),
-            ref_dbsnp       = select_first([ref_dbsnp]),
-            ref_dbsnp_index = select_first([ref_dbsnp_index]),
+            ref_dbsnp = ref_dbsnp,
+            ref_dbsnp_index = ref_dbsnp_index,
             min_variant_quality_hmer_indels = 5,
             min_variant_quality_non_hmer_indels = 0,
             min_variant_quality_snps = 0,
