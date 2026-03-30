@@ -32,7 +32,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -390,6 +390,16 @@ workflow SomaticCNVCallingControlFREEC{
         }
         tumor_CNVs_annotated_bed_file : {
             help: "Called CNVs for tumor sample with LCR and LENGTH annotations",
+            type: "File",
+            category: "output"
+        }
+        tumor_CNVs_annotated_vcf : {
+            help: "Called CNVs for tumor sample in VCF format with annotations and filters",
+            type: "File",
+            category: "output"
+        }
+        tumor_CNVs_annotated_vcf_index : {
+            help: "Index file for the annotated CNVs VCF",
             type: "File",
             category: "output"
         }
@@ -759,6 +769,8 @@ workflow SomaticCNVCallingControlFREEC{
          File controlFREEC_info = runControlFREEC.controlFREEC_info
          File tumor_ratio_bedgraph = runControlFREEC.tumor_ratio_bedgraph
          File tumor_CNVs_annotated_bed_file = CnvVcfToBed.output_cnv_bed
+         File tumor_CNVs_annotated_vcf = ControlFREECCnvsVcf.annotated_cnv_vcf
+         File tumor_CNVs_annotated_vcf_index = ControlFREECCnvsVcf.annotated_cnv_vcf_index
          File tumor_CNVs_filtered_bed_file =  FilterControlFREECCnvs.sample_cnvs_filtered_bed
          File coverage_plot = FilterControlFREECCnvs.coverage_plot
          File dup_del_plot = FilterControlFREECCnvs.dup_del_plot

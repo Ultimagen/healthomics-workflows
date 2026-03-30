@@ -33,6 +33,7 @@ import "tasks/single_read_snv_tasks.wdl" as SRSNVTasks
 import "tasks/qc_tasks.wdl" as UGQCTasks
 import "tasks/mrd.wdl" as UGMrdTasks
 import "tasks/globals.wdl" as Globals
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 
 workflow SingleReadSNV {
@@ -41,23 +42,25 @@ input {
   Array[File] input_cram_bam_index_list
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.28.0"
-  References references
+  String pipeline_version = "1.29.1"
+
+  # Genome resources
+  String reference_genome = "hg38"
 
   FeatureMapParams featuremap_params
   SingleReadSNVParams? single_read_snv_params
   Array[String] features
 
-  # snv quality model include/exclude regions
-  File training_regions_interval_list
-  File training_regions_interval_list_index
+  # annotation files
+  FeaturemapAnnotationFiles annotation_files
+
+  # model training parameters
   File xgboost_params_file
   File? random_sample_trinuc_freq
 
   Float min_coverage_to_train_model
 
-  Array[File]? pre_trained_model_files
-  File? pre_trained_srsnv_metadata_json
+  SingleReadSNVModel? pre_trained_model_files
 
   Boolean raise_exceptions_in_report
 
@@ -82,23 +85,16 @@ input {
   #@wv suffix(input_cram_bam_index_list) <= {".bai", ".crai"}
   #@wv len(input_cram_bam_list) == len(input_cram_bam_index_list)
   ##@wv prefix(basename(input_cram_bam_index_list)) == basename(input_cram_bam_list)
-  ##@wv prefix(basename(training_regions_interval_list_index)) == basename(training_regions_interval_list)
-  #@wv suffix(training_regions_interval_list) in {".gz"}
-  #@wv suffix(prefix(training_regions_interval_list)) in {".interval_list"}
+  #@wv reference_genome in {"hg38"}
   #@wv defined(sorter_json_stats_file_list) -> suffix(sorter_json_stats_file_list) <= {".json"}
   #@wv defined(sorter_json_stats_file_list) -> len(sorter_json_stats_file_list) == len(input_cram_bam_list)
-  #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa'}
-  #@wv suffix(references['ref_dict']) == '.dict'
-  #@wv suffix(references['ref_fasta_index']) == '.fai'
-  #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
   #@wv not defined(pre_trained_model_files) -> defined(single_read_snv_params)
   #@wv defined(single_read_snv_params) -> single_read_snv_params['num_CV_folds'] > 1
-  #@wv defined(pre_trained_model_files) <-> defined(pre_trained_srsnv_metadata_json)
-  ##@wv defined(pre_trained_model_files) -> suffix(pre_trained_model_files) == ".json"
-  #@wv defined(pre_trained_srsnv_metadata_json) -> suffix(pre_trained_srsnv_metadata_json) == ".json"
+  #@wv defined(pre_trained_model_files) -> suffix(pre_trained_model_files['model_metadata']) == ".json"
   #@wv (defined(mean_coverage) or defined(total_aligned_bases)) -> (defined(mean_coverage) and defined(total_aligned_bases) and not defined(sorter_json_stats_file_list))
   #@wv defined(sorter_json_stats_file_list) -> (not defined(mean_coverage) and not defined(total_aligned_bases))
   #@wv defined(random_sample_trinuc_freq) -> suffix(random_sample_trinuc_freq) in {".csv", ".tsv"}
+  #@wv defined(featuremap_params['read_filters']) -> defined(single_read_snv_params)
 }
 
 meta {
@@ -110,10 +106,6 @@ meta {
         "no_address_override",
         "preemptible_tries",
         "monitoring_script_input",
-        "override_memory_gb_PrepareRawFeatureMap",
-        "override_memory_gb_PrepareRandomSampleFeatureMap",
-        "override_memory_gb_CreateFeatureMap",
-        "override_memory_gb_TrainModel",
         "CreateTrainingRegionsBed.disk_size",
         "CreateTrainingRegionsBed.cpus",
         "TrainModel.cpus",
@@ -126,6 +118,8 @@ meta {
         "Inference.out_vcf",
         "CreateFeatureMap.cpus",
         "CreateFeatureMap.memory_gb",
+        "CreateFeatureMap.interval_list",
+        "CreateFeatureMap.model_files",
         "CreateReport.cpus",
         "CreateReport.memory_gb",
         "PrepareRawFeatureMap.cpus",
@@ -169,10 +163,10 @@ parameter_meta {
         type: "String",
         category: "input_optional"
     }
-    references: {
-        help: "Reference files: fasta, dict and fai, recommended value set in the template",
-        type: "References",
-        category: "ref_required"
+    reference_genome: {
+        type: "String",
+        help: "Genome type selector. The workflow currently supports only hg38.",
+        category: "input_optional"
     }
     featuremap_params: {
         type: "FeatureMapParams",
@@ -204,15 +198,10 @@ parameter_meta {
         type: "Boolean",
         category: "input_optional"
     }
-    training_regions_interval_list: {
-        type: "File",
-        help: "Genomic regions to include in the training set, the recommended value is set in the template",
-        category: "param_required"
-    }
-    training_regions_interval_list_index: {
-        type: "File",
-        help: "Index for genomic regions to exclude from the training set, the recommended value is set in the template",
-        category: "optional"
+    annotation_files: {
+        type: "FeaturemapAnnotationFiles",
+        help: "Annotation files for featuremap generation: dbSNP, gnomAD, and UG High Confidence Regions with their indices",
+        category: "ref_required"
     }
     min_coverage_to_train_model: {
         type: "Float",
@@ -220,13 +209,28 @@ parameter_meta {
         category: "param_required"
     }
     pre_trained_model_files: {
-        type: "Array[File]",
-        help: "Pre-trained ML model json files, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
+        type: "SingleReadSNVModel",
+        help: "Pre-trained ML model json files and .srsnv_metadata.json file. if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
         category: "optional"
     }
-    pre_trained_srsnv_metadata_json: {
-        type: "File",
-        help: "Pre-trained SNV quality model metadata json file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features",
+    override_memory_gb_CreateFeatureMap: {
+        type: "Int",
+        help: "Override memory in GB for the CreateFeatureMap task, default: 2 (GiB). If an out of memory error occurs in the CreateFeatureMap task, try increasing this value, e.g. double it.",
+        category: "optional"
+    }
+    override_memory_gb_PrepareRawFeatureMap: {
+        type: "Int",
+        help: "Override memory in GB for the PrepareRawFeatureMap task, default: 128 (GiB). If an out of memory error occurs in the PrepareRawFeatureMap task, try increasing this value, e.g. double it.",
+        category: "optional"
+    }
+    override_memory_gb_PrepareRandomSampleFeatureMap: {
+        type: "Int",
+        help: "Override memory in GB for the PrepareRandomSampleFeatureMap task, default: 16 (GiB). If an out of memory error occurs in the PrepareRandomSampleFeatureMap task, try increasing this value, e.g. double it.",
+        category: "optional"
+    }
+    override_memory_gb_TrainModel: {
+        type: "Int",
+        help: "Override memory in GB for the TrainModel task, default: 32 (GiB). If an out of memory error occurs in the TrainModel task, try increasing this value, e.g. double it.",
         category: "optional"
     }
     raise_exceptions_in_report: {
@@ -243,6 +247,11 @@ parameter_meta {
         type: "Int",
         help: "Number of times to retry preemptible instances, default: 1",
         category: "optional"
+    }
+    monitoring_script_input: {
+        type: "File",
+        help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+        category: "input_optional"
     }
     featuremap: {
         type: "File",
@@ -375,7 +384,17 @@ parameter_meta {
   GlobalVariables global = Globals.global_dockers
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
-  Boolean use_pre_trained_model = defined(pre_trained_model_files) && defined(pre_trained_srsnv_metadata_json)
+  call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
+  References references = object {
+    ref_fasta: GenomeResources.resources[reference_genome].ref_fasta,
+    ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
+    ref_dict: GenomeResources.resources[reference_genome].ref_dict
+  }
+
+  File training_interval_list = GenomeResources.resources[reference_genome].srsnv_training_interval_list
+
+  Boolean use_pre_trained_model = defined(pre_trained_model_files)
 
   if (defined(sorter_json_stats_file_list)) {
     Array[File] sorter_json_stats_file_list_ = select_first([sorter_json_stats_file_list])
@@ -396,6 +415,12 @@ parameter_meta {
   else
     1000000
 
+  if (defined(featuremap_params.read_filters) && defined(single_read_snv_params)) {
+    Float max_coverage_factor = select_first([single_read_snv_params]).max_coverage_factor
+  }
+  if (defined(pre_trained_model_files)) {
+    Array[SingleReadSNVModel] pre_trained_model_files_array = [select_first([pre_trained_model_files])]
+  }
   # Run snvfind to create featuremap
   call SRSNVTasks.CreateFeatureMap {
     input:
@@ -404,82 +429,63 @@ parameter_meta {
       references = references,
       base_file_name = base_file_name_sub,
       total_aligned_bases = total_aligned_bases_used,
+      mean_coverage = mean_coverage_used,
+      max_coverage_factor = max_coverage_factor,
       random_sample_size = random_sample_size,
       random_sample_trinuc_freq_ = random_sample_trinuc_freq,
       featuremap_params = featuremap_params,
+      annotation_files = annotation_files,
       docker = global.featuremap_docker,
       preemptible_tries = preemptibles,
       monitoring_script = monitoring_script,
-      memory_gb = select_first([override_memory_gb_CreateFeatureMap, 2]),
+      memory_gb = select_first([override_memory_gb_CreateFeatureMap, 4]),
+      model_files = pre_trained_model_files_array
   }
 
   Boolean sufficient_coverage_to_train_model = (mean_coverage_used >= min_coverage_to_train_model)
-  Boolean snv_qualities_can_be_assigned = (sufficient_coverage_to_train_model) || (use_pre_trained_model)
+  Boolean can_train_model = (sufficient_coverage_to_train_model) && (featuremap_params.generate_random_sample)
+  Boolean snv_qualities_can_be_assigned = can_train_model
 
-  if ((sufficient_coverage_to_train_model) && (!use_pre_trained_model)) {
+  if (can_train_model && (!use_pre_trained_model)) {
     # Prepare the raw featuremap for training
     SingleReadSNVParams single_read_snv_params_ = select_first([single_read_snv_params])
     # Dynamically assign memory for PrepareRawFeatureMap by mean_coverage
-    Int memory_gb_PrepareRawFeatureMap_default = if (mean_coverage_used < 50.0) then 128 else 256
+    Int memory_gb_PrepareRawFeatureMap_default = if (mean_coverage_used < 50.0) then 64 else 128
     Int memory_gb_PrepareRawFeatureMap = select_first([override_memory_gb_PrepareRawFeatureMap, memory_gb_PrepareRawFeatureMap_default])
     Int cpu_PrepareRawFeatureMap_ = ceil(memory_gb_PrepareRawFeatureMap / 2)
-    Int cpu_PrepareRawFeatureMap = if (cpu_PrepareRawFeatureMap_ > 64) then 64 else cpu_PrepareRawFeatureMap_
+    Int cpu_PrepareRawFeatureMap = if (cpu_PrepareRawFeatureMap_ > 32) then 32 else cpu_PrepareRawFeatureMap_
+    File read_filters_with_max_coverage_ = select_first([CreateFeatureMap.read_filters_with_max_coverage])
 
+    # Generate FP training set
     call SRSNVTasks.PrepareFeatureMapForTraining as PrepareRawFeatureMap {
         input:
             featuremap = CreateFeatureMap.featuremap,
             featuremap_index = CreateFeatureMap.featuremap_index,
-            training_regions_interval_list = training_regions_interval_list,
-            training_regions_interval_list_index = training_regions_interval_list_index,
-            featuremap_params = featuremap_params,
             single_read_snv_params = single_read_snv_params_,
-            train_set_size = single_read_snv_params_.tp_train_set_size,
-            mean_coverage = mean_coverage_used,
-            filters = ["name=low_vaf:field=RAW_VAF:op=le:value=" + single_read_snv_params_.max_vaf_for_fp + ":type=label"],
+            train_set_size = single_read_snv_params_.fp_train_set_size,
+            filter_json_key = "filters_full_output",
+            read_filters_with_max_coverage = read_filters_with_max_coverage_,
             docker = global.ugbio_featuremap_docker,
             preemptible_tries = preemptibles,
             memory_gb = memory_gb_PrepareRawFeatureMap,
             cpus      = cpu_PrepareRawFeatureMap,
             monitoring_script = monitoring_script
     }
-
+    
     # Prepare the random sample featuremap for training
-    Int memory_gb_PrepareRandomSampleFeatureMap = select_first([override_memory_gb_PrepareRandomSampleFeatureMap, 16])
+    Int memory_gb_PrepareRandomSampleFeatureMap = select_first([override_memory_gb_PrepareRandomSampleFeatureMap, 8])
     Int cpu_PrepareRandomSampleFeatureMap_ = ceil(memory_gb_PrepareRandomSampleFeatureMap / 2)
-    Int cpu_PrepareRandomSampleFeatureMap = if (cpu_PrepareRandomSampleFeatureMap_ > 8) then 8 else cpu_PrepareRandomSampleFeatureMap_
+    Int cpu_PrepareRandomSampleFeatureMap = if (cpu_PrepareRandomSampleFeatureMap_ > 4) then 4 else cpu_PrepareRandomSampleFeatureMap_
 
+    # Generate TP training set
     call SRSNVTasks.PrepareFeatureMapForTraining as PrepareRandomSampleFeatureMap {
         input:
-            featuremap = CreateFeatureMap.featuremap_random_sample,
-            featuremap_index = CreateFeatureMap.featuremap_random_sample_index,
-            training_regions_interval_list = training_regions_interval_list,
-            training_regions_interval_list_index = training_regions_interval_list_index,
-            featuremap_params = featuremap_params,
+            featuremap = select_first([CreateFeatureMap.featuremap_random_sample]),
+            featuremap_index = select_first([CreateFeatureMap.featuremap_random_sample_index]),
             single_read_snv_params = single_read_snv_params_,
-            train_set_size = single_read_snv_params_.fp_train_set_size,
-            mean_coverage = mean_coverage_used,
-            filters = ["name=ref_eq_alt:field=REF:op=eq:value_field=ALT:type=label"],
-            docker = global.ugbio_featuremap_docker,
-            preemptible_tries = preemptibles,
-            memory_gb = memory_gb_PrepareRandomSampleFeatureMap,
-            cpus = cpu_PrepareRandomSampleFeatureMap,
-            monitoring_script = monitoring_script
-    }
-
-    call SRSNVTasks.PrepareFeatureMapForTraining as RandomSampleFeatureMapApplyNegativeFilter {
-        input:
-            featuremap = CreateFeatureMap.featuremap_random_sample,
-            featuremap_index = CreateFeatureMap.featuremap_random_sample_index,
-            training_regions_interval_list = training_regions_interval_list,
-            training_regions_interval_list_index = training_regions_interval_list_index,
-            featuremap_params = featuremap_params,
-            single_read_snv_params = single_read_snv_params_,
-            train_set_size = single_read_snv_params_.fp_train_set_size,
-            mean_coverage = mean_coverage_used,
-            filters = [
-              "name=ref_ne_alt:field=REF:op=ne:value_field=ALT:type=label",
-              "name=vaf_le_5perc:field=RAW_VAF:op=le:value=" + single_read_snv_params_.max_vaf_for_fp + ":type=label"
-              ],
+            train_set_size = single_read_snv_params_.tp_train_set_size,
+            filter_json_key = "filters_random_sample",
+            read_filters_with_max_coverage = read_filters_with_max_coverage_,
             docker = global.ugbio_featuremap_docker,
             preemptible_tries = preemptibles,
             memory_gb = memory_gb_PrepareRandomSampleFeatureMap,
@@ -492,13 +498,11 @@ parameter_meta {
         input:
             raw_filtered_featuremap_parquet = PrepareRawFeatureMap.filtered_featuremap_parquet,
             random_sample_filtered_featuremap_parquet = PrepareRandomSampleFeatureMap.filtered_featuremap_parquet,
-            random_sample_negative_label_stats = RandomSampleFeatureMapApplyNegativeFilter.stats_file,
-            random_sample_positive_label_stats = PrepareRandomSampleFeatureMap.stats_file,
-            raw_featuremap_stats = PrepareRawFeatureMap.stats_file,
+            stats_file = CreateFeatureMap.model_filters_status_funnel,
             mean_coverage = mean_coverage_used,
-            training_regions_interval_list = training_regions_interval_list,
             xgboost_params_file = xgboost_params_file,
             single_read_snv_params = single_read_snv_params_,
+            training_interval_list = training_interval_list,
             features=features,
             base_file_name = base_file_name_sub,
             docker = global.ugbio_srsnv_docker,
@@ -525,9 +529,10 @@ parameter_meta {
     File report_html_output        = CreateReport.report_html
   }
 
-  if (snv_qualities_can_be_assigned) {
-    Array[File] model_files_ = select_all(select_first([pre_trained_model_files, TrainModel.model_files]))
-    File srsnv_metadata_json_ = select_first([pre_trained_srsnv_metadata_json, TrainModel.srsnv_metadata_json])
+  if (snv_qualities_can_be_assigned && (!use_pre_trained_model)) {
+    # when running with a pre-trained model, inference is done in CreateFeatureMap task
+    Array[File] model_files_ = select_all(select_first([TrainModel.model_files]))
+    File srsnv_metadata_json_ = select_first([TrainModel.srsnv_metadata_json])
 
     call SRSNVTasks.Inference {
         input:
@@ -570,7 +575,7 @@ parameter_meta {
                 docker = global.ugbio_core_docker
         }
     }
-
+  File srsnv_metadata_json__ = select_first([srsnv_metadata_json_, CreateFeatureMap.model_filters_status_funnel])
   output {
     File featuremap = featuremap_output
     File featuremap_index = featuremap_index_output
@@ -579,19 +584,13 @@ parameter_meta {
     Float downsampling_rate = CreateFeatureMap.downsampling_rate
     Boolean snv_qualities_assigned = snv_qualities_can_be_assigned
     Boolean used_self_trained_model = snv_qualities_assigned && (!use_pre_trained_model)
-    # File? report_html = TrainModel.report_html
-    # File? model_file = TrainModel.model
-    # File? combined_stats = TrainModel.combined_stats
     File? raw_filtered_featuremap_parquet = PrepareRawFeatureMap.filtered_featuremap_parquet
-    File? raw_featuremap_stats = PrepareRawFeatureMap.stats_file
-    File? random_sample_filtered_featuremap_parquet = PrepareRandomSampleFeatureMap.filtered_featuremap_parquet
-    File? random_sample_featuremap_stats = PrepareRandomSampleFeatureMap.stats_file
     File? random_sample_trinuc_freq_stats = CreateFeatureMap.random_sample_trinuc_freq
 
     File? featuremap_df = featuremap_df_output
     File? application_qc_h5 = application_qc_h5_output
     File? report_html = report_html_output
-    File? srsnv_metadata_json = srsnv_metadata_json_
+    File? srsnv_metadata_json = srsnv_metadata_json__
     Array[File]? model_files = model_files_
 
     File? md5_checksums_json = MergeMd5sToJson.md5_json

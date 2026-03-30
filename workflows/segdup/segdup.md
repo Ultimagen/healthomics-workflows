@@ -19,20 +19,15 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>File </i> &mdash;
          Input CRAM/BAM index file <br />
 </p>
-<p name="SegDupAnalysis.references">
-        <b>SegDupAnalysis.references</b><br />
-        <i>References </i> &mdash;
-         Reference genome files <br />
+<p name="SegDupAnalysis.reference_genome">
+        <b>SegDupAnalysis.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome type selector. The workflow currently supports only hg38. <br />
 </p>
 <p name="SegDupAnalysis.n_threads">
         <b>SegDupAnalysis.n_threads</b><br />
         <i>Int </i> &mdash;
          Number of threads to use <br />
-</p>
-<p name="SegDupAnalysis.exome_intervals">
-        <b>SegDupAnalysis.exome_intervals</b><br />
-        <i>File </i> &mdash;
-         Exome intervals for variant calling (required for deepVariant, otherwise not important) <br />
 </p>
 <p name="SegDupAnalysis.dbsnp">
         <b>SegDupAnalysis.dbsnp</b><br />
@@ -66,6 +61,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Array[File] </i> &mdash;
          Background (normal sample) cram index files for somatic calling <br />
 </p>
+<p name="SegDupAnalysis.DV.ScatterIntervalList.convert_to_bed">
+        <b>SegDupAnalysis.DV.ScatterIntervalList.convert_to_bed</b><br />
+        <i>Boolean? </i> &mdash;
+         If true, convert interval_list files to BED format in addition to interval_list format <br />
+</p>
 
 ### Optional parameters
 <p name="SegDupAnalysis.DV.show_bg_fields">
@@ -81,7 +81,7 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.intervals_string">
         <b>SegDupAnalysis.DV.intervals_string</b><br />
         <i>String? </i> &mdash;
-         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used. <br />
+         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals. <br />
 </p>
 <p name="SegDupAnalysis.DV.min_read_count_snps">
         <b>SegDupAnalysis.DV.min_read_count_snps</b><br />
@@ -309,10 +309,10 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>File</i><br />
         CNV calls
 </p>
-<p name="SegDupAnalysis.acnv_calls_index">
-        <b>SegDupAnalysis.acnv_calls_index</b><br />
+<p name="SegDupAnalysis.pcnv_calls">
+        <b>SegDupAnalysis.pcnv_calls</b><br />
         <i>File</i><br />
-        CNV calls index
+        Paralog CNV calls
 </p>
 <p name="SegDupAnalysis.small_variants">
         <b>SegDupAnalysis.small_variants</b><br />

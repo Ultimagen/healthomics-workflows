@@ -21,7 +21,7 @@ workflow Globals {
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ugbio_core_docker": "ultimagenomics/ugbio_core:1.18.0",
-        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.21.0",
+        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.22.0",
         "pypgx_docker": "ultimagenomics/ugbio_pypgx:0.26.0-r3"
 }
 }

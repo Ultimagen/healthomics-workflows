@@ -67,8 +67,8 @@
         "description": "Reference fasta file for cache tarball",
         "optional": false
     },
-    "ppmSeqPreprocess.references": {
-        "description": "Reference files",
+    "ppmSeqPreprocess.reference_genome": {
+        "description": "Genome type for resource selection (hg38)",
         "optional": false
     },
     "ppmSeqPreprocess.sorter_params": {

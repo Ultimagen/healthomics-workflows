@@ -174,6 +174,13 @@ task UGMakeExamples{
     touch background.cram
     touch background.cram.crai
 
+    # Link the haplotypes cram and index into the same directory, as the tool expects the haplotypes cram and index to be in the same directory with the same prefix as the input cram
+    if [ "~{defined(pangenome_haplotypes)}" == "true" ]
+    then
+      ln -s "~{pangenome_haplotypes}" "$(basename ~{pangenome_haplotypes})"
+      ln -s "~{pangenome_haplotypes_index}" "$(basename ~{pangenome_haplotypes_index})"
+    fi
+
     # Process interval file
     grep -v @ ~{interval} | awk 'BEGIN{OFS="\t"}{print $1,$2-1,$3}' >> interval.bed
 
@@ -251,7 +258,7 @@ task UGMakeExamples{
         ~{extra_args} \
         ~{true="--progress" false="" log_progress} \
         ~{if defined(germline_vcf) then "--region-haplotypes-vcf ~{germline_vcf}" else ""} \
-        ~{if defined(pangenome_haplotypes) then "--exp-pangenome-haps ~{pangenome_haplotypes}" else ""} \
+        ~{if defined(pangenome_haplotypes) then "--exp-pangenome-haps $(basename ~{pangenome_haplotypes})" else ""} \
          &
         
       # Save the PID of the process
@@ -491,8 +498,8 @@ task UGPostProcessing{
     String output_prefix
     File exome_intervals
     Array[File]? annotation_intervals
-    File dbsnp
-    File dbsnp_index
+    File? dbsnp
+    File? dbsnp_index
     String flow_order
     Int qual_filter
     Array[File]? gvcf_records
@@ -510,10 +517,10 @@ task UGPostProcessing{
 
     Int disk_size = ceil(48 * size(called_records, "GB") +
                          size(ref, "GB") +
-                         size(dbsnp, "GB") +
+                         (if defined(dbsnp) then size(dbsnp, "GB") else 0) +
                          (if make_gvcf then size(select_first([gvcf_records]), "GB") else 0) +
-                         4 + (if make_gvcf then 5 else 0)) + 
-                         ceil(size(background_cram_files, "GB")) + 
+                         4 + (if make_gvcf then 5 else 0)) +
+                         ceil(size(background_cram_files, "GB")) +
                          ceil(size(cram_files, "GB")) +
                          ceil(size(cram_index_files, "GB")) +
                          ceil(size(background_cram_index_files, "GB"))
@@ -593,7 +600,7 @@ task UGPostProcessing{
         --qual_filter ~{qual_filter} \
         --filter \
         --filters_file filters.txt \
-        --dbsnp ~{dbsnp} \
+        ~{if defined(dbsnp) then "--dbsnp " + dbsnp else ""} \
         ~{if show_bg_fields then "--consider_bg_fields" else ""} \
         ~{if recalibrate_vaf then '$recalibration_string' else ""} \
         ~{if is_somatic then "--ignore_multi_allelic_cvos" else ""} \
@@ -730,7 +737,7 @@ task GenerateQuickCoverageBed {
     python3 << 'EOF'
 import os
 
-avg_distance = int(os.environ['AVG_DISTANCE'])
+avg_distance = max(1, int(os.environ['AVG_DISTANCE']))
 num_points = int(os.environ['NUM_POINTS'])
 
 points_generated = 0

@@ -19,15 +19,15 @@ The steps of the pipeline are as following:
         <i>String </i> &mdash;
          Base file name for the output files (to be used as the prefix) <br />
 </p>
-<p name="SVPipeline.references">
-        <b>SVPipeline.references</b><br />
-        <i>References </i> &mdash;
-         Reference files: fasta, dict and fai, recommended value set in the template <br />
+<p name="SVPipeline.reference_genome">
+        <b>SVPipeline.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome type selector. Supported values: hg38, b37 <br />
 </p>
-<p name="SVPipeline.ua_references">
-        <b>SVPipeline.ua_references</b><br />
+<p name="SVPipeline.ua_parameters">
+        <b>SVPipeline.ua_parameters</b><br />
         <i>UaParameters </i> &mdash;
-         UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template <br />
+         UA parameters: v_aware_alignment_flag and ua_extra_args, recommended value set in the template <br />
 </p>
 <p name="SVPipeline.wgs_calling_interval_list">
         <b>SVPipeline.wgs_calling_interval_list</b><br />
@@ -184,6 +184,11 @@ The steps of the pipeline are as following:
         <b>SVPipeline.create_md5_checksum_outputs</b><br />
         <i>Boolean </i> &mdash;
          Create md5 checksum for requested output files <br />
+</p>
+<p name="SVPipeline.ScatterIntervalList.convert_to_bed">
+        <b>SVPipeline.ScatterIntervalList.convert_to_bed</b><br />
+        <i>Boolean? </i> &mdash;
+         If true, convert interval_list files to BED format in addition to interval_list format <br />
 </p>
 </details>
 

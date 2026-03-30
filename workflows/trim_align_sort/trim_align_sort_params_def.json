@@ -36,12 +36,12 @@
         "optional": true
     },
     "TrimAlignSort.ref_fastas_cram": {
-        "description": "List of references for CreateReferenceCache task.",
-        "optional": false
+        "description": "List of references for CreateReferenceCache task. Optional - if not provided, cache_tarball will not be created.",
+        "optional": true
     },
-    "TrimAlignSort.references": {
-        "description": "References for merging inputs into one file, alignment, and sorting.",
-        "optional": false
+    "TrimAlignSort.reference_genome": {
+        "description": "Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38",
+        "optional": true
     },
     "TrimAlignSort.sorter_params": {
         "description": "Parameters for the sorter task. Mandatory if sort step is selected.",

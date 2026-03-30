@@ -1,0 +1,34 @@
+{
+    "EfficientDV.base_file_name": "<base_file_name>",
+    "EfficientDV.cram_files": [
+        "<cram_file>.cram"
+    ],
+    "EfficientDV.cram_index_files": [
+        "<cram_file>.cram.crai"
+    ],
+    "EfficientDV.num_shards": 50,
+    "EfficientDV.make_gvcf": true,
+    "EfficientDV.recalibrate_vaf": false,
+    "EfficientDV.is_somatic": false,
+    "EfficientDV.single_strand_filter": false,
+    "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
+    "EfficientDV.reference_genome": "hg38",
+    "EfficientDV.preemptible_tries": 2,
+    "EfficientDV.cap_at_optimal_coverage": false,
+    "EfficientDV.normalize_strand_bias": false,
+    "EfficientDV.strong_call_threshold": 0.999,
+    "EfficientDV.ensemble_size": 7,
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wes/v1.16/ultimagen-germline-WES-v1.16-ramp.onnx",
+    "EfficientDV.min_variant_quality_hmer_indels": 5,
+    "EfficientDV.min_variant_quality_exome_hmer_indels": 7,
+    "EfficientDV.min_variant_quality_non_hmer_indels": 0,
+    "EfficientDV.min_variant_quality_snps": 0,
+    "EfficientDV.optimal_coverages": [
+        1000
+    ],
+    "EfficientDV.keep_duplicates": false,
+    "EfficientDV.add_ins_size_channel": true,
+    "EfficientDV.override_target_intervals": "<targeted_exome>.interval_list",
+    "EfficientDV.cloud_provider_override": "aws",
+    "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+}

@@ -34,6 +34,6 @@
         "alignment_reference_fasta_for_haplotypes": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hg38.primary.fa",
         "alignment_reference_fasta_index_for_haplotypes": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hg38.primary.fa.fai"
     },
-    "GiraffeAlignment.output_haplotypes_cram": false,
+    "GiraffeAlignment.output_haplotypes_cram": true,
     "GiraffeAlignment.preemptible_tries": 2
 }

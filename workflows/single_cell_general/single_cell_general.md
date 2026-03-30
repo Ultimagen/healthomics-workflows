@@ -28,10 +28,10 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>Array[File] </i> &mdash;
          Reference fasta files for the CRAM file <br />
 </p>
-<p name="SingleCell.references">
-        <b>SingleCell.references</b><br />
-        <i>References </i> &mdash;
-         References for the workflow <br />
+<p name="SingleCell.reference_genome">
+        <b>SingleCell.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome type selector. The workflow currently supports only hg38. <br />
 </p>
 <p name="SingleCell.insert_rg">
         <b>SingleCell.insert_rg</b><br />

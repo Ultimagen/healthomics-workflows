@@ -1,4 +1,8 @@
 {
+    "SegDupAnalysis.DV.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
     "SegDupAnalysis.DV.allele_frequency_ratio": {
         "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
         "optional": true
@@ -80,7 +84,7 @@
         "optional": true
     },
     "SegDupAnalysis.DV.intervals_string": {
-        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used.",
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals.",
         "optional": true
     },
     "SegDupAnalysis.DV.log_make_examples_progress": {
@@ -227,10 +231,6 @@
         "description": "dbSNP reference index file (for annotation)",
         "optional": false
     },
-    "SegDupAnalysis.exome_intervals": {
-        "description": "Exome intervals for variant calling (required for deepVariant, otherwise not important)",
-        "optional": false
-    },
     "SegDupAnalysis.homology_table": {
         "description": "Segmental duplication table (see parascopy), see template",
         "optional": false
@@ -271,8 +271,8 @@
         "description": "Number of preemptible tries",
         "optional": true
     },
-    "SegDupAnalysis.references": {
-        "description": "Reference genome files",
+    "SegDupAnalysis.reference_genome": {
+        "description": "Genome type selector. The workflow currently supports only hg38.",
         "optional": false
     },
     "SegDupAnalysis.segdup_regions": {

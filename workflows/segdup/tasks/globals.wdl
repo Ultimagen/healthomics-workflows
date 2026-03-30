@@ -8,6 +8,7 @@ struct GlobalVariables {
   String bcftools_docker
   String monitoring_script
   String segdup_docker
+  String ugbio_cnv_docker
   String ugbio_filtering_docker
 }
 workflow Globals {
@@ -20,7 +21,8 @@ workflow Globals {
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "segdup_docker": "ultimagenomics/parascopy:1.2.0_f42c9e4",
-        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.21.0"
+        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.22.1",
+        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.22.0"
 }
 }
 
