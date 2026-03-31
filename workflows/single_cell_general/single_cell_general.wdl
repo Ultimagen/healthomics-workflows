@@ -64,7 +64,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -72,8 +72,8 @@ workflow SingleCell {
         # Trimming and sorting parameters
         TrimAlignSortSteps steps
         Array[File] ref_fastas_cram
-        # References
-        References references
+        # Genome type selector
+        String reference_genome = "hg38"
         # trimmer parameters
         TrimmerParameters trimmer_parameters
         # sorter parameters
@@ -107,12 +107,7 @@ workflow SingleCell {
         #@wv defined(trimmer_parameters) and not 'formats_description' in trimmer_parameters -> 'format' in trimmer_parameters
 
         #@wv 'trim' in steps or 'align' in steps or 'sort' in steps -> (steps['trim'] or steps['align'] or steps['sort'])
-        #@wv defined(references) -> len(references) == 3
-        #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa','.fna'}
-        #@wv suffix(references['ref_dict']) == '.dict'
-        #@wv suffix(references['ref_fasta_index']) == '.fai'
-        #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
-        #@wv prefix(references['ref_dict']) == prefix(references['ref_fasta'])
+        #@wv reference_genome in {"hg38"}
         
         # Trimmer checks
         #@wv 'trim' in steps and steps['trim'] -> defined(trimmer_parameters)
@@ -207,9 +202,9 @@ workflow SingleCell {
             type: "String",
             category: "optional"
         }
-        references: {
-            help: "References for the workflow",
-            type: "References",
+        reference_genome: {
+            help: "Genome type selector. The workflow currently supports only hg38.",
+            type: "String",
             category: "input_required"
         }
         ref_fastas_cram: {
@@ -372,7 +367,7 @@ workflow SingleCell {
             input_cram_bam_list     = [input_file],
             base_file_name          = base_file_name,
             steps                   = steps,
-            references              = references,
+            reference_genome             = reference_genome,
             ref_fastas_cram         = ref_fastas_cram,
             trimmer_parameters      = trimmer_parameters,
             sorter_params           = sorter_params,

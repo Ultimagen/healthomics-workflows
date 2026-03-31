@@ -1,4 +1,8 @@
 {
+    "SVPipeline.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
     "SVPipeline.annotate_variants_cpu_override": {
         "description": "cpu override for annotate_variants task",
         "optional": true
@@ -147,12 +151,12 @@
         "description": "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
         "optional": false
     },
-    "SVPipeline.reference_name": {
-        "description": "Can be 38 or 19",
+    "SVPipeline.reference_genome": {
+        "description": "Genome type selector. Supported values: hg38, b37",
         "optional": false
     },
-    "SVPipeline.references": {
-        "description": "Reference files: fasta, dict and fai, recommended value set in the template",
+    "SVPipeline.reference_name": {
+        "description": "Can be 38 or 19",
         "optional": false
     },
     "SVPipeline.rematching_memory_override": {
@@ -179,8 +183,8 @@
         "description": "Whether to convert the output vcf to the region format or not, default True",
         "optional": true
     },
-    "SVPipeline.ua_references": {
-        "description": "UAReference files: ua_index, ref_alt, v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
+    "SVPipeline.ua_parameters": {
+        "description": "UA parameters: v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
         "optional": false
     },
     "SVPipeline.wgs_calling_interval_list": {

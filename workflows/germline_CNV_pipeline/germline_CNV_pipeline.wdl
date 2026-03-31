@@ -35,7 +35,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -53,7 +53,6 @@ workflow GermlineCNVPipeline {
         Int? cnmops_window_length_override
         Int? cnmops_parallel_override
         Array[File] bed_graph
-        File genome_windows
         File cohort_reads_count_matrix
         File ploidy_file
         Int? cnmops_min_width_value_override
@@ -178,11 +177,6 @@ workflow GermlineCNVPipeline {
             type: "Array[File]",
             category: "input_required"
         }
-        genome_windows: {
-            help: "Bed file of the genome binned to equal sized windows similar to the cohort_reads_count_matrix.",
-            type: "File",
-            category: "input_required"
-        }
         cohort_reads_count_matrix: {
             help : "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
             type: "File",
@@ -285,12 +279,22 @@ workflow GermlineCNVPipeline {
             type: "File",
             category: "output"
         }
-        combine_read_evidence: {
+        split_read_evidence: {
+            help: "BAM file with split read evidence supporting combined CNV calls",
+            type: "File",
+            category: "output"
+        }        
+        split_read_evidence_index: {
+            help: "Index file for the BAM with split read evidence supporting combined CNV calls",
+            type: "File",
+            category: "output"
+        }
+        realign_read_evidence: {
             help: "BAM file with read evidence supporting combined CNV calls",
             type: "File",
             category: "output"
         }
-        combine_read_evidence_index: {
+        realign_read_evidence_index: {
             help: "Index file for the BAM with read evidence supporting combined CNV calls",
             type: "File",
             category: "output"
@@ -322,7 +326,7 @@ workflow GermlineCNVPipeline {
         }
     }
     Int cnmops_mapq = select_first([cnmops_mapq_override, 1])
-    Int cnmops_window_length = select_first([cnmops_window_length_override, 500])
+    Int cnmops_window_length = select_first([cnmops_window_length_override, 1000])
     Int cnmops_parallel = select_first([cnmops_parallel_override, 4])
     Int cnmops_min_width_value = select_first([cnmops_min_width_value_override, 2])
     Int cnmops_min_cnv_length = select_first([cnmops_min_cnv_length_override, 0])
@@ -348,7 +352,6 @@ workflow GermlineCNVPipeline {
             window_length = cnmops_window_length,
             parallel = cnmops_parallel,
             bed_graph = bed_graph,
-            genome_windows = genome_windows,
             cohort_reads_count_matrix = cohort_reads_count_matrix,
             ploidy_file = ploidy_file,
             min_width_value = cnmops_min_width_value,
@@ -442,8 +445,10 @@ workflow GermlineCNVPipeline {
         File combined_cnv_calls_bed = CombineCNVCalls.out_sample_cnvs_bed
         File combined_cnv_calls_bed_vcf = combined_cnv_calls_bed_vcf_
         File combined_cnv_calls_bed_vcf_index = combined_cnv_calls_bed_vcf_index_
-        File combine_read_evidence = CombineCNVCalls.read_evidence
-        File combine_read_evidence_index = CombineCNVCalls.read_evidence_index
+        File split_read_evidence = CombineCNVCalls.split_read_evidence
+        File split_read_evidence_index = CombineCNVCalls.split_read_evidence_index
+        File realign_read_evidence = CombineCNVCalls.realign_read_evidence
+        File realign_read_evidence_index = CombineCNVCalls.realign_read_evidence_index
         File combine_read_scores_csv = CombineCNVCalls.read_scores_csv
         File? combined_coverage_plot = PlotCNVResults.coverage_plot
         File? combined_dup_del_plot = PlotCNVResults.dup_del_plot

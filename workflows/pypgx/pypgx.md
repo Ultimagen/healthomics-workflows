@@ -30,11 +30,11 @@ Runs pharmacogenomics analysis on several genes.
          List of references for CreateReferenceCache task. <br />
 </p>
 
-### Required references
-<p name="PyPGx.references">
-        <b>PyPGx.references</b><br />
-        <i>References </i> &mdash;
-         Reference files: fasta, dict and fai <br />
+### Required parameters
+<p name="PyPGx.reference_genome">
+        <b>PyPGx.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome type selector. The workflow currently supports only hg38. <br />
 </p>
 
 ### Optional inputs
@@ -53,11 +53,6 @@ Runs pharmacogenomics analysis on several genes.
         <i>File? </i> &mdash;
          TensorRT model for calling variants (onnx format) <br />
 </p>
-<p name="PyPGx.exome_intervals">
-        <b>PyPGx.exome_intervals</b><br />
-        <i>File? </i> &mdash;
-         A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome. <br />
-</p>
 <p name="PyPGx.ref_dbsnp">
         <b>PyPGx.ref_dbsnp</b><br />
         <i>File? </i> &mdash;
@@ -67,6 +62,11 @@ Runs pharmacogenomics analysis on several genes.
         <b>PyPGx.ref_dbsnp_index</b><br />
         <i>File? </i> &mdash;
          DbSNP vcf index <br />
+</p>
+<p name="PyPGx.EfficientDV.ScatterIntervalList.convert_to_bed">
+        <b>PyPGx.EfficientDV.ScatterIntervalList.convert_to_bed</b><br />
+        <i>Boolean? </i> &mdash;
+         If true, convert interval_list files to BED format in addition to interval_list format <br />
 </p>
 
 ### Optional parameters
@@ -83,7 +83,7 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.EfficientDV.intervals_string">
         <b>PyPGx.EfficientDV.intervals_string</b><br />
         <i>String? </i> &mdash;
-         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used. <br />
+         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals. <br />
 </p>
 <p name="PyPGx.EfficientDV.min_fraction_hmer_indels">
         <b>PyPGx.EfficientDV.min_fraction_hmer_indels</b><br />

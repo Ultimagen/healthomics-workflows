@@ -22,15 +22,16 @@ version 1.0
 import "tasks/structs.wdl" as structs
 import "tasks/general_tasks.wdl" as UGGeneral
 import "tasks/globals.wdl" as GlobalsWDL
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
-        References references
+        String reference_genome = "hg38"
         File homology_table
         File homology_table_index
         File segdup_regions
@@ -39,7 +40,6 @@ workflow SegDupAnalysis {
         Int n_threads
         File model_onnx
         File? model_serialized
-        File exome_intervals
         File dbsnp
         File dbsnp_index
         # Used for running on other clouds (aws)
@@ -52,10 +52,7 @@ workflow SegDupAnalysis {
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv suffix(input_cram_bam) in {".bam", ".cram"}
         #@wv suffix(input_crai_bai) in {".bai", ".crai"}
-        #@wv suffix(references['ref_fasta']) in {'.fasta', '.fa'}
-        #@wv suffix(references['ref_dict']) == '.dict'
-        #@wv suffix(references['ref_fasta_index']) == '.fai'
-        #@wv prefix(references['ref_fasta_index']) == references['ref_fasta']
+        #@wv reference_genome in {"hg38"}
         #@wv suffix(homology_table) == '.gz'
         #@wv suffix(homology_table_index) == '.tbi'
 	}
@@ -92,9 +89,9 @@ workflow SegDupAnalysis {
             type: "File",
             category: "input_required"
         }
-        references: {
-            help: "Reference genome files",
-            type: "References",
+        reference_genome: {
+            help: "Genome type selector. The workflow currently supports only hg38.",
+            type: "String",
             category: "input_required"
         }
         homology_table: {
@@ -136,11 +133,6 @@ workflow SegDupAnalysis {
             help: "Serialized model for variant calling",
             type: "File",
             category: "input_advanced"
-        }
-        exome_intervals: {
-            help: "Exome intervals for variant calling (required for deepVariant, otherwise not important)",
-            type: "File",
-            category: "input_required"
         }
         dbsnp: {
             help: "dbSNP reference file (for annotation)",
@@ -187,8 +179,8 @@ workflow SegDupAnalysis {
             type: "File",
             category: "output"
         }
-        acnv_calls_index: {
-            help: "CNV calls index",
+        pcnv_calls: {
+            help: "Paralog CNV calls",
             type: "File",
             category: "output"
         }
@@ -202,11 +194,22 @@ workflow SegDupAnalysis {
             type: "File",
             category: "output"
         }
+
     }
     call GlobalsWDL.Globals as Globals
     GlobalVariables global = Globals.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+
+    # Get genome resources based on reference_genome
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
+    # Construct References struct from genome resources for tasks that still need it
+    References references = object {
+        ref_fasta: GenomeResources.resources[reference_genome].ref_fasta,
+        ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
+        ref_dict: GenomeResources.resources[reference_genome].ref_dict
+    }
 
     call PoolReads {
         input:
@@ -254,7 +257,7 @@ workflow SegDupAnalysis {
             base_file_name = base_file_name,
             cram_files = [PoolReads.remap_cram],
             cram_index_files = [PoolReads.remap_cram_index],
-            references = references,
+            reference_genome = reference_genome,
             make_gvcf = false,
             is_somatic = false,
             recalibrate_vaf = false,
@@ -270,8 +273,7 @@ workflow SegDupAnalysis {
             # Call variants args
             model_onnx = model_onnx,
             model_serialized = model_serialized,
-            target_intervals = BedToIntervalList.interval_list, 
-            exome_intervals = exome_intervals,
+            override_target_intervals = BedToIntervalList.interval_list,
             ref_dbsnp = dbsnp,
             ref_dbsnp_index = dbsnp_index,
 
@@ -298,12 +300,23 @@ workflow SegDupAnalysis {
             preemptible_tries = preemptible_tries,
     }
 
+    call FixCNVFormat { 
+        input: 
+            acnv_calls = CallCNV.acnv_calls, 
+            pcnv_calls = CallCNV.pcnv_calls, 
+            base_file_name = base_file_name,
+            monitoring_script = monitoring_script,
+            docker = global.ugbio_cnv_docker,
+            preemptible_tries = preemptible_tries,
+            no_address = no_address
+    }
+
 
     output { 
         File remap_bam = PoolReads.remap_cram
         File remap_bam_index = PoolReads.remap_cram_index
-        File acnv_calls = CallCNV.acnv_calls
-        File acnv_calls_index = CallCNV.acnv_calls_index
+        File acnv_calls = FixCNVFormat.out_acnv_calls
+        File pcnv_calls = FixCNVFormat.out_pcnv_calls 
         File small_variants = ParascopyCall.small_variants
         File small_variants_idx = ParascopyCall.small_variants_index
     }
@@ -469,5 +482,41 @@ task ParascopyCall {
         cpu: n_threads
         preemptible: preemptible_tries
         disks: "local-disk " + disk_size + " HDD"
+    }
+}
+task FixCNVFormat {
+    input {
+        File acnv_calls
+        File pcnv_calls
+        String base_file_name
+        File monitoring_script
+        String docker
+        Int preemptible_tries
+        Boolean no_address = true  
+    }
+    Int disk_size = ceil(2 * size(acnv_calls, "GB") + 2 * size(pcnv_calls, "GB") + 1)
+    command <<<
+        set -eo pipefail
+        set -x
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        
+        reformat_parascopy_bed \
+            --input_bed ~{acnv_calls} \
+            --output_bed ~{base_file_name}.acnv.bed
+        reformat_parascopy_bed \
+            --input_bed ~{pcnv_calls} \
+            --output_bed ~{base_file_name}.pcnv.bed
+    >>>
+    output {
+        File out_acnv_calls = "~{base_file_name}.acnv.bed"
+        File out_pcnv_calls = "~{base_file_name}.pcnv.bed"
+    }
+    runtime {
+        docker: docker
+        memory: "8 GB"
+        preemptible: preemptible_tries
+        cpu: 1
+        disks: "local-disk " + disk_size + " HDD"
+        noAddress: no_address
     }
 }

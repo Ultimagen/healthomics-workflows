@@ -27,6 +27,11 @@ The following input templates are available for different input data:
         <i>String </i> &mdash;
          ppmSeq adapter version <br />
 </p>
+<p name="ppmSeqPreprocess.reference_genome">
+        <b>ppmSeqPreprocess.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome type for resource selection (hg38) <br />
+</p>
 
 ### Required parameters
 <p name="ppmSeqPreprocess.trimmer_parameters">
@@ -50,11 +55,6 @@ The following input templates are available for different input data:
         <b>ppmSeqPreprocess.ref_fastas_cram</b><br />
         <i>Array[File] </i> &mdash;
          Reference fasta file for cache tarball <br />
-</p>
-<p name="ppmSeqPreprocess.references">
-        <b>ppmSeqPreprocess.references</b><br />
-        <i>References </i> &mdash;
-         Reference files <br />
 </p>
 
 ### Optional inputs

@@ -9,13 +9,15 @@
         "<sorter_stats>.json"
     ],
     "SingleReadSNV.base_file_name": "<base_file_name>",
-    "SingleReadSNV.references": {
-        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
+    "SingleReadSNV.reference_genome": "hg38",
+    "SingleReadSNV.annotation_files": {
+        "dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.dbsnp138.bcf",
+        "dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.dbsnp138.bcf.csi",
+        "gnomad": "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.bcf",
+        "gnomad_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.bcf.csi",
+        "ug_hcr": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed.gz",
+        "ug_hcr_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed.gz.tbi"
     },
-    "SingleReadSNV.training_regions_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz",
-    "SingleReadSNV.training_regions_interval_list_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/ug_rare_variant_hcr.Homo_sapiens_assembly38.interval_list.gz.tbi",
     "SingleReadSNV.xgboost_params_file": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/251117.xgboost_model_params.json",
     "SingleReadSNV.random_sample_trinuc_freq": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv",
     "SingleReadSNV.min_coverage_to_train_model": 8.0,
@@ -58,19 +60,11 @@
         "tp_train_set_size": 3200000,
         "fp_train_set_size": 3200000,
         "tp_train_set_size_sampling_overhead": 3.0,
-        "min_coverage_filter": 20,
         "max_coverage_factor": 2.0,
-        "max_vaf_for_fp": 0.05,
-        "pre_filters": [
-            "name=mapq_ge_60:field=MAPQ:op=ge:value=60:type=mapping",
-            "name=no_adj_ref_diff:field=ADJ_REF_DIFF:op=eq:value=0:type=quality",
-            "name=bcsq_gt_40:field=BCSQ:op=gt:value=40:type=quality",
-            "name=edist_le_10:field=EDIST:op=lt:value=10:type=quality",
-            "name=alt_hmer_lt_7:field=X_HMER_ALT:op=lt:value=7:type=quality",
-            "name=not_a_duplicate:field=DUP:op=eq:value=False:type=label"
-        ]
+        "max_vaf_for_fp": 0.05
     },
     "SingleReadSNV.featuremap_params": {
+        "generate_random_sample": true,
         "min_mapq": 1,
         "padding_size": 5,
         "score_limit": 100,
@@ -90,8 +84,8 @@
             "MI:Z",
             "DS:i"
         ],
+        "read_filters": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/create_featuremap_read_filters.json",
         "bed_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
     },
-    "SingleReadSNV.cloud_provider_override": "aws",
-    "SingleReadSNV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+    "SingleReadSNV.cloud_provider_override": "aws"
 }

@@ -28,7 +28,7 @@ task CnmopsGetReadCountsFromBam{
     String out_bam_filtered='~{base_file_name}.MAPQ~{mapq}.bam'
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -exo pipefail
 
         samtools view ~{input_bam_file} -O BAM -o ~{out_bam_filtered} -bq ~{mapq} -T ~{reference_genome}
         samtools index ~{out_bam_filtered}
@@ -77,7 +77,7 @@ task ConvertBedGraphToGranges {
 
     command <<<
         bash ~{monitoring_script} > monitoring.log &
-        set -eo pipefail
+        set -exo pipefail
 
         for bedgraph in ~{sep=" " input_bed_graph}; 
         do 
@@ -120,6 +120,83 @@ task ConvertBedGraphToGranges {
         File monitoring_log = "monitoring.log"
     }
 }
+
+task ExtractGenomeWindows {
+    input {
+        File cohort_reads_count_matrix
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+
+    Float cohort_reads_count_matrix_size = size(cohort_reads_count_matrix, "GB")
+    Float additional_disk = 10
+    Int disk_size = ceil(cohort_reads_count_matrix_size + additional_disk)
+
+    command <<<
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        set -exo pipefail
+
+        Rscript --vanilla /home/ugbio/src/cnv/cnmops/export_cohort_matrix_to_bed.R \
+            ~{cohort_reads_count_matrix} \
+            --intervals_only
+    >>>
+
+    runtime {
+        preemptible: preemptible_tries
+        memory: "4 GiB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+        noAddress: no_address
+        cpu: 2
+    }
+
+    output {
+        File genome_windows = "intervals.bed"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+task RebinCohortReadsCount {
+    input {
+        File cohort_reads_count_matrix
+        Int new_window_length
+        String docker
+        File monitoring_script
+        Boolean no_address
+        Int preemptible_tries
+    }
+
+    Float cohort_reads_count_matrix_size = size(cohort_reads_count_matrix, "GB")
+    Float additional_disk = 10
+    Int disk_size = ceil(3 * cohort_reads_count_matrix_size + additional_disk)
+
+    command <<<
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        set -exo pipefail
+
+        Rscript --vanilla /home/ugbio/src/cnv/cnmops/rebin_cohort_reads_count.R \
+            --input_cohort_file ~{cohort_reads_count_matrix} \
+            --new_window_length ~{new_window_length} \
+            -o rebinned_cohort_reads_count.rds 
+    >>>
+
+    runtime {
+        preemptible: preemptible_tries
+        memory: "8 GiB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+        noAddress: no_address
+        cpu: 2
+    }
+
+    output {
+        File rebinned_cohort_reads_count_matrix = "rebinned_cohort_reads_count.rds"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
 task AddCountsToCohortMatrix {
     input {
         File sample_reads_count
@@ -139,7 +216,7 @@ task AddCountsToCohortMatrix {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -exo pipefail
         Rscript --vanilla /home/ugbio/src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
             -cohort_rc ~{cohort_reads_count_matrix} \
             -sample_rc ~{sample_reads_count} \
@@ -177,7 +254,7 @@ task CreateCohortReadsCountMatrix {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -exo pipefail
         echo "~{sep="\n" sample_reads_count_files}" >> samples_list.txt
         Rscript --vanilla /home/ugbio/src/cnv/cnmops/create_reads_count_cohort_matrix.R \
             -samples_read_count_files_list samples_list.txt \
@@ -222,7 +299,7 @@ task RunCnmops {
 
     command <<<
         bash ~{monitoring_script} | tee monitoring.log >&2 &
-        set -eo pipefail
+        set -exo pipefail
 
         # use touch for optional output files
         touch .estimate_gender

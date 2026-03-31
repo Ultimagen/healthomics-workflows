@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.28.0" # !UnusedDeclaration
+        String pipeline_version = "1.29.1" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -59,8 +59,9 @@ workflow MRDFeatureMap {
         # for generating db control signatures
         File? snv_database
         Int? n_synthetic_signatures
-        # option to increase memory for the coverage extraction task
-        Int? memory_extract_coverage_override
+        # option to increase memory for the specific tasks
+        Int? override_memory_gb_ExtractCoverageOverVcfFiles
+        Int? override_memory_gb_FeatureMapIntersect
 
         References references
         
@@ -215,10 +216,15 @@ workflow MRDFeatureMap {
           type: "Int",
           category: "input_optional"
       }
-      memory_extract_coverage_override: {
-            help: "Memory in GB to use for the coverage extraction task",
-            type: "Int",
-            category: "input_optional"
+      override_memory_gb_ExtractCoverageOverVcfFiles: {
+        help: "Override memory in GB for the ExtractCoverageOverVcfFiles task, default: 8 (GiB). If an out of memory error occurs in the ExtractCoverageOverVcfFiles task, try increasing this value, e.g. double it.",
+        type: "Int",
+        category: "input_optional"
+      }
+      override_memory_gb_FeatureMapIntersect: {
+        type: "Int",
+        help: "Override memory in GB for the FeatureMapIntersectXXXX tasks, default: 4 (GiB). If an out of memory error occurs in the these tasks, try increasing this value, e.g. double it.",
+        category: "optional"
       }
       create_md5_checksum_outputs: {
            help: "Create md5 checksum for requested output files",
@@ -409,7 +415,7 @@ workflow MRDFeatureMap {
 
   # Part 2 - Collect coverage over signatures
   Array[File] all_vcf_files = flatten(select_all([filtered_matched_control_signatures, filtered_external_control_signatures, filtered_db_control_signatures]))
-  Int memory_extract_coverage = select_first([memory_extract_coverage_override, 8])
+  Int memory_extract_coverage = select_first([override_memory_gb_ExtractCoverageOverVcfFiles, 8])
 
   call UGMrdTasks.MergeVcfsIntoBed as MergeVcfsIntoBed {
     input:
@@ -437,35 +443,73 @@ workflow MRDFeatureMap {
       monitoring_script = monitoring_script  #!FileCoercion
   }
 
-  # Part 3 - Intersect FeatureMap with signatures
+  # Part 3 - Intersect FeatureMap with signatures (one small task per signature: 2 CPU, 4 GiB)
   Float featuremap_size = size(cfdna_featuremap, "GB")
-  Int tmp_cpus_FeatureMapIntersectWithSignatures = round(length(all_vcf_files) / 2)
-  Int cpus_FeatureMapIntersectWithSignatures = if tmp_cpus_FeatureMapIntersectWithSignatures < 2 then 2 else tmp_cpus_FeatureMapIntersectWithSignatures
-  Int tmp_memory_FeatureMapIntersectWithSignatures = cpus_FeatureMapIntersectWithSignatures * 2
-  Int memory_FeatureMapIntersectWithSignatures = if tmp_memory_FeatureMapIntersectWithSignatures < 4 then 4 else tmp_memory_FeatureMapIntersectWithSignatures
-  call UGMrdTasks.FeatureMapIntersectWithSignatures as FeatureMapIntersectWithSignatures{
-    input:
-      featuremap = cfdna_featuremap,
-      featuremap_index = cfdna_featuremap_index,
-      matched_signatures = FilterMatched.output_vcf,
-      matched_signatures_indexes = FilterMatched.output_vcf_index,
-      control_signatures = FilterControlSignatures.output_vcf,
-      control_signatures_indexes = FilterControlSignatures.output_vcf_index,
-      db_signatures = GenerateControlSignaturesFromDatabase.db_signatures,
-      matched_signatures_indices = FilterMatched.output_vcf_index,
-      control_signatures_indices = FilterControlSignatures.output_vcf_index,
-      db_signatures_indices = GenerateControlSignaturesFromDatabase.db_signatures_indices,
-      docker = global.ugbio_mrd_docker,
-      disk_size = 2 * featuremap_size + 30,
-      memory_gb = memory_FeatureMapIntersectWithSignatures,
-      cpus = cpus_FeatureMapIntersectWithSignatures,
-      monitoring_script = monitoring_script  #!FileCoercion
+  Array[File] matched_sigs = select_first([FilterMatched.output_vcf, []])
+  Array[File] matched_idxs = select_first([FilterMatched.output_vcf_index, []])
+  Array[File] control_sigs = select_first([FilterControlSignatures.output_vcf, []])
+  Array[File] control_idxs = select_first([FilterControlSignatures.output_vcf_index, []])
+  Array[File] db_sigs = select_first([GenerateControlSignaturesFromDatabase.db_signatures, []])
+  Array[File] db_idxs = select_first([GenerateControlSignaturesFromDatabase.db_signatures_indices, []])
+  Array[Int] matched_indices = range(length(matched_sigs))
+  Array[Int] control_indices = range(length(control_sigs))
+  Array[Int] db_indices = range(length(db_sigs))
+  Int memory_gb_featuremap_intersect = select_first([override_memory_gb_FeatureMapIntersect, 4])
+
+  scatter (i in matched_indices) {
+    call UGMrdTasks.FeatureMapIntersectWithSignatures as FeatureMapIntersectMatched {
+      input:
+        featuremap = cfdna_featuremap,
+        featuremap_index = cfdna_featuremap_index,
+        signature = matched_sigs[i],
+        signature_index = matched_idxs[i],
+        signature_type = "matched",
+        docker = global.ugbio_mrd_docker,
+        disk_size = 2 * featuremap_size + size(matched_sigs[i], "GB") + 10,
+        memory_gb = memory_gb_featuremap_intersect,
+        cpus = 2,
+        monitoring_script = monitoring_script  #!FileCoercion
+    }
   }
+  scatter (i in control_indices) {
+    call UGMrdTasks.FeatureMapIntersectWithSignatures as FeatureMapIntersectControl {
+      input:
+        featuremap = cfdna_featuremap,
+        featuremap_index = cfdna_featuremap_index,
+        signature = control_sigs[i],
+        signature_index = control_idxs[i],
+        signature_type = "control",
+        docker = global.ugbio_mrd_docker,
+        disk_size = 2 * featuremap_size + size(control_sigs[i], "GB") + 10,
+        memory_gb = memory_gb_featuremap_intersect,
+        cpus = 2,
+        monitoring_script = monitoring_script  #!FileCoercion
+    }
+  }
+  scatter (i in db_indices) {
+    call UGMrdTasks.FeatureMapIntersectWithSignatures as FeatureMapIntersectDb {
+      input:
+        featuremap = cfdna_featuremap,
+        featuremap_index = cfdna_featuremap_index,
+        signature = db_sigs[i],
+        signature_index = db_idxs[i],
+        signature_type = "db_control",
+        docker = global.ugbio_mrd_docker,
+        disk_size = 2 * featuremap_size + size(db_sigs[i], "GB") + 10,
+        memory_gb = memory_gb_featuremap_intersect,
+        cpus = 2,
+        monitoring_script = monitoring_script  #!FileCoercion
+    }
+  }
+
+  Array[File] intersected_featuremaps_parquet_all = flatten([FeatureMapIntersectMatched.intersected_featuremap_parquet, FeatureMapIntersectControl.intersected_featuremap_parquet, FeatureMapIntersectDb.intersected_featuremap_parquet])
+  Array[File] intersected_featuremaps_all = flatten([FeatureMapIntersectMatched.intersected_featuremap, FeatureMapIntersectControl.intersected_featuremap, FeatureMapIntersectDb.intersected_featuremap])
+  Array[File] intersected_featuremaps_indices_all = flatten([FeatureMapIntersectMatched.intersected_featuremap_index, FeatureMapIntersectControl.intersected_featuremap_index, FeatureMapIntersectDb.intersected_featuremap_index])
 
   # Part 4 - Integrate all the processed data in the MRD data analysis
   call UGMrdTasks.MrdDataAnalysis as MrdDataAnalysis{
     input:
-      intersected_featuremaps_parquet = FeatureMapIntersectWithSignatures.intersected_featuremaps_parquet,
+      intersected_featuremaps_parquet = intersected_featuremaps_parquet_all,
       matched_signatures_vcf = filtered_matched_control_signatures,
       control_signatures_vcf = filtered_external_control_signatures,
       db_signatures_vcf = filtered_db_control_signatures,
@@ -516,9 +560,9 @@ workflow MRDFeatureMap {
     File report_html = report_html_
     File ctdna_vaf_h5 = ctdna_vaf_h5_
     # Intersected featuremaps
-    Array[File] intersected_featuremaps_parquet = FeatureMapIntersectWithSignatures.intersected_featuremaps_parquet
-    Array[File] intersected_featuremaps = FeatureMapIntersectWithSignatures.intersected_featuremaps
-    Array[File] intersected_featuremaps_indices = FeatureMapIntersectWithSignatures.intersected_featuremaps_indices
+    Array[File] intersected_featuremaps_parquet = intersected_featuremaps_parquet_all
+    Array[File] intersected_featuremaps = intersected_featuremaps_all
+    Array[File] intersected_featuremaps_indices = intersected_featuremaps_indices_all
     # filtered signatures
     Array[File]? control_signatures_vcf = filtered_external_control_signatures
     Array[File]? matched_signatures_vcf = filtered_matched_control_signatures

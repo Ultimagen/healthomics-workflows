@@ -497,17 +497,22 @@ task AlignWithUA {
     }
 
     Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
+    Boolean defined_cache_tarball = defined(cache_tarball)
     command <<<
     set -exuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    ~{"tar -zxf "+cache_tarball}
+    if [[ ~{defined_cache_tarball} == true ]]; then
+        echo "Unzipping cache tarball"
+        ~{"tar -zxf "+cache_tarball}
+    
+        export REF_CACHE=cache/%2s/%2s/ 
+        export REF_PATH='.' 
+    fi
     
     # for compatibility with the old image where ua was in /ua/ua and not in PATH
     export PATH=$PATH:/ua
-    export REF_CACHE=cache/%2s/%2s/ 
-    export REF_PATH='.' 
-    
+
     samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{sep=" " input_bams} | \
     ua \
         --index ~{ua_index} \
@@ -568,19 +573,24 @@ task AlignWithUAMeth {
     }
     Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
     String ua_meth_mode = if (UaMethIntensiveMode) then "--methylation-intensive" else "--methylation"
-
+    Boolean defined_cache_tarball = defined(cache_tarball)
+    
     command <<<
     set -exuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
     ua_index_file_name=$(echo ~{index_c2t} | sed -r 's/'.c2t'//g')
 
-    ~{"tar -zxf "+cache_tarball}
     
+    if [[ ~{defined_cache_tarball} == true ]]; then
+        echo "Unzipping cache tarball"
+        ~{"tar -zxf "+cache_tarball}
+    
+        export REF_CACHE=cache/%2s/%2s/ 
+        export REF_PATH='.' 
+    fi
     # for compatibility with the old image where ua was in /ua/ua and not in PATH
     export PATH=$PATH:/ua
-    export REF_CACHE=cache/%2s/%2s/ 
-    export REF_PATH='.' 
     
     samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{sep=" " input_bams} | \
     ua \

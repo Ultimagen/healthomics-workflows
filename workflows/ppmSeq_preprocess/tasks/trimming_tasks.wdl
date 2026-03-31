@@ -26,12 +26,14 @@ task Trimmer {
         Int preemptible_tries
         Boolean no_address
     }
+    
     Int memory_gb = select_first([parameters.memory_gb, 8])
 
     String trimmer_mode = if defined(parameters.untrimmed_reads_action) then "--~{parameters.untrimmed_reads_action}" else ""
     String trimmer_format_flag = if defined(parameters.format) then "--format=\"~{parameters.format}\"" else ""
     String trimmer_extra_args = if defined(parameters.extra_args) then " ~{parameters.extra_args}" else ""
     Array[File] pattern_files = select_first([parameters.pattern_files, []])
+    Array[File] additional_format_files = select_first([parameters.additional_format_files, []])
     String formats_base_path = "trimmer/formats"
     String trimmer_prefix_sep = if defined(parameters.filename_prefix_sep) then "~{parameters.filename_prefix_sep}" else "_"
 
@@ -46,6 +48,7 @@ task Trimmer {
     String failure_read_group_args = if defined(parameters.failure_read_group) then "--failure-field rg:Z:~{parameters.failure_read_group}" else ""
     String minor_read_group_args = if defined(parameters.minor_read_group) then "--output-field rg:Z:~{parameters.minor_read_group}" else ""
     File? cram_reference = parameters.cram_reference
+    File? ini_file = parameters.ini_file
 
     Boolean run_id_for_ri_tag = select_first([parameters.add_run_id_as_ri_tag, false])
 
@@ -60,6 +63,15 @@ task Trimmer {
         for pattern_file in ~{sep=" " pattern_files}; do
             cp "$pattern_file" ~{formats_base_path}
         done
+        # Moving all format description to the formats base path
+        # If no description file is provided, Trimmer will look for jsons in this path
+        if [ -n "~{parameters.formats_description}" ]; then
+            cp "~{parameters.formats_description}" "~{formats_base_path}"
+        fi
+        for additional_format_file in ~{sep=" " additional_format_files}; do
+            cp "$additional_format_file" "~{formats_base_path}"
+        done
+        
 
         # update the command according to the input file type (bam/cram)
         filename="~{input_cram_bam_list[0]}"
@@ -85,19 +97,17 @@ task Trimmer {
             add_ri_tag_param=""
         fi
 
+        
 
         # this next part has code duplication, the parameters are the same for both cram and bam, but the input is different, make sure to keep them in sync
         if [ "$extension" = "cram" ]; then
             trimmer \
             --input=~{sep=" --input=" input_cram_bam_list} \
-            --description=~{parameters.formats_description} \
             ~{trimmer_format_flag} \
             --statistics=~{trimmer_stats_file} \
             --directory=~{formats_base_path} \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
-            ~{failure_codes_args} \
-            ~{failure_read_group_args} \
             ~{minor_read_group_args} \
             --progress \
             --vector \
@@ -109,7 +119,10 @@ task Trimmer {
             --trim-field MI \
             --trim-field DS \
             ${add_ri_tag_param} \
-            ~{trimmer_extra_args} 
+            ~{trimmer_extra_args} \
+            ~{if defined(ini_file) then "--parameters=" + ini_file else ""} \
+            ~{failure_read_group_args} \
+            ~{failure_codes_args}
         else  # bam extension
             ~{"tar -zxf "+cache_tarball}
 
@@ -119,14 +132,11 @@ task Trimmer {
             samtools merge -c /dev/stdout ~{sep=" " input_cram_bam_list} | \
             samtools view -h -@ 2 - | \
             trimmer \
-            --description=~{parameters.formats_description} \
             ~{trimmer_format_flag} \
             --statistics=~{trimmer_stats_file} \
             --directory=~{formats_base_path} \
             --skip-unused-pattern-lists=true \
             ~{trimmer_mode} \
-            ~{failure_codes_args} \
-            ~{failure_read_group_args} \
             ~{minor_read_group_args} \
             --progress \
             --vector \
@@ -138,7 +148,10 @@ task Trimmer {
             --trim-field MI \
             --trim-field DS \
             ${add_ri_tag_param} \
-            ~{trimmer_extra_args}
+            ~{trimmer_extra_args} \
+            ~{if defined(ini_file) then "--parameters=" + ini_file else ""} \
+            ~{failure_read_group_args} \
+            ~{failure_codes_args}
         fi
         
         OUT_CRAM_SUFFIX=~{output_file_name_suffix} 

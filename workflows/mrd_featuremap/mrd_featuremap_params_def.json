@@ -115,10 +115,6 @@
         "description": "Mapping quality threshold for reads to be included in the coverage analysis, default 0 as srsnv mapq filtering is included in srsnv_metadata_json",
         "optional": false
     },
-    "MRDFeatureMap.memory_extract_coverage_override": {
-        "description": "Memory in GB to use for the coverage extraction task",
-        "optional": true
-    },
     "MRDFeatureMap.monitoring_script_input": {
         "description": "monitoring_script_input",
         "optional": true
@@ -133,6 +129,14 @@
     },
     "MRDFeatureMap.no_address_override": {
         "description": "no_address_override",
+        "optional": true
+    },
+    "MRDFeatureMap.override_memory_gb_ExtractCoverageOverVcfFiles": {
+        "description": "Override memory in GB for the ExtractCoverageOverVcfFiles task, default: 8 (GiB). If an out of memory error occurs in the ExtractCoverageOverVcfFiles task, try increasing this value, e.g. double it.",
+        "optional": true
+    },
+    "MRDFeatureMap.override_memory_gb_FeatureMapIntersect": {
+        "description": "Override memory in GB for the FeatureMapIntersectXXXX tasks, default: 4 (GiB). If an out of memory error occurs in the these tasks, try increasing this value, e.g. double it.",
         "optional": true
     },
     "MRDFeatureMap.preemptible_tries": {

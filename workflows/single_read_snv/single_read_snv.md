@@ -39,11 +39,6 @@ The following input templates are available for different kinds of input data:
         <i>Array[String] </i> &mdash;
          Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template. <br />
 </p>
-<p name="SingleReadSNV.training_regions_interval_list">
-        <b>SingleReadSNV.training_regions_interval_list</b><br />
-        <i>File </i> &mdash;
-         Genomic regions to include in the training set, the recommended value is set in the template <br />
-</p>
 <p name="SingleReadSNV.xgboost_params_file">
         <b>SingleReadSNV.xgboost_params_file</b><br />
         <i>File </i> &mdash;
@@ -56,34 +51,44 @@ The following input templates are available for different kinds of input data:
 </p>
 
 ### Required references
-<p name="SingleReadSNV.references">
-        <b>SingleReadSNV.references</b><br />
-        <i>References </i> &mdash;
-         Reference files: fasta, dict and fai, recommended value set in the template <br />
+<p name="SingleReadSNV.annotation_files">
+        <b>SingleReadSNV.annotation_files</b><br />
+        <i>FeaturemapAnnotationFiles </i> &mdash;
+         Annotation files for featuremap generation: dbSNP, gnomAD, and UG High Confidence Regions with their indices <br />
 </p>
 
 ### Optional inputs
 <details>
 <summary> Show/Hide </summary>
-<p name="SingleReadSNV.training_regions_interval_list_index">
-        <b>SingleReadSNV.training_regions_interval_list_index</b><br />
-        <i>File &mdash; Default: None</i><br />
-        Index for genomic regions to exclude from the training set, the recommended value is set in the template
-</p>
 <p name="SingleReadSNV.pre_trained_model_files">
         <b>SingleReadSNV.pre_trained_model_files</b><br />
-        <i>Array[File]? &mdash; Default: None</i><br />
-        Pre-trained ML model json files, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
-</p>
-<p name="SingleReadSNV.pre_trained_srsnv_metadata_json">
-        <b>SingleReadSNV.pre_trained_srsnv_metadata_json</b><br />
-        <i>File? &mdash; Default: None</i><br />
-        Pre-trained SNV quality model metadata json file, if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
+        <i>SingleReadSNVModel? &mdash; Default: None</i><br />
+        Pre-trained ML model json files and .srsnv_metadata.json file. if provided the model will be used for inference and no self-trained model will be created. Use with care, the model must be trained on the same data type with the same features
 </p>
 <p name="SingleReadSNV.raise_exceptions_in_report">
         <b>SingleReadSNV.raise_exceptions_in_report</b><br />
         <i>Boolean &mdash; Default: None</i><br />
         Raise and exception and fail the pipeline if an error is raised in the QC report
+</p>
+<p name="SingleReadSNV.override_memory_gb_CreateFeatureMap">
+        <b>SingleReadSNV.override_memory_gb_CreateFeatureMap</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Override memory in GB for the CreateFeatureMap task, default: 2 (GiB). If an out of memory error occurs in the CreateFeatureMap task, try increasing this value, e.g. double it.
+</p>
+<p name="SingleReadSNV.override_memory_gb_PrepareRawFeatureMap">
+        <b>SingleReadSNV.override_memory_gb_PrepareRawFeatureMap</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Override memory in GB for the PrepareRawFeatureMap task, default: 128 (GiB). If an out of memory error occurs in the PrepareRawFeatureMap task, try increasing this value, e.g. double it.
+</p>
+<p name="SingleReadSNV.override_memory_gb_PrepareRandomSampleFeatureMap">
+        <b>SingleReadSNV.override_memory_gb_PrepareRandomSampleFeatureMap</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Override memory in GB for the PrepareRandomSampleFeatureMap task, default: 16 (GiB). If an out of memory error occurs in the PrepareRandomSampleFeatureMap task, try increasing this value, e.g. double it.
+</p>
+<p name="SingleReadSNV.override_memory_gb_TrainModel">
+        <b>SingleReadSNV.override_memory_gb_TrainModel</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Override memory in GB for the TrainModel task, default: 32 (GiB). If an out of memory error occurs in the TrainModel task, try increasing this value, e.g. double it.
 </p>
 
 ### Optional inputs
@@ -91,6 +96,11 @@ The following input templates are available for different kinds of input data:
         <b>SingleReadSNV.sorter_json_stats_file_list</b><br />
         <i>Array[File]? </i> &mdash;
          (Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases. <br />
+</p>
+<p name="SingleReadSNV.reference_genome">
+        <b>SingleReadSNV.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome type selector. The workflow currently supports only hg38. <br />
 </p>
 <p name="SingleReadSNV.random_sample_trinuc_freq">
         <b>SingleReadSNV.random_sample_trinuc_freq</b><br />
@@ -167,21 +177,6 @@ The following input templates are available for different kinds of input data:
         <b>SingleReadSNV.raw_filtered_featuremap_parquet</b><br />
         <i>File?</i><br />
         Filtered parquet dataframe of raw featuremap for training
-</p>
-<p name="SingleReadSNV.raw_featuremap_stats">
-        <b>SingleReadSNV.raw_featuremap_stats</b><br />
-        <i>File?</i><br />
-        Statistics for raw featuremap filtering
-</p>
-<p name="SingleReadSNV.random_sample_filtered_featuremap_parquet">
-        <b>SingleReadSNV.random_sample_filtered_featuremap_parquet</b><br />
-        <i>File?</i><br />
-        Filtered parquet dataframe of random sample featuremap for training
-</p>
-<p name="SingleReadSNV.random_sample_featuremap_stats">
-        <b>SingleReadSNV.random_sample_featuremap_stats</b><br />
-        <i>File?</i><br />
-        Statistics for random sample featuremap filtering
 </p>
 <p name="SingleReadSNV.random_sample_trinuc_freq_stats">
         <b>SingleReadSNV.random_sample_trinuc_freq_stats</b><br />

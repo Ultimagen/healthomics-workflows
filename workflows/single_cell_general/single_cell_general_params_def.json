@@ -99,8 +99,8 @@
         "description": "Reference fasta files for the CRAM file",
         "optional": false
     },
-    "SingleCell.references": {
-        "description": "References for the workflow",
+    "SingleCell.reference_genome": {
+        "description": "Genome type selector. The workflow currently supports only hg38.",
         "optional": false
     },
     "SingleCell.sorter_params": {

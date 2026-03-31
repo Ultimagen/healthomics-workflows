@@ -33,33 +33,18 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 </p>
 
 ### Required references
-<p name="EfficientDV.references">
-        <b>EfficientDV.references</b><br />
-        <i>References </i> &mdash;
-         Reference files: fasta, dict and fai, recommended value set in the template <br />
-</p>
 <p name="EfficientDV.model_onnx">
         <b>EfficientDV.model_onnx</b><br />
         <i>File </i> &mdash;
          TensorRT model for calling variants (onnx format) <br />
 </p>
-<p name="EfficientDV.exome_intervals">
-        <b>EfficientDV.exome_intervals</b><br />
-        <i>File </i> &mdash;
-         A bed file with exome intervals. Used at the post-processing step to annotate the vcf and modify the FILTER of variants in the exome. <br />
-</p>
-<p name="EfficientDV.ref_dbsnp">
-        <b>EfficientDV.ref_dbsnp</b><br />
-        <i>File </i> &mdash;
-         DbSNP vcf for the annotation of known variants <br />
-</p>
-<p name="EfficientDV.ref_dbsnp_index">
-        <b>EfficientDV.ref_dbsnp_index</b><br />
-        <i>File </i> &mdash;
-         DbSNP vcf index <br />
-</p>
 
 ### Optional inputs
+<p name="EfficientDV.reference_genome">
+        <b>EfficientDV.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome selector: hg38, b37, hg38_taps, hg38_nist_v3. Default to hg38 <br />
+</p>
 <p name="EfficientDV.background_cram_files">
         <b>EfficientDV.background_cram_files</b><br />
         <i>Array[File] </i> &mdash;
@@ -69,6 +54,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.background_cram_index_files</b><br />
         <i>Array[File] </i> &mdash;
          Background (normal sample) cram index files for somatic calling <br />
+</p>
+<p name="EfficientDV.ScatterIntervalList.convert_to_bed">
+        <b>EfficientDV.ScatterIntervalList.convert_to_bed</b><br />
+        <i>Boolean? </i> &mdash;
+         If true, convert interval_list files to BED format in addition to interval_list format <br />
 </p>
 
 ### Optional parameters
@@ -82,15 +72,15 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Int </i> &mdash;
          The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals. <br />
 </p>
-<p name="EfficientDV.target_intervals">
-        <b>EfficientDV.target_intervals</b><br />
+<p name="EfficientDV.override_target_intervals">
+        <b>EfficientDV.override_target_intervals</b><br />
         <i>File? </i> &mdash;
-         Limit calling to these regions. If target_intervals and intervals_string are not provided then entire genome is used. <br />
+         Override default genome-specific target intervals. If not provided, uses genome-specific default intervals. <br />
 </p>
 <p name="EfficientDV.intervals_string">
         <b>EfficientDV.intervals_string</b><br />
         <i>String? </i> &mdash;
-         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. hese regions. Takes precedence over target_intervals. If both are not provided then entire genome is used. <br />
+         Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals. <br />
 </p>
 <p name="EfficientDV.min_fraction_hmer_indels">
         <b>EfficientDV.min_fraction_hmer_indels</b><br />
@@ -323,6 +313,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.annotation_intervals</b><br />
         <i>Array[File]? </i> &mdash;
          List of bed files for VCF annotation <br />
+</p>
+<p name="EfficientDV.ref_dbsnp">
+        <b>EfficientDV.ref_dbsnp</b><br />
+        <i>File? </i> &mdash;
+         DbSNP vcf for the annotation of known variants <br />
+</p>
+<p name="EfficientDV.ref_dbsnp_index">
+        <b>EfficientDV.ref_dbsnp_index</b><br />
+        <i>File? </i> &mdash;
+         DbSNP vcf index <br />
 </p>
 </details>
 

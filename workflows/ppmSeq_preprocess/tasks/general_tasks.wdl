@@ -247,6 +247,14 @@ task ScatterIntervalList {
         String docker
         Boolean no_address
         String dummy_input_for_call_caching  # !UnusedDeclaration
+        Boolean? convert_to_bed = false
+    }
+    parameter_meta {
+        convert_to_bed: {
+            help: "If true, convert interval_list files to BED format in addition to interval_list format",
+            type: "Boolean",
+            category: "input_optional"
+        }
     }
     command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
@@ -274,10 +282,19 @@ task ScatterIntervalList {
     with open("interval_count.txt", "w") as fh:
         fh.write(str(len(intervals)))
     CODE
+
+    if [[ "~{select_first([convert_to_bed, false])}" == "true" ]]; then
+      for file in out/*/*.interval_list; do
+        bed_file="${file%.interval_list}.bed"
+        grep -v @ "$file" | awk 'BEGIN{OFS="\t"}{print $1,$2-1,$3}' > "$bed_file"
+      done
+    fi
+    
     >>>
     output {
         Array[File] out = glob("out/*/*.interval_list")
         Int interval_count = read_int('interval_count.txt')
+        Array[File]? out_bed = glob("out/*/*.bed")
         File monitoring_log = "monitoring.log"
     }
     runtime {

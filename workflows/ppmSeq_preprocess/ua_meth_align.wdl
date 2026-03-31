@@ -25,9 +25,11 @@ workflow UAMethAlignment {
     input {
         Array[File] input_files
         String base_file_name
+        File? ua_meth_index_c2t_input  # Optional ua_meth_index_c2t from genome resources
+        File? ua_meth_index_g2a_input  # Optional ua_meth_index_g2a from genome resources
         UaMethParameters ua_meth_parameters
-        File cache_tarball
-        References? references
+        File? cache_tarball
+        References references
         Boolean UaMethIntensiveMode = false  # If false, map against the three-letter C2T index, otherwise  map against both C2T and G2A indexes.
 
         Boolean no_address
@@ -36,23 +38,19 @@ workflow UAMethAlignment {
         # Used for running on other clouds (aws)
         File? monitoring_script_input
 
-        #@wv not defined(ua_meth_parameters) -> defined(references)
+        #@wv defined(references['ref_alt'])
     }
     call Globals.Globals as Globals
     GlobalVariables global = Globals.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
-    Int cpu_default = 40 
-    if (defined(ua_meth_parameters.index_c2t)) {
-        File ua_index_c2t_ = select_first([ua_meth_parameters.index_c2t])
-        File ua_index_g2a_ = select_first([ua_meth_parameters.index_g2a])
-        
-    } 
-    if (!defined(ua_meth_parameters.index_c2t)) {
+    Int cpu_default = 40
+
+    if (! defined(ua_meth_index_c2t_input)){
         call AlignTasks.BuildUaMethIndex {
             input :
-                references          = select_first([references]),
+                references          = references,
                 preemptible_tries   = preemptible_tries,
                 ua_docker           = global.ua_docker,
                 monitoring_script   = monitoring_script,
@@ -60,8 +58,8 @@ workflow UAMethAlignment {
         }
     }
 
-    File ua_index_c2t = select_first([ua_index_c2t_, BuildUaMethIndex.index_c2t])
-    File ua_index_g2a = select_first([ua_index_g2a_, BuildUaMethIndex.index_g2a])
+    File ua_index_c2t = select_first([ua_meth_index_c2t_input, BuildUaMethIndex.index_c2t])
+    File ua_index_g2a = select_first([ua_meth_index_g2a_input, BuildUaMethIndex.index_g2a])
 
     Int cpu = select_first([ua_meth_parameters.cpus, cpu_default])
 
@@ -72,7 +70,7 @@ workflow UAMethAlignment {
             output_bam_basename     = base_file_name + ".ua.aln",
             index_c2t               = ua_index_c2t,
             index_g2a               = ua_index_g2a,
-            ref_alt                 = ua_meth_parameters.ref_alt,
+            ref_alt                 = references.ref_alt,
             extra_args              = ua_meth_parameters.ua_extra_args,
             use_v_aware_alignment   = ua_meth_parameters.v_aware_alignment_flag,
             UaMethIntensiveMode     = UaMethIntensiveMode,
