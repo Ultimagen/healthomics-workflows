@@ -1,0 +1,74 @@
+{
+    "BcftoolsVariantCalling.auto_determine_sex": {
+        "description": "Automatically determine sex from CRAM file if sex parameter not provided (default: true)",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.autosomes_bed": {
+        "description": "BED file with autosomal targets",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.base_file_name": {
+        "description": "Base name for all output files",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.chrx_nonpar_bed": {
+        "description": "BED file with X chromosome non-PAR regions",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.chrx_par_bed": {
+        "description": "BED file with X chromosome PAR (pseudoautosomal) regions",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.chry_nonpar_bed": {
+        "description": "BED file with Y chromosome non-PAR regions (used for XY samples)",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.cpus": {
+        "description": "Number of CPUs for variant calling tasks",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.input_cram": {
+        "description": "Input CRAM file with aligned reads",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.input_cram_index": {
+        "description": "CRAM index file (.crai)",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.memory_gb": {
+        "description": "Memory in GB for variant calling tasks",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.num_autosome_shards": {
+        "description": "Number of shards to split autosomes for parallel processing",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.preemptible_tries_override": {
+        "description": "preemptible_tries_override",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.reference_genome": {
+        "description": "Genome type for reference selection (hg38, b37). Reference files are automatically selected based on this value.",
+        "optional": false
+    },
+    "BcftoolsVariantCalling.run_filtering": {
+        "description": "Whether to generate filtered gVCF using depth and GQ thresholds",
+        "optional": true
+    },
+    "BcftoolsVariantCalling.sex": {
+        "description": "Sample sex: XX (female) or XY (male). If not provided and auto_determine_sex=true, will be determined automatically from CRAM",
+        "optional": true
+    }
+}

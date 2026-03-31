@@ -1,0 +1,15 @@
+{
+    "BcftoolsVariantCalling.base_file_name": "<base_file_name>",
+    "BcftoolsVariantCalling.input_cram": "<input_cram>.cram",
+    "BcftoolsVariantCalling.input_cram_index": "<input_cram>.cram.crai",
+    "BcftoolsVariantCalling.auto_determine_sex": true,
+    "BcftoolsVariantCalling.reference_genome": "hg38",
+    "BcftoolsVariantCalling.autosomes_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/targets/broad_wgs_calling_regions_autosomes.bed",
+    "BcftoolsVariantCalling.chrx_par_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/targets/chrX_PAR.bed",
+    "BcftoolsVariantCalling.chrx_nonpar_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/targets/chrX_nonPAR.bed",
+    "BcftoolsVariantCalling.chry_nonpar_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/targets/chrY_nonPAR.bed",
+    "BcftoolsVariantCalling.run_filtering": true,
+    "BcftoolsVariantCalling.num_autosome_shards": 10,
+    "BcftoolsVariantCalling.memory_gb": 4,
+    "BcftoolsVariantCalling.cpus": 2
+}
