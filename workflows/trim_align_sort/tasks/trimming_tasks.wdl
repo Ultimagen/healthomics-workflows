@@ -174,7 +174,7 @@ task Trimmer {
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"
-        cpu: "~{cpus}"
+        cpu: cpus
         preemptible: preemptible_tries
         memory: "~{memory_gb} GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
@@ -228,7 +228,7 @@ task TrimmerAggregateStats {
     >>>
     runtime {
         preemptible: preemptible_tries
-        cpu: "1"
+        cpu: 1
         memory: "5 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -281,7 +281,7 @@ task CutadaptMarkAdapter {
     }
 
     runtime {
-        cpu: "~{cpus}"
+        cpu: cpus
         memory: "~{memory_gb} GB"
         docker: docker
         noAddress: no_address

@@ -44,7 +44,7 @@ task BcftoolsMpileupTask {
     }
     runtime {
       preemptible: "~{preemptibles}"
-      cpu: "~{cpus}"
+      cpu: cpus
       memory: "~{memory_gb} GB"
       disks: "local-disk " + ceil(disk_size) + " HDD"
       docker: docker
@@ -173,7 +173,7 @@ command <<<
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
         noAddress: no_address
-        cpu:1
+        cpu: 1
     }
     output {
         File out_pileup = "~{base_input_name}_minipileup.pileup"
