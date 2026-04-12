@@ -942,7 +942,7 @@ task ValidateSamFile {
         OUTPUT=~{report_filename} \
         REFERENCE_SEQUENCE=~{references.ref_fasta} \
         ~{"MAX_OUTPUT=" + max_output} \
-        IGNORE=~{default="null" sep=" IGNORE=" ignore} \
+        IGNORE=~{sep=" IGNORE=" select_first([ignore, ["null"]])} \
         MODE=VERBOSE \
         SKIP_MATE_VALIDATION=true \
         IS_BISULFITE_SEQUENCED=is_methyl_seq
