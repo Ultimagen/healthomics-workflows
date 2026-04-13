@@ -31,7 +31,7 @@ task SplitCram {
     runtime {
         preemptible: preemptible_tries
         memory: "8 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + disk_size + " LOCAL"
         docker: docker
         noAddress: no_address
@@ -115,7 +115,7 @@ task CreateReferenceCache {
     runtime {
         preemptible: preemptible_tries
         memory: "4 GB"
-        cpu: "2"
+        cpu: 2
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         maxRetries: 1
@@ -177,7 +177,7 @@ task ConvertCramOrBamToUBam {
     runtime {
         preemptible: preemptible_tries
         memory: "13 GB"
-        cpu: "3"
+        cpu: 3
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address
@@ -272,7 +272,7 @@ task SamToFastqAndBwaMemAndMba {
     runtime {
         preemptible: preemptible_tries
         memory: "28 GB"
-        cpu: "16"
+        cpu: 16
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address
@@ -365,7 +365,7 @@ task SamToFastqAndBwaMeth {
     runtime {
         preemptible: preemptible_tries
         memory: "32 GB"
-        cpu: "25"
+        cpu: 25
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address
@@ -409,7 +409,7 @@ task BuildUaIndex{
     >>>
 
     runtime {
-        cpu : "1"
+        cpu: 1
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries
         memory: "200 GB"
@@ -456,7 +456,7 @@ task BuildUaMethIndex {
     >>>
 
     runtime {
-        cpu : "1"
+        cpu: 1
         preemptible: preemptible_tries
         memory: "200 GB"
         disks: "local-disk " + disk_size + " HDD"
@@ -534,7 +534,7 @@ task AlignWithUA {
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries_final
         memory: "~{memory_gb} GiB"
-        cpu: "~{cpu}"
+        cpu: cpu
         disks: "local-disk " + disk_size + " HDD"
         docker: ua_docker
         noAddress: no_address
@@ -615,7 +615,7 @@ task AlignWithUAMeth {
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries_final
         memory: "~{memory_gb} GiB"
-        cpu: "~{cpu}"
+        cpu: cpu
         disks: "local-disk " + disk_size + " HDD"
         docker: ua_docker
         noAddress: no_address
@@ -897,7 +897,7 @@ task ConvertToCram {
     runtime {
         preemptible: preemptible_tries
         memory: "8 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         maxRetries: 1
@@ -1012,7 +1012,7 @@ task StarAlign {
 
     runtime {
         preemptible: "~{preemptible_tries}"
-        cpu: "~{cpu}"
+        cpu: cpu
         memory: "~{memory_gb} GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1068,7 +1068,7 @@ task StarGenomeGenerate {
 
     runtime {
         preemptible: "~{preemptible_tries}"
-        cpu: "~{cpu}"
+        cpu: cpu
         memory: "40 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1127,7 +1127,7 @@ task StarAlignStats {
     >>>
     runtime {
         preemptible: "~{preemptible_tries}"
-        cpu: "1"
+        cpu: 1
         memory: "8 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1161,7 +1161,7 @@ task SortBam {
             SORT_ORDER=~{sort_order}
     >>>
     runtime {
-        cpu: "1"
+        cpu: 1
         memory: "8 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1192,7 +1192,7 @@ task IndexBam {
         samtools index ~{input_bam}
     >>>  
     runtime {
-        cpu: "1"
+        cpu: 1
         memory: "8 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
