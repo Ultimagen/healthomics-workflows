@@ -10,6 +10,7 @@ log_format = "[%(levelname)s] %(message)s"
 logging.basicConfig(level=logging.INFO, format=log_format)
 
 GLOBALS_WDL = "tasks/globals.wdl"
+GENOME_RESOURCES_WDL = "tasks/genome_resources.wdl"
 
 
 def localize_workflow(wf_root, aws_region, s3_bucket, aws_profile=None, input_template=None):
@@ -24,6 +25,10 @@ def localize_workflow(wf_root, aws_region, s3_bucket, aws_profile=None, input_te
     else:
         files_to_localize_s3 = glob.glob(f'{wf_root}/input_templates/*.json')
     files_to_localize_s3.append(globals_wdl_file)
+
+    genome_resources_file = f"{wf_root}/{GENOME_RESOURCES_WDL}"
+    if Path(genome_resources_file).exists():
+        files_to_localize_s3.append(genome_resources_file)
 
     for input_file in files_to_localize_s3:
         logging.info(f"localizing {input_file}")
