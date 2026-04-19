@@ -414,7 +414,7 @@ task UGCallVariants{
     cpu: "~{num_cpus}"
     disks: "local-disk " + disk_size + " LOCAL"
     docker: docker
-    gpuType: "nvidia-tesla-p100"
+    gpuType: "nvidia-tesla-t4"
     gpuCount: num_gpus
     acceleratorType : gpu_type #!UnknownRuntimeKey
     acceleratorCount : num_gpus #!UnknownRuntimeKey

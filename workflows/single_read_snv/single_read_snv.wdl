@@ -42,7 +42,7 @@ input {
   Array[File] input_cram_bam_index_list
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.29.1"
+  String pipeline_version = "1.29.2"
 
   # Genome resources
   String reference_genome = "hg38"

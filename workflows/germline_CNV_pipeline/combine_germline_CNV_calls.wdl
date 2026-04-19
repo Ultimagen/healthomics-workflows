@@ -29,7 +29,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.29.1" # !UnusedDeclaration
+        String pipeline_version = "1.29.2" # !UnusedDeclaration
 
         String base_file_name
 

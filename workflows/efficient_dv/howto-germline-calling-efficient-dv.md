@@ -46,9 +46,9 @@ ultimagenomics/make_examples:3.2.1
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:3.0.0
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:4.0.0
 or
-ultimagenomics/call_variants:3.0.0
+ultimagenomics/call_variants:4.0.0
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.

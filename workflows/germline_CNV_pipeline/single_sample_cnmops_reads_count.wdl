@@ -5,7 +5,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow SingleSampleCnmopsReadsCount{
 
     input{
-        String pipeline_version = "1.29.1" # !UnusedDeclaration
+        String pipeline_version = "1.29.2" # !UnusedDeclaration
 
         File input_bam_file
         File input_bam_file_index
