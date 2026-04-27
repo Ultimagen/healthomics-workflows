@@ -283,7 +283,7 @@ task CreateFeatureMap {
       ~{true="-Q" false="" defined(featuremap_params.surrounding_quality_size)}~{default="" featuremap_params.surrounding_quality_size} \
       ~{true="-r" false="" defined(featuremap_params.reference_context_size)}~{default="" featuremap_params.reference_context_size} \
       ~{true="-m" false="" defined(featuremap_params.min_mapq)}~{default="" featuremap_params.min_mapq} \
-      ~{true="-c" false="" defined(featuremap_params.cram_tags_to_copy)} ~{default="" sep="," featuremap_params.cram_tags_to_copy} \
+      ~{true="-c" false="" defined(featuremap_params.cram_tags_to_copy)} ~{sep="," featuremap_params.cram_tags_to_copy} \
       ~{true="-C" false="" defined(featuremap_params.attributes_prefix)} ~{default="" featuremap_params.attributes_prefix} \
       ~{true="-b" false="" defined(featuremap_params.bed_file)} ~{default="" featuremap_params.bed_file} \
       ~{true="-F" false="" select_first([featuremap_params.somatic_filter_mode, false])} \
