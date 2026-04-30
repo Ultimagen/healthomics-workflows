@@ -66,11 +66,10 @@ def validate_genome_resources(workflows_dir: Path) -> None:
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
-        "healthomics_workflows_dir",
+        "--healthomics_workflows_dir",
         help="Path to healthomics-workflows/workflows directory",
         type=Path,
-        default="workflows",
-        required=False
+        default="workflows"
     )
     args = parser.parse_args()
     validate_genome_resources(args.healthomics_workflows_dir)
