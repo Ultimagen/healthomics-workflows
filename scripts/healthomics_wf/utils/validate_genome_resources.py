@@ -69,7 +69,8 @@ if __name__ == "__main__":
         "healthomics_workflows_dir",
         help="Path to healthomics-workflows/workflows directory",
         type=Path,
-        default="workflows"
+        default="workflows",
+        required=False
     )
     args = parser.parse_args()
     validate_genome_resources(args.healthomics_workflows_dir)
