@@ -31,7 +31,7 @@
     "ppmSeqPreprocess.create_md5_checksum_outputs": false,
     "ppmSeqPreprocess.adapter_version": "legacy_v5",
     "ppmSeqPreprocess.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.50/public/ppmSeq/ppmSeq_legacy_v5.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.3/public/ppmSeq/ppmSeq_legacy_v5.json",
         "format": "ppmSeq_legacy_v5",
         "extra_args": "--histogram %1.%2.%3.%4.%5.histogram.csv",
         "failure_read_group": "unmatched",

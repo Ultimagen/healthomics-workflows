@@ -42,10 +42,12 @@ input {
   Array[File] input_cram_bam_index_list
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.29.2"
+  String pipeline_version = "1.30.0"
 
   # Genome resources
   String reference_genome = "hg38"
+
+  Boolean train_on_gpu = false
 
   FeatureMapParams featuremap_params
   SingleReadSNVParams? single_read_snv_params
@@ -88,6 +90,7 @@ input {
   #@wv reference_genome in {"hg38"}
   #@wv defined(sorter_json_stats_file_list) -> suffix(sorter_json_stats_file_list) <= {".json"}
   #@wv defined(sorter_json_stats_file_list) -> len(sorter_json_stats_file_list) == len(input_cram_bam_list)
+  #@wv train_on_gpu -> defined(single_read_snv_params)
   #@wv not defined(pre_trained_model_files) -> defined(single_read_snv_params)
   #@wv defined(single_read_snv_params) -> single_read_snv_params['num_CV_folds'] > 1
   #@wv defined(pre_trained_model_files) -> suffix(pre_trained_model_files['model_metadata']) == ".json"
@@ -108,9 +111,13 @@ meta {
         "monitoring_script_input",
         "CreateTrainingRegionsBed.disk_size",
         "CreateTrainingRegionsBed.cpus",
-        "TrainModel.cpus",
-        "TrainModel.memory_gb",
-        "TrainModel.disk_size",
+        "TrainModelOnCPU.cpus",
+        "TrainModelOnCPU.memory_gb",
+        "TrainModelOnCPU.disk_size",
+        "TrainModelOnGPU.gpuType",
+        "TrainModelOnGPU.gpuCount",
+        "TrainModelOnGPU.memory_gb",
+        "TrainModelOnGPU.disk_size",
         "Inference.cpus",
         "Inference.memory_gb",
         "Inference.disk_size",
@@ -126,7 +133,8 @@ meta {
         "PrepareRawFeatureMap.memory_gb",
         "PrepareRandomSampleFeatureMap.cpus",
         "PrepareRandomSampleFeatureMap.memory_gb",
-        "TrainModel.xgboost_params_file",
+        "TrainModelOnCPU.xgboost_params_file",
+        "TrainModelOnGPU.xgboost_params_file",
         "MergeMd5sToJson.output_json",
         "Globals.glob"
     ]}
@@ -167,6 +175,11 @@ parameter_meta {
         type: "String",
         help: "Genome type selector. The workflow currently supports only hg38.",
         category: "input_optional"
+    }
+    train_on_gpu: {
+        type: "Boolean",
+        help: "Train the ML model on GPU, default: false",
+        category: "param_required"
     }
     featuremap_params: {
         type: "FeatureMapParams",
@@ -494,29 +507,55 @@ parameter_meta {
     }
 
     Int memory_gb_TrainModel = select_first([override_memory_gb_TrainModel, 32])
-    call SRSNVTasks.TrainModel {
-        input:
-            raw_filtered_featuremap_parquet = PrepareRawFeatureMap.filtered_featuremap_parquet,
-            random_sample_filtered_featuremap_parquet = PrepareRandomSampleFeatureMap.filtered_featuremap_parquet,
-            stats_file = CreateFeatureMap.model_filters_status_funnel,
-            mean_coverage = mean_coverage_used,
-            xgboost_params_file = xgboost_params_file,
-            single_read_snv_params = single_read_snv_params_,
-            training_interval_list = training_interval_list,
-            features=features,
-            base_file_name = base_file_name_sub,
-            docker = global.ugbio_srsnv_docker,
-            pipeline_version = pipeline_version,
-            preemptible_tries = preemptibles,
-            memory_gb = memory_gb_TrainModel,
-            monitoring_script = monitoring_script
+
+    if (train_on_gpu) {
+      call SRSNVTasks.TrainModelOnGPU {
+          input:
+              raw_filtered_featuremap_parquet = PrepareRawFeatureMap.filtered_featuremap_parquet,
+              random_sample_filtered_featuremap_parquet = PrepareRandomSampleFeatureMap.filtered_featuremap_parquet,
+              stats_file = CreateFeatureMap.model_filters_status_funnel,
+              mean_coverage = mean_coverage_used,
+              xgboost_params_file = xgboost_params_file,
+              single_read_snv_params = single_read_snv_params_,
+              training_interval_list = training_interval_list,
+              features = features,
+              base_file_name = base_file_name_sub,
+              docker = global.ugbio_srsnv_docker,
+              pipeline_version = pipeline_version,
+              preemptible_tries = preemptibles,
+              memory_gb = memory_gb_TrainModel,
+              monitoring_script = monitoring_script
+      }
     }
+    if (!train_on_gpu) {
+      call SRSNVTasks.TrainModelOnCPU {
+          input:
+              raw_filtered_featuremap_parquet = PrepareRawFeatureMap.filtered_featuremap_parquet,
+              random_sample_filtered_featuremap_parquet = PrepareRandomSampleFeatureMap.filtered_featuremap_parquet,
+              stats_file = CreateFeatureMap.model_filters_status_funnel,
+              mean_coverage = mean_coverage_used,
+              xgboost_params_file = xgboost_params_file,
+              single_read_snv_params = single_read_snv_params_,
+              training_interval_list = training_interval_list,
+              features = features,
+              base_file_name = base_file_name_sub,
+              docker = global.ugbio_srsnv_docker,
+              pipeline_version = pipeline_version,
+              preemptible_tries = preemptibles,
+              memory_gb = memory_gb_TrainModel,
+              monitoring_script = monitoring_script
+      }
+    }
+
+    File featuremap_df_trained = select_first([TrainModelOnGPU.featuremap_df, TrainModelOnCPU.featuremap_df])
+    File srsnv_metadata_json_trained = select_first([TrainModelOnGPU.srsnv_metadata_json, TrainModelOnCPU.srsnv_metadata_json])
+    Array[File] model_files_trained = select_first([TrainModelOnGPU.model_files, TrainModelOnCPU.model_files])
 
     call SRSNVTasks.CreateReport {
       input:
-        featuremap_df        = TrainModel.featuremap_df,
-        srsnv_metadata_json  = TrainModel.srsnv_metadata_json,
-        model_files          = TrainModel.model_files,
+        featuremap_df        = featuremap_df_trained,
+        srsnv_metadata_json  = srsnv_metadata_json_trained,
+        model_files          = model_files_trained,
         basename             = base_file_name_sub,
         docker               = global.ugbio_srsnv_docker,
         preemptible_tries    = preemptibles,
@@ -524,15 +563,15 @@ parameter_meta {
     }
 
     # Wire report outputs to outer scope
-    File featuremap_df_output      = TrainModel.featuremap_df
+    File featuremap_df_output      = featuremap_df_trained
     File application_qc_h5_output  = CreateReport.application_qc_h5
     File report_html_output        = CreateReport.report_html
   }
 
   if (snv_qualities_can_be_assigned && (!use_pre_trained_model)) {
     # when running with a pre-trained model, inference is done in CreateFeatureMap task
-    Array[File] model_files_ = select_all(select_first([TrainModel.model_files]))
-    File srsnv_metadata_json_ = select_first([TrainModel.srsnv_metadata_json])
+    Array[File] model_files_ = select_all(select_first([model_files_trained]))
+    File srsnv_metadata_json_ = select_first([srsnv_metadata_json_trained])
 
     call SRSNVTasks.Inference {
         input:

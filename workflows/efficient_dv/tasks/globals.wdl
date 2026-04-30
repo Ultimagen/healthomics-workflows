@@ -15,7 +15,7 @@ workflow Globals {
         "ubuntu_docker": "ubuntu:focal",
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "ug_call_variants_docker": "ultimagenomics/call_variants:4.0.0",
-        "ug_make_examples_docker": "ultimagenomics/make_examples:3.2.1",
+        "ug_make_examples_docker": "ultimagenomics/make_examples:3.2.2",
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.22.0"

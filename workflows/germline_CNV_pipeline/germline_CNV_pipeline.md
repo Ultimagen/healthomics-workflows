@@ -1,5 +1,5 @@
 # GermlineCNVPipeline
-Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results, verifies them using split reads and jump alignments<br>4. Applies ML model to estimate quality of the CNV</b>
+Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results, verifies them using split reads and jump alignments<br>4. Applies ML model to estimate quality of the CNV<br>5. If given - combines the CNV calls with SV calls</b>
 
 ## Inputs
 
@@ -53,15 +53,10 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
 </p>
 
 ### Required references
-<p name="GermlineCNVPipeline.reference_genome">
-        <b>GermlineCNVPipeline.reference_genome</b><br />
-        <i>File </i> &mdash;
-         Genome fasta file associated with the CRAM file <br />
-</p>
-<p name="GermlineCNVPipeline.reference_genome_index">
-        <b>GermlineCNVPipeline.reference_genome_index</b><br />
-        <i>File </i> &mdash;
-         Fai index of the fasta file <br />
+<p name="GermlineCNVPipeline.reference">
+        <b>GermlineCNVPipeline.reference</b><br />
+        <i>References </i> &mdash;
+         Genome reference object <br />
 </p>
 
 ### Optional inputs
@@ -74,6 +69,16 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <b>GermlineCNVPipeline.filtering_model</b><br />
         <i>File? </i> &mdash;
          CNV filtering model, default in template, calls are not filtered if not provided <br />
+</p>
+<p name="GermlineCNVPipeline.sv_calls_vcf">
+        <b>GermlineCNVPipeline.sv_calls_vcf</b><br />
+        <i>File? </i> &mdash;
+         SV calls in VCF format (MANTA-like, single record per SV call) to be used for annotation of combined CNV calls, default is empty and annotation is not performed.<br> The input tested is the output of structrual_variant_pipeline.wdl <br />
+</p>
+<p name="GermlineCNVPipeline.sv_calls_vcf_index">
+        <b>GermlineCNVPipeline.sv_calls_vcf_index</b><br />
+        <i>File? </i> &mdash;
+         Index file for the SV calls VCF <br />
 </p>
 <p name="GermlineCNVPipeline.create_md5_checksum_outputs">
         <b>GermlineCNVPipeline.create_md5_checksum_outputs</b><br />

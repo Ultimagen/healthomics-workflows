@@ -40,9 +40,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.2.1
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.2.2
 or
-ultimagenomics/make_examples:3.2.1
+ultimagenomics/make_examples:3.2.2
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```

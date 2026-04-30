@@ -11,8 +11,8 @@ workflow Globals {
   GlobalVariables glob ={
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
-        "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.22.2",
-        "featuremap_docker": "ultimagenomics/featuremap:master_b51ac53"
+        "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.24.0",
+        "featuremap_docker": "ultimagenomics/featuremap:master_499be0d"
 }
 }
 

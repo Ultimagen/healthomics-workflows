@@ -353,7 +353,7 @@ task UGCallVariants{
     Boolean shuffle_all_samples = false
   }
 
-  Int disk_size = ceil(1.05*size(examples, 'GB') + 10)
+  Int disk_size = ceil(1.05*size(examples, 'GB') + size(model_onnx, 'GB') + 20)
   Int num_examples = length(examples)
   Int extra_mem = select_first([call_variants_extra_mem, 8])
   Int builder_optimization_level  = select_first([optimization_level, if is_somatic then 5 else 1])
@@ -542,7 +542,7 @@ task UGPostProcessing{
 
       cp ~{write_lines(called_records)} called_records.txt
 
-      echo 'Defining filters...'
+      echo 'Defining filters...' >&2
       printf "%b\n" "LowQualInExome" \
         "QUAL < ~{min_variant_quality_exome_hmer_indels} and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and vc.hasAttribute('EXOME')" \
         "LowQual" \
@@ -566,28 +566,28 @@ task UGPostProcessing{
       background=~{sep=',' background_cram_files} 
       cram_string="~{true='$foreground;$background' false='$foreground' defined_background}"
 
-      echo "Calculating approximate INDEL variant count"
+      echo "Calculating approximate INDEL variant count" >&2
       ug_postproc \
           --infile @called_records.txt \
           --ref ~{ref} \
           --outfile "~{output_prefix}.vcf.gz" \
           --qual_filter ~{qual_filter} \
-          --count_indels --group_variants false |& tee indel.count.log
+          --count_indels --group_variants false 2>&1 | tee indel.count.log >&2
 
       indel_count=$( grep indel_count indel.count.log | cut -d " " -f 4 )
-      echo "Approximate INDEL variant count: $indel_count"
+      echo "Approximate INDEL variant count: $indel_count" >&2
       if [ "$indel_count" -gt ~{indel_threshold_for_recalibration} ]
       then
-        echo "INDEL variant count is too high, skipping post-processing"
+        echo "INDEL variant count is too high, skipping post-processing" >&2
         recalibration_string=""
       else 
-        echo "INDEL variant count is low, recalibrating VAF"
+        echo "INDEL variant count is low, recalibrating VAF" >&2
         # shellcheck disable=SC2034
         recalibration_string="--fix_allele_coverage --fix_allele_indels_only --fix_allele_crams $cram_string"
       fi
      
 
-      echo 'Running UG post-processing...'
+      echo 'Running UG post-processing...' >&2
       ug_postproc \
         --infile @called_records.txt \
         --ref ~{ref} \
@@ -616,17 +616,17 @@ task UGPostProcessing{
       touch "~{output_prefix}.g.vcf.gz.tbi"
       touch "~{output_prefix}.hcr.bed"
 
-    echo 'Saving header IDs to a file...'
-    export header_file=header.hdr
-    export id_file=header.ID
-    export all_ids=all_ids.txt
+      echo 'Saving header IDs to a file...' >&2
+      export header_file=header.hdr
+      export id_file=header.ID
+      export all_ids=all_ids.txt
 
-    for f in ~{sep=" " exome_and_annotations}
-    do
-      head -1 $f > $header_file
-      sed 's/[<>]/ /' "$header_file" | sed 's/[=]/ /' | sed 's/[=]/ /' | sed 's/[,]/ /' | awk '{print $3}' > $id_file
-      cat $id_file >> $all_ids
-    done
+      for f in ~{sep=" " exome_and_annotations}
+      do
+        head -1 $f > $header_file
+        sed 's/[<>]/ /' "$header_file" | sed 's/[=]/ /' | sed 's/[=]/ /' | sed 's/[,]/ /' | awk '{print $3}' > $id_file
+        cat $id_file >> $all_ids
+      done
 
   >>>
   runtime {

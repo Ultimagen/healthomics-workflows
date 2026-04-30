@@ -41,9 +41,15 @@ The following reference files are publicly available:
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
-gs://concordanz/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list
-gs://concordanz/hg38/tandem_repeats.hg38.bed
+
+s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list
+s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed
 ```
+
+### Model Selection
+
+The workflow requires pre-trained SingleReadSNV models for both tumor and normal samples, as well as an XGBoost classification model. Model configurations are available for different tumor sample types (Fresh Frozen, FFPE).
+For the specific model file paths and configurations, see the workflow's input templates.
 
 ### Installation
 

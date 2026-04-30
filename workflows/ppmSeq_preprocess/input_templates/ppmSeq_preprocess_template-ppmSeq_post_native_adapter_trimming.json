@@ -31,10 +31,10 @@
     "ppmSeqPreprocess.create_md5_checksum_outputs": false,
     "ppmSeqPreprocess.adapter_version": "v1",
     "ppmSeqPreprocess.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.50/public/ppmSeq/ppmSeq_post_native_adapter_trimming.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.3/public/ppmSeq/ppmSeq_post_native_adapter_trimming.json",
         "pattern_files": [
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.50/public/ppmSeq/ppmSeq_start_loop.csv",
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/2.50/public/ppmSeq/ppmSeq_end_loop.csv"
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.3/public/ppmSeq/ppmSeq_start_loop.csv",
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.3/public/ppmSeq/ppmSeq_end_loop.csv"
         ],
         "format": "ppmSeq_post_native_adapter_trimming",
         "extra_args": "--histogram %1.%2.%4.%5.histogram.csv",

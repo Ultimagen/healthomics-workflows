@@ -18,7 +18,8 @@
         "ug_hcr": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed.gz",
         "ug_hcr_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed.gz.tbi"
     },
-    "SingleReadSNV.xgboost_params_file": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/251117.xgboost_model_params.json",
+    "SingleReadSNV.xgboost_params_file": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/260211.xgboost_model_params_device_agnostic_MultiSoftprob_DatasetSize6.4M.json",
+    "SingleReadSNV.train_on_gpu": true,
     "SingleReadSNV.random_sample_trinuc_freq": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv",
     "SingleReadSNV.min_coverage_to_train_model": 8.0,
     "SingleReadSNV.preemptible_tries": 1,
@@ -62,6 +63,7 @@
         "q4",
         "q5",
         "q6",
+        "sr",
         "EDIST",
         "HAMDIST",
         "HAMDIST_FILT"
@@ -105,11 +107,13 @@
             "q4:i",
             "q5:i",
             "q6:i",
+            "sr:f",
             "MI:Z",
             "DS:i"
         ],
         "read_filters": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/create_featuremap_read_filters.json",
-        "bed_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed"
+        "bed_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.bed",
+        "filler_prob": 0.0001
     },
     "SingleReadSNV.cloud_provider_override": "aws"
 }

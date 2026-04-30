@@ -35,7 +35,7 @@ workflow HaplotypeSampling {
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.29.2"   #!UnusedDeclaration
+        String pipeline_version = "1.30.0"   #!UnusedDeclaration
         # Resource parameters
         Int index_cores = 32
         Int index_mem_gb = 64

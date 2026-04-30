@@ -19,7 +19,7 @@
     "EfficientDV.strong_call_threshold": 0.995,
     "EfficientDV.shuffle_all_samples": false,
     "EfficientDV.ensemble_size": 7,
-    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.14/germline-ramp-8128462_shuffle_300K_ckpt_260000.onnx",
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx",
     "EfficientDV.min_variant_quality_hmer_indels": 5,
     "EfficientDV.min_variant_quality_exome_hmer_indels": 7,
     "EfficientDV.min_variant_quality_non_hmer_indels": 0,

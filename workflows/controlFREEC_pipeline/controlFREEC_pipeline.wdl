@@ -32,7 +32,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.29.2" # !UnusedDeclaration
+        String pipeline_version = "1.30.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -779,7 +779,7 @@ workflow SomaticCNVCallingControlFREEC{
          File neutral_AF_bed = FilterControlFREECCnvs.neutral_AF_bed
 
          File? FREEC_normal_BAF = FREEC_normal_BAF_maybe
-         File? FREEC_tumor_BAF = FREEC_tumor_BAF_maybe
+         File? FREEC_tumor_BAF = runControlFREEC.tumor_BAF
          File? FREEC_tumor_CNVs = FREEC_tumor_CNVs_maybe
          File? FREEC_normal_CNVs = FREEC_normal_CNVs_maybe
          File? FREEC_noraml_ratio_bedgraph = FREEC_noraml_ratio_bedgraph_maybe

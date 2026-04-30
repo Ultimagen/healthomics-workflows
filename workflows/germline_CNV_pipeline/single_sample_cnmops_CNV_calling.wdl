@@ -34,10 +34,10 @@ import "tasks/globals.wdl" as Globals
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.29.2" # !UnusedDeclaration
+        String pipeline_version = "1.30.0" # !UnusedDeclaration
 
         String base_file_name
-
+        String? sample_name
         File? input_bam_file
         File? input_bam_file_index
         File reference_genome      #ref-genome+idx to enable cram as input file
@@ -105,9 +105,14 @@ workflow SingleSampleCnmopsCNVCalling {
     }
     parameter_meta {
         base_file_name: {
-            help: "Sample name",
+            help: "Base name for the output file, if sample_name not provided - will also be the sample name in the VCF",
             type: "String",
             category: "input_required"
+        }
+        sample_name: {
+            help: "Sample name for the output VCF. if not provided, base_file_name will be used as sample name in the VCF",
+            type: "String",
+            category: "input_optional"
         }
         input_bam_file: {
             help: "Input sample BAM/CRAM file. one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
@@ -340,7 +345,7 @@ workflow SingleSampleCnmopsCNVCalling {
         }
     }
 
-    String sample_name = select_first([SingleSampleReadsCount.out_sample_name,base_file_name])
+    String sample_name_defined = select_first([sample_name, SingleSampleReadsCount.out_sample_name,base_file_name])
 
     if(run_convert_bedGraph_to_Granges)
     {
@@ -358,7 +363,7 @@ workflow SingleSampleCnmopsCNVCalling {
 
         call CnvTasks.ConvertBedGraphToGranges as ConvertBedGraphToGranges{
         input:
-            sample_name = sample_name,
+            sample_name = sample_name_defined,
             input_bed_graph = input_bed_graph,
             genome_windows = ExtractGenomeWindows.genome_windows,
             genome_file = reference_genome_index,
@@ -400,7 +405,7 @@ workflow SingleSampleCnmopsCNVCalling {
             parallel = parallel
     }
 
-    Array[String] sample_names = [sample_name]
+    Array[String] sample_names = [sample_name_defined]
 
     call CnvTasks.ExtractNormalizedReadCount{
         input: 

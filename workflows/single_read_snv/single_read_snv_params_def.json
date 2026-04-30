@@ -95,6 +95,10 @@
         "description": "(Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list.",
         "optional": true
     },
+    "SingleReadSNV.train_on_gpu": {
+        "description": "Train the ML model on GPU, default: false",
+        "optional": false
+    },
     "SingleReadSNV.xgboost_params_file": {
         "description": "XGBoost parameters file for training the SNV quality model, recommended value set in the template.",
         "optional": false

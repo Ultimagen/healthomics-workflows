@@ -29,6 +29,11 @@ The following input templates are available for different kinds of input data:
 </p>
 
 ### Required parameters
+<p name="SingleReadSNV.train_on_gpu">
+        <b>SingleReadSNV.train_on_gpu</b><br />
+        <i>Boolean </i> &mdash;
+         Train the ML model on GPU, default: false <br />
+</p>
 <p name="SingleReadSNV.featuremap_params">
         <b>SingleReadSNV.featuremap_params</b><br />
         <i>FeatureMapParams </i> &mdash;

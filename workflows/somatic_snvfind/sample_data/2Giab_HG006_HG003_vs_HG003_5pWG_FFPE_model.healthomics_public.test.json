@@ -41,11 +41,11 @@
         "pileup_window_width": 2
     },
     "SomaticSNVfind.tumor_single_read_snv_model": {
-        "model_metadata": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.srsnv_metadata.json",
+        "model_metadata": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FFPE.srsnv_metadata.json",
         "model_fold_files": [
-            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.model_fold_0.json",
-            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.model_fold_1.json",
-            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FreshFrozen.Lb_705.runs_021146_021152_cov60.model_fold_2.json"
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FFPE.model_fold_0.json",
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FFPE.model_fold_1.json",
+            "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/Pa_46_FFPE.model_fold_2.json"
         ]
     },
     "SomaticSNVfind.normal_single_read_snv_model": {

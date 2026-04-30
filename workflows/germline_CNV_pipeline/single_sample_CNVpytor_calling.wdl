@@ -26,9 +26,10 @@ import "tasks/cnv_calling_tasks.wdl" as CNVTasks
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.29.2" # !UnusedDeclaration
+        String pipeline_version = "1.30.0" # !UnusedDeclaration
 
         String base_file_name
+        String? sample_name
         File input_bam_file
         File input_bam_file_index
         File reference_genome
@@ -67,9 +68,14 @@ workflow SingleSampleCNVpytorCalling {
     }
     parameter_meta {
         base_file_name: {
-            help: "Sample name",
+            help: "Name for the output files, if sample_name not provided - will also be the sample name in the VCF",
             type: "String",
             category: "input_required"
+        }
+        sample_name: {
+            help: "Sample name for the output VCF. if not provided, base_file_name will be used as sample name in the VCF",
+            type: "String",
+            category: "input_optional"
         }
         input_bam_file: {
             help: "Input sample BAM/CRAM file.",
@@ -129,7 +135,7 @@ workflow SingleSampleCNVpytorCalling {
     scatter (window_size in window_lengths) {
         call RunCNVpytor {
             input:
-                sample_name = base_file_name,
+                sample_name = select_first([sample_name, base_file_name]),
                 input_bam = input_bam_file,
                 input_bam_index = input_bam_file_index,
                 reference_fasta = reference_genome,

@@ -39,6 +39,10 @@
         "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).",
         "optional": false
     },
+    "GermlineCNVPipeline.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
     "GermlineCNVPipeline.cnmops_intersection_cutoff_override": {
         "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
         "optional": true
@@ -119,12 +123,8 @@
         "description": "Chromosome names for which coverage will be calculated",
         "optional": false
     },
-    "GermlineCNVPipeline.reference_genome": {
-        "description": "Genome fasta file associated with the CRAM file",
-        "optional": false
-    },
-    "GermlineCNVPipeline.reference_genome_index": {
-        "description": "Fai index of the fasta file",
+    "GermlineCNVPipeline.reference": {
+        "description": "Genome reference object",
         "optional": false
     },
     "GermlineCNVPipeline.skip_figure_generation": {
@@ -134,6 +134,14 @@
     "GermlineCNVPipeline.skip_filtering": {
         "description": "Whether to skip CNV filtering step, default is False",
         "optional": false
+    },
+    "GermlineCNVPipeline.sv_calls_vcf": {
+        "description": "SV calls in VCF format (MANTA-like, single record per SV call) to be used for annotation of combined CNV calls, default is empty and annotation is not performed.<br> The input tested is the output of structrual_variant_pipeline.wdl",
+        "optional": true
+    },
+    "GermlineCNVPipeline.sv_calls_vcf_index": {
+        "description": "Index file for the SV calls VCF",
+        "optional": true
     },
     "GermlineCNVPipeline.ug_cnv_lcr_file": {
         "description": "UG-CNV-LCR bed file",

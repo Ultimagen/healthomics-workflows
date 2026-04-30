@@ -35,13 +35,12 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.29.2" # !UnusedDeclaration
+        String pipeline_version = "1.30.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
         File input_bam_file_index
-        File reference_genome
-        File reference_genome_index
+        References reference
         Array[String] ref_seq_names
         File? ug_cnv_lcr_file
 
@@ -65,9 +64,13 @@ workflow GermlineCNVPipeline {
         
         Int cushion_size
         
+        File? sv_calls_vcf
+        File? sv_calls_vcf_index
+
         Boolean? skip_figure_generation
         Boolean? no_address_override
         Int? preemptible_tries_override
+        String? cloud_provider_override
         File? monitoring_script_input
         Boolean create_md5_checksum_outputs = false
 
@@ -76,17 +79,16 @@ workflow GermlineCNVPipeline {
         #@wv prefix(input_bam_file_index) == input_bam_file
         #@wv suffix(input_bam_file) in {".bam", ".cram"}
         #@wv suffix(input_bam_file_index) in {".bai", ".crai"}
-        #@wv reference_genome == prefix(reference_genome_index)
-        #@wv suffix(reference_genome) in {'.fasta', '.fa', '.fna'}
-        #@wv suffix(reference_genome_index) == '.fai'
         #@wv defined(filtering_model) -> suffix(filtering_model) == '.pkl'
     }
 
     meta {
-        description: "Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results, verifies them using split reads and jump alignments<br>4. Applies ML model to estimate quality of the CNV</b>"
+        description: "Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)<br>2. cnvpytor workflow<br> 3. combines results, verifies them using split reads and jump alignments<br>4. Applies ML model to estimate quality of the CNV<br>5. If given - combines the CNV calls with SV calls</b>"
         author: "Ultima Genomics"
         WDL_AID: {
-            exclude: ["pipeline_version",
+            exclude: [
+                "cloud_provider_override",
+                "pipeline_version",
                 "monitoring_script_input",
                 "SingleSampleReadsCount.monitoring_script_input",
                 "no_address_override",
@@ -117,14 +119,9 @@ workflow GermlineCNVPipeline {
             type: "File",
             category: "input_required"
         }
-        reference_genome: {
-            help: "Genome fasta file associated with the CRAM file",
-            type: "File",
-            category: "ref_required"
-        }
-        reference_genome_index: {
-            help : "Fai index of the fasta file",
-            type: "File",
+        reference: {
+            help: "Genome reference object",
+            type: "References",
             category: "ref_required"
         }
         ref_seq_names: {
@@ -263,6 +260,16 @@ workflow GermlineCNVPipeline {
             type: "Int",
             category: "param_required"
         }
+        sv_calls_vcf: {
+            help: "SV calls in VCF format (MANTA-like, single record per SV call) to be used for annotation of combined CNV calls, default is empty and annotation is not performed.<br> The input tested is the output of structrual_variant_pipeline.wdl",
+            type: "File",
+            category: "input_optional"
+        }
+        sv_calls_vcf_index: {
+            help: "Index file for the SV calls VCF",
+            type: "File",
+            category: "input_optional"
+        }
         combined_cnv_calls_bed: {
             help: "Final (combined) CNV calls in bed format",
             type: "File",
@@ -325,6 +332,8 @@ workflow GermlineCNVPipeline {
             category: "output"
         }
     }
+
+
     Int cnmops_mapq = select_first([cnmops_mapq_override, 1])
     Int cnmops_window_length = select_first([cnmops_window_length_override, 1000])
     Int cnmops_parallel = select_first([cnmops_parallel_override, 4])
@@ -341,12 +350,25 @@ workflow GermlineCNVPipeline {
     GlobalVariables global = Glob.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script]) #!FileCoercion
+    String cloud_provider = select_first([cloud_provider_override, 'gcp'])
+
+    call UGGeneralTasks.ExtractSampleNameFlowOrder {
+        input:
+            input_bam = input_bam_file,
+            monitoring_script = monitoring_script,
+            preemptible_tries = preemptible_tries,
+            docker = global.broad_gatk_docker, 
+            references = reference,
+            no_address = no_address,
+            cloud_provider_override = cloud_provider
+    }
 
     call SingleSampleCnmopsCNVCalling.SingleSampleCnmopsCNVCalling as CnmopsCNVCalling{
         input:
             base_file_name = base_file_name,
-            reference_genome = reference_genome,
-            reference_genome_index = reference_genome_index,
+            sample_name = ExtractSampleNameFlowOrder.sample_name,
+            reference_genome = reference.ref_fasta,
+            reference_genome_index = reference.ref_fasta_index,
             mapq = cnmops_mapq,
             ref_seq_names = ref_seq_names,
             window_length = cnmops_window_length,
@@ -368,10 +390,11 @@ workflow GermlineCNVPipeline {
     call SingleSampleCNVpytorCalling.SingleSampleCNVpytorCalling as CnvpytorCNVCalling{
         input:
         base_file_name = base_file_name,
+        sample_name = ExtractSampleNameFlowOrder.sample_name,
         input_bam_file = input_bam_file,
         input_bam_file_index = input_bam_file_index,
-        reference_genome = reference_genome,
-        reference_genome_index = reference_genome_index,
+        reference_genome = reference.ref_fasta,
+        reference_genome_index = reference.ref_fasta_index,
         ref_seq_names = ref_seq_names,
         window_lengths = cnvpytor_window_lengths,
         preemptible_tries_override = preemptible_tries,
@@ -390,11 +413,14 @@ workflow GermlineCNVPipeline {
             input_bam_file = input_bam_file,
             input_bam_file_index = input_bam_file_index,
             cushion_size = cushion_size,
-            reference_genome = reference_genome,
-            reference_genome_index = reference_genome_index,
+            reference_genome = reference.ref_fasta,
+            reference_genome_index = reference.ref_fasta_index,
             skip_filtering = skip_filtering,
+            min_sv_length_to_integrate = 2*cnvpytor_window_lengths[0],
             filtering_model = filtering_model,
             filtering_model_decision_threshold = filtering_model_decision_threshold,
+            sv_calls_vcf = sv_calls_vcf,
+            sv_calls_vcf_index = sv_calls_vcf_index,
             monitoring_script_input = monitoring_script,
             preemptible_tries_override = preemptible_tries,
             no_address_override = no_address
@@ -404,7 +430,8 @@ workflow GermlineCNVPipeline {
     File combined_cnv_calls_bed_vcf_index_ = CombineCNVCalls.out_sample_cnvs_vcf_index
     
     # Generate CNV plots after filtering and BED output (only if not skipped)
-    if (!skip_figure_generation_value) {
+    # Plotting figures does not work when SV calls are integrated
+    if (!skip_figure_generation_value && !defined(sv_calls_vcf)) {
         call CnvTasks.PlotCNVResults {
             input:
                 input_cnv_vcf = combined_cnv_calls_bed_vcf_,

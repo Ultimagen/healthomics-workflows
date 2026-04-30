@@ -121,15 +121,17 @@ task FeatureMapIntersectWithSignatures {
     output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.~{signature_type}.intersection.vcf.gz"
 
     echo "******** making sure files are in the same directory as their index ********"
-    mkdir signatures_dir/
-    cp ~{signature} signatures_dir/${signature_base}.vcf.gz
-    cp ~{signature_index} signatures_dir/${signature_base}.vcf.gz.tbi
-    mkdir featuremap_dir/
-    cp ~{featuremap} featuremap_dir/${featuremap_base}.vcf.gz
-    cp ~{featuremap_index} featuremap_dir/${featuremap_base}.vcf.gz.tbi
+    workdir="${featuremap_base%%.*}.${signature_base%%.*}"
+    sig_dir="${workdir}/signatures"
+    fm_dir="${workdir}/featuremap"
+    mkdir -p "${sig_dir}" "${fm_dir}"
+    cp ~{signature} "${sig_dir}/${signature_base}.vcf.gz"
+    cp ~{signature_index} "${sig_dir}/${signature_base}.vcf.gz.tbi"
+    cp ~{featuremap} "${fm_dir}/${featuremap_base}.vcf.gz"
+    cp ~{featuremap_index} "${fm_dir}/${featuremap_base}.vcf.gz.tbi"
 
     echo "******** Run intersection ********"
-    bcftools isec -n=2 -w1 featuremap_dir/${featuremap_base}.vcf.gz signatures_dir/${signature_base}.vcf.gz -Oz -o "$output_vcf" --threads ~{cpus} --write-index=tbi
+    bcftools isec -n=2 -w1 "${fm_dir}/${featuremap_base}.vcf.gz" "${sig_dir}/${signature_base}.vcf.gz" -Oz -o "$output_vcf" --threads ~{cpus} --write-index=tbi
 
     echo "******** Converting to dataframe ********"
     number_of_lines=$(bcftools view "$output_vcf" -H | wc -l)

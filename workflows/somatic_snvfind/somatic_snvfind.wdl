@@ -35,7 +35,7 @@ import "tasks/structs.wdl" as Structs
 workflow SomaticSNVfind {
 
     input {
-        String pipeline_version = "1.29.2" # !UnusedDeclaration
+        String pipeline_version = "1.30.0" # !UnusedDeclaration
 
         String base_file_name
         References references

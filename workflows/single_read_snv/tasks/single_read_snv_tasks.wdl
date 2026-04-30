@@ -80,15 +80,15 @@ task PrepareFeatureMapForTraining {
   }
 }
 
-task TrainModel {
+task TrainModelOnCPU {
   parameter_meta {
     memory_gb: {
-      help: "Memory in GiB to allocate for the TrainModel task",
+      help: "Memory in GiB to allocate for the TrainModelOnCPU task",
       type: "Int",
       category: "runtime"
     }
     cpus: {
-      help: "Number of CPUs to allocate for the TrainModel task",
+      help: "Number of CPUs to allocate for the TrainModelOnCPU task",
       type: "Int",
       category: "runtime"
     }
@@ -135,7 +135,7 @@ task TrainModel {
     --verbose
 
     ls -ltr
-    
+
   >>>
 
   runtime {
@@ -144,6 +144,89 @@ task TrainModel {
     cpu: cpus
     memory: "~{memory_gb} GiB"
     disks: "local-disk ~{disk_size} HDD"
+  }
+
+  output {
+    File featuremap_df = "~{base_file_name}.featuremap_df.parquet"
+    File srsnv_metadata_json = "~{base_file_name}.srsnv_metadata.json"
+    Array[File] model_files = glob("~{base_file_name}.model_fold_*.json")
+    File monitoring_log = "monitoring.log"
+  }
+}
+
+task TrainModelOnGPU {
+  parameter_meta {
+    memory_gb: {
+      help: "Memory in GB to allocate for the TrainModelOnGPU task",
+      type: "Int",
+      category: "runtime"
+    }
+    gpuType: {
+      help: "GPU type for the TrainModelOnGPU task",
+      type: "String",
+      category: "runtime"
+    }
+    gpuCount: {
+      help: "Number of GPUs for the TrainModelOnGPU task",
+      type: "Int",
+      category: "runtime"
+    }
+  }
+  input {
+    File raw_filtered_featuremap_parquet
+    File random_sample_filtered_featuremap_parquet
+    File stats_file
+    Float mean_coverage
+    File xgboost_params_file
+    SingleReadSNVParams single_read_snv_params
+    File training_interval_list
+    Array[String] features
+    String base_file_name
+    String docker
+    String pipeline_version
+    Int preemptible_tries
+    File monitoring_script
+    Int memory_gb = 32
+    String gpuType = "nvidia-tesla-t4"
+    Int gpuCount = 1
+  }
+
+  Float featuremap_size = size(raw_filtered_featuremap_parquet, "GB") + size(random_sample_filtered_featuremap_parquet, "GB")
+  Int disk_size = ceil(featuremap_size*3 + size(training_interval_list, "GB") + 20)
+
+  command <<<
+    set -xeuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    srsnv_training \
+    --positive ~{random_sample_filtered_featuremap_parquet} \
+    --negative ~{raw_filtered_featuremap_parquet} \
+    --stats-file ~{stats_file} \
+    --mean-coverage ~{mean_coverage} \
+    --training-regions ~{training_interval_list} \
+    --k-folds ~{single_read_snv_params.num_CV_folds} \
+    --model-params ~{xgboost_params_file} \
+    --output $PWD \
+    --basename ~{base_file_name} \
+    --features ~{sep=":" features} \
+    --random-seed ~{single_read_snv_params.random_seed} \
+    --metadata docker_image="~{docker}" \
+    --metadata pipeline_version="~{pipeline_version}" \
+    --use-gpu \
+    --verbose
+
+    ls -ltr
+
+  >>>
+
+  runtime {
+    preemptible: preemptible_tries
+    docker: docker
+    memory: "~{memory_gb} GB"
+    disks: "local-disk ~{disk_size} HDD"
+    gpuType: gpuType
+    gpuCount: gpuCount
+    nvidiaDriverVersion: "515.65.01"
   }
 
   output {
@@ -288,6 +371,7 @@ task CreateFeatureMap {
       ~{true="-b" false="" defined(featuremap_params.bed_file)} ~{default="" featuremap_params.bed_file} \
       ~{true="-F" false="" select_first([featuremap_params.somatic_filter_mode, false])} \
       ~{true="-w" false="" defined(featuremap_params.pileup_window_width)} ~{default="" featuremap_params.pileup_window_width} \
+      ~{true="-D" false="" defined(featuremap_params.filler_prob)} ~{default="" featuremap_params.filler_prob} \
       -a ~{annotation_files.dbsnp},ID \
       -a ~{annotation_files.gnomad},AF,gnomAD_AF \
       -a ~{annotation_files.ug_hcr},UG_HCR

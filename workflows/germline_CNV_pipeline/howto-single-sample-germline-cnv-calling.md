@@ -1,11 +1,12 @@
 # Single sample germline CNV Calling
 
 CNV calling pipeline to detect CNVs using multiple tools.
-It runs: 
+It runs:
 1. cn.mops pipeline - using [cn.mops](https://github.com/Ultimagen/cn.mops)
 2. cnvpytor pipeline - using [cnvpytor](https://github.com/abyzovlab/CNVpytor)
 3. CNV candidates validation - using [jalign](https://github.com/Ultimagen/jalign)
 4. results combination
+5. (Optional) SV call integration - can merge with SV calls from [GRIDSS pipeline](https://github.com/Ultimagen/healthomics-workflows/tree/main/workflows/structural_variant_pipeline)
 
 Outputs: 
 - cnmops_cnv_calls_bed : cn.mops cnv calls in bed format
@@ -320,11 +321,11 @@ They should be provided in the following form:
 #### Combine redundant calls and produce final VCF
 
 In this step, overlapping or adjacent PASS-filtered CNV calls are consolidated into a single call, with aggregation of their INFO annotations.
-Next, we merge nearby CNVs using a size-dependent criterion. Two CNVs are merged when the gap between them is smaller than `gap_scale_fraction × max(len(CNV1), len(CNV2))` and 
-less than `max_gap_absolute`. 
+Next, we merge nearby CNVs using a size-dependent criterion. Two CNVs are merged when the gap between them is smaller than `gap_scale_fraction × max(len(CNV1), len(CNV2))` and
+less than `max_gap_absolute`.
 Finally, filtered CNVs that overlap merged CNV calls are removed from the VCF.
 
-Use `ugbio_cnv` docker. 
+Use `ugbio_cnv` docker.
 
     combine_cnmops_cnvpytor_cnv_calls merge_records \
             --input_vcf {sample_name}.filtered.vcf.gz \
@@ -335,22 +336,48 @@ Use `ugbio_cnv` docker.
             --gap_scale_fraction 0.05 \
             --cipos_threshold 50
 
+#### Optional: Integrate SV calls
+
+If you have structural variant (SV) calls available (e.g., from the GRIDSS pipeline: https://github.com/Ultimagen/healthomics-workflows/tree/main/workflows/structural_variant_pipeline), you can merge them with the CNV calls to improve breakpoint resolution.
+
+This step should be performed after the collapse callset step above. Use `ugbio_cnv` docker.
+
+```
+combine_cnmops_cnvpytor_cnv_calls merge_cnv_sv \
+    --cnv_vcf {sample_name}.mrg.vcf.gz \
+    --sv_vcf {sv_calls_vcf} \
+    --output_vcf {sample_name}.sv.cnv.merge.vcf.gz \
+    --min_sv_length {min_cnv_length} \
+    --fasta_index Homo_sapiens_assembly38.fasta.fai \
+    --max_sv_length 5000000 \
+    --min_sv_qual 600
+```
+
+**Parameters:**
+- `--min_sv_length`: Minimum SV length to consider for merging with CNV calls
+- `--max_sv_length`: Maximum SV length to consider (default: 5000000)
+- `--min_sv_qual`: Minimum SV quality score to consider (default: 600)
+
+The resulting VCF will contain both CNV and SV calls, with improved breakpoint positions where CNV and SV calls overlap.
+
 ## Output Files and Interpretation
 
 The germline CNV calling pipeline generates the following final output files:
 
-### 1. Final Merged VCF (`{sample_name}.mrg.vcf.gz`)
+### 1. Final Merged VCF (`{sample_name}.mrg.vcf.gz` or `{sample_name}.sv.cnv.merge.vcf.gz`)
 
-Final deduplicated CNV callset where overlapping/redundant calls have been merged. **This is the recommended file for downstream analysis and interpretation.**
+Final deduplicated CNV callset where overlapping/redundant calls have been merged. If SV calls were provided, the output will be `{sample_name}.sv.cnv.merge.vcf.gz` which includes integrated SV information. **This is the recommended file for downstream analysis and interpretation.**
 
 **Processing:**
 - Adjacent or overlapping CNV calls from the same caller are merged
 - Keeps the most informative annotations from merged calls
 - FILTER annotates high confidence calls after ML filtering (FILTER=PASS)
+- If SV calls are provided, CNV breakpoints are refined using overlapping SV calls
 
 **Key INFO Fields:**
 - `SVTYPE`: DEL (deletion) or DUP (duplication)
 - `SVLEN`: Length of the CNV in base pairs
+- `CIPOS`: Confidence interval around the breakpoint (estimated from the CNV, split reads and the SV integration (optional))
 - `CopyNumber`: Estimated copy number (float)
 - `RoundedCopyNumber`: Rounded copy number (integer)
 - `CNV_SOURCE`: Tool(s) that called the CNV (cn.mops, cnvpytor, or both)

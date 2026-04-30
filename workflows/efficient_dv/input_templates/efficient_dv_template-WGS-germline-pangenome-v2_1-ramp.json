@@ -23,7 +23,7 @@
     "EfficientDV.ensemble_size": 7,
     "EfficientDV.pileup_min_mapping_quality": 1,
     "EfficientDV.candidate_min_mapping_quality": 1,
-    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.15/germline-pangenome-ramp-9003772_shuffle_haplotypes_best.onnx",
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.1/ultimagen-germline-wgs-solaris2-pan-hprc-v1.0-regnet-v2.1.onnx",
     "EfficientDV.min_variant_quality_hmer_indels": 5,
     "EfficientDV.min_variant_quality_exome_hmer_indels": 7,
     "EfficientDV.min_variant_quality_non_hmer_indels": 0,

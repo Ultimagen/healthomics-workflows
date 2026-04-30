@@ -5,8 +5,11 @@
     "GermlineCNVPipeline.bed_graph": [
         "s3://<sample>.1_bedGraph.gz"
     ],
-    "GermlineCNVPipeline.reference_genome": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
-    "GermlineCNVPipeline.reference_genome_index": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta.fai",
+    "GermlineCNVPipeline.reference": {
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta.fai",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.dict"
+    },
     "GermlineCNVPipeline.ref_seq_names": [
         "1",
         "2",
@@ -35,11 +38,12 @@
     ],
     "GermlineCNVPipeline.cohort_reads_count_matrix": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg19.ReadsCount.rds",
     "GermlineCNVPipeline.ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg19/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy",
-    "GermlineCNVPipeline.skip_figure_generation": true,
+    "GermlineCNVPipeline.skip_figure_generation": false,
     "GermlineCNVPipeline.cushion_size": 1500,
     "GermlineCNVPipeline.create_md5_checksum_outputs": false,
     "GermlineCNVPipeline.filtering_model": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.7.3.pkl",
     "GermlineCNVPipeline.skip_filtering": false,
     "GermlineCNVPipeline.filtering_model_decision_threshold": 31,
+    "GermlineCNVPipeline.cloud_provider_override": "aws",
     "GermlineCNVPipeline.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

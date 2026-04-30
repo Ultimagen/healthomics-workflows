@@ -149,6 +149,42 @@ process_cnvs \
 	--fasta_index_file Homo_sapiens_assembly38.fasta.fai
 ```
 
+### Generate CNV visualization plots
+from inside ugbio_cnv docker image:
+```
+#prepare coverage files in BED format
+awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' {normal}.cpn | sed 's/^/chr/' > normal_coverage.cpn.bed
+awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' {tumor}.cpn | sed 's/^/chr/' > tumor_coverage.cpn.bed
+
+#extract PASS CNVs and separate by type
+bcftools view -f "PASS" {sample_name}.cnvs.annotate.vcf.gz | \
+	bcftools query -f '%CHROM\t%POS0\t%END\t%CopyNumber\n' > helper.bed
+
+#separate duplications and deletions based on ploidy
+awk '$4>{ploidy}' helper.bed > {sample_name}.cnvs.filter.DUP.bed
+awk '$4<{ploidy}' helper.bed > {sample_name}.cnvs.filter.DEL.bed
+
+#create output directory for plots
+mkdir CNV_figures
+
+#generate CNV coverage, duplication/deletion, and copy number plots
+plot_cnv_results \
+	--germline_coverage normal_coverage.cpn.bed \
+	--tumor_coverage tumor_coverage.cpn.bed \
+	--duplication_cnv_calls {sample_name}.cnvs.filter.DUP.bed \
+	--deletion_cnv_calls {sample_name}.cnvs.filter.DEL.bed \
+	--sample_name {sample_name} \
+	--out_directory CNV_figures \
+	--neutral_ploidy {ploidy}
+
+#generate neutral allele frequency plot
+plot_FREEC_neutral_AF \
+	--mpileup {tumor}_minipileup.pileup \
+	--cnvs_file helper.bed \
+	--sample_name {sample_name} \
+	--out_directory CNV_figures
+```
+
 ## Output Files and Interpretation
 
 The pipeline generates the following final output files:
@@ -293,7 +329,5 @@ holds information for :
 
 1. **Start with PASS calls**: Filter VCF for `FILTER=PASS` to get high-confidence CNVs
 2. **Check CNV size**: Larger CNVs (>50kb) are generally more reliable than smaller ones
-3. **Review copy number**: Integer copy numbers (2, 3, 4) are more reliable than fractional values
-4. **Consider coverage statistics**: If available, check `CNMOPS_SAMPLE_MEAN` and `CNMOPS_COHORT_MEAN` for consistency
-5. **Visual validation**: Use plots from `plot_FREEC_fold_change` to visualize fold-change across the genome
-6. **Compare with germline**: For somatic analysis, ensure CNVs are present in tumor but not in matched normal
+3. **Visual validation**: Use plots from `plot_FREEC_fold_change` to visualize fold-change across the genome
+4. **Compare with germline**: For somatic analysis, ensure CNVs are present in tumor but not in matched normal
