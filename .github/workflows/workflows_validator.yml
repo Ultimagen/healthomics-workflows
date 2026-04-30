@@ -42,4 +42,4 @@ jobs:
       run: pip install boto3
 
     - name: Validate genome resources
-      run: python scripts/healthomics_wf/utils/validate_genome_resources.py workflows
+      run: python scripts/healthomics_wf/utils/validate_genome_resources.py
