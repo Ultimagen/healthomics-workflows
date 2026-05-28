@@ -33,7 +33,7 @@ import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.30.0" # !UnusedDeclaration
+    String pipeline_version = "1.31.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -155,7 +155,7 @@ workflow EfficientDV {
    #@wv cloud_provider_override == "gcp" -> suffix(cram_index_files) <= {".crai", ".bai", ".csi"}
    #@wv prefix(cram_index_files) == cram_files
    #@wv len(cram_files) >= 0
-   #@wv reference_genome in {"hg38", "b37", "hg38_taps", "hg38_nist_v3"}
+   #@wv reference_genome in {"hg38", "b37", "hg38_taps", "hg38_nist_v3", "mm10"}
    #@wv len(background_cram_files) == len(background_cram_index_files)
    #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
    #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".csi"}
@@ -213,7 +213,7 @@ workflow EfficientDV {
 
     reference_genome: {
       type: "String",
-      help: "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3. Default to hg38",
+      help: "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, mm10. Default to hg38",
       category: "input_optional"
     }
 
@@ -656,7 +656,7 @@ workflow EfficientDV {
     ref_dict: GenomeResources.resources[reference_genome].ref_dict
   }
 
-  File exome_intervals = GenomeResources.resources[reference_genome].exome_intervals
+  File? exome_intervals = GenomeResources.resources[reference_genome].exome_intervals
 
   # Get target intervals: use override if provided, otherwise use genome-specific default
   File target_intervals = select_first([override_target_intervals, GenomeResources.resources[reference_genome].efficient_dv_target_intervals])

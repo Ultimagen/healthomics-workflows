@@ -43,7 +43,7 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.reference_genome">
         <b>EfficientDV.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome selector: hg38, b37, hg38_taps, hg38_nist_v3. Default to hg38 <br />
+         Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, mm10. Default to hg38 <br />
 </p>
 <p name="EfficientDV.background_cram_files">
         <b>EfficientDV.background_cram_files</b><br />

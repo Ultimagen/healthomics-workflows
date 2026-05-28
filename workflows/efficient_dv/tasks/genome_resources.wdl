@@ -5,7 +5,7 @@ version 1.0
 
 struct GenomeResources {
   File efficient_dv_target_intervals
-  File exome_intervals
+  File? exome_intervals
   File ref_dict
   File ref_fasta
   File ref_fasta_index
@@ -41,6 +41,12 @@ workflow GenomeResourcesWorkflow {
         "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/251015/hg38_Lambda_pUC19.dict",
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/251015/hg38_Lambda_pUC19.fasta",
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/251015/hg38_Lambda_pUC19.fasta.fai"
+},
+      "mm10": {
+        "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/mm10/mm10.interval_list",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/mm10/mm10.dict",
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/mm10/mm10.fa",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/mm10/mm10.fa.fai"
 }
     }
   }

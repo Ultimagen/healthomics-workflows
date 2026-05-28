@@ -4,7 +4,6 @@
     "SomaticSNVfind.input_somatic_snvfind_vcf_index": "<somatic_snvfind_vcf_file>.vcf.gz.tbi",
     "SomaticSNVfind.tandem_repeats_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed",
     "SomaticSNVfind.interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
-    "SomaticSNVfind.xgb_proba_threshold": 0.6,
     "SomaticSNVfind.num_shards": 100,
     "SomaticSNVfind.scatter_intervals_break": 10000000,
     "SomaticSNVfind.references": {
@@ -13,10 +12,12 @@
         "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
     },
     "FreshFrozen-native_vs_BuffyCoat-native": {
-        "SomaticSNVfind.xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/sfm.xgb_model.V1.15.json"
+        "SomaticSNVfind.xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/somatic_snvfind.xgb_model.UGSB4v1.21_FreshFrozen.json",
+        "SomaticSNVfind.xgb_proba_threshold": 0.95
     },
     "FFPE-xGen_vs_BuffyCoat-native": {
-        "SomaticSNVfind.xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/sfm.xgb_model.FFPEV1.9.json"
+        "SomaticSNVfind.xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/sfm.xgb_model.FFPEV1.9.json",
+        "SomaticSNVfind.xgb_proba_threshold": 0.8
     },
     "SomaticSNVfind.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

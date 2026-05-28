@@ -496,7 +496,7 @@ task UGPostProcessing{
     File ref_index
     String docker
     String output_prefix
-    File exome_intervals
+    File? exome_intervals
     Array[File]? annotation_intervals
     File? dbsnp
     File? dbsnp_index
@@ -533,7 +533,7 @@ task UGPostProcessing{
   Array[File] gvcf_records_not_opt = select_first([gvcf_records, []])
   Array[File] empty_array_of_files = []
   Array[File] annotation_intervals_or_empty = select_first([annotation_intervals, empty_array_of_files])
-  Array[File] exome_and_annotations = flatten([[exome_intervals], annotation_intervals_or_empty])
+  Array[File] exome_and_annotations = flatten([select_all([exome_intervals]), annotation_intervals_or_empty])
   Boolean defined_background = length(background_cram_files) > 0
 
   command <<<
@@ -596,7 +596,7 @@ task UGPostProcessing{
         --consider_strand_bias \
         --flow_order ~{flow_order} \
         --annotate \
-        --bed_annotation_files ~{sep="," exome_and_annotations} \
+        ~{true="--bed_annotation_files " false="" length(exome_and_annotations) > 0}~{sep="," exome_and_annotations} \
         --qual_filter ~{qual_filter} \
         --filter \
         --filters_file filters.txt \
@@ -620,13 +620,17 @@ task UGPostProcessing{
       export header_file=header.hdr
       export id_file=header.ID
       export all_ids=all_ids.txt
+      touch $all_ids
 
-      for f in ~{sep=" " exome_and_annotations}
-      do
-        head -1 $f > $header_file
-        sed 's/[<>]/ /' "$header_file" | sed 's/[=]/ /' | sed 's/[=]/ /' | sed 's/[,]/ /' | awk '{print $3}' > $id_file
-        cat $id_file >> $all_ids
-      done
+      annotation_files="~{sep=" " exome_and_annotations}"
+      if [ -n "$annotation_files" ]; then
+        for f in $annotation_files
+          do
+            head -1 $f > $header_file
+            sed 's/[<>]/ /' "$header_file" | sed 's/[=]/ /' | sed 's/[=]/ /' | sed 's/[,]/ /' | awk '{print $3}' > $id_file
+            cat $id_file >> $all_ids
+          done
+      fi
 
   >>>
   runtime {

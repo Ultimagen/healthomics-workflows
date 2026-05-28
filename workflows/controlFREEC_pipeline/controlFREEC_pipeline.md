@@ -29,8 +29,6 @@ The pipeline outputs:
 
 &nbsp;&nbsp;-copy-number figure  shows the copy number along the genome.
 
-<b>When Running in AWS HealthOmics this pipeline should run with</b> [static storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)
-
 <u>available templeates:</u>
 
 &nbsp;&nbsp;- controlFREEC_pipeline_bedGraph_input_template.json - use in case you have both .cram and _1.bedgraph input files.

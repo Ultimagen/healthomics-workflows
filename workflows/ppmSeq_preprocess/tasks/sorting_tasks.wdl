@@ -43,7 +43,7 @@ task Demux {
 
     Boolean defined_downsapling_seed = defined(sorter_params.downsample_seed)
     Boolean defined_downsapling_frac = defined(sorter_params.downsample_frac)
-    Boolean need_samtools_view = defined(mapq_override) || defined_downsapling_frac  # if filtering or downsampling is needed, samtools view is required
+    Boolean need_samtools_view = defined(mapq_override) || defined_downsapling_frac || defined(sorter_params.tag_filter_expression)  # if filtering or downsampling is needed, samtools view is required
     Boolean defined_cache_tarball = defined(cache_tarball)
     command <<<
         set -xeo pipefail
@@ -93,14 +93,17 @@ task Demux {
             # build filter and/or down-sampling flags
             mapq_flag="~{true='-q ' false='' defined(mapq_override)}~{mapq_override}"
             ds_flag="~{true='-s ' false='' defined(sorter_params.downsample_frac)}${seed_var}~{default='' sorter_params.downsample_frac}"
-            VIEW_CMD="samtools view -h -@ ~{cpu_samtools} ${mapq_flag} ${ds_flag} -"
+            tag_expression="~{default='' sorter_params.tag_filter_expression}"
+            VIEW_CMD=(samtools view -h -@ ~{cpu_samtools} ${mapq_flag} ${ds_flag})
+            [[ -n "${tag_expression}" ]] && VIEW_CMD+=(-e "${tag_expression}")
+            VIEW_CMD+=(-)
         else
             # pass‑through
-            VIEW_CMD="cat"
+            VIEW_CMD=(cat)
         fi
 
         samtools merge --reference reference_folder/~{reference_fasta_base} -@ ~{cpu_samtools} -c -O SAM - ~{sep=" " input_cram_bam_list} | \
-        ${VIEW_CMD} | \
+        "${VIEW_CMD[@]}" | \
         demux \
             --input=- \
             --output-dir=~{demux_output_path} \

@@ -20,7 +20,6 @@
     "SomaticSNVfind.interval_list": "s3://ultimagen-workflow-resources-us-east-1/sample_data/somatic_snvfind/subsample.5p.interval_list.gz",
     "SomaticSNVfind.num_shards": 5,
     "SomaticSNVfind.tandem_repeats_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed",
-    "SomaticSNVfind.xgb_proba_threshold": 0.6,
     "SomaticSNVfind.scatter_intervals_break": 10000000,
     "SomaticSNVfind.annotation_files": {
         "dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.dbsnp138.bcf",
@@ -57,5 +56,6 @@
         ]
     },
     "SomaticSNVfind.xgb_model": "s3://ultimagen-workflow-resources-us-east-1/somatic_snvfind/sfm.xgb_model.FFPEV1.9.json",
+    "SomaticSNVfind.xgb_proba_threshold": 0.8,
     "SomaticSNVfind.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

@@ -272,7 +272,7 @@
         "optional": true
     },
     "EfficientDV.reference_genome": {
-        "description": "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3. Default to hg38",
+        "description": "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, mm10. Default to hg38",
         "optional": true
     },
     "EfficientDV.scatter_intervals_break": {

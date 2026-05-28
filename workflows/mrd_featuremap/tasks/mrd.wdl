@@ -125,10 +125,10 @@ task FeatureMapIntersectWithSignatures {
     sig_dir="${workdir}/signatures"
     fm_dir="${workdir}/featuremap"
     mkdir -p "${sig_dir}" "${fm_dir}"
-    cp ~{signature} "${sig_dir}/${signature_base}.vcf.gz"
-    cp ~{signature_index} "${sig_dir}/${signature_base}.vcf.gz.tbi"
-    cp ~{featuremap} "${fm_dir}/${featuremap_base}.vcf.gz"
-    cp ~{featuremap_index} "${fm_dir}/${featuremap_base}.vcf.gz.tbi"
+    ln -s ~{signature} "${sig_dir}/${signature_base}.vcf.gz"
+    ln -s ~{signature_index} "${sig_dir}/${signature_base}.vcf.gz.tbi"
+    ln -s ~{featuremap} "${fm_dir}/${featuremap_base}.vcf.gz"
+    ln -s ~{featuremap_index} "${fm_dir}/${featuremap_base}.vcf.gz.tbi"
 
     echo "******** Run intersection ********"
     bcftools isec -n=2 -w1 "${fm_dir}/${featuremap_base}.vcf.gz" "${sig_dir}/${signature_base}.vcf.gz" -Oz -o "$output_vcf" --threads ~{cpus} --write-index=tbi
