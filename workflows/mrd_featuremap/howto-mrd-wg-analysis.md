@@ -34,43 +34,20 @@ The following input templates are available for different kinds of input data:
 The four templates differ along three axes: **matched signature**, **cohort controls**, and **quality filtering**. Use the decision tree below to pick the right one:
 
 ```mermaid
-flowchart TD
-    Start([Select MRD Template]) --> Q1
+flowchart LR
+    Q1{Matched\nsignature?} -->|Yes| Q2{Cohort\ncontrols?}
+    Q1 -->|No| T4
 
-    Q1{Matched tumor\nsignature available?}
-
-    Q1 -->|Yes| Q2{Cohort control\nsignatures available?}
-    Q1 -->|"No — healthy control\n(no matched signature)"| T4
-
-    Q2 -->|Yes| Q3{"Apply quality filtering\nto signatures?\ne.g. QUAL › 10\n(EfficientDV output)"}
+    Q2 -->|Yes| Q3{Quality\nfiltering?}
     Q2 -->|No| T2
 
     Q3 -->|Yes| T1
-    Q3 -->|"No — vcf without\nQUAL field"| T3
+    Q3 -->|No| T3
 
-    T1["Matched · Cohort · QC-filtered
-────────────────────────────
-mrd_featuremap_template-
-Matched-signature-with-cohort-
-with-quality-filtering.json"]
-
-    T2["Matched · No Cohort · QC-filtered
-────────────────────────────
-mrd_featuremap_template-
-Matched-signature-without-cohort-
-with-quality-filtering.json"]
-
-    T3["Matched · Cohort · No QC filter
-────────────────────────────
-mrd_featuremap_template-
-Matched-signature-with-cohort-
-without-quality-filtering.json"]
-
-    T4["Healthy · No Matched · Cohort · QC-filtered
-────────────────────────────
-mrd_featuremap_template-
-Healthy-without-matched-with-cohort-
-with-quality-filtering.json"]
+    T1(["Matched-signature-with-cohort-\nwith-quality-filtering.json"])
+    T2(["Matched-signature-without-cohort-\nwith-quality-filtering.json"])
+    T3(["Matched-signature-with-cohort-\nwithout-quality-filtering.json"])
+    T4(["Healthy-without-matched-with-cohort-\nwith-quality-filtering.json"])
 
     style T1 fill:#d4edda,stroke:#28a745,color:#000
     style T2 fill:#d4edda,stroke:#28a745,color:#000
