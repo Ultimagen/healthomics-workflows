@@ -29,6 +29,55 @@ The following input templates are available for different kinds of input data:
 | `mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering.json` | Use this template to run MRD using a matched signature, with cohort controls (non-matched mutation signature vcf). Quality filtering is not applied to matched and signature (suitable for vcf files without a QUAL field). |
 | `mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering.json` | Use this template to run MRD on a healthy control plasma without a matched signature, with cohort controls (non-matched mutation signature vcf). Quality filtering is applied to matched and signature (suitable for EfficientDV output). |
 
+### Template selection diagram
+
+The four templates differ along three axes: **matched signature**, **cohort controls**, and **quality filtering**. Use the decision tree below to pick the right one:
+
+```mermaid
+flowchart TD
+    Start([Select MRD Template]) --> Q1
+
+    Q1{Matched tumor\nsignature available?}
+
+    Q1 -->|Yes| Q2{Cohort control\nsignatures available?}
+    Q1 -->|"No — healthy control\n(no matched signature)"| T4
+
+    Q2 -->|Yes| Q3{"Apply quality filtering\nto signatures?\ne.g. QUAL › 10\n(EfficientDV output)"}
+    Q2 -->|No| T2
+
+    Q3 -->|Yes| T1
+    Q3 -->|"No — vcf without\nQUAL field"| T3
+
+    T1["Matched · Cohort · QC-filtered
+────────────────────────────
+mrd_featuremap_template-
+Matched-signature-with-cohort-
+with-quality-filtering.json"]
+
+    T2["Matched · No Cohort · QC-filtered
+────────────────────────────
+mrd_featuremap_template-
+Matched-signature-without-cohort-
+with-quality-filtering.json"]
+
+    T3["Matched · Cohort · No QC filter
+────────────────────────────
+mrd_featuremap_template-
+Matched-signature-with-cohort-
+without-quality-filtering.json"]
+
+    T4["Healthy · No Matched · Cohort · QC-filtered
+────────────────────────────
+mrd_featuremap_template-
+Healthy-without-matched-with-cohort-
+with-quality-filtering.json"]
+
+    style T1 fill:#d4edda,stroke:#28a745,color:#000
+    style T2 fill:#d4edda,stroke:#28a745,color:#000
+    style T3 fill:#d4edda,stroke:#28a745,color:#000
+    style T4 fill:#d4edda,stroke:#28a745,color:#000
+```
+
 ## Running the pipeline
 ### Step 1: Somatic variant calling
 Please refer to instruction in one of:
