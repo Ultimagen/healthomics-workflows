@@ -29,30 +29,52 @@ The following input templates are available for different kinds of input data:
 | `mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering.json` | Use this template to run MRD using a matched signature, with cohort controls (non-matched mutation signature vcf). Quality filtering is not applied to matched and signature (suitable for vcf files without a QUAL field). |
 | `mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering.json` | Use this template to run MRD on a healthy control plasma without a matched signature, with cohort controls (non-matched mutation signature vcf). Quality filtering is applied to matched and signature (suitable for EfficientDV output). |
 
-### Template selection diagram
+### Template input diagrams
 
-The four templates differ along three axes: **matched signature**, **cohort controls**, and **quality filtering**. Use the decision tree below to pick the right one:
+Each template receives the same cfDNA FeatureMap inputs from the SRSNV pipeline. The three axes that vary are: **matched signature** (present/absent), **cohort control signatures** (present/absent), and **quality filtering** (applied to both matched and control signatures, or not).
 
+**① `mrd_featuremap_template-Matched-signature-with-cohort-with-quality-filtering.json`**
+*Use when: matched tumor signature available, cohort controls available, EfficientDV output (QUAL field present)*
 ```mermaid
 flowchart LR
-    Q1{Matched\nsignature?} -->|Yes| Q2{Cohort\ncontrols?}
-    Q1 -->|No| T4
+    fm1([cfDNA FeatureMap]):::common --> mrd1([MRD Analysis])
+    ms1([Matched signature\nfiltered: QUAL>10]):::sig --> mrd1
+    cc1([Cohort signatures\nfiltered: QUAL>10]):::ctrl --> mrd1
+    classDef common fill:#cce5ff,stroke:#004085,color:#000
+    classDef sig fill:#fff3cd,stroke:#856404,color:#000
+    classDef ctrl fill:#f8d7da,stroke:#721c24,color:#000
+```
 
-    Q2 -->|Yes| Q3{Quality\nfiltering?}
-    Q2 -->|No| T2
+**② `mrd_featuremap_template-Matched-signature-without-cohort-with-quality-filtering.json`**
+*Use when: matched tumor signature available, no cohort controls, EfficientDV output (QUAL field present)*
+```mermaid
+flowchart LR
+    fm2([cfDNA FeatureMap]):::common --> mrd2([MRD Analysis])
+    ms2([Matched signature\nfiltered: QUAL>10]):::sig --> mrd2
+    classDef common fill:#cce5ff,stroke:#004085,color:#000
+    classDef sig fill:#fff3cd,stroke:#856404,color:#000
+```
 
-    Q3 -->|Yes| T1
-    Q3 -->|No| T3
+**③ `mrd_featuremap_template-Matched-signature-with-cohort-without-quality-filtering.json`**
+*Use when: matched tumor signature available, cohort controls available, VCF without QUAL field (e.g. from a third-party caller)*
+```mermaid
+flowchart LR
+    fm3([cfDNA FeatureMap]):::common --> mrd3([MRD Analysis])
+    ms3([Matched signature\nno QUAL filter]):::sig --> mrd3
+    cc3([Cohort signatures\nno QUAL filter]):::ctrl --> mrd3
+    classDef common fill:#cce5ff,stroke:#004085,color:#000
+    classDef sig fill:#fff3cd,stroke:#856404,color:#000
+    classDef ctrl fill:#f8d7da,stroke:#721c24,color:#000
+```
 
-    T1(["Matched-signature-with-cohort-\nwith-quality-filtering.json"])
-    T2(["Matched-signature-without-cohort-\nwith-quality-filtering.json"])
-    T3(["Matched-signature-with-cohort-\nwithout-quality-filtering.json"])
-    T4(["Healthy-without-matched-with-cohort-\nwith-quality-filtering.json"])
-
-    style T1 fill:#d4edda,stroke:#28a745,color:#000
-    style T2 fill:#d4edda,stroke:#28a745,color:#000
-    style T3 fill:#d4edda,stroke:#28a745,color:#000
-    style T4 fill:#d4edda,stroke:#28a745,color:#000
+**④ `mrd_featuremap_template-Healthy-without-matched-with-cohort-with-quality-filtering.json`**
+*Use when: healthy control plasma sample, no matched tumor signature available*
+```mermaid
+flowchart LR
+    fm4([cfDNA FeatureMap]):::common --> mrd4([MRD Analysis])
+    cc4([Cohort signatures\nfiltered: QUAL>10]):::ctrl --> mrd4
+    classDef common fill:#cce5ff,stroke:#004085,color:#000
+    classDef ctrl fill:#f8d7da,stroke:#721c24,color:#000
 ```
 
 ## Running the pipeline
