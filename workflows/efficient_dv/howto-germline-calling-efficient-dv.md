@@ -24,12 +24,12 @@ gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval
 ```
 3. A model checkpoint in ONNX format:
 ```
-gs://concordanz/deepvariant/model/germline/v1.14/germline-ramp-8128462_shuffle_300K_ckpt_260000.onnx
+gs://concordanz/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
 
 or 
 ```
-s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/v1.14/germline-ramp-8128462_shuffle_300K_ckpt_260000.onnx
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
 
 **NOTE:** the exact model may differ between use-cases, we recommend consulting with the parameters templates provided to find the exact model
@@ -121,7 +121,8 @@ The program will output a sam file with the re-aligned reads unless the argument
 The call_variants step combines the tfrecords from all make_examples jobs. The arguments to the call_variants step are provided as an `.ini`-formatted file. A typical file will look like:
 ```
 [RT classification]
-onnxFileName = model/germline/v1.14/germline-ramp-8128462_shuffle_300K_ckpt_260000.onnx
+onnxFileName = model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
+builderOptimizationLevel = 1
 useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
 numInferTreadsPerGpu = 2
@@ -261,13 +262,13 @@ tool \
 Variant calling with haplotype data requires a specific model:
 
 ```bash
-gs://concordanz/deepvariant/model/germline/v1.15/germline-pangenome-ramp-9003772_shuffle_haplotypes_best.onnx
+gs://concordanz/deepvariant/model/germline/wgs/v2.1/ultimagen-germline-wgs-solaris2-pan-hprc-v1.0-regnet-v2.1.onnx
 ```
 
 or
 
 ```bash
-s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/v1.15/germline-pangenome-ramp-9003772_shuffle_haplotypes_best.onnx
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.1/ultimagen-germline-wgs-solaris2-pan-hprc-v1.0-regnet-v2.1.onnx
 ```
 
 The post-processing step remains unchanged.
