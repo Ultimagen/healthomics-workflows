@@ -23,7 +23,10 @@ The workflow takes three major inputs:
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
-gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list
+```
+The calling regions interval list used in the WGS somatic pipeline excludes centromeres:
+```
+gs://concordanz/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
 ```
 3. A model checkpoint in ONNX format
 ```
@@ -55,7 +58,7 @@ make_examples is typically run on a small interval in the genome determined by a
 mkdir out && \
 picard \
   IntervalListTools \
-  SCATTER_COUNT=40 \
+  SCATTER_COUNT=100 \
   SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW \
   UNIQUE=true \
   SORT=true \
@@ -95,6 +98,7 @@ tool \
   --median-coverage <tumor_median_coverage> \
   --background-median-coverage <background_median_coverage> \
   --single-strand-filter \
+  --ignore-multi-allelic-cvos \
   --keep-duplicates \
   --add-ins-size-channel
 ```
@@ -106,6 +110,8 @@ The `--output` argument is the prefix for the output files (including tfrecords)
 The argument `optimal-coverages` (and the related argument `cap-at-optimal-coverage`) determine how reads are internally downsampled before image generation. The same values are used in the training of the model and the inference. Hence, their values are tightly linked to which model is used. The argument `add-ins-size-channel` adds a channel with the length of the insertion, and should also be aligned with the model. `--median-coverage` and `--background-median-coverage` provide `make_examples` with the actual sequencing depth of the tumor and normal samples, respectively, used alongside `--optimal-coverages` to control read downsampling.
 
 The `single-strand-filter` reduces the number of candidates, therby reducing compute costs, at a negligible effect on recall.
+
+**Note:** When running the WDL pipeline, `--median-coverage` and `--background-median-coverage` are automatically calculated from the input CRAMs and do not need to be provided manually.
 
 #### Running somatic-on-germline
 In somatic variant calling, complex somatic variants near germline variants can pose challenges during read alignment and variant calling. To address this, it can be beneficial to "correct" the reference genome by incorporating germline variants during the read-alignment step of `make_examples`. This simplifies the generated image and improves the accuracy of likelihood calculations during `call_variants`.
@@ -170,7 +176,8 @@ ug_postproc \
   --consider_strand_bias \
   --flow_order TGCA \
   --annotate \
-  --bed_annotation_files exome.twist.bed,ug_hcr.bed,... \
+  --bed_annotation_files LCR-hs38.bed,mappability.0.bed,hmers_7_and_higher.bed,ug_hcr.bed,gnomad.common.indel.annotation.sort.bed \
+  --ignore_multi_allelic_cvos \
   --qual_filter 1 \
   --filter \
   --filters_file filters.txt \
@@ -196,14 +203,16 @@ If `##INFO` is not present in the bed file, then a json file with the same name 
 }
 ```
 
-If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows [JEXL filtering expressions](https://gatk.broadinstitute.org/hc/en-us/articles/360035891011-JEXL-filtering-expressions). Below is an example of a filters_file that is typically used. Note that these filters use the EXOME attribute, which is an annotation that was added using a bed file, if there is no annotation named EXOME this filter will fail.
+The `--ignore_multi_allelic_cvos` flag instructs post-processing to skip resolving multi-allelic records from call_variants output, which is the standard behavior for somatic calling.
+
+If `--filter` argument is used, the vcf will be filtered based on the criteria in `--filters_file`. In this file, each filter is composed of two lines, the first is the filter name (which will appear in FILTER column of the vcf), and the second is the expression for the filter. The syntax of the expression follows [JEXL filtering expressions](https://gatk.broadinstitute.org/hc/en-us/articles/360035891011-JEXL-filtering-expressions). Below is an example of a filters_file that is typically used for WGS somatic calling:
 ```
 LowQualInExome
-QUAL < 16 and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and vc.hasAttribute('EXOME')
+QUAL < 20 and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and vc.hasAttribute('EXOME')
 LowQual
-QUAL < 16 and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and not vc.hasAttribute('EXOME')
+QUAL < 20 and VARIANT_TYPE=='h-indel' and not vc.isFiltered() and not vc.hasAttribute('EXOME')
 LowQual
-QUAL < 16 and VARIANT_TYPE=='non-h-indel' and not vc.isFiltered()
+QUAL < 20 and VARIANT_TYPE=='non-h-indel' and not vc.isFiltered()
 LowQual
 QUAL < 14 and VARIANT_TYPE=='snp' and not vc.isFiltered()
 LargeDeletion
@@ -212,8 +221,7 @@ REFLEN > 220 and vc.isFiltered()
 
 dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
 
-`ug_post_processing` can also be used to improve the VAF estimates of INDELs. This is recommended only run if the callset contains less than 30K indels. 
-To do this, append the following parameters
+`ug_post_processing` can also be used to improve the VAF estimates of INDELs (enabled by setting `recalibrate_vaf` to `true` in the WDL pipeline). Note: this is not recommended when the callset contains more than 30K indels; the pipeline automatically skips recalibration in that case. When running manually, append the following parameters to `ug_postproc`:
 
 ```
 --fix_allele_coverage 
@@ -222,14 +230,13 @@ To do this, append the following parameters
 ```
 
 
-### Additional filtering steps recommended
+### Allele-frequency ratio filtering
 
+The pipeline applies a filter on the allele-frequency ratio between tumor and normal. This is a safe measure to hard-filter variants with significant appearance in the normal sample. This filter is mandatory for somatic calling in the WDL pipeline (controlled by the `allele_frequency_ratio` parameter, which must be defined when `is_somatic` is `true`).
 
-We recommend applying an additional post-processes filter. The filter is applied to the allele-frequency ratio between tumor and normal. It filters out loci with germline variants that changed allele-frequency in the tumor, as the model was not trained to filter them, making this inconsistent with some other somatic calling pipelines.
+Specifically, the filter removes any SNV or Non-homopolymer indel variants where the ratio of allele frequency between the tumor and the normal variant is below the threshold (default: 10).
 
-Specifically, the command below filters out any SNV or Non-homopolymer indel variants where the ratio of allele frequency between the tumor and the normal variant is below 10.
-
-The process to applying this filter is:
+When running manually outside the WDL pipeline:
 
 ```
   # Run in ugbio_filtering_docker
