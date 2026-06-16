@@ -42,7 +42,7 @@ The workflow uses multiple Docker images:
 
 1. **PyPGx Docker:**
    ```
-   ultimagenomics/ugbio_pypgx:0.26.0-r2
+   ultimagenomics/ugbio_pypgx:0.26.0-r3
    ```
 
 2. **Efficient DV Dockers:**

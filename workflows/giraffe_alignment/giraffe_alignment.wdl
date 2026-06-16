@@ -8,7 +8,7 @@ import "tasks/sorting_tasks.wdl" as SortTasks
 
 workflow GiraffeAlignment {
     input {
-        String pipeline_version = "1.31.1" # !UnusedDeclaration
+        String pipeline_version = "1.31.2" # !UnusedDeclaration
 
         Array[File] input_cram_list
         String base_file_name

@@ -121,9 +121,9 @@ Either when using the WDL or running as standalone, the following inputs are nee
 
   d. snv_database - a large database of whole-genome somatic cancer mutations from which variants for synthetic control signatures (also called database controls) will be drawn. Default is the PCAWG database (Nature 2020). The synthetic signatures (default: 5 synthetic signatures) are generated based on the matched signature: they have the same size and same trinucleotide motif distribution as the first matched signature. In case matched signatures are not part of the input, the sythetic signatures mimic the first control signature. The synthetic signatures appear as "db_control" signatures in the output ctdna_vaf.h5. snv_database default:
   
-    "gs://concordanz/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
+    "gs://concordanz/hg38/pcawg/pancan.filtered.vcf.gz"
     or
-    "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.mutations_hg38_GNOMAD_dbsnp_beds.sorted.Annotated.HMER_LEN.edited.vcf.gz"
+    "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz"
 
   e. n_synthetic_signatures - number of synthetic signatures to generate from the database. Default: 5
 

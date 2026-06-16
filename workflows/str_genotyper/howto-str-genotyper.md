@@ -37,7 +37,7 @@ The STR Genotyper workflow performs Short Tandem Repeat (STR) genotyping on whol
 ### Docker Image
 
 ```
-337532070941.dkr.ecr.us-east-1.amazonaws.com/str-genotyper:1.0.0
+337532070941.dkr.ecr.us-east-1.amazonaws.com/str_genotyper:1.0.4
 ```
 
 ### Hardware Requirements

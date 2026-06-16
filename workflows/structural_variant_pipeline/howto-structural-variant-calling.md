@@ -26,10 +26,10 @@ The following files are publicly available:
 
 The following file is required as input for UA realignment:
     
-    gs://concordanz/hg38/UA/Homo_sapiens_assembly38.fasta.uai
+    gs://concordanz/hg38/UA/b38-v45-79372c0.uai
 or 
 
-    s3://ultimagen-workflow-resources-us-east-1/hg38/UA/Homo_sapiens_assembly38.fasta.uai
+    s3://ultimagen-workflow-resources-us-east-1/hg38/UA/b38-v45-79372c0.uai
 
 ### Pipeline steps 
 
@@ -61,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.1.10
+ultimagenomics/make_examples:3.2.3
 ```
 
 Generate interval bed : 
@@ -150,7 +150,7 @@ samtools index output_basename_assembly_hap_out_sorted.bam
 UA Docker:
 
 ```
-ultimagenomics/alignment:3.0.4
+ultimagenomics/alignment:3.0.6
 ```
 UA realignment command: (realignment is done on a merged bam consisting of a merge of all the BAMs produced in the scattered assembly)
 ```
@@ -175,7 +175,7 @@ samtools index output_basename_assembly_file_ua_aligned_sorted.bam
 
 Docker:
 ```
-ultimagenomics/gridss:b90d23b
+ultimagenomics/gridss:0c97dd1
 ```
 
 Run: 
@@ -194,7 +194,7 @@ samtools index output_basename_assembly_ua_realigned.bam
 
 Docker:
 
-    ultimagenomics/gridss:b90d23b
+    ultimagenomics/gridss:0c97dd1
 
 ```
     python3 /opt/gridss/align_long_homopolymers.py \
@@ -211,7 +211,7 @@ Here we assign the reads to the best supported haplotype.
 
 Docker: 
 
-    ultimagenomics/rematcher:main_b41b06a
+    ultimagenomics/rematcher:main_04615d5
 
 ```
     sv_rematch -b interval.bed \
@@ -440,7 +440,7 @@ gsutil -m cp -r gs://concordanz/sv/gripss/ .
 
 GRIPSS docker: (run on a merge of the vcfs produced in scatter by AnnotateVariants above)
 ```
-ultimagenomics/gripss:58cba04b7b
+ultimagenomics/gripss:ug_2.4.1_165b492
 ```
 
 T/N GRIPSS:

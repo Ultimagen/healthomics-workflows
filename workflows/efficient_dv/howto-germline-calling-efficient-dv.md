@@ -22,17 +22,27 @@ gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
 gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list
 ```
-3. A model checkpoint in ONNX format:
+3. A model checkpoint in ONNX format. There are two germline WGS models depending on the sequencing platform:
+
+**Solaris 2** (current):
 ```
 gs://concordanz/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
-
-or 
+or
 ```
 s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
 
-**NOTE:** the exact model may differ between use-cases, we recommend consulting with the parameters templates provided to find the exact model
+**Solaris 1**:
+```
+gs://concordanz/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx
+```
+or
+```
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx
+```
+
+**NOTE:** Additional models exist for WES, somatic, and pangenome use-cases. See the parameters templates for a complete list.
 
 ### Dockers and hardware requirements
 

@@ -38,13 +38,13 @@ The following files are publicly available
 * Use docker: <br>
 	Pull ugbio_freec and ugbio_cnv docker images :
 	```
-	docker pull ultimagenomics/ugbio_freec:1.5.5
-	docker pull ultimagenomics/ugbio_cnv:1.5.5
+	docker pull ultimagenomics/ugbio_freec:1.16.1
+	docker pull ultimagenomics/ugbio_cnv:1.24.0
 	```
 	Run docker in interactive mode: 
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_freec:1.5.5 /bin/bash
-	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.5.5 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_freec:1.16.1 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.24.0 /bin/bash
 	```
 	for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/902c0def79e17c71ef810f7cdd887e06e736c5b4/workflows/single_read_snv/tasks/globals.wdl#L68C31-L68C64)<br>
 * manual installation: 

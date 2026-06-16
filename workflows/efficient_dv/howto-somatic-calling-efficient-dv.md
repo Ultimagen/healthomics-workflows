@@ -27,7 +27,7 @@ gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval
 ```
 3. A model checkpoint in ONNX format
 ```
-onnxFileName = gs://concordanz/deepvariant/model/somatic/wgs/model_dyn_1000_200_221_9_2950000.onnx
+onnxFileName = gs://concordanz/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx
 ```
 This model is intended for whole genome sequencing at a coverage of 40-150x for tumor and 40-100x for normal. For other applications, see the last sections of this document.
 

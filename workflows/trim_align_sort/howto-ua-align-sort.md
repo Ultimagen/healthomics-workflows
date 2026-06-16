@@ -24,10 +24,10 @@ The most up-to-date docker images can be found in the `workflows/trim_align_sort
     ultimagenomics/ (hosted on DockerHub)
 
 ### UA docker:
-    ultimagenomics/alignment:3.0.4
+    ultimagenomics/alignment:3.0.6
 
 ### Sorter docker:
-    ultimagenomics/sorter:1.4.15
+    ultimagenomics/sorter:1.5.18
 
 ## System Requirements
     1. CPUs: 32-40 
@@ -61,11 +61,11 @@ The following reference files are needed for UA alignment and sorting. These fil
 
 ### Pre-built UA index file 
 
-* `gs://concordanz/hg38/UA/Homo_sapiens_assembly38.fasta.uai` - Pre-built UA index
+* `gs://concordanz/hg38/UA/b38-v45-79372c0.uai` - Pre-built UA index
 
 
 ### Step 1 : Build UA Index
-This step creates the UA index file needed for alignment. Note that this file is typically very large, e.g. ~51GiB for the standard hg38 reference genome. This step only needs to be done once per reference genome, and a pre-built index file for hg38 is already provided at `gs://concordanz/hg38/UA/Homo_sapiens_assembly38.fasta.uai`.
+This step creates the UA index file needed for alignment. Note that this file is typically very large, e.g. ~51GiB for the standard hg38 reference genome. This step only needs to be done once per reference genome, and a pre-built index file for hg38 is already provided at `gs://concordanz/hg38/UA/b38-v45-79372c0.uai`.
 
 This command is implemented in the `BuildUaIndex` task in `wdls/tasks/alignment_tasks.wdl`.
 
