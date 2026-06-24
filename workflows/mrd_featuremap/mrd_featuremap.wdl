@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.31.2" # !UnusedDeclaration
+        String pipeline_version = "1.32.0" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -51,7 +51,9 @@ workflow MRDFeatureMap {
         # filter signatures
         String? bcftools_extra_args
         Array[File] include_regions
-        Array[File] exclude_regions
+        Array[File] exclude_regions_bed = []
+        Array[File] exclude_regions_vcf = []
+        Array[File] exclude_regions_vcf_indices = []
         # diluent germline vcfs
         Array[File]? diluent_germline_vcfs
         # final-analysis-level filters
@@ -100,7 +102,10 @@ workflow MRDFeatureMap {
         #@wv suffix(cfdna_cram_bam) in {'.bam', '.cram'}
         #@wv suffix(cfdna_cram_bam_index) in {'.bai', '.crai'}
         #@wv suffix(include_regions) <= {'.bed', '.gz'}
-        #@wv suffix(exclude_regions) <= {'.bed', '.gz', '.vcf', '.vcf.gz'}
+        #@wv suffix(exclude_regions_bed) <= {'.bed', '.gz'}
+        #@wv suffix(exclude_regions_vcf) <= {'.vcf', '.vcf.gz', '.gz'}
+        #@wv suffix(exclude_regions_vcf_indices) <= {'.tbi'}
+        #@wv len(exclude_regions_vcf) == len(exclude_regions_vcf_indices)
         #@wv suffix(snv_database) in {'.gz'}
         #@wv suffix(prefix(snv_database)) in {'.vcf', '.vcf.gz'}
         #@wv suffix(featuremap_df_file) in {'.parquet'}
@@ -126,6 +131,15 @@ workflow MRDFeatureMap {
           "PadDiluentVcf.disk_size",
           "PadDiluentVcf.memory_gb",
           "PadDiluentVcf.cpus",
+          "FilterMatchedOnExactAltAllele.disk_size",
+          "FilterMatchedOnExactAltAllele.memory_gb",
+          "FilterMatchedOnExactAltAllele.cpus",
+          "FilterControlOnExactAltAllele.disk_size",
+          "FilterControlOnExactAltAllele.memory_gb",
+          "FilterControlOnExactAltAllele.cpus",
+          "FilterDbOnExactAltAllele.disk_size",
+          "FilterDbOnExactAltAllele.memory_gb",
+          "FilterDbOnExactAltAllele.cpus",
           "MergeMd5sToJson.output_json"
       ]}
   }    
@@ -191,8 +205,18 @@ workflow MRDFeatureMap {
           type: "Array[File]",
           category: "ref_required"
       }
-      exclude_regions: {
-          help: "Genomic regions to exclude from the analysis, bed and vcf[.gz] files are accepted",
+      exclude_regions_bed: {
+          help: "BED regions to exclude from the analysis (position-based filtering)",
+          type: "Array[File]",
+          category: "ref_optional"
+      }
+      exclude_regions_vcf: {
+          help: "VCF files to exclude from signatures by exact locus and alt allele (e.g. dbSNP, GNOMAD, panel-of-normals). Must be bgzipped and tabix-indexed.",
+          type: "Array[File]",
+          category: "ref_optional"
+      }
+      exclude_regions_vcf_indices: {
+          help: "Respective tabix indices for exclude_regions_vcf (same order).",
           type: "Array[File]",
           category: "ref_optional"
       }
@@ -322,6 +346,7 @@ workflow MRDFeatureMap {
   Boolean defined_external_control_signatures = defined(external_control_signatures)
   Boolean defined_somatic_snv_database = defined(snv_database) && (select_first([n_synthetic_signatures]) > 0)
   Boolean defined_diluent_germline_vcfs = defined(diluent_germline_vcfs)
+  Boolean has_exclude_regions_vcf = length(exclude_regions_vcf) > 0
   File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
   # Part 1 - Filter signatures
@@ -343,26 +368,39 @@ workflow MRDFeatureMap {
 
   if (defined_external_matched_signatures) {
     Array[File] all_matched_signatures = select_first([external_matched_signatures,])
-    Array[Array[File]] matched_exclude_regions_array = select_all([exclude_regions, PadDiluentVcf.padded_bed])
+    Array[Array[File]] matched_exclude_regions_array = select_all([exclude_regions_bed, PadDiluentVcf.padded_bed])
     Array[File] matched_exclude_regions = flatten(matched_exclude_regions_array)
-    # Filter the matched signatures over the genomic regions bed file + apply filters
     scatter (i in range(length(all_matched_signatures))) {
       call UGGeneralTasks.FilterVcfWithBcftools as FilterMatched {
         input:
           input_vcf = all_matched_signatures[i],
           docker = global.bcftools_docker,
-          bcftools_extra_args = bcftools_extra_args,  
+          bcftools_extra_args = bcftools_extra_args,
           exclude_regions = matched_exclude_regions,
           include_regions = include_regions,
           preemptible_tries = preemptibles,
           monitoring_script = monitoring_script, #!FileCoercion
       }
+      if (has_exclude_regions_vcf) {
+        call UGMrdTasks.FilterSignatureOnExactAltAllele as FilterMatchedOnExactAltAllele {
+          input:
+            signature_vcf = FilterMatched.output_vcf,
+            signature_vcf_index = FilterMatched.output_vcf_index,
+            exclude_vcfs = exclude_regions_vcf,
+            exclude_vcf_indices = exclude_regions_vcf_indices,
+            docker = global.bcftools_docker,
+            preemptible_tries = preemptibles,
+            monitoring_script = monitoring_script,
+        }
+      }
+      File matched_filtered_vcf = select_first([FilterMatchedOnExactAltAllele.output_vcf, FilterMatched.output_vcf])
+      File matched_filtered_vcf_index = select_first([FilterMatchedOnExactAltAllele.output_vcf_index, FilterMatched.output_vcf_index])
     }
-  }  
-  
+  }
+
   # for the external and db controls, exclude the regions from the matched signatures
-  Array[Array[File]] control_exclude_regions_array = select_all([exclude_regions, external_matched_signatures, PadDiluentVcf.padded_bed])
-  Array[File] control_exclude_regions = flatten(control_exclude_regions_array) 
+  Array[Array[File]] control_exclude_regions_array = select_all([exclude_regions_bed, external_matched_signatures, PadDiluentVcf.padded_bed])
+  Array[File] control_exclude_regions = flatten(control_exclude_regions_array)
   if (defined_external_control_signatures) {
     Array[File] external_control_signatures_array = select_first([external_control_signatures,])
     scatter (i in range(length(external_control_signatures_array))) {
@@ -370,12 +408,26 @@ workflow MRDFeatureMap {
         input:
           input_vcf = external_control_signatures_array[i],
           docker = global.bcftools_docker,
-          bcftools_extra_args = bcftools_extra_args,  
+          bcftools_extra_args = bcftools_extra_args,
           exclude_regions = control_exclude_regions,
           include_regions = include_regions,
           preemptible_tries = preemptibles,
           monitoring_script = monitoring_script, #!FileCoercion
       }
+      if (has_exclude_regions_vcf) {
+        call UGMrdTasks.FilterSignatureOnExactAltAllele as FilterControlOnExactAltAllele {
+          input:
+            signature_vcf = FilterControlSignatures.output_vcf,
+            signature_vcf_index = FilterControlSignatures.output_vcf_index,
+            exclude_vcfs = exclude_regions_vcf,
+            exclude_vcf_indices = exclude_regions_vcf_indices,
+            docker = global.bcftools_docker,
+            preemptible_tries = preemptibles,
+            monitoring_script = monitoring_script,
+        }
+      }
+      File control_filtered_vcf = select_first([FilterControlOnExactAltAllele.output_vcf, FilterControlSignatures.output_vcf])
+      File control_filtered_vcf_index = select_first([FilterControlOnExactAltAllele.output_vcf_index, FilterControlSignatures.output_vcf_index])
     }
   }
 
@@ -390,28 +442,43 @@ workflow MRDFeatureMap {
         monitoring_script = monitoring_script, #!FileCoercion
     }
 
+    # Filter DB on exact alt allele before generating synthetic signatures (consistent with matched/control treatment)
+    if (has_exclude_regions_vcf) {
+      call UGMrdTasks.FilterSignatureOnExactAltAllele as FilterDbOnExactAltAllele {
+        input:
+          signature_vcf = FilterDb.output_vcf,
+          signature_vcf_index = FilterDb.output_vcf_index,
+          exclude_vcfs = exclude_regions_vcf,
+          exclude_vcf_indices = exclude_regions_vcf_indices,
+          docker = global.bcftools_docker,
+          preemptible_tries = preemptibles,
+          monitoring_script = monitoring_script,
+      }
+    }
+    File db_filtered_vcf = select_first([FilterDbOnExactAltAllele.output_vcf, FilterDb.output_vcf])
+
     # use the first matched signature as the reference for the db signatures, unless it is not given, then use the first control signature
-    Array[File] filtered_signature_files = select_first([FilterMatched.output_vcf, FilterControlSignatures.output_vcf])
+    Array[File] filtered_signature_files = select_first([matched_filtered_vcf, control_filtered_vcf])
     File filtered_signature_file = filtered_signature_files[0]
     call UGMrdTasks.GenerateControlSignaturesFromDatabase as GenerateControlSignaturesFromDatabase {
       input:
         signature_file = filtered_signature_file,
-        snv_database = FilterDb.output_vcf,
+        snv_database = db_filtered_vcf,
         n_synthetic_signatures = select_first([n_synthetic_signatures]),
         ref_fasta = references.ref_fasta,
         ref_fasta_index = references.ref_fasta_index,
         ref_dict = references.ref_dict,
         docker = global.ugbio_mrd_docker,
-        disk_size = 2 * (size(snv_database, "GB") + size(FilterDb.output_vcf, "GB")) + 10,
+        disk_size = 2 * (size(snv_database, "GB") + size(db_filtered_vcf, "GB")) + 10,
         memory_gb = 8,
         cpus = 2,
         monitoring_script = monitoring_script #!FileCoercion
     }
   }
 
+  Array[File]? filtered_matched_control_signatures = matched_filtered_vcf
+  Array[File]? filtered_external_control_signatures = control_filtered_vcf
   Array[File]? filtered_db_control_signatures = GenerateControlSignaturesFromDatabase.db_signatures
-  Array[File]? filtered_external_control_signatures = FilterControlSignatures.output_vcf
-  Array[File]? filtered_matched_control_signatures = FilterMatched.output_vcf
 
   # Part 2 - Collect coverage over signatures
   Array[File] all_vcf_files = flatten(select_all([filtered_matched_control_signatures, filtered_external_control_signatures, filtered_db_control_signatures]))
@@ -445,11 +512,11 @@ workflow MRDFeatureMap {
 
   # Part 3 - Intersect FeatureMap with signatures (one small task per signature: 2 CPU, 4 GiB)
   Float featuremap_size = size(cfdna_featuremap, "GB")
-  Array[File] matched_sigs = select_first([FilterMatched.output_vcf, []])
-  Array[File] matched_idxs = select_first([FilterMatched.output_vcf_index, []])
-  Array[File] control_sigs = select_first([FilterControlSignatures.output_vcf, []])
-  Array[File] control_idxs = select_first([FilterControlSignatures.output_vcf_index, []])
-  Array[File] db_sigs = select_first([GenerateControlSignaturesFromDatabase.db_signatures, []])
+  Array[File] matched_sigs = select_first([filtered_matched_control_signatures, []])
+  Array[File] matched_idxs = select_first([matched_filtered_vcf_index, []])
+  Array[File] control_sigs = select_first([filtered_external_control_signatures, []])
+  Array[File] control_idxs = select_first([control_filtered_vcf_index, []])
+  Array[File] db_sigs = select_first([filtered_db_control_signatures, []])
   Array[File] db_idxs = select_first([GenerateControlSignaturesFromDatabase.db_signatures_indices, []])
   Array[Int] matched_indices = range(length(matched_sigs))
   Array[Int] control_indices = range(length(control_sigs))
@@ -464,7 +531,7 @@ workflow MRDFeatureMap {
         signature = matched_sigs[i],
         signature_index = matched_idxs[i],
         signature_type = "matched",
-        docker = global.ugbio_mrd_docker,
+        docker = global.ugbio_featuremap_docker,
         disk_size = 2 * featuremap_size + size(matched_sigs[i], "GB") + 10,
         memory_gb = memory_gb_featuremap_intersect,
         cpus = 2,
@@ -479,7 +546,7 @@ workflow MRDFeatureMap {
         signature = control_sigs[i],
         signature_index = control_idxs[i],
         signature_type = "control",
-        docker = global.ugbio_mrd_docker,
+        docker = global.ugbio_featuremap_docker,
         disk_size = 2 * featuremap_size + size(control_sigs[i], "GB") + 10,
         memory_gb = memory_gb_featuremap_intersect,
         cpus = 2,
@@ -494,7 +561,7 @@ workflow MRDFeatureMap {
         signature = db_sigs[i],
         signature_index = db_idxs[i],
         signature_type = "db_control",
-        docker = global.ugbio_mrd_docker,
+        docker = global.ugbio_featuremap_docker,
         disk_size = 2 * featuremap_size + size(db_sigs[i], "GB") + 10,
         memory_gb = memory_gb_featuremap_intersect,
         cpus = 2,

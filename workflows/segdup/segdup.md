@@ -103,15 +103,10 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Int </i> &mdash;
          Minimal base quality for candidate generation <br />
 </p>
-<p name="SegDupAnalysis.DV.pileup_min_mapping_quality">
-        <b>SegDupAnalysis.DV.pileup_min_mapping_quality</b><br />
+<p name="SegDupAnalysis.DV.min_mapping_quality">
+        <b>SegDupAnalysis.DV.min_mapping_quality</b><br />
         <i>Int </i> &mdash;
-         Minimal mapping quality to be included in image (the input to the CNN) <br />
-</p>
-<p name="SegDupAnalysis.DV.candidate_min_mapping_quality">
-        <b>SegDupAnalysis.DV.candidate_min_mapping_quality</b><br />
-        <i>Int </i> &mdash;
-         Minimal mapping quality for candidate generation <br />
+         Minimum mapping quality for reads to appear in pileup images (input to CNN) and to be considered as supporting an alt-allele in candidate generation <br />
 </p>
 <p name="SegDupAnalysis.DV.min_hmer_plus_one_candidate">
         <b>SegDupAnalysis.DV.min_hmer_plus_one_candidate</b><br />
@@ -132,6 +127,21 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.prioritize_alt_supporting_reads</b><br />
         <i>Boolean </i> &mdash;
          Generate an image with all available alt-supporting reads, and only then add non-supporting reads <br />
+</p>
+<p name="SegDupAnalysis.DV.active_areas_min_base_quality">
+        <b>SegDupAnalysis.DV.active_areas_min_base_quality</b><br />
+        <i>Int </i> &mdash;
+         Minimum base quality for active areas detection <br />
+</p>
+<p name="SegDupAnalysis.DV.prioritize_high_quality_reads">
+        <b>SegDupAnalysis.DV.prioritize_high_quality_reads</b><br />
+        <i>Boolean </i> &mdash;
+         When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads <br />
+</p>
+<p name="SegDupAnalysis.DV.trim_soft_clips">
+        <b>SegDupAnalysis.DV.trim_soft_clips</b><br />
+        <i>Boolean </i> &mdash;
+         Trim soft-clipped bases from pileup images <br />
 </p>
 <p name="SegDupAnalysis.DV.p_error">
         <b>SegDupAnalysis.DV.p_error</b><br />
@@ -191,12 +201,12 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.strong_call_threshold">
         <b>SegDupAnalysis.DV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference <br />
+         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
 </p>
 <p name="SegDupAnalysis.DV.ensemble_size">
         <b>SegDupAnalysis.DV.ensemble_size</b><br />
         <i>Int </i> &mdash;
-         Size of the ensemble for inference <br />
+         Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
 </p>
 <p name="SegDupAnalysis.DV.ensemble_reference_rows">
         <b>SegDupAnalysis.DV.ensemble_reference_rows</b><br />
@@ -258,9 +268,9 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>String? </i> &mdash;
          Flow order. If not provided, it will be extracted from the CRAM header <br />
 </p>
-<p name="SegDupAnalysis.DV.call_variants_gpu_type">
-        <b>SegDupAnalysis.DV.call_variants_gpu_type</b><br />
-        <i>String </i> &mdash;
+<p name="SegDupAnalysis.DV.call_variants_gpu_type_override">
+        <b>SegDupAnalysis.DV.call_variants_gpu_type_override</b><br />
+        <i>String? </i> &mdash;
          GPU type for call variants <br />
 </p>
 <p name="SegDupAnalysis.DV.call_variants_gpus">
@@ -282,6 +292,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
          Memory buffer allocated for each uncompression thread in calll_variants <br />
+</p>
+<p name="SegDupAnalysis.DV.v_gpu_tile_size">
+        <b>SegDupAnalysis.DV.v_gpu_tile_size</b><br />
+        <i>Int </i> &mdash;
+         Virtual GPU tile size for call_variants <br />
 </p>
 
 ### Optional reference files

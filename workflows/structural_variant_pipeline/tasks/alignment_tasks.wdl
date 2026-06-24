@@ -824,7 +824,6 @@ task MarkDuplicates {
         File monitoring_script
         String docker
         Boolean no_address
-        Int preemptibles
         Int disk_size = ceil(3.5*size(input_bam,"GB") +
             size(references.ref_fasta,"GB") + 10)
     }
@@ -839,7 +838,10 @@ task MarkDuplicates {
           -M ~{base_file_name}.duplicate_metrics \
           -R ~{references.ref_fasta} \
           --VERBOSITY WARNING \
-          --FLOW_MODE True
+          --FLOW_MODE True \
+          --FLOW_USE_END_IN_UNPAIRED_READS true \
+          --FLOW_USE_UNPAIRED_CLIPPED_END true \
+          --FLOW_UNPAIRED_END_UNCERTAINTY 0
     >>>
     runtime {
         disks: "local-disk " + disk_size + " HDD"

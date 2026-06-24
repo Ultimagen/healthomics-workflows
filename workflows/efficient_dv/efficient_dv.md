@@ -43,7 +43,7 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.reference_genome">
         <b>EfficientDV.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, mm10. Default to hg38 <br />
+         Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10. Default to hg38 <br />
 </p>
 <p name="EfficientDV.background_cram_files">
         <b>EfficientDV.background_cram_files</b><br />
@@ -117,15 +117,10 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Int </i> &mdash;
          Minimal base quality for candidate generation <br />
 </p>
-<p name="EfficientDV.pileup_min_mapping_quality">
-        <b>EfficientDV.pileup_min_mapping_quality</b><br />
+<p name="EfficientDV.min_mapping_quality">
+        <b>EfficientDV.min_mapping_quality</b><br />
         <i>Int </i> &mdash;
-         Minimal mapping quality to be included in image (the input to the CNN) <br />
-</p>
-<p name="EfficientDV.candidate_min_mapping_quality">
-        <b>EfficientDV.candidate_min_mapping_quality</b><br />
-        <i>Int </i> &mdash;
-         Minimal mapping quality for candidate generation <br />
+         Minimum mapping quality for reads to appear in pileup images (input to CNN) and to be considered as supporting an alt-allele in candidate generation <br />
 </p>
 <p name="EfficientDV.min_hmer_plus_one_candidate">
         <b>EfficientDV.min_hmer_plus_one_candidate</b><br />
@@ -146,6 +141,21 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.prioritize_alt_supporting_reads</b><br />
         <i>Boolean </i> &mdash;
          Generate an image with all available alt-supporting reads, and only then add non-supporting reads <br />
+</p>
+<p name="EfficientDV.active_areas_min_base_quality">
+        <b>EfficientDV.active_areas_min_base_quality</b><br />
+        <i>Int </i> &mdash;
+         Minimum base quality for active areas detection <br />
+</p>
+<p name="EfficientDV.prioritize_high_quality_reads">
+        <b>EfficientDV.prioritize_high_quality_reads</b><br />
+        <i>Boolean </i> &mdash;
+         When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads <br />
+</p>
+<p name="EfficientDV.trim_soft_clips">
+        <b>EfficientDV.trim_soft_clips</b><br />
+        <i>Boolean </i> &mdash;
+         Trim soft-clipped bases from pileup images <br />
 </p>
 <p name="EfficientDV.p_error">
         <b>EfficientDV.p_error</b><br />
@@ -205,12 +215,12 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.strong_call_threshold">
         <b>EfficientDV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference <br />
+         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
 </p>
 <p name="EfficientDV.ensemble_size">
         <b>EfficientDV.ensemble_size</b><br />
         <i>Int </i> &mdash;
-         Size of the ensemble for inference <br />
+         Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
 </p>
 <p name="EfficientDV.ensemble_reference_rows">
         <b>EfficientDV.ensemble_reference_rows</b><br />
@@ -277,9 +287,9 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>String? </i> &mdash;
          Flow order. If not provided, it will be extracted from the CRAM header <br />
 </p>
-<p name="EfficientDV.call_variants_gpu_type">
-        <b>EfficientDV.call_variants_gpu_type</b><br />
-        <i>String </i> &mdash;
+<p name="EfficientDV.call_variants_gpu_type_override">
+        <b>EfficientDV.call_variants_gpu_type_override</b><br />
+        <i>String? </i> &mdash;
          GPU type for call variants <br />
 </p>
 <p name="EfficientDV.call_variants_gpus">
@@ -301,6 +311,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
          Memory buffer allocated for each uncompression thread in calll_variants <br />
+</p>
+<p name="EfficientDV.v_gpu_tile_size">
+        <b>EfficientDV.v_gpu_tile_size</b><br />
+        <i>Int </i> &mdash;
+         Virtual GPU tile size for call_variants <br />
 </p>
 
 ### Optional reference files
@@ -358,11 +373,6 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Array[File]?</i><br />
         The tfrecords that call_variants outputs
 </p>
-<p name="EfficientDV.call_variants_output_tfrecords_final">
-        <b>EfficientDV.call_variants_output_tfrecords_final</b><br />
-        <i>Array[File]?</i><br />
-        The final merged tfrecord that call_variants outputs
-</p>
 <p name="EfficientDV.output_gvcf">
         <b>EfficientDV.output_gvcf</b><br />
         <i>File?</i><br />
@@ -417,16 +427,6 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.num_candidates_as_int</b><br />
         <i>Int</i><br />
         Number of candidates that call_variants processed (as an integer)
-</p>
-<p name="EfficientDV.num_weak_candidates">
-        <b>EfficientDV.num_weak_candidates</b><br />
-        <i>Array[File]</i><br />
-        Number of weak candidates that were re-called with ensemble inference
-</p>
-<p name="EfficientDV.num_weak_candidates_as_int">
-        <b>EfficientDV.num_weak_candidates_as_int</b><br />
-        <i>Int</i><br />
-        Number of weak candidates that were re-called with ensemble inference (as an integer)
 </p>
 
 <hr />

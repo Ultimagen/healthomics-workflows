@@ -29,7 +29,7 @@ import "tasks/alignment_tasks.wdl" as UGAlignment
 
 workflow PyPGx {
     input {
-        String pipeline_version = "1.31.2" # !UnusedDeclaration
+        String pipeline_version = "1.32.0" # !UnusedDeclaration
         String base_file_name
         File cram_file
         File cram_index_file
@@ -55,7 +55,7 @@ workflow PyPGx {
 
         ##@wv suffix(cram_file) <= {".bam", ".cram"}
         ##@wv suffix(cram_index_file) <= {".bai", ".crai"}
-        ##@wv reference_genome in {"hg38"}
+        ##@wv reference_genome in {"hg38", "hg38_no_alt"}
 
     }
 
@@ -97,7 +97,7 @@ workflow PyPGx {
             category: "input_required"
         }
         reference_genome: {
-            help: "Genome type selector. The workflow currently supports only hg38.",
+            help: "Genome type selector. Supported values: hg38, hg38_no_alt",
             category: "param_required"
         }
         input_vcf_file: {
@@ -228,8 +228,8 @@ workflow PyPGx {
             make_gvcf = false,
             recalibrate_vaf = false,
             is_somatic = false,
-            candidate_min_mapping_quality = 0, # Set to 0 so variants will be called also in regions of high homology such as CYP2D6
-            pileup_min_mapping_quality = 0, # Set to 0 so variants will be called also in regions of high homology such as CYP2D6
+            min_mapping_quality = 0, # Set to 0 so variants will be called also in regions of high homology such as CYP2D6
+            prioritize_high_quality_reads = false, # Disable so mapq=0 reads are not deprioritized in homologous regions
             keep_duplicates = true,
             override_target_intervals = ExtractGeneIntervals.interval_list,
             model_onnx = select_first([model_onnx]),
@@ -260,6 +260,7 @@ workflow PyPGx {
             base_file_name = base_file_name,
             cram_file = cram_file,
             cram_index_file = cram_index_file,
+            gene_symbols = gene_symbols,
             cache_tarball = CreateReferenceCache.cache_tarball,
             monitoring_script = monitoring_script,
             no_address_override = no_address,
@@ -352,6 +353,7 @@ task DepthOfCoverage {
         String base_file_name
         File cram_file
         File cram_index_file
+        Array[String] gene_symbols
         File cache_tarball
         File monitoring_script
         Int disk_size = ceil(1.1*size(cram_file, 'GB') + size(cache_tarball, 'GB') + 11)
@@ -369,7 +371,7 @@ task DepthOfCoverage {
         export REF_CACHE=cache/%2s/%2s/ 
         export REF_PATH='.' 
 
-        pypgx prepare-depth-of-coverage --assembly GRCh38 ~{base_file_name}.coverage.zip ~{cram_file}
+        pypgx prepare-depth-of-coverage ~{base_file_name}.coverage.zip ~{cram_file} --assembly GRCh38 --genes ~{sep=" " gene_symbols}
         pypgx compute-control-statistics --assembly GRCh38 VDR ~{base_file_name}_VDR_coverage.zip ~{cram_file}
 
     >>>

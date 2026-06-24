@@ -22,27 +22,17 @@ gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
 gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list
 ```
-3. A model checkpoint in ONNX format. There are two germline WGS models depending on the sequencing platform:
-
-**Solaris 2** (current):
+3. A model checkpoint in ONNX format:
 ```
 gs://concordanz/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
-or
+
+or 
 ```
 s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
 
-**Solaris 1**:
-```
-gs://concordanz/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx
-```
-or
-```
-s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx
-```
-
-**NOTE:** Additional models exist for WES, somatic, and pangenome use-cases. See the parameters templates for a complete list.
+**NOTE:** the exact model may differ between use-cases, we recommend consulting with the parameters templates provided to find the exact model
 
 ### Dockers and hardware requirements
 
@@ -50,15 +40,15 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.2.3
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.2.4
 or
-ultimagenomics/make_examples:3.2.3
+ultimagenomics/make_examples:3.2.4
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:4.0.0
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:4.1.0
 or
-ultimagenomics/call_variants:4.0.0
+ultimagenomics/call_variants:4.1.0
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
@@ -110,7 +100,6 @@ tool \
   --cgp-min-fraction-snps 0.12 \
   --cgp-min-fraction-hmer-indels 0.12 \
   --cgp-min-fraction-non-hmer-indels 0.06 \
-  --cgp-min-mapping-quality 5 \
   --max-reads-per-region 1500 \
   --assembly-min-base-quality 0 \
   --optimal-coverages 50 \
@@ -137,17 +126,22 @@ useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
 numInferTreadsPerGpu = 2
 useGPUs = 1
+vGPUTileSize = 4
 gpuid = 0
 
 [debug]
 logFileFolder = .
 
 [ensemble]
-ensembleSize = 7
-randomSeed = 1000
+ensembleSize = 0
+randomSeed = 42
 referenceRows = 5
 sampleHeights = 100
 shuffleAllSamples = false
+criteria = max_prob_threshold
+threshold = 0.995
+replaceAlways = true
+enableSelectiveLogging = false
 
 [general]
 tfrecord = 1
@@ -166,12 +160,35 @@ exampleFile 3 = input_dir/003.tfrecord.gz
 ```
 
 The last part of the `ini` file is a list with the paths to all tfrecord files, and the first `numExampleFiles` files are used.
-If `useSerializedModel` is set to 1, then the programs searches for a onnx-serialized file, with the same name as the onnx file and .serialized suffix. If the file is not found, it generates it. The serialized file can be re-used across different runs on the same platform (TRT version, GPU type etc.). The number of GPUs and the number of tfrecord.gz uncompression threads (runs on CPU) can be modified using the `useGPUs` and `numUncomprThreads` arguments, respectively.
+If `useSerializedModel` is set to 1, then the program searches for an onnx-serialized file with the same name as the onnx file and a `.serialized` suffix. If the file is not found, it generates it. The serialized file can be re-used across different runs on the same platform (TRT version, GPU type etc.). The number of GPUs and the number of tfrecord.gz uncompression threads (runs on CPU) can be modified using the `useGPUs` and `numUncomprThreads` arguments, respectively.
+
+`builderOptimizationLevel` controls the TensorRT engine-build optimization level (0–5). Higher values produce a faster inference engine at the cost of a longer build time. The workflow uses `1` for germline calling.
+
+`vGPUTileSize` is a virtual GPU tiling factor (default `1`) used by the ensemble inference scheduler. It multiplies the internal GPU slot count so that multiple inference threads can be interleaved; the physical GPU device is then selected as `gpuid / vGPUTileSize`.
 
 Once the `ini` file is ready, call_variants can be invoked from within the docker using:
 ```
-call_variants --param params.ini
+call_variants --param params.ini --fp16
 ```
+
+#### Ensemble inference
+
+The `[ensemble]` section controls selective ensemble inference, which improves variant calling accuracy by reprocessing uncertain candidates with multiple augmented passes.
+
+When `ensembleSize` is `0` or `1`, ensemble is fully disabled: each input image is inferred exactly once and no augmentation is applied. When `ensembleSize` is set to `2` or higher, a two-stage strategy is applied:
+1. **Base pass** — every image is inferred once.
+2. **Selective repass** — images whose top predicted-class probability is below `threshold` ("weak candidates") are reprocessed `ensembleSize` times, each time with a different random row-shuffle augmentation. The results are averaged to produce the final output.
+
+Images above `threshold` are "strong calls" and are not reprocessed, so the runtime overhead is proportional to the fraction of weak candidates rather than the full dataset.
+
+Key parameters:
+- `ensembleSize`: number of augmented inference passes for weak candidates. `0` or `1` disables ensemble entirely (no augmentation is applied); set to e.g. `7` to enable.
+- `threshold` (workflow parameter `strong_call_threshold`, default `0.995`): the max-class probability below which a candidate is considered weak and reprocessed.
+- `randomSeed` (workflow parameter `random_seed`, default `42`): random seed for the row-shuffle augmentation, ensuring reproducible results.
+- `referenceRows` (workflow parameter `ensemble_reference_rows`, default `5`): number of reference rows at the top of the image that are not shuffled.
+- `sampleHeights`: image height in rows per input sample. Use `100` for standard germline calling (single input CRAM). Use `100,100` when using pangenome haplotype calling (reads + haplotype CRAM).
+- `criteria`: selection criterion for identifying weak candidates. Always `max_prob_threshold` in the workflow.
+- `shuffleAllSamples` (workflow parameter `shuffle_all_samples`, default `false`): when `true`, row shuffling is applied to all samples in the image; when `false`, only the primary sample is shuffled.
 
 #### Using a serialized engine file in call_variants
 
@@ -236,7 +253,7 @@ As demonstrated by [Asri et al.](https://www.biorxiv.org/content/10.1101/2025.06
 
 #### Running `make_examples` with Haplotype Data
 
-Below is the command to generate images that include haplotype data. The key differences from standard variant calling are the addition of `--exp-pangenome-haps haplotypes.cram`, `--min-mapq 1`, and `--cgp-min-mapping-quality 1`:
+Below is the command to generate images that include haplotype data. The key differences from standard variant calling are the addition of `--exp-pangenome-haps haplotypes.cram`, and `--min-mapq 1`:
 
 ```bash
 tool \
@@ -247,7 +264,6 @@ tool \
   --reference Homo_sapiens_assembly38.fasta \
   --min-base-quality 5 \
   --min-mapq 1 \
-  --cgp-min-mapping-quality 1 \
   --cgp-min-count-snps 2 \
   --cgp-min-count-hmer-indels 2 \
   --cgp-min-count-non-hmer-indels 2 \

@@ -3,6 +3,10 @@
         "description": "If true, convert interval_list files to BED format in addition to interval_list format",
         "optional": true
     },
+    "PyPGx.EfficientDV.active_areas_min_base_quality": {
+        "description": "Minimum base quality for active areas detection",
+        "optional": true
+    },
     "PyPGx.EfficientDV.allele_frequency_ratio": {
         "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
         "optional": true
@@ -15,7 +19,7 @@
         "description": "Number of CPUs for call_variants",
         "optional": true
     },
-    "PyPGx.EfficientDV.call_variants_gpu_type": {
+    "PyPGx.EfficientDV.call_variants_gpu_type_override": {
         "description": "GPU type for call variants",
         "optional": true
     },
@@ -40,7 +44,7 @@
         "optional": true
     },
     "PyPGx.EfficientDV.ensemble_size": {
-        "description": "Size of the ensemble for inference",
+        "description": "Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
         "optional": true
     },
     "PyPGx.EfficientDV.germline_vcf": {
@@ -172,7 +176,11 @@
         "optional": true
     },
     "PyPGx.EfficientDV.strong_call_threshold": {
-        "description": "Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference",
+        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.trim_soft_clips": {
+        "description": "Trim soft-clipped bases from pileup images",
         "optional": true
     },
     "PyPGx.EfficientDV.ug_call_variants_extra_mem": {
@@ -193,6 +201,10 @@
     },
     "PyPGx.EfficientDV.ug_post_processing_extra_args": {
         "description": "Additional arguments for post-processing",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.v_gpu_tile_size": {
+        "description": "Virtual GPU tile size for call_variants",
         "optional": true
     },
     "PyPGx.base_file_name": {
@@ -252,7 +264,7 @@
         "optional": false
     },
     "PyPGx.reference_genome": {
-        "description": "Genome type selector. The workflow currently supports only hg38.",
+        "description": "Genome type selector. Supported values: hg38, hg38_no_alt",
         "optional": false
     }
 }

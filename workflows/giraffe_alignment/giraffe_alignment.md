@@ -48,6 +48,11 @@ Single-sample alignment + sort + mark-duplicates using vg giraffe only. This is 
         <i>Boolean </i> &mdash;
          When true, run haplotype sampling and output a haplotype CRAM. <br />
 </p>
+<p name="GiraffeAlignment.kmc_mem_gb">
+        <b>GiraffeAlignment.kmc_mem_gb</b><br />
+        <i>Int </i> &mdash;
+         Memory (GB) for KMC k-mer counting during haplotype sampling (default: 128). <br />
+</p>
 <p name="GiraffeAlignment.reads_per_split">
         <b>GiraffeAlignment.reads_per_split</b><br />
         <i>Int </i> &mdash;

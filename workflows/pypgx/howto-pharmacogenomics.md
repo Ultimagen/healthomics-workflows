@@ -73,8 +73,8 @@ If no input VCF is provided, the workflow uses Efficient DV to call variants. Fo
 
 | Parameter name in WDL         | Argument in tool command line | Value |
 | ----------------------------- | ----------------------------- | ----- |
-| candidate_min_mapping_quality | cgp-min-mapping-quality       | 0     |
-| pileup_min_mapping_quality    | min-map                       | 0     |
+| min_mapq | cgp-min-mapping-quality       | 0     |
+| min_mapq    | min-map                       | 0     |
 
 **Extracting Gene Regions (Recommended):**
 To reduce run time, limit variant calling to relevant genomic regions. A bed file with these regions can be produced by PyPGx:

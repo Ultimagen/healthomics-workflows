@@ -22,7 +22,7 @@ The steps of the pipeline are as following:
 <p name="SVPipeline.reference_genome">
         <b>SVPipeline.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome type selector. Supported values: hg38, b37 <br />
+         Genome type selector. Supported values: hg38, b37, hg38_no_alt <br />
 </p>
 <p name="SVPipeline.ua_parameters">
         <b>SVPipeline.ua_parameters</b><br />

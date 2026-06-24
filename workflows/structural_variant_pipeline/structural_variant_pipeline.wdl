@@ -42,7 +42,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.31.2" # !UnusedDeclaration
+        String pipeline_version = "1.32.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -97,7 +97,7 @@ workflow SVPipeline {
         Boolean create_md5_checksum_outputs = false
 
         # Winval validations
-        #@wv reference_genome in {"hg38", "b37"}
+        #@wv reference_genome in {"hg38", "b37", "hg38_no_alt"}
         #@wv min_base >= 0
         #@wv min_mapq >= 0
         #@wv max_num_haps >= 0
@@ -189,7 +189,7 @@ workflow SVPipeline {
         }
         reference_genome: {
             type: "String",
-            help: "Genome type selector. Supported values: hg38, b37",
+            help: "Genome type selector. Supported values: hg38, b37, hg38_no_alt",
             category: "required"
         }
         ua_parameters: {

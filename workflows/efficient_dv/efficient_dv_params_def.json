@@ -3,6 +3,10 @@
         "description": "If true, convert interval_list files to BED format in addition to interval_list format",
         "optional": true
     },
+    "EfficientDV.active_areas_min_base_quality": {
+        "description": "Minimum base quality for active areas detection",
+        "optional": true
+    },
     "EfficientDV.add_ins_size_channel": {
         "description": "Use a channel with the insertion size (depends on the model).",
         "optional": false
@@ -31,7 +35,7 @@
         "description": "Number of CPUs for call_variants",
         "optional": true
     },
-    "EfficientDV.call_variants_gpu_type": {
+    "EfficientDV.call_variants_gpu_type_override": {
         "description": "GPU type for call variants",
         "optional": true
     },
@@ -45,10 +49,6 @@
     },
     "EfficientDV.call_variants_uncompr_buf_size_gb": {
         "description": "Memory buffer allocated for each uncompression thread in calll_variants",
-        "optional": true
-    },
-    "EfficientDV.candidate_min_mapping_quality": {
-        "description": "Minimal mapping quality for candidate generation",
         "optional": true
     },
     "EfficientDV.cap_at_optimal_coverage": {
@@ -80,7 +80,7 @@
         "optional": true
     },
     "EfficientDV.ensemble_size": {
-        "description": "Size of the ensemble for inference",
+        "description": "Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
         "optional": true
     },
     "EfficientDV.germline_vcf": {
@@ -157,6 +157,10 @@
     },
     "EfficientDV.min_hmer_plus_one_candidate": {
         "description": "Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions",
+        "optional": true
+    },
+    "EfficientDV.min_mapping_quality": {
+        "description": "Minimum mapping quality for reads to appear in pileup images (input to CNN) and to be considered as supporting an alt-allele in candidate generation",
         "optional": true
     },
     "EfficientDV.min_read_count_hmer_indels": {
@@ -243,16 +247,16 @@
         "description": "Optional pangenome haplotypes cram index file",
         "optional": true
     },
-    "EfficientDV.pileup_min_mapping_quality": {
-        "description": "Minimal mapping quality to be included in image (the input to the CNN)",
-        "optional": true
-    },
     "EfficientDV.preemptible_tries": {
         "description": "Number of preemptible tries",
         "optional": false
     },
     "EfficientDV.prioritize_alt_supporting_reads": {
         "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "EfficientDV.prioritize_high_quality_reads": {
+        "description": "When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads",
         "optional": true
     },
     "EfficientDV.random_seed": {
@@ -272,7 +276,7 @@
         "optional": true
     },
     "EfficientDV.reference_genome": {
-        "description": "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, mm10. Default to hg38",
+        "description": "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10. Default to hg38",
         "optional": true
     },
     "EfficientDV.scatter_intervals_break": {
@@ -296,7 +300,11 @@
         "optional": true
     },
     "EfficientDV.strong_call_threshold": {
-        "description": "Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference",
+        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "optional": true
+    },
+    "EfficientDV.trim_soft_clips": {
+        "description": "Trim soft-clipped bases from pileup images",
         "optional": true
     },
     "EfficientDV.ug_call_variants_extra_mem": {
@@ -317,6 +325,10 @@
     },
     "EfficientDV.ug_post_processing_extra_args": {
         "description": "Additional arguments for post-processing",
+        "optional": true
+    },
+    "EfficientDV.v_gpu_tile_size": {
+        "description": "Virtual GPU tile size for call_variants",
         "optional": true
     }
 }

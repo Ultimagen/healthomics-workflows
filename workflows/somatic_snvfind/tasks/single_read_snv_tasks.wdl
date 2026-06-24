@@ -17,6 +17,50 @@ version 1.0
 
 
 import "structs.wdl" as Structs
+
+task PrepareAnnotationVcfs {
+  input {
+    String exclude_field_name = "EXCLUDE_TRAINING"
+    String include_field_name = "INCLUDE_INFERENCE"
+    String pcawg_field_name = "PCAWG"
+    Boolean has_exclude = false
+    Boolean has_include = false
+    Boolean has_pcawg = false
+    File? read_filters_json
+    Int? coverage_threshold
+    String docker
+    Int preemptible_tries
+    File monitoring_script
+  }
+
+  command <<<
+    set -xeuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    prepare_annotation_vcfs \
+      ~{if has_exclude then "--exclude-field " + exclude_field_name else ""} \
+      ~{if has_include then "--include-field " + include_field_name else ""} \
+      ~{if has_pcawg then "--pcawg-field " + pcawg_field_name else ""} \
+      ~{if defined(read_filters_json) then "--read-filters " + select_first([read_filters_json]) else ""} \
+      ~{if defined(coverage_threshold) then "--coverage-threshold " + coverage_threshold else ""} \
+      --output-dir .
+  >>>
+
+  runtime {
+    docker: docker
+    preemptible: preemptible_tries
+    memory: "4 GB"
+    cpu: 2
+    disks: "local-disk 5 HDD"
+  }
+
+  output {
+    File? augmented_read_filters = "read_filters_with_max_coverage.json"
+    File? inference_filters = "inference_filters.json"
+    File monitoring_log = "monitoring.log"
+  }
+}
+
 task PrepareFeatureMapForTraining {
   parameter_meta {
     memory_gb: {
@@ -54,7 +98,7 @@ task PrepareFeatureMapForTraining {
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    # Convert featuremap to parquet
+    # Convert featuremap to parquet (annotation exclusion filters are in the read_filters JSON)
     featuremap_to_dataframe \
     --input ~{featuremap} \
     --output ~{filtered_parquet} \
@@ -249,6 +293,11 @@ task CreateFeatureMap {
       type: "Int",
       category: "runtime"
     }
+    model_files: {
+      help: "Optional array of SingleReadSNVModel structs for model-aware featuremap creation",
+      type: "Array[SingleReadSNVModel]?",
+      category: "optional"
+    }
   }
   input {
     Array[File] input_cram_bam_list
@@ -262,6 +311,16 @@ task CreateFeatureMap {
     FeatureMapParams featuremap_params
     FeaturemapAnnotationFiles annotation_files
     Array[SingleReadSNVModel]? model_files         # Model SingleReadSNVModel structs (-M flag)
+    Array[File] exclude_annotation_vcfs = []         # annotation VCFs for snvfind -a flags
+    Array[File] exclude_annotation_vcf_indices = []
+    String exclude_annotation_field_name = ""
+    Array[File] include_annotation_vcfs = []
+    Array[File] include_annotation_vcf_indices = []
+    String include_annotation_field_name = ""
+    File? pcawg_annotation_vcf
+    File? pcawg_annotation_vcf_index
+    String pcawg_annotation_field_name = ""
+    File? augmented_read_filters                    # pre-augmented JSON from PrepareAnnotationVcfs
     String docker
     Int preemptible_tries
     File monitoring_script
@@ -272,7 +331,8 @@ task CreateFeatureMap {
 
   Float input_size = size(input_cram_bam_list, "GiB")
   Float ref_size = size(references.ref_fasta, "GiB")
-  Int disk_size = ceil(input_size * 3 + ref_size + 20 + size(annotation_files.dbsnp, "GiB") + size(annotation_files.gnomad, "GiB") + size(annotation_files.ug_hcr, "GiB"))
+  Float extra_annot_size = size(exclude_annotation_vcfs, "GiB") + size(include_annotation_vcfs, "GiB") + (if defined(pcawg_annotation_vcf) then size(select_first([pcawg_annotation_vcf]), "GiB") else 0)
+  Int disk_size = ceil(input_size * 3 + ref_size + 20 + size(annotation_files.dbsnp, "GiB") + size(annotation_files.gnomad, "GiB") + size(annotation_files.ug_hcr, "GiB") + extra_annot_size)
 
   String out_vcf = "~{base_file_name}.raw.featuremap.vcf.gz"
   String out_vcf_random_sample = "~{base_file_name}.random_sample.featuremap.vcf.gz"
@@ -340,15 +400,42 @@ task CreateFeatureMap {
       cp ~{sep=" " model_1_fold_files} "model_1/"
       MODEL_FLAG="${MODEL_FLAG},model_1/$(basename ~{sep='' model_1_metadata_files})"
     fi
-    # If no model is provided, but a read_filters json file is provided, input it in -M flag
-    if [ -z "$MODEL_FLAG" ] && [ -n "~{featuremap_params.read_filters}" ]; then
-      # 1. Complete read_filters json file with maximal coverage threshold
-      jq --argjson coverage_threshold ~{coverage_threshold} '(.filters_full_output[]? | select(.name == "coverage_le_max")) |= . + {value: $coverage_threshold} | (.filters_random_sample[]? | select(.name == "coverage_le_max")) |= . + {value: $coverage_threshold}' ~{featuremap_params.read_filters} > read_filters_with_max_coverage.json
-      MODEL_FLAG="-M read_filters_with_max_coverage.json"
+    # If no model is provided, use read_filters JSON for -M flag
+    # Use augmented JSON from PrepareAnnotationVcfs if available, otherwise apply coverage threshold
+    if [ -z "$MODEL_FLAG" ]; then
+      if [ -n "~{default='' augmented_read_filters}" ]; then
+        MODEL_FLAG="-M ~{augmented_read_filters}"
+      elif [ -n "~{featuremap_params.read_filters}" ]; then
+        jq --argjson coverage_threshold ~{coverage_threshold} '(.filters_full_output[]? | select(.name == "coverage_le_max")) |= . + {value: $coverage_threshold} | (.filters_random_sample[]? | select(.name == "coverage_le_max")) |= . + {value: $coverage_threshold}' ~{featuremap_params.read_filters} > read_filters_with_max_coverage.json
+        MODEL_FLAG="-M read_filters_with_max_coverage.json"
+      fi
+    fi
+
+    ##################### Convert annotation VCFs to BCF and build -a flags #####################
+    ANNOT_FLAGS=""
+    EXCL_IDX=0
+    for vcf in ~{sep=" " exclude_annotation_vcfs}; do
+      bcf_name="exclude_${EXCL_IDX}_$(basename "${vcf}" | sed 's/\.\(vcf\.gz\|vcf\)$/.bcf/')"
+      bcftools view -Ob -o "${bcf_name}" "${vcf}"
+      bcftools index "${bcf_name}"
+      ANNOT_FLAGS="${ANNOT_FLAGS} -a ${bcf_name},.,~{exclude_annotation_field_name}"
+      EXCL_IDX=$((EXCL_IDX + 1))
+    done
+    INCL_IDX=0
+    for vcf in ~{sep=" " include_annotation_vcfs}; do
+      bcf_name="include_${INCL_IDX}_$(basename "${vcf}" | sed 's/\.\(vcf\.gz\|vcf\)$/.bcf/')"
+      bcftools view -Ob -o "${bcf_name}" "${vcf}"
+      bcftools index "${bcf_name}"
+      ANNOT_FLAGS="${ANNOT_FLAGS} -a ${bcf_name},.,~{include_annotation_field_name}"
+      INCL_IDX=$((INCL_IDX + 1))
+    done
+    if [ -n "~{default='' pcawg_annotation_vcf}" ]; then
+      bcftools view -Ob -o pcawg_annot.bcf ~{pcawg_annotation_vcf}
+      bcftools index pcawg_annot.bcf
+      ANNOT_FLAGS="${ANNOT_FLAGS} -a pcawg_annot.bcf,.,~{pcawg_annotation_field_name}"
     fi
 
     ##################### Run snvfind #####################
-    # Run snvfind with parameters
     snvfind \
       ~{sep="," input_cram_bam_list} \
       ~{references.ref_fasta} \
@@ -372,9 +459,11 @@ task CreateFeatureMap {
       ~{true="-F" false="" select_first([featuremap_params.somatic_filter_mode, false])} \
       ~{true="-w" false="" defined(featuremap_params.pileup_window_width)} ~{default="" featuremap_params.pileup_window_width} \
       ~{true="-D" false="" defined(featuremap_params.filler_prob)} ~{default="" featuremap_params.filler_prob} \
+      ~{true="-u" false="" defined(featuremap_params.sample_name)} ~{default="" featuremap_params.sample_name} \
       -a ~{annotation_files.dbsnp},ID \
       -a ~{annotation_files.gnomad},AF,gnomAD_AF \
-      -a ~{annotation_files.ug_hcr},UG_HCR
+      -a ~{annotation_files.ug_hcr},UG_HCR \
+      ${ANNOT_FLAGS}
     
     bcftools index -t ~{out_vcf}
     if [ "$GENERATE_RANDOM_SAMPLE" = "true" ]; then

@@ -1,4 +1,32 @@
 {
+    "SingleReadSNV.FeatureMapPrep.CreateFeatureMap.model_files": {
+        "description": "Optional array of SingleReadSNVModel structs for model-aware featuremap creation",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.cpus": {
+        "description": "Number of cpus to use for this task. Default is 4.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.disk_size": {
+        "description": "Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.exclude_regions": {
+        "description": "Regions to exclude from the output vcf. Supported formats are bed, bed.gz, vcf, vcf.gz. VCF exclusion is done using bcftools view -T ^regions, by position and not by ref and alt.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.include_regions": {
+        "description": "Regions to include in the output vcf. Supported formats are bed, bed.gz. Inclusion is done using 'bcftools view -T'.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.memory_gb": {
+        "description": "Amount of memory to use for this task, in GB. Default is 4 (GB).",
+        "optional": true
+    },
     "SingleReadSNV.annotation_files": {
         "description": "Annotation files for featuremap generation: dbSNP, gnomAD, and UG High Confidence Regions with their indices",
         "optional": false
@@ -15,6 +43,10 @@
         "description": "Create md5 checksum for requested output files",
         "optional": true
     },
+    "SingleReadSNV.exclude_from_training_field_name": {
+        "description": "INFO field name for the exclude-from-training annotation in the featuremap VCF. Default: EXCLUDE_TRAINING",
+        "optional": true
+    },
     "SingleReadSNV.featuremap_params": {
         "description": "FeatureMap parameters, recommended value set in the template.",
         "optional": false
@@ -22,6 +54,14 @@
     "SingleReadSNV.features": {
         "description": "Features to be used for training the SNV quality model, should match pre trained model if one is given, recommended value set in the template.",
         "optional": false
+    },
+    "SingleReadSNV.include_in_inference_field_name": {
+        "description": "INFO field name for the include-in-inference annotation in the featuremap VCF. Default: INCLUDE_INFERENCE",
+        "optional": true
+    },
+    "SingleReadSNV.include_vcf_bcftools_filter_args": {
+        "description": "Bcftools filter arguments applied to include-in-inference VCFs before annotation. Default: '-f PASS --type snps -m2 -M2' (PASS biallelic SNPs only). Override if your VCFs lack a PASS filter.",
+        "optional": true
     },
     "SingleReadSNV.input_cram_bam_index_list": {
         "description": "Input CRAM index file/s",
@@ -61,6 +101,10 @@
     },
     "SingleReadSNV.override_memory_gb_TrainModel": {
         "description": "Override memory in GB for the TrainModel task, default: 32 (GiB). If an out of memory error occurs in the TrainModel task, try increasing this value, e.g. double it.",
+        "optional": true
+    },
+    "SingleReadSNV.pcawg_field_name": {
+        "description": "INFO field name for the PCAWG annotation in the featuremap VCF. Default: PCAWG",
         "optional": true
     },
     "SingleReadSNV.pre_trained_model_files": {

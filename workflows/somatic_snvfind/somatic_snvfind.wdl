@@ -35,7 +35,7 @@ import "tasks/structs.wdl" as Structs
 workflow SomaticSNVfind {
 
     input {
-        String pipeline_version = "1.31.2" # !UnusedDeclaration
+        String pipeline_version = "1.32.0" # !UnusedDeclaration
 
         String base_file_name
         References references
@@ -110,7 +110,17 @@ workflow SomaticSNVfind {
                 "SomaticSNVfindClassifier.cpus",
                 'CreateFeatureMap.mean_coverage',
                 'CreateFeatureMap.annotation_files',
-                'CreateFeatureMap.max_coverage_factor'
+                'CreateFeatureMap.max_coverage_factor',
+                'CreateFeatureMap.exclude_annotation_vcfs',
+                'CreateFeatureMap.exclude_annotation_vcf_indices',
+                'CreateFeatureMap.exclude_annotation_field_name',
+                'CreateFeatureMap.include_annotation_vcfs',
+                'CreateFeatureMap.include_annotation_vcf_indices',
+                'CreateFeatureMap.include_annotation_field_name',
+                'CreateFeatureMap.pcawg_annotation_vcf',
+                'CreateFeatureMap.pcawg_annotation_vcf_index',
+                'CreateFeatureMap.pcawg_annotation_field_name',
+                'CreateFeatureMap.augmented_read_filters'
                 ]}
     }
     parameter_meta {
@@ -322,7 +332,7 @@ workflow SomaticSNVfind {
                     docker = global.featuremap_docker,
                     preemptible_tries = preemptible_tries,
                     monitoring_script = monitoring_script,
-                    memory_gb = select_first([override_memory_gb_CreateFeatureMap, 32]),
+                    memory_gb = select_first([override_memory_gb_CreateFeatureMap, 4]),
                     cpus = 2,
             }
         }

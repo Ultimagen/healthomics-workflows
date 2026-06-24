@@ -8,7 +8,7 @@ import "tasks/sorting_tasks.wdl" as SortTasks
 
 workflow GiraffeAlignment {
     input {
-        String pipeline_version = "1.31.2" # !UnusedDeclaration
+        String pipeline_version = "1.32.0" # !UnusedDeclaration
 
         Array[File] input_cram_list
         String base_file_name
@@ -24,6 +24,7 @@ workflow GiraffeAlignment {
         SorterParams sorter_params
 
         Boolean output_haplotypes_cram = true
+        Int kmc_mem_gb = 128
 
         Int reads_per_split = 10000000
 
@@ -111,6 +112,11 @@ workflow GiraffeAlignment {
         output_haplotypes_cram: {
             help: "When true, run haplotype sampling and output a haplotype CRAM.",
             type: "Boolean",
+            category: "param_optional"
+        }
+        kmc_mem_gb: {
+            help: "Memory (GB) for KMC k-mer counting during haplotype sampling (default: 128).",
+            type: "Int",
             category: "param_optional"
         }
         reads_per_split: {
@@ -310,7 +316,8 @@ workflow GiraffeAlignment {
                 hapl_file = select_first([giraffe_parameters.ref_hapl]),
                 alignment_reference_fasta =   select_first([giraffe_parameters.alignment_reference_fasta_for_haplotypes]),
                 alignment_reference_fasta_index = select_first([giraffe_parameters.alignment_reference_fasta_index_for_haplotypes]),
-                sample_name = base_file_name
+                sample_name = base_file_name,
+                kmc_mem_gb = kmc_mem_gb
         }
     }
 

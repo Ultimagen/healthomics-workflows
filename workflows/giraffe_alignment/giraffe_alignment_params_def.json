@@ -43,6 +43,10 @@
         "description": "List of input CRAM/BAM files to align using vg giraffe. All files in the list are processed together.",
         "optional": false
     },
+    "GiraffeAlignment.kmc_mem_gb": {
+        "description": "Memory (GB) for KMC k-mer counting during haplotype sampling (default: 128).",
+        "optional": true
+    },
     "GiraffeAlignment.no_address_override": {
         "description": "no_address_override",
         "optional": true

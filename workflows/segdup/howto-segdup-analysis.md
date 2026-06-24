@@ -21,13 +21,13 @@ s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed
 s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz.tbi
 
 # Segmental duplication regions
-s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hom.regions.bed
+s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_260520/hom.regions.bed
 
 # Background regions for CNV calling
 s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz
 
 # Trained CNV model
-s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_250205/model.tar.gz
+s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_260520/model.tar.gz
 
 # DeepVariant model for segmental duplications
 s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx

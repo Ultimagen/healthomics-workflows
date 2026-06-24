@@ -16,6 +16,7 @@
     "EfficientDV.preemptible_tries": 2,
     "EfficientDV.cap_at_optimal_coverage": false,
     "EfficientDV.normalize_strand_bias": false,
+    "EfficientDV.ensemble_size": 0,
     "EfficientDV.strong_call_threshold": 1.1,
     "EfficientDV.background_cram_files": [
         "<normal_cram_file>.cram"
@@ -40,6 +41,8 @@
         80
     ],
     "EfficientDV.ug_make_examples_memory_override": 4,
+    "EfficientDV.ug_call_variants_extra_mem": 16,
+    "EfficientDV.v_gpu_tile_size": 2,
     "EfficientDV.cloud_provider_override": "aws",
     "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

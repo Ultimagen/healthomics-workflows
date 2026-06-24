@@ -95,6 +95,11 @@ The following input templates are available for different kinds of input data:
         <i>Int? &mdash; Default: None</i><br />
         Override memory in GB for the TrainModel task, default: 32 (GiB). If an out of memory error occurs in the TrainModel task, try increasing this value, e.g. double it.
 </p>
+<p name="SingleReadSNV.FeatureMapPrep.CreateFeatureMap.model_files">
+        <b>SingleReadSNV.FeatureMapPrep.CreateFeatureMap.model_files</b><br />
+        <i>Array[SingleReadSNVModel]? &mdash; Default: None</i><br />
+        Optional array of SingleReadSNVModel structs for model-aware featuremap creation
+</p>
 
 ### Optional inputs
 <p name="SingleReadSNV.sorter_json_stats_file_list">
@@ -112,6 +117,26 @@ The following input templates are available for different kinds of input data:
         <i>File? </i> &mdash;
          (Optional) CSV or TSV file with trinucleotide frequencies for the random sample. If provided, the random sample featuremap will be sampled according to the given trinucleotide frequency. If not provided, sampling is uniform. <br />
 </p>
+<p name="SingleReadSNV.exclude_from_training_field_name">
+        <b>SingleReadSNV.exclude_from_training_field_name</b><br />
+        <i>String </i> &mdash;
+         INFO field name for the exclude-from-training annotation in the featuremap VCF. Default: EXCLUDE_TRAINING <br />
+</p>
+<p name="SingleReadSNV.include_in_inference_field_name">
+        <b>SingleReadSNV.include_in_inference_field_name</b><br />
+        <i>String </i> &mdash;
+         INFO field name for the include-in-inference annotation in the featuremap VCF. Default: INCLUDE_INFERENCE <br />
+</p>
+<p name="SingleReadSNV.pcawg_field_name">
+        <b>SingleReadSNV.pcawg_field_name</b><br />
+        <i>String </i> &mdash;
+         INFO field name for the PCAWG annotation in the featuremap VCF. Default: PCAWG <br />
+</p>
+<p name="SingleReadSNV.include_vcf_bcftools_filter_args">
+        <b>SingleReadSNV.include_vcf_bcftools_filter_args</b><br />
+        <i>String </i> &mdash;
+         Bcftools filter arguments applied to include-in-inference VCFs before annotation. Default: '-f PASS --type snps -m2 -M2' (PASS biallelic SNPs only). Override if your VCFs lack a PASS filter. <br />
+</p>
 <p name="SingleReadSNV.create_md5_checksum_outputs">
         <b>SingleReadSNV.create_md5_checksum_outputs</b><br />
         <i>Boolean </i> &mdash;
@@ -126,6 +151,36 @@ The following input templates are available for different kinds of input data:
         <b>SingleReadSNV.total_aligned_bases</b><br />
         <i>String? </i> &mdash;
          (Optional) Total aligned bases used for downsampling rate calculation. Provide together with mean_coverage and without sorter_json_stats_file_list. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.base_file_name">
+        <b>SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.base_file_name</b><br />
+        <i>String? </i> &mdash;
+         Base file name for output files. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.exclude_regions">
+        <b>SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.exclude_regions</b><br />
+        <i>Array[File]? </i> &mdash;
+         Regions to exclude from the output vcf. Supported formats are bed, bed.gz, vcf, vcf.gz. VCF exclusion is done using bcftools view -T ^regions, by position and not by ref and alt. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.include_regions">
+        <b>SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.include_regions</b><br />
+        <i>Array[File]? </i> &mdash;
+         Regions to include in the output vcf. Supported formats are bed, bed.gz. Inclusion is done using 'bcftools view -T'. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.disk_size">
+        <b>SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.disk_size</b><br />
+        <i>Int </i> &mdash;
+         Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.memory_gb">
+        <b>SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.memory_gb</b><br />
+        <i>Int </i> &mdash;
+         Amount of memory to use for this task, in GB. Default is 4 (GB). <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.cpus">
+        <b>SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.cpus</b><br />
+        <i>Int </i> &mdash;
+         Number of cpus to use for this task. Default is 4. <br />
 </p>
 
 ### Optional parameters

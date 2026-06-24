@@ -35,10 +35,11 @@ workflow HaplotypeSampling {
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.31.2"   #!UnusedDeclaration
+        String pipeline_version = "1.32.0"   #!UnusedDeclaration
         # Resource parameters
         Int index_cores = 32
         Int index_mem_gb = 64
+        Int kmc_mem_gb = 128               # Memory (GB) for KMC k-mer counting
         Int map_cores = 30
         Int map_mem_gb = 64
 
@@ -104,7 +105,6 @@ workflow HaplotypeSampling {
             type: "File",
             category: "param_required"
         }
-
         sample_name: {
             help: "Sample name used for naming output files",
             type: "String",
@@ -112,6 +112,11 @@ workflow HaplotypeSampling {
         }
         kmer_length: {
             help: "K-mer length for KMC counting (default: 29)",
+            type: "Int",
+            category: "param_optional"
+        }
+        kmc_mem_gb: {
+            help: "Memory (GB) for KMC k-mer counting (default: 128)",
             type: "Int",
             category: "param_optional"
         }
@@ -184,7 +189,7 @@ workflow HaplotypeSampling {
             fastq_file = ConvertCramToFastq.fastq_file,
             sample_name = sample_name,
             kmer_length = kmer_length,
-            mem_gb = 128,
+            mem_gb = kmc_mem_gb,
             cores = 16,
             kmc_docker = kmc_docker,
             monitoring_script = monitoring_script   #!FileCoercion

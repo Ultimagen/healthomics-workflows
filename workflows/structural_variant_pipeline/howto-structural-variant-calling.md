@@ -61,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.2.3
+ultimagenomics/make_examples:3.2.4
 ```
 
 Generate interval bed : 
@@ -175,7 +175,7 @@ samtools index output_basename_assembly_file_ua_aligned_sorted.bam
 
 Docker:
 ```
-ultimagenomics/gridss:0c97dd1
+ultimagenomics/gridss:03117df
 ```
 
 Run: 
@@ -194,7 +194,7 @@ samtools index output_basename_assembly_ua_realigned.bam
 
 Docker:
 
-    ultimagenomics/gridss:0c97dd1
+    ultimagenomics/gridss:03117df
 
 ```
     python3 /opt/gridss/align_long_homopolymers.py \

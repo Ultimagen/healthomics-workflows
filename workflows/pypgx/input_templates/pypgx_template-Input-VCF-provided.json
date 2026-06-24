@@ -30,11 +30,7 @@
     "PyPGx.reference_genome": "hg38",
     "PyPGx.ref_files_for_tarball": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "s3://ultimagen-workflow-resources-us-east-1/hg38/methyl_seq_ref/hg38_Lambda_pUC19.fa",
-        "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta",
-        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/hg19.ucsc.fa",
-        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.25_GRCh37.p13_genomic.fna",
-        "s3://ultimagen-workflow-resources-us-east-1/ref_cram/GCF_000001405.39_GRCh38.p13_genomic.fna"
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38_no_alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"
     ],
     "PyPGx.input_vcf_file": "<input_vcf_file>.vcf",
     "PyPGx.input_vcf_index_file": "<input_vcf_file>.vcf.idx",

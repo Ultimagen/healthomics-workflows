@@ -36,7 +36,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.31.2" # !UnusedDeclaration
+        String pipeline_version = "1.32.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File]? ref_fastas_cram
         String base_file_name
@@ -80,7 +80,7 @@ workflow TrimAlignSort {
         #@wv len(input_cram_bam_list) > 0
         #@wv suffix(input_cram_bam_list) <= {".bam", ".cram"}
         #@wv 'trim' in steps or 'align' in steps or 'sort' in steps -> (steps['trim'] or steps['align'] or steps['sort'])
-        #@wv reference_genome in {"hg38", "b37", "b37_ancient_dna", "hg38_taps", "hg38_nist_v3", "mm10", "mm10_methyl", "mm39", "hg38_rna_seq"}
+        #@wv reference_genome in {"hg38", "b37", "b37_ancient_dna", "hg38_taps", "hg38_nist_v3", "hg38_no_alt", "mm10", "mm10_methyl", "mm39", "hg38_rna_seq", "hg38_nist_v3_with_decoy"}
 
         ## Trimmer checks
         #@wv 'trim' in steps and steps['trim'] -> defined(trimmer_parameters)
@@ -179,7 +179,7 @@ workflow TrimAlignSort {
         }
         reference_genome: {
             type: "String",
-            help: "Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38",
+            help: "Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38",
             category: "input_optional"
         }
         trimmer_parameters: {

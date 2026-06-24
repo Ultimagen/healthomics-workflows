@@ -354,3 +354,110 @@ task PadVcf {
     File padded_bed = "~{basename_vcf2}.padded.bed.gz"
   }
 }
+
+task FilterSignatureOnExactAltAllele {
+  input {
+    File signature_vcf
+    File signature_vcf_index
+    Array[File] exclude_vcfs
+    Array[File] exclude_vcf_indices
+    String docker
+    Int preemptible_tries = 1
+    File monitoring_script
+    Int disk_size = ceil(2 * size(signature_vcf, "GB") + size(exclude_vcfs, "GB") + 10)
+    Int memory_gb = 4
+    Int cpus = 2
+  }
+  parameter_meta {
+    signature_vcf: {
+      help: "Input signature VCF to filter.",
+      type: "File",
+      category: "input_required"
+    }
+    signature_vcf_index: {
+      help: "Respective tabix index.",
+      type: "File",
+      category: "input_required"
+    }
+    exclude_vcfs: {
+      help: "Array of VCFs to exclude. For each VCF, variants matching by locus and exact alt allele will be removed from the signature.",
+      type: "Array[File]",
+      category: "input_required"
+    }
+    exclude_vcf_indices: {
+      help: "Respective tabix indices for the exclude VCFs (same order).",
+      type: "Array[File]",
+      category: "input_required"
+    }
+    docker: {
+      help: "Docker image with bcftools.",
+      type: "String",
+      category: "input_required"
+    }
+    preemptible_tries: {
+      help: "Number of preemption retries.",
+      type: "Int",
+      category: "input_optional"
+    }
+    monitoring_script: {
+      help: "UG resource monitoring script.",
+      type: "File",
+      category: "input_required"
+    }
+    disk_size: {
+      help: "Disk size in GB. Default is calculated from input file sizes.",
+      type: "Int",
+      category: "input_optional"
+    }
+    memory_gb: {
+      help: "Memory in GB. Default is 4.",
+      type: "Int",
+      category: "input_optional"
+    }
+    cpus: {
+      help: "Number of CPUs. Default is 2.",
+      type: "Int",
+      category: "input_optional"
+    }
+  }
+  String output_basename = basename(signature_vcf, ".vcf.gz") + ".exact_alt_filtered"
+
+  command <<<
+    set -xeo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    EXCLUDE_VCFS=(~{sep=" " exclude_vcfs})
+    EXCLUDE_IDXS=(~{sep=" " exclude_vcf_indices})
+
+    ln -s ~{signature_vcf} sig.vcf.gz
+    ln -s ~{signature_vcf_index} sig.vcf.gz.tbi
+
+    EXCLUDE_ARGS=()
+    for i in "${!EXCLUDE_VCFS[@]}"; do
+      ln -s "${EXCLUDE_VCFS[$i]}" "exclude_${i}.vcf.gz"
+      ln -s "${EXCLUDE_IDXS[$i]}" "exclude_${i}.vcf.gz.tbi"
+      EXCLUDE_ARGS+=("exclude_${i}.vcf.gz")
+    done
+
+    bcftools isec -C -w1 \
+      sig.vcf.gz \
+      "${EXCLUDE_ARGS[@]}" \
+      --threads ~{cpus} \
+      --collapse some \
+      -Oz -o ~{output_basename}.vcf.gz
+
+    bcftools index -t ~{output_basename}.vcf.gz
+  >>>
+  runtime {
+    preemptible: preemptible_tries
+    cpu: "~{cpus}"
+    memory: "~{memory_gb} GB"
+    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+  }
+  output {
+    File monitoring_log = "monitoring.log"
+    File output_vcf = "~{output_basename}.vcf.gz"
+    File output_vcf_index = "~{output_basename}.vcf.gz.tbi"
+  }
+}

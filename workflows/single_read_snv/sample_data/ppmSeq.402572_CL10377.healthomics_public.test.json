@@ -25,6 +25,10 @@
     "SingleReadSNV.preemptible_tries": 1,
     "SingleReadSNV.raise_exceptions_in_report": true,
     "SingleReadSNV.create_md5_checksum_outputs": false,
+    "SingleReadSNV.exclude_from_training_field_name": "EXCLUDE_TRAINING",
+    "SingleReadSNV.include_in_inference_field_name": "INCLUDE_INFERENCE",
+    "SingleReadSNV.pcawg_field_name": "PCAWG",
+    "SingleReadSNV.include_vcf_bcftools_filter_args": "-f PASS --type snps -m2 -M2",
     "SingleReadSNV.features": [
         "REF",
         "ALT",

@@ -40,7 +40,7 @@
         "optional": true
     },
     "TrimAlignSort.reference_genome": {
-        "description": "Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38",
+        "description": "Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38",
         "optional": true
     },
     "TrimAlignSort.sorter_params": {

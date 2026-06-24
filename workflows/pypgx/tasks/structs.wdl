@@ -169,6 +169,7 @@ struct FeatureMapParams {
   Boolean? somatic_filter_mode      # -F flag use somatic filter mode, meaning that only the first sample is examined for quality filter (FILT=1)
   Boolean generate_random_sample   # Whether to generate a random sample for the featuremap
   Float? filler_prob               # -D filler probability parameter for snvfind
+  String? sample_name              # -u If specifies, it disable all rg/sample_name checks and generates a single sample by the give name
 }
 
 struct SingleReadSNVParams {
@@ -310,9 +311,41 @@ struct FeaturemapAnnotationFiles {
   File gnomad_index
   File ug_hcr
   File ug_hcr_index
+  Array[File]? exclude_from_training_vcf_list
+  Array[File]? exclude_from_training_vcf_index_list
+  Array[File]? include_in_inference_vcf_list
+  Array[File]? include_in_inference_vcf_index_list
+  File? pcawg_vcf
+  File? pcawg_vcf_index
 }
 
 struct SingleReadSNVModel {
   File model_metadata           # srsnv_metadata.json
   Array[File] model_fold_files  # 3 model_fold_*.json files
+}
+
+struct DeepSRSNVParams {
+    Int num_folds                     # k-fold count (typically 3)
+    Int tensor_length                 # padded read length (default 300)
+    Int shard_size                    # rows per shard (default 25000)
+    Int num_tensorize_workers         # parallel workers for cram_to_tensors
+    String holdout_chromosomes        # comma-separated (default "chr21")
+    Int random_seed                   # reproducibility seed
+    # Training
+    Int epochs                        # max training epochs
+    Int patience                      # early stopping patience
+    Int batch_size                    # training batch size
+    Float learning_rate               # learning rate
+    String lr_scheduler               # "cosine" or "onecycle"
+    Boolean use_amp                   # mixed-precision training
+    File? pretrained_checkpoint       # optional pretrained .ckpt for fine-tuning
+    # Hardware
+    Int gpu_count                     # GPUs for training tasks (default 4; inference hardcodes 1)
+    Int? training_gpu_count           # GPUs for training (default: gpu_count; set to 1 to avoid /dev/shm issues)
+    String? gpu_type                  # GPU type (default: nvidia-tesla-t4)
+    # Inference
+    String? inference_backend         # "trt" or "pytorch" (default: trt)
+    Float? low_qual_threshold         # SNVQ threshold for PASS filter (default: 40.0)
+    # Feature channels
+    String? dnn_channels              # "pos1:pos2:...|const1:const2:..." (default: qual:tp:mask:focus:softclip_mask:t0|strand:mapq:rq:mixed)
 }

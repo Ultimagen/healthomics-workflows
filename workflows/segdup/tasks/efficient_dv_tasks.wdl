@@ -19,7 +19,7 @@ task UGMakeExamples{
     File? pangenome_haplotypes_index
 
     Int min_base_quality
-    Int pileup_min_mapping_quality
+    Int min_mapq
     Int min_read_count_snps
     Int min_read_count_hmer_indels
     Int min_read_count_non_hmer_indels
@@ -28,9 +28,11 @@ task UGMakeExamples{
     Float min_fraction_non_hmer_indels
     Float min_fraction_single_strand_non_snps
     Int? min_hmer_plus_one_candidate
-    Int candidate_min_mapping_quality
     Int max_reads_per_partition
     Int assembly_min_base_quality
+    Int active_areas_min_base_quality = 5
+    Boolean prioritize_high_quality_reads = true
+    Boolean trim_soft_clips = true
     Boolean make_gvcf
     Float p_error = 0
     Int gq_resolution = 5
@@ -229,8 +231,7 @@ task UGMakeExamples{
         --bed "$interval_part" \
         --median-coverage ~{median_coverage} \
         --background-median-coverage ~{background_median_coverage} \
-        --min-base-quality ~{min_base_quality} \
-        --min-mapq ~{pileup_min_mapping_quality} \
+        --min-mapq ~{min_mapq} \
         --cgp-min-count-snps ~{min_read_count_snps} \
         --cgp-min-count-hmer-indels ~{min_read_count_hmer_indels} \
         --cgp-min-count-non-hmer-indels ~{min_read_count_non_hmer_indels} \
@@ -238,10 +239,13 @@ task UGMakeExamples{
         --cgp-min-fraction-hmer-indels ~{min_fraction_hmer_indels} \
         --cgp-min-fraction-non-hmer-indels ~{min_fraction_non_hmer_indels} \
         --cgp-min-fraction-single-strand-non-snps ~{min_fraction_single_strand_non_snps} \
-        --cgp-min-mapping-quality ~{candidate_min_mapping_quality} \
         --cgp-min-hmer-plus-one-candidate ~{if defined(min_hmer_plus_one_candidate) then min_hmer_plus_one_candidate else 7} \
         --max-reads-per-region ~{max_reads_per_partition} \
         --assembly-min-base-quality ~{assembly_min_base_quality} \
+        --min-base-quality ~{min_base_quality} \
+        --active-areas-min-base-quality ~{active_areas_min_base_quality} \
+        ~{true="--prioritize-high-quality-reads" false="" prioritize_high_quality_reads} \
+        ~{true="--trim-soft-clips" false="" trim_soft_clips} \
         ~{true="--realigned-sam" false="" output_realignment} \
         ~{true="--somatic" false="" is_somatic} \
         ~{if make_gvcf then "--gvcf --p-error ~{p_error} $gvcf_extra_args" else ""} \
@@ -342,11 +346,13 @@ task UGCallVariants{
     Int? call_variants_extra_mem
     Int? optimization_level
     Boolean no_address = true
+    Int v_gpu_tile_size = 4
     
-    # Ensemble parameters
+    # Ensemble parameters (ensemble_size <= 1 disables ensemble entirely — no augmentation is applied; >= 2 enables selective ensemble)
     Int ensemble_size = 0
     Int random_seed = 42
     Int reference_rows = 5
+    Float strong_call_threshold = 0.995
     
     # Multi-sample parameters
     Array[Int] sample_heights  # Height of each sample (e.g., [100,100] or [100])
@@ -355,10 +361,13 @@ task UGCallVariants{
 
   Int disk_size = ceil(1.05*size(examples, 'GB') + size(model_onnx, 'GB') + 20)
   Int num_examples = length(examples)
-  Int extra_mem = select_first([call_variants_extra_mem, 8])
+  Int extra_mem = select_first([call_variants_extra_mem, 16])
   Int builder_optimization_level  = select_first([optimization_level, if is_somatic then 5 else 1])
   Int mem = num_threads * call_variants_uncompr_buf_size_gb + extra_mem
   String onnx_base_name = basename(model_onnx)
+
+  String ensemble_criteria = "max_prob_threshold"
+  
   command <<<
     set -eo pipefail
 
@@ -381,6 +390,7 @@ task UGCallVariants{
       "trtWorkspaceSizeMB = 2000" \
       "numInferTreadsPerGpu = 2" \
       "useGPUs = ~{num_gpus}" \
+      "vGPUTileSize = ~{v_gpu_tile_size}" \
       "gpuid = 0\n" \
       "[debug]" \
       "logFileFolder = .\n" \
@@ -389,7 +399,11 @@ task UGCallVariants{
       "randomSeed = ~{random_seed}" \
       "referenceRows = ~{reference_rows}" \
       "sampleHeights = ~{sep=',' sample_heights}" \
-      "shuffleAllSamples = ~{true='true' false='false' shuffle_all_samples}\n" \
+      "shuffleAllSamples = ~{true='true' false='false' shuffle_all_samples}" \
+      "criteria = ~{ensemble_criteria}" \
+      "threshold = ~{strong_call_threshold}" \
+      "replaceAlways = true" \
+      "enableSelectiveLogging = false\n" \
       "[general]" \
       "tfrecord = 1" \
       "compressed = 1" \
@@ -404,7 +418,8 @@ task UGCallVariants{
 
     call_variants --param params.ini --fp16
 
-    num_candidates_val=$(grep -oP 'total batch size \K\d+(?= vectors)' call_variants*.log)
+    num_candidates_val=$(grep -oP 'num_candidates: \K\d+' call_variants*.log) \
+      || { echo "ERROR: 'num_candidates:' line not found in call_variants log -- check call_variants version compatibility" >&2; exit 1; }
     echo "$num_candidates_val" > "num_candidates_${num_candidates_val}"
     echo "$num_candidates_val" > nc.txt
 
@@ -430,55 +445,6 @@ output {
     Int num_candidates_as_int = read_int("nc.txt")
     File output_model_serialized = "~{onnx_base_name}.serialized"
   }
-}
-
-task UGSplitBoundaryCalls {
-  input {
-    Array[File] examples
-    Array[File] calls
-    Float boundary_threshold
-    String docker
-    File monitoring_script
-    Int preemptible_tries
-    Boolean no_address
-  }
-  Int disk_size = ceil(1.1*size(examples, 'GB') + 1.1*size(calls, 'GB') + 10)
-  command <<<
-    set -exo pipefail
-    examples_file=~{write_lines(examples)}
-    calls_file=~{write_lines(calls)}
-    
-    bash ~{monitoring_script} | tee monitoring.log >&2 &
-    mkdir boundary_examples
-    mkdir strong_calls
-    sort -t "." -k2,2n $calls_file > sorted_calls.txt
-    paste -d "\t" $examples_file sorted_calls.txt > input_pairs.txt
-    cat input_pairs.txt
-    while IFS=$'\t' read -r example call; do
-      example_basename=$(basename "$example")
-      echo "[$(date +%T)] Processing line $((++line_count)) of $(wc -l < input_pairs.txt)"
-      call_basename=$(basename "$call")
-      dvtools --infile "$call" --op ensembleSplit --filetype cvo \
-      --ensembleSplitThreshold ~{boundary_threshold} \
-      --ensembleSplitInputDV "$example" \
-      --outfile "strong_calls/${call_basename}" \
-      --ensembleSplitOutputDV "boundary_examples/${example_basename}"
-    done < input_pairs.txt
-
-  >>>
-  runtime {
-    memory: "8 GB"
-    disks: "local-disk " + disk_size + " HDD"
-    docker: docker
-    preemptible: preemptible_tries
-    noAddress: no_address
-    cpu: 2
-  }
-  output {
-    Array[File] strong_calls = glob("strong_calls/*.gz")
-    Array[File] boundary_examples = glob("boundary_examples/*.tfrecord.gz")
-    File monitoring_log = "monitoring.log"
-  } 
 }
 
 

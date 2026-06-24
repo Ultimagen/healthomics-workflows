@@ -34,7 +34,7 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 <p name="TrimAlignSort.reference_genome">
         <b>TrimAlignSort.reference_genome</b><br />
         <i>String </i> &mdash;
-         Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38 <br />
+         Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38 <br />
 </p>
 <p name="TrimAlignSort.trimmer_parameters">
         <b>TrimAlignSort.trimmer_parameters</b><br />

@@ -91,8 +91,16 @@
         "description": "dummy_input_for_call_caching",
         "optional": true
     },
-    "MRDFeatureMap.exclude_regions": {
-        "description": "Genomic regions to exclude from the analysis, bed and vcf[.gz] files are accepted",
+    "MRDFeatureMap.exclude_regions_bed": {
+        "description": "BED regions to exclude from the analysis (position-based filtering)",
+        "optional": true
+    },
+    "MRDFeatureMap.exclude_regions_vcf": {
+        "description": "VCF files to exclude from signatures by exact locus and alt allele (e.g. dbSNP, GNOMAD, panel-of-normals). Must be bgzipped and tabix-indexed.",
+        "optional": true
+    },
+    "MRDFeatureMap.exclude_regions_vcf_indices": {
+        "description": "Respective tabix indices for exclude_regions_vcf (same order).",
         "optional": true
     },
     "MRDFeatureMap.external_control_signatures": {

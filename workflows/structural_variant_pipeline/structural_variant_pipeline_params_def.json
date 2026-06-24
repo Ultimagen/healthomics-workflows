@@ -152,7 +152,7 @@
         "optional": false
     },
     "SVPipeline.reference_genome": {
-        "description": "Genome type selector. Supported values: hg38, b37",
+        "description": "Genome type selector. Supported values: hg38, b37, hg38_no_alt",
         "optional": false
     },
     "SVPipeline.reference_name": {

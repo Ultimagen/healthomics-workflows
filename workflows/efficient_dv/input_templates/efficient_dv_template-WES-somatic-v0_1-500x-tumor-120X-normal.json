@@ -16,6 +16,7 @@
     "EfficientDV.preemptible_tries": 2,
     "EfficientDV.cap_at_optimal_coverage": true,
     "EfficientDV.normalize_strand_bias": true,
+    "EfficientDV.ensemble_size": 0,
     "EfficientDV.strong_call_threshold": 1.1,
     "EfficientDV.background_cram_files": [
         "<normal_bam_file>.cram"
@@ -49,6 +50,7 @@
     "EfficientDV.max_reads_per_partition": 6500,
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,
+    "EfficientDV.ug_call_variants_extra_mem": 16,
     "EfficientDV.annotation_intervals": [
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
@@ -57,6 +59,7 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
+    "EfficientDV.v_gpu_tile_size": 2,
     "EfficientDV.cloud_provider_override": "aws",
     "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

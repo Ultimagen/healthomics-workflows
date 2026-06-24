@@ -34,7 +34,7 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.reference_genome">
         <b>PyPGx.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome type selector. The workflow currently supports only hg38. <br />
+         Genome type selector. Supported values: hg38, hg38_no_alt <br />
 </p>
 
 ### Optional inputs
@@ -140,6 +140,16 @@ Runs pharmacogenomics analysis on several genes.
         <i>Boolean </i> &mdash;
          Generate an image with all available alt-supporting reads, and only then add non-supporting reads <br />
 </p>
+<p name="PyPGx.EfficientDV.active_areas_min_base_quality">
+        <b>PyPGx.EfficientDV.active_areas_min_base_quality</b><br />
+        <i>Int </i> &mdash;
+         Minimum base quality for active areas detection <br />
+</p>
+<p name="PyPGx.EfficientDV.trim_soft_clips">
+        <b>PyPGx.EfficientDV.trim_soft_clips</b><br />
+        <i>Boolean </i> &mdash;
+         Trim soft-clipped bases from pileup images <br />
+</p>
 <p name="PyPGx.EfficientDV.p_error">
         <b>PyPGx.EfficientDV.p_error</b><br />
         <i>Float </i> &mdash;
@@ -198,12 +208,12 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.EfficientDV.strong_call_threshold">
         <b>PyPGx.EfficientDV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Threshold for boundary call. If ensemble_size > 0 boundary calls will be re-called using ensemble inference <br />
+         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
 </p>
 <p name="PyPGx.EfficientDV.ensemble_size">
         <b>PyPGx.EfficientDV.ensemble_size</b><br />
         <i>Int </i> &mdash;
-         Size of the ensemble for inference <br />
+         Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
 </p>
 <p name="PyPGx.EfficientDV.ensemble_reference_rows">
         <b>PyPGx.EfficientDV.ensemble_reference_rows</b><br />
@@ -250,9 +260,9 @@ Runs pharmacogenomics analysis on several genes.
         <i>String? </i> &mdash;
          Flow order. If not provided, it will be extracted from the CRAM header <br />
 </p>
-<p name="PyPGx.EfficientDV.call_variants_gpu_type">
-        <b>PyPGx.EfficientDV.call_variants_gpu_type</b><br />
-        <i>String </i> &mdash;
+<p name="PyPGx.EfficientDV.call_variants_gpu_type_override">
+        <b>PyPGx.EfficientDV.call_variants_gpu_type_override</b><br />
+        <i>String? </i> &mdash;
          GPU type for call variants <br />
 </p>
 <p name="PyPGx.EfficientDV.call_variants_gpus">
@@ -274,6 +284,11 @@ Runs pharmacogenomics analysis on several genes.
         <b>PyPGx.EfficientDV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
          Memory buffer allocated for each uncompression thread in calll_variants <br />
+</p>
+<p name="PyPGx.EfficientDV.v_gpu_tile_size">
+        <b>PyPGx.EfficientDV.v_gpu_tile_size</b><br />
+        <i>Int </i> &mdash;
+         Virtual GPU tile size for call_variants <br />
 </p>
 
 ### Optional reference files

@@ -203,10 +203,20 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
 </p>
 
 ### Optional reference files
-<p name="MRDFeatureMap.exclude_regions">
-        <b>MRDFeatureMap.exclude_regions</b><br />
+<p name="MRDFeatureMap.exclude_regions_bed">
+        <b>MRDFeatureMap.exclude_regions_bed</b><br />
         <i>Array[File] </i> &mdash;
-         Genomic regions to exclude from the analysis, bed and vcf[.gz] files are accepted <br />
+         BED regions to exclude from the analysis (position-based filtering) <br />
+</p>
+<p name="MRDFeatureMap.exclude_regions_vcf">
+        <b>MRDFeatureMap.exclude_regions_vcf</b><br />
+        <i>Array[File] </i> &mdash;
+         VCF files to exclude from signatures by exact locus and alt allele (e.g. dbSNP, GNOMAD, panel-of-normals). Must be bgzipped and tabix-indexed. <br />
+</p>
+<p name="MRDFeatureMap.exclude_regions_vcf_indices">
+        <b>MRDFeatureMap.exclude_regions_vcf_indices</b><br />
+        <i>Array[File] </i> &mdash;
+         Respective tabix indices for exclude_regions_vcf (same order). <br />
 </p>
 </details>
 
