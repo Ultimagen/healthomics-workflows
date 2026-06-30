@@ -26,7 +26,7 @@ import "tasks/cnv_calling_tasks.wdl" as CNVTasks
 workflow SingleSampleCNVpytorCalling {
 
     input {
-        String pipeline_version = "1.32.0" # !UnusedDeclaration
+        String pipeline_version = "1.32.1" # !UnusedDeclaration
 
         String base_file_name
         String? sample_name

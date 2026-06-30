@@ -15,7 +15,7 @@ workflow Globals {
         "ubuntu_docker": "ubuntu:focal",
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.18.0",
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.27.1",
         "ugbio_mrd_docker": "ultimagenomics/ugbio_mrd:1.26.0",
         "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.26.0",
         "mosdepth_docker": "brentp/mosdepth:v0.3.3"

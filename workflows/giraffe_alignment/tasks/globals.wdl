@@ -16,7 +16,7 @@ workflow Globals {
         "giraffe_docker": "ultimagenomics/giraffe:1.71.1",
         "crammer_docker": "ultimagenomics/crammer:1.3.1_1f194312_1f1943",
         "sorter_docker": "ultimagenomics/sorter:1.5.18",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.18.0"
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.27.1"
 }
 }
 

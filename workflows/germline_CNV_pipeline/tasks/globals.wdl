@@ -16,7 +16,7 @@ workflow Globals {
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.18.0",
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.27.1",
         "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.24.0",
         "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.22.0"
 }
