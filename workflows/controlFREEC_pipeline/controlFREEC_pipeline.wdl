@@ -827,7 +827,7 @@ CODE
     runtime {
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
-        cpu:1
+        cpu: 1
     }
 
 }
