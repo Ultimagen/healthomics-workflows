@@ -324,7 +324,7 @@ task IntervalListOfGenome {
 
   runtime {
     preemptible: preemptible_tries
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
@@ -359,7 +359,7 @@ task IntervalListFromString {
   >>>
   runtime {
     preemptible: preemptible_tries
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
@@ -395,7 +395,7 @@ task IntervalListTotalLength {
   }
 
    runtime {
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + 4 + " HDD"
     docker: docker
@@ -422,7 +422,7 @@ task FastaLengthFromIndex {
   }
 
    runtime {
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + 4 + " HDD"
     docker: docker
@@ -530,7 +530,7 @@ task DownsampleCramBam {
     >>>
     runtime {
         disks: "local-disk " + disk_size + " HDD"
-        cpu: "~{cpus}"
+        cpu: cpus
         memory: "~{memory_gb} GB"
         preemptible: preemptibles
         docker: docker
@@ -631,7 +631,7 @@ task ConcatHtmls {
         preemptible: preemptible_tries
         memory: "2 GB"
         docker: docker
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + ceil(disk_size) + " HDD"
         noAddress: true
     }
@@ -700,7 +700,7 @@ task RenameSampleInBam {
     runtime {
         preemptible: preemptible_tries
         memory: "2 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + disk_size + " LOCAL"
         docker: docker
         noAddress: no_address
@@ -748,7 +748,7 @@ task MergeCramFiles {
             disks: "local-disk " + (ceil(size(cache_tarball, "GB") + size(crams, "GB")) * 3 + 10) + " HDD"
             docker: docker
             noAddress: no_address
-            cpu: "~{cpus_to_use}"
+            cpu: cpus_to_use
             preemptible: preemptible_tries
 
     }
@@ -773,7 +773,7 @@ task MergeBams {
     runtime {
         preemptible: preemptible_tries
         memory: "16 GB"
-        cpu: "8"
+        cpu: 8
         disks: "local-disk " + disk_size + " LOCAL"
         docker: docker
         noAddress: no_address
@@ -970,7 +970,7 @@ task FilterVcfWithBcftools {
         memory: "~{memory_gb} GB"
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
-        cpu: "~{cpus}"
+        cpu: cpus
         preemptible: preemptible_tries
     }
 }
@@ -1027,7 +1027,7 @@ task ExtractSorterStatsMetrics {
         preemptible: preemptible_tries
         memory: "2 GB"
         docker: docker
-        cpu: "1"
+        cpu: 1
     }
     output {
         Float mean_coverage = read_float("~{mean_coverage_output_file}")
@@ -1048,7 +1048,7 @@ task CopyFiles {
         docker: docker
         preemptible: 1
         memory: "2 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " +ceil(2*size(input_files,"GB") + 1) + " HDD"
         noAddress: true
     }
@@ -1222,7 +1222,7 @@ task ConcatFiles{
     runtime {
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
-        cpu:1
+        cpu: 1
     }
     output{
         File out_merged_file = "~{out_file_name}"

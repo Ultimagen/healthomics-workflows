@@ -508,7 +508,7 @@ task CollectIntervalCoverageStats {
 
     runtime {
         preemptible: preemptible_tries
-        cpu: "16"
+        cpu: 16
         memory: "16 GB"
         disks: "local-disk " + coverage_stats_disk + " LOCAL"
         docker: docker
@@ -613,7 +613,7 @@ task FastQC {
   runtime
   {
     docker: docker
-    cpu: "~{cpu}"
+    cpu: cpu
     memory: "~{memory_gb} GB"
     disks: "local-disk " + disk_size + " " + disk_type
     noAddress: no_address
@@ -651,7 +651,7 @@ task CreateReportSingleSampleQC {
         preemptible: preemptible_tries
         memory: "3 GB"
         docker: docker
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + ceil(disk_size) + " HDD"
         noAddress: true
         maxRetries: preemptible_tries
