@@ -37,7 +37,7 @@ task ppmSeqQC {
   >>>
   runtime {
     preemptible: preemptible_tries
-    cpu: "~{cpu}"
+    cpu: cpu
     memory: "~{memory_gb} GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker

@@ -132,7 +132,7 @@ task Demux {
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"
-        cpu: "~{cpu}"
+        cpu: cpu
         preemptible: preemptible_tries_final
         memory: "~{memory_gb} GiB"
         disks: "local-disk " + ceil(mapped_bam_size_local_ssd) + " LOCAL"
@@ -296,7 +296,7 @@ task Sorter {
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"
-        cpu: "~{cpu}"
+        cpu: cpu
         preemptible: preemptible_tries_final
         memory: "~{memory_gb} GiB"
         disks: "local-disk " + ceil(mapped_bam_size_local_ssd) + " LOCAL"
@@ -374,7 +374,7 @@ task ConvertToFastq {
     >>>
     runtime {
         cpuPlatform: "Intel Skylake"
-        cpu: "~{cpu}"
+        cpu: cpu
         preemptible: preemptible_tries
         memory: "16 GiB"
         disks: "local-disk " + ceil(local_ssd_size_ask) + " LOCAL"

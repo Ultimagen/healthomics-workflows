@@ -308,7 +308,7 @@ task UGMakeExamples{
   >>>
   runtime {
     memory: "~{memory} GB"
-    cpu: "~{cpu}"
+    cpu: cpu
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
     preemptible: preemptible_tries
@@ -426,7 +426,7 @@ task UGCallVariants{
   >>>
   runtime {
     memory: "~{mem} GB"
-    cpu: "~{num_cpus}"
+    cpu: num_cpus
     disks: "local-disk " + disk_size + " LOCAL"
     docker: docker
     gpuType: "nvidia-tesla-t4"
@@ -601,7 +601,7 @@ task UGPostProcessing{
   >>>
   runtime {
     memory: "8 GB"
-    cpu: "1"
+    cpu: 1
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
     noAddress: no_address
@@ -652,7 +652,7 @@ task QCReport{
   >>>
   runtime {
     memory: "8 GB"
-    cpu: "1"
+    cpu: 1
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
     noAddress: no_address

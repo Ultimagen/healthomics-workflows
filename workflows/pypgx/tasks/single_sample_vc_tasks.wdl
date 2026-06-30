@@ -72,7 +72,7 @@ task HaplotypeCaller {
     runtime {
         preemptible: preemptible_tries
         memory: "~{memory_gb} GB"
-        cpu: "2"
+        cpu: 2
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address
@@ -148,7 +148,7 @@ task ConvertGVCFtoVCF {
   runtime {
     preemptible: preemptible_tries
     memory: "12 GB"
-    cpu: "1"
+    cpu: 1
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker
     noAddress: no_address
@@ -193,7 +193,7 @@ task CreateSECBlacklist {
   runtime {
     preemptible: preemptible_tries
     memory: "12 GB"
-    cpu: "1"
+    cpu: 1
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker
     noAddress: no_address
@@ -431,7 +431,7 @@ task NormalizeVariants {
     memory: "3 GB"
     preemptible: preemptible_tries
     noAddress: no_address
-    cpu: "2"
+    cpu: 2
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
   }
