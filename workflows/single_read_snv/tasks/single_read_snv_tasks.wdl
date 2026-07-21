@@ -453,7 +453,7 @@ task CreateFeatureMap {
       ~{true="-Q" false="" defined(featuremap_params.surrounding_quality_size)}~{default="" featuremap_params.surrounding_quality_size} \
       ~{true="-r" false="" defined(featuremap_params.reference_context_size)}~{default="" featuremap_params.reference_context_size} \
       ~{true="-m" false="" defined(featuremap_params.min_mapq)}~{default="" featuremap_params.min_mapq} \
-      ~{true="-c" false="" defined(featuremap_params.cram_tags_to_copy)} ~{default="" sep="," featuremap_params.cram_tags_to_copy} \
+      ~{true="-c" false="" defined(featuremap_params.cram_tags_to_copy)} ~{sep="," featuremap_params.cram_tags_to_copy} \
       ~{true="-C" false="" defined(featuremap_params.attributes_prefix)} ~{default="" featuremap_params.attributes_prefix} \
       ~{true="-b" false="" defined(featuremap_params.bed_file)} ~{default="" featuremap_params.bed_file} \
       ~{true="-F" false="" select_first([featuremap_params.somatic_filter_mode, false])} \
@@ -493,6 +493,43 @@ task CreateFeatureMap {
     Float downsampling_rate = read_float("downsampling_rate.txt")
     File model_filters_status_funnel = "~{out_model_filters_status_funnel}"
     File? read_filters_with_max_coverage = "read_filters_with_max_coverage.json"
+    File monitoring_log = "monitoring.log"
+  }
+}
+
+task MergeSnvfindStats {
+  input {
+    Array[File] stats_json_files
+    String output_filename
+    Array[File]? trinuc_freq_files
+    String? trinuc_freq_output_filename
+    String docker
+    Int preemptible_tries
+    File monitoring_script
+  }
+
+  command <<<
+    set -xeuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    merge_snvfind_stats \
+      ~{sep=" " prefix("--input ", stats_json_files)} \
+      --output ~{output_filename} \
+      ~{true="" false="" defined(trinuc_freq_files)}~{sep=" " prefix("--trinuc-freq-input ", select_first([trinuc_freq_files, []]))} \
+      ~{true="--trinuc-freq-output" false="" defined(trinuc_freq_output_filename)} ~{default="" trinuc_freq_output_filename}
+  >>>
+
+  runtime {
+    preemptible: preemptible_tries
+    docker: docker
+    cpu: 2
+    memory: "4 GiB"
+    disks: "local-disk 10 HDD"
+  }
+
+  output {
+    File merged_stats_json = "~{output_filename}"
+    File? merged_trinuc_freq = trinuc_freq_output_filename
     File monitoring_log = "monitoring.log"
   }
 }

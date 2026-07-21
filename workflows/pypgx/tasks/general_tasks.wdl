@@ -324,7 +324,7 @@ task IntervalListOfGenome {
 
   runtime {
     preemptible: preemptible_tries
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
@@ -359,7 +359,7 @@ task IntervalListFromString {
   >>>
   runtime {
     preemptible: preemptible_tries
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker
@@ -395,7 +395,7 @@ task IntervalListTotalLength {
   }
 
    runtime {
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + 4 + " HDD"
     docker: docker
@@ -422,7 +422,7 @@ task FastaLengthFromIndex {
   }
 
    runtime {
-    cpu: "1"
+    cpu: 1
     memory: "1 GB"
     disks: "local-disk " + 4 + " HDD"
     docker: docker
@@ -530,7 +530,7 @@ task DownsampleCramBam {
     >>>
     runtime {
         disks: "local-disk " + disk_size + " HDD"
-        cpu: "~{cpus}"
+        cpu: cpus
         memory: "~{memory_gb} GB"
         preemptible: preemptibles
         docker: docker
@@ -631,7 +631,7 @@ task ConcatHtmls {
         preemptible: preemptible_tries
         memory: "2 GB"
         docker: docker
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + ceil(disk_size) + " HDD"
         noAddress: true
     }
@@ -700,7 +700,7 @@ task RenameSampleInBam {
     runtime {
         preemptible: preemptible_tries
         memory: "2 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + disk_size + " LOCAL"
         docker: docker
         noAddress: no_address
@@ -748,7 +748,7 @@ task MergeCramFiles {
             disks: "local-disk " + (ceil(size(cache_tarball, "GB") + size(crams, "GB")) * 3 + 10) + " HDD"
             docker: docker
             noAddress: no_address
-            cpu: "~{cpus_to_use}"
+            cpu: cpus_to_use
             preemptible: preemptible_tries
 
     }
@@ -773,7 +773,7 @@ task MergeBams {
     runtime {
         preemptible: preemptible_tries
         memory: "16 GB"
-        cpu: "8"
+        cpu: 8
         disks: "local-disk " + disk_size + " LOCAL"
         docker: docker
         noAddress: no_address
@@ -837,6 +837,38 @@ task ConcatVcfs{
         bash ~{monitoring_script} | tee monitoring.log >&2 &
         set -xeo pipefail
         bcftools concat ~{sep=' ' input_vcfs} | bcftools sort -T . -Oz -o ~{output_vcf_name} - 
+        bcftools index -t ~{output_vcf_name}
+    }
+    runtime {
+        preemptible: preemptible_tries
+        memory: "4 GB"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        noAddress: no_address
+        maxRetries: 2
+    }
+    output {
+        File output_vcf = "~{output_vcf_name}"
+        File output_vcf_index = "~{output_vcf_name}.tbi"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+task NaiveConcatVcfs {
+    input {
+        File monitoring_script
+        Array[File] input_vcfs
+        Array[File] input_vcfs_indexes
+        String output_vcf_name
+        Int disk_size = ceil(2*size(input_vcfs,"GB")+5)
+        Int preemptible_tries
+        String docker
+        Boolean no_address
+    }
+    command {
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+        set -xeo pipefail
+        bcftools concat -n ~{sep=' ' input_vcfs} -Oz -o ~{output_vcf_name}
         bcftools index -t ~{output_vcf_name}
     }
     runtime {
@@ -970,7 +1002,7 @@ task FilterVcfWithBcftools {
         memory: "~{memory_gb} GB"
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
-        cpu: "~{cpus}"
+        cpu: cpus
         preemptible: preemptible_tries
     }
 }
@@ -1027,7 +1059,7 @@ task ExtractSorterStatsMetrics {
         preemptible: preemptible_tries
         memory: "2 GB"
         docker: docker
-        cpu: "1"
+        cpu: 1
     }
     output {
         Float mean_coverage = read_float("~{mean_coverage_output_file}")
@@ -1048,7 +1080,7 @@ task CopyFiles {
         docker: docker
         preemptible: 1
         memory: "2 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " +ceil(2*size(input_files,"GB") + 1) + " HDD"
         noAddress: true
     }
@@ -1222,7 +1254,7 @@ task ConcatFiles{
     runtime {
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
-        cpu:1
+        cpu: 1
     }
     output{
         File out_merged_file = "~{out_file_name}"
@@ -1307,4 +1339,64 @@ task CalculateCoverage {
     File monitoring_log = "monitoring.log"
     Int median_coverage = read_int("median_coverage.txt")
   }
+}
+
+task ConvertMetricsCsvToJson {
+    input {
+        File metrics_csv
+        String base_file_name
+        String docker
+    }
+
+    command <<<
+        set -euo pipefail
+
+        python3 <<CODE
+        import csv
+        import json
+
+        def parse_value(value):
+            """Parse a string value to numeric if possible."""
+            clean = value.strip().replace("%", "").replace(",", "")
+            try:
+                return float(clean)
+            except ValueError:
+                return value.strip()
+
+        def convert_csv(reader):
+            """Convert CSV to metrics dict.
+            For single-row CSVs: stores all values directly.
+            For multi-row CSVs: stores the minimum numeric value across all rows for each metric column."""
+            metrics = {}
+            for row in reader:
+                for key, value in row.items():
+                    if not key or not value:
+                        continue
+                    key = key.strip()
+                    parsed = parse_value(value)
+                    if not isinstance(parsed, float):
+                        continue
+                    if key not in metrics or parsed < metrics[key]:
+                        metrics[key] = parsed
+            return metrics
+
+        with open("~{metrics_csv}") as f:
+            reader = csv.DictReader(f)
+            metrics = convert_csv(reader)
+
+        with open("~{base_file_name}.aggregated_metrics.json", "w") as out:
+            json.dump({"metrics": metrics}, out, indent=2)
+        CODE
+    >>>
+
+    runtime {
+        docker: docker
+        cpu: 1
+        memory: "1 GiB"
+        disks: "local-disk 10 HDD"
+    }
+
+    output {
+        File aggregated_metrics_json = "~{base_file_name}.aggregated_metrics.json"
+    }
 }

@@ -1,8 +1,4 @@
 {
-    "SingleReadSNV.FeatureMapPrep.CreateFeatureMap.model_files": {
-        "description": "Optional array of SingleReadSNVModel structs for model-aware featuremap creation",
-        "optional": true
-    },
     "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.base_file_name": {
         "description": "Base file name for output files.",
         "optional": true
@@ -24,6 +20,30 @@
         "optional": true
     },
     "SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.memory_gb": {
+        "description": "Amount of memory to use for this task, in GB. Default is 4 (GB).",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.cpus": {
+        "description": "Number of cpus to use for this task. Default is 4.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.disk_size": {
+        "description": "Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.exclude_regions": {
+        "description": "Regions to exclude from the output vcf. Supported formats are bed, bed.gz, vcf, vcf.gz. VCF exclusion is done using bcftools view -T ^regions, by position and not by ref and alt.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.include_regions": {
+        "description": "Regions to include in the output vcf. Supported formats are bed, bed.gz. Inclusion is done using 'bcftools view -T'.",
+        "optional": true
+    },
+    "SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.memory_gb": {
         "description": "Amount of memory to use for this task, in GB. Default is 4 (GB).",
         "optional": true
     },
@@ -87,6 +107,10 @@
         "description": "no_address_override",
         "optional": true
     },
+    "SingleReadSNV.num_shards_featuremap": {
+        "description": "Number of genomic shards to scatter the snvfind (CreateFeatureMap) step across. Higher values reduce wall-clock time but add scatter overhead.",
+        "optional": false
+    },
     "SingleReadSNV.override_memory_gb_CreateFeatureMap": {
         "description": "Override memory in GB for the CreateFeatureMap task, default: 2 (GiB). If an out of memory error occurs in the CreateFeatureMap task, try increasing this value, e.g. double it.",
         "optional": true
@@ -126,6 +150,10 @@
     "SingleReadSNV.reference_genome": {
         "description": "Genome type selector. The workflow currently supports only hg38.",
         "optional": true
+    },
+    "SingleReadSNV.scatter_interval_list": {
+        "description": "Interval list defining the genomic regions to scatter snvfind across. Should match the regions in featuremap_params.bed_file.",
+        "optional": false
     },
     "SingleReadSNV.single_read_snv_params": {
         "description": "SingleReadSNV parameters, recommended value set in the template.",

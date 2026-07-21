@@ -58,22 +58,22 @@ Finally, we apply simple ML model to filter candidates according to the length, 
 * for running cnmops, cnvpytor, and post processing use ugbio_cnv docker: <br>
 	Pull **ugbio_cnv** docker image :
 	```
-	docker pull ultimagenomics/ugbio_cnv:1.24.0
+	docker pull ultimagenomics/ugbio_cnv:1.28.1
 	```
 	Run docker in interactive mode:
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.24.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.28.1 /bin/bash
 	```
 for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/germline_CNV_pipeline/tasks/globals.wdl)
 
 
 * For running ML-based filtering - use **ugbio_filtering** docker image.
 	```
-	docker pull ultimagenomics/ugbio_filtering:1.22.0
+	docker pull ultimagenomics/ugbio_filtering:1.28.0
 	```
 	Run docker in interactive mode:
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.22.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.28.0 /bin/bash
 	```	
 
 

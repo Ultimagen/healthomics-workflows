@@ -43,7 +43,7 @@ input {
   Array[File] input_cram_bam_index_list
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.32.1"
+  String pipeline_version = "1.33.0"
 
   # Genome resources
   String reference_genome = "hg38"
@@ -72,6 +72,10 @@ input {
   String include_vcf_bcftools_filter_args
 
   Boolean raise_exceptions_in_report
+
+  # Scatter configuration for snvfind parallelization
+  Int num_shards_featuremap
+  File scatter_interval_list
 
   Int? override_memory_gb_CreateFeatureMap
   Int? override_memory_gb_PrepareRawFeatureMap
@@ -144,6 +148,22 @@ meta {
         "FeatureMapPrep.monitoring_script",
         "FeatureMapPrep.featuremap_docker",
         "FeatureMapPrep.ugbio_featuremap_docker",
+        "FeatureMapPrep.gatk_docker",
+        "FeatureMapPrep.scatter_interval_list", "FeatureMapPrep.scatter_intervals_break",
+        "FeatureMapPrep.model_files",
+        "FeatureMapPrep.run_training_prep",
+        "FeatureMapPrep.ConcatFeaturemapVcfs.disk_size",
+        "FeatureMapPrep.ConcatRandomSampleVcfs.disk_size",
+        "FeatureMapPrepPathB.preemptible_tries",
+        "FeatureMapPrepPathB.monitoring_script",
+        "FeatureMapPrepPathB.featuremap_docker",
+        "FeatureMapPrepPathB.ugbio_featuremap_docker",
+        "FeatureMapPrepPathB.gatk_docker",
+        "FeatureMapPrepPathB.scatter_intervals_break",
+        "FeatureMapPrepPathB.override_memory_gb_PrepareRawFeatureMap",
+        "FeatureMapPrepPathB.override_memory_gb_PrepareRandomSampleFeatureMap",
+        "FeatureMapPrepPathB.ConcatFeaturemapVcfs.disk_size",
+        "FeatureMapPrepPathB.ConcatRandomSampleVcfs.disk_size",
         "FilterIncludeVcf.disk_size", "FilterIncludeVcf.memory_gb", "FilterIncludeVcf.cpus",
         "FilterIncludeVcf.preemptible_tries", "FilterIncludeVcf.bcftools_extra_args",
         "FilterIncludeVcf.base_file_name", "FilterIncludeVcf.exclude_regions", "FilterIncludeVcf.include_regions"
@@ -255,6 +275,16 @@ parameter_meta {
         type: "String",
         help: "Bcftools filter arguments applied to include-in-inference VCFs before annotation. Default: '-f PASS --type snps -m2 -M2' (PASS biallelic SNPs only). Override if your VCFs lack a PASS filter.",
         category: "input_optional"
+    }
+    num_shards_featuremap: {
+        type: "Int",
+        help: "Number of genomic shards to scatter the snvfind (CreateFeatureMap) step across. Higher values reduce wall-clock time but add scatter overhead.",
+        category: "input_required"
+    }
+    scatter_interval_list: {
+        type: "File",
+        help: "Interval list defining the genomic regions to scatter snvfind across. Should match the regions in featuremap_params.bed_file.",
+        category: "input_required"
     }
     override_memory_gb_CreateFeatureMap: {
         type: "Int",
@@ -476,6 +506,7 @@ parameter_meta {
         base_file_name = base_file_name_sub,
         references = references,
         training_interval_list = training_interval_list,
+        scatter_interval_list = scatter_interval_list,
         featuremap_params = featuremap_params,
         single_read_snv_params = single_read_snv_params_,
         annotation_files = annotation_files,
@@ -491,8 +522,10 @@ parameter_meta {
         override_memory_gb_PrepareRandomSampleFeatureMap = override_memory_gb_PrepareRandomSampleFeatureMap,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script,
+        num_shards = num_shards_featuremap,
         featuremap_docker = global.featuremap_docker,
-        ugbio_featuremap_docker = global.ugbio_featuremap_docker
+        ugbio_featuremap_docker = global.ugbio_featuremap_docker,
+        gatk_docker = global.broad_gatk_docker
     }
 
     Int memory_gb_TrainModel = select_first([override_memory_gb_TrainModel, 32])
@@ -500,8 +533,8 @@ parameter_meta {
     if (train_on_gpu) {
       call SRSNVTasks.TrainModelOnGPU {
           input:
-              raw_filtered_featuremap_parquet = FeatureMapPrep.negative_parquet,
-              random_sample_filtered_featuremap_parquet = FeatureMapPrep.positive_parquet,
+              raw_filtered_featuremap_parquet = select_first([FeatureMapPrep.negative_parquet]),
+              random_sample_filtered_featuremap_parquet = select_first([FeatureMapPrep.positive_parquet]),
               stats_file = FeatureMapPrep.model_filters_status_funnel,
               mean_coverage = mean_coverage_used,
               xgboost_params_file = xgboost_params_file,
@@ -519,8 +552,8 @@ parameter_meta {
     if (!train_on_gpu) {
       call SRSNVTasks.TrainModelOnCPU {
           input:
-              raw_filtered_featuremap_parquet = FeatureMapPrep.negative_parquet,
-              random_sample_filtered_featuremap_parquet = FeatureMapPrep.positive_parquet,
+              raw_filtered_featuremap_parquet = select_first([FeatureMapPrep.negative_parquet]),
+              random_sample_filtered_featuremap_parquet = select_first([FeatureMapPrep.positive_parquet]),
               stats_file = FeatureMapPrep.model_filters_status_funnel,
               mean_coverage = mean_coverage_used,
               xgboost_params_file = xgboost_params_file,
@@ -573,94 +606,44 @@ parameter_meta {
   }
 
   # ============================================================
-  # Path B: Pre-trained model or insufficient coverage — direct featuremap creation
+  # Path B: Pre-trained model or insufficient coverage — use FeatureMapPrep with model_files
   # ============================================================
   if (use_pre_trained_model || !can_train_model) {
-    # Calculate random_sample_size for pre-trained model path
-    Int random_sample_size = if (defined(single_read_snv_params)) then
-      ceil(select_first([single_read_snv_params]).tp_train_set_size * select_first([single_read_snv_params]).tp_train_set_size_sampling_overhead)
-    else
-      1000000
+    SingleReadSNVParams single_read_snv_params_b = select_first([single_read_snv_params])
 
-    if (defined(featuremap_params.read_filters)) {
-      Int coverage_threshold = ceil(mean_coverage_used * max_coverage_factor)
-    }
-
-    # Multi-VCF annotation (all optional)
-    Array[File] exclude_vcfs_raw = select_first([annotation_files.exclude_from_training_vcf_list, []])
-    Array[File] exclude_vcf_idxs_raw = select_first([annotation_files.exclude_from_training_vcf_index_list, []])
-    Array[File] include_vcfs_raw = select_first([annotation_files.include_in_inference_vcf_list, []])
-    Array[File] include_vcf_idxs_raw = select_first([annotation_files.include_in_inference_vcf_index_list, []])
-
-    # Filter include VCFs to PASS-only biallelic SNPs
-    if (length(include_vcfs_raw) > 0) {
-      scatter (idx in range(length(include_vcfs_raw))) {
-        call UGGeneralTasks.FilterVcfWithBcftools as FilterIncludeVcf {
-          input:
-            input_vcf = include_vcfs_raw[idx],
-            bcftools_extra_args = include_vcf_bcftools_filter_args,
-            docker = global.featuremap_docker,
-            monitoring_script = monitoring_script,
-            preemptible_tries = preemptibles
-        }
-      }
-    }
-    Array[File] include_vcfs_filtered = select_first([FilterIncludeVcf.output_vcf, []])
-    Array[File] include_vcf_idxs_filtered = select_first([FilterIncludeVcf.output_vcf_index, []])
-
-    Boolean has_annotation_vcfs = (length(exclude_vcfs_raw) > 0 || length(include_vcfs_filtered) > 0 || defined(annotation_files.pcawg_vcf))
-
-    if (has_annotation_vcfs) {
-      call SRSNVTasks.PrepareAnnotationVcfs {
-        input:
-          exclude_field_name = exclude_from_training_field_name,
-          include_field_name = include_in_inference_field_name,
-          pcawg_field_name = pcawg_field_name,
-          has_exclude = length(exclude_vcfs_raw) > 0,
-          has_include = length(include_vcfs_filtered) > 0,
-          has_pcawg = defined(annotation_files.pcawg_vcf),
-          read_filters_json = featuremap_params.read_filters,
-          coverage_threshold = coverage_threshold,
-          docker = global.ugbio_featuremap_docker,
-          preemptible_tries = preemptibles,
-          monitoring_script = monitoring_script
-      }
-    }
-
-    call SRSNVTasks.CreateFeatureMap {
+    call PrepareFeaturemap.FeatureMapPrep as FeatureMapPrepPathB {
       input:
         input_cram_bam_list = input_cram_bam_list,
         input_cram_bam_index_list = input_cram_bam_index_list,
-        references = references,
         base_file_name = base_file_name_sub,
-        total_aligned_bases = total_aligned_bases_used,
-        mean_coverage = mean_coverage_used,
-        max_coverage_factor = max_coverage_factor,
-        random_sample_size = random_sample_size,
-        random_sample_trinuc_freq_ = random_sample_trinuc_freq,
+        references = references,
+        training_interval_list = training_interval_list,
+        scatter_interval_list = scatter_interval_list,
         featuremap_params = featuremap_params,
+        single_read_snv_params = single_read_snv_params_b,
         annotation_files = annotation_files,
-        exclude_annotation_vcfs = exclude_vcfs_raw,
-        exclude_annotation_vcf_indices = exclude_vcf_idxs_raw,
-        exclude_annotation_field_name = exclude_from_training_field_name,
-        include_annotation_vcfs = include_vcfs_filtered,
-        include_annotation_vcf_indices = include_vcf_idxs_filtered,
-        include_annotation_field_name = include_in_inference_field_name,
-        pcawg_annotation_vcf = annotation_files.pcawg_vcf,
-        pcawg_annotation_vcf_index = annotation_files.pcawg_vcf_index,
-        pcawg_annotation_field_name = pcawg_field_name,
-        augmented_read_filters = PrepareAnnotationVcfs.augmented_read_filters,
-        docker = global.featuremap_docker,
+        mean_coverage = mean_coverage_used,
+        total_aligned_bases = total_aligned_bases_used,
+        random_sample_trinuc_freq = random_sample_trinuc_freq,
+        exclude_from_training_field_name = exclude_from_training_field_name,
+        include_in_inference_field_name = include_in_inference_field_name,
+        pcawg_field_name = pcawg_field_name,
+        include_vcf_bcftools_filter_args = include_vcf_bcftools_filter_args,
+        num_shards = num_shards_featuremap,
+        model_files = pre_trained_model_files_array,
+        run_training_prep = false,
+        override_memory_gb_CreateFeatureMap = override_memory_gb_CreateFeatureMap,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script,
-        memory_gb = select_first([override_memory_gb_CreateFeatureMap, 4]),
-        model_files = pre_trained_model_files_array
+        featuremap_docker = global.featuremap_docker,
+        ugbio_featuremap_docker = global.ugbio_featuremap_docker,
+        gatk_docker = global.broad_gatk_docker
     }
   }
 
   # Resolve featuremap outputs from whichever path ran
-  File featuremap_output = select_first([Inference.featuremap_out, FeatureMapPrep.featuremap, CreateFeatureMap.featuremap])
-  File featuremap_index_output = select_first([Inference.featuremap_out_index, FeatureMapPrep.featuremap_index, CreateFeatureMap.featuremap_index])
+  File featuremap_output = select_first([Inference.featuremap_out, FeatureMapPrep.featuremap, FeatureMapPrepPathB.featuremap])
+  File featuremap_index_output = select_first([Inference.featuremap_out_index, FeatureMapPrep.featuremap_index, FeatureMapPrepPathB.featuremap_index])
   
 
   if (create_md5_checksum_outputs) {
@@ -689,17 +672,17 @@ parameter_meta {
                 docker = global.ugbio_core_docker
         }
     }
-  File srsnv_metadata_json__ = select_first([srsnv_metadata_json_, FeatureMapPrep.model_filters_status_funnel, CreateFeatureMap.model_filters_status_funnel])
+  File srsnv_metadata_json__ = select_first([srsnv_metadata_json_, FeatureMapPrep.model_filters_status_funnel, FeatureMapPrepPathB.model_filters_status_funnel])
   output {
     File featuremap = featuremap_output
     File featuremap_index = featuremap_index_output
-    File? featuremap_random_sample = if defined(FeatureMapPrep.featuremap_random_sample) then FeatureMapPrep.featuremap_random_sample else CreateFeatureMap.featuremap_random_sample
-    File? featuremap_random_sample_index = if defined(FeatureMapPrep.featuremap_random_sample_index) then FeatureMapPrep.featuremap_random_sample_index else CreateFeatureMap.featuremap_random_sample_index
-    Float downsampling_rate = select_first([FeatureMapPrep.downsampling_rate, CreateFeatureMap.downsampling_rate])
+    File? featuremap_random_sample = if defined(FeatureMapPrep.featuremap_random_sample) then FeatureMapPrep.featuremap_random_sample else FeatureMapPrepPathB.featuremap_random_sample
+    File? featuremap_random_sample_index = if defined(FeatureMapPrep.featuremap_random_sample_index) then FeatureMapPrep.featuremap_random_sample_index else FeatureMapPrepPathB.featuremap_random_sample_index
+    Float downsampling_rate = select_first([FeatureMapPrep.downsampling_rate, FeatureMapPrepPathB.downsampling_rate])
     Boolean snv_qualities_assigned = snv_qualities_can_be_assigned
     Boolean used_self_trained_model = snv_qualities_assigned && (!use_pre_trained_model)
     File? raw_filtered_featuremap_parquet = FeatureMapPrep.negative_parquet
-    File? random_sample_trinuc_freq_stats = if defined(FeatureMapPrep.random_sample_trinuc_freq_stats) then FeatureMapPrep.random_sample_trinuc_freq_stats else CreateFeatureMap.random_sample_trinuc_freq
+    File? random_sample_trinuc_freq_stats = if defined(FeatureMapPrep.random_sample_trinuc_freq_stats) then FeatureMapPrep.random_sample_trinuc_freq_stats else FeatureMapPrepPathB.random_sample_trinuc_freq_stats
 
     File? featuremap_df = featuremap_df_output
     File? application_qc_h5 = application_qc_h5_output

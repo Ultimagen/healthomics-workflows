@@ -77,7 +77,7 @@ task StarSolo {
 
     runtime {
         preemptible: "~{preemptible_tries}"
-        cpu: "~{cpu}"
+        cpu: cpu
         memory: "64 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker

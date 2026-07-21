@@ -32,7 +32,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.32.1" # !UnusedDeclaration
+        String pipeline_version = "1.33.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -495,7 +495,7 @@ workflow SomaticCNVCallingControlFREEC{
 
     Boolean run_createMpileup = !(defined(normal_mpileup_override))
     Boolean run_bedgraph_to_cpn = !(defined(normal_coverage_cpn))
-    Boolean run_collect_coverage = length(select_all([normal_coverage_cpn,normal_sorter_zipped_bed_graph])) == 0
+    Boolean run_collect_coverage = !defined(normal_coverage_cpn) && !defined(normal_sorter_zipped_bed_graph)
     Array[String] collect_coverage_region_for_cov_collection = select_first([collect_coverage_region,[""]])
     
 
@@ -827,7 +827,7 @@ CODE
     runtime {
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
-        cpu:1
+        cpu: 1
     }
 
 }

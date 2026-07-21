@@ -43,7 +43,7 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.reference_genome">
         <b>EfficientDV.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10. Default to hg38 <br />
+         Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm39. Default to hg38 <br />
 </p>
 <p name="EfficientDV.background_cram_files">
         <b>EfficientDV.background_cram_files</b><br />
@@ -66,6 +66,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.show_bg_fields</b><br />
         <i>Boolean </i> &mdash;
          Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling. <br />
+</p>
+<p name="EfficientDV.run_haplotype_sampling">
+        <b>EfficientDV.run_haplotype_sampling</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to run haplotype sampling to create pangenome haplotypes. Default: false <br />
 </p>
 <p name="EfficientDV.scatter_intervals_break">
         <b>EfficientDV.scatter_intervals_break</b><br />
@@ -202,6 +207,21 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>File? </i> &mdash;
          Optional pangenome haplotypes cram index file <br />
 </p>
+<p name="EfficientDV.num_haplotypes">
+        <b>EfficientDV.num_haplotypes</b><br />
+        <i>Int? </i> &mdash;
+         Number of haplotypes to sample from the pangenome graph (must fit the model) <br />
+</p>
+<p name="EfficientDV.include_reference_in_haplotypes">
+        <b>EfficientDV.include_reference_in_haplotypes</b><br />
+        <i>Boolean? </i> &mdash;
+         Include the reference sequence in the sampled haplotypes (must fit the model) <br />
+</p>
+<p name="EfficientDV.diploid_sampling_in_haplotypes">
+        <b>EfficientDV.diploid_sampling_in_haplotypes</b><br />
+        <i>Boolean? </i> &mdash;
+         Use diploid sampling strategy for haplotype selection (must fit the model) <br />
+</p>
 <p name="EfficientDV.optimization_level">
         <b>EfficientDV.optimization_level</b><br />
         <i>Int? </i> &mdash;
@@ -317,8 +337,68 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Int </i> &mdash;
          Virtual GPU tile size for call_variants <br />
 </p>
+<p name="EfficientDV.HaplotypeSampling.input_fastq">
+        <b>EfficientDV.HaplotypeSampling.input_fastq</b><br />
+        <i>File? </i> &mdash;
+         Optional input FASTQ file (if not using CRAM) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.kmer_length">
+        <b>EfficientDV.HaplotypeSampling.kmer_length</b><br />
+        <i>Int </i> &mdash;
+         K-mer length for KMC counting (default: 29) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.min_kmer_count">
+        <b>EfficientDV.HaplotypeSampling.min_kmer_count</b><br />
+        <i>Int </i> &mdash;
+         Minimum k-mer count threshold for sampling (default: 2) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.window_size">
+        <b>EfficientDV.HaplotypeSampling.window_size</b><br />
+        <i>Int </i> &mdash;
+         Sliding window size for seqkit (default: 50000) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.step_size">
+        <b>EfficientDV.HaplotypeSampling.step_size</b><br />
+        <i>Int </i> &mdash;
+         Sliding window step size for seqkit (default: 50000) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.minimap2_preset">
+        <b>EfficientDV.HaplotypeSampling.minimap2_preset</b><br />
+        <i>String </i> &mdash;
+         Minimap2 preset for alignment (default: asm5) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.cram_to_fastq_cores">
+        <b>EfficientDV.HaplotypeSampling.cram_to_fastq_cores</b><br />
+        <i>Int </i> &mdash;
+         Number of CPU cores for CRAM to FASTQ conversion (default: 2) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.kmc_mem_gb">
+        <b>EfficientDV.HaplotypeSampling.kmc_mem_gb</b><br />
+        <i>Int </i> &mdash;
+         Memory (GB) for KMC k-mer counting (default: 64) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.kmc_cores">
+        <b>EfficientDV.HaplotypeSampling.kmc_cores</b><br />
+        <i>Int </i> &mdash;
+         Number of CPU cores for KMC (default: 16) <br />
+</p>
+<p name="EfficientDV.HaplotypeSampling.minimap_extra_args">
+        <b>EfficientDV.HaplotypeSampling.minimap_extra_args</b><br />
+        <i>String? </i> &mdash;
+         Additional extra arguments to pass to minimap2 (default: empty) <br />
+</p>
 
 ### Optional reference files
+<p name="EfficientDV.ref_gbz_for_haplotypes">
+        <b>EfficientDV.ref_gbz_for_haplotypes</b><br />
+        <i>File? </i> &mdash;
+         Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
+</p>
+<p name="EfficientDV.ref_hapl">
+        <b>EfficientDV.ref_hapl</b><br />
+        <i>File? </i> &mdash;
+         Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
+</p>
 <p name="EfficientDV.model_serialized">
         <b>EfficientDV.model_serialized</b><br />
         <i>File? </i> &mdash;

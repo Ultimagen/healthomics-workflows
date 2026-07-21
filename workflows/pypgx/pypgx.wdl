@@ -29,7 +29,7 @@ import "tasks/alignment_tasks.wdl" as UGAlignment
 
 workflow PyPGx {
     input {
-        String pipeline_version = "1.32.1" # !UnusedDeclaration
+        String pipeline_version = "1.33.0" # !UnusedDeclaration
         String base_file_name
         File cram_file
         File cram_index_file
@@ -42,8 +42,6 @@ workflow PyPGx {
 
         # EfficientDV parameters
         File? model_onnx
-        File? ref_dbsnp
-        File? ref_dbsnp_index
 
         Boolean? no_address_override
         Int preemptible_tries = 1
@@ -55,7 +53,7 @@ workflow PyPGx {
 
         ##@wv suffix(cram_file) <= {".bam", ".cram"}
         ##@wv suffix(cram_index_file) <= {".bai", ".crai"}
-        ##@wv reference_genome in {"hg38", "hg38_no_alt"}
+        ##@wv reference_genome in {"hg38", "hg38_no_alt", "hg38_nist_v3_with_decoy"}
 
     }
 
@@ -68,7 +66,7 @@ workflow PyPGx {
                 "no_address_override",
                 "monitoring_script_input",
                 "DepthOfCoverage.disk_size",
-                "Globals.glob",
+                "Glob.glob",
                 "preemptible_tries",
                 "CreateReferenceCache.disk_size",
                 "CreateReferenceCache.cache_populate_script_path"
@@ -97,11 +95,11 @@ workflow PyPGx {
             category: "input_required"
         }
         reference_genome: {
-            help: "Genome type selector. Supported values: hg38, hg38_no_alt",
+            help: "Genome type selector. Supported values: hg38, hg38_no_alt, hg38_nist_v3_with_decoy", 
             category: "param_required"
         }
         input_vcf_file: {
-            help: "Input VCF file with variants. If not provided, Efficient DV will be run",
+            help: "Input VCF file with variants. Use of high quality variants (i.e. PASS). If not provided, Efficient DV will be run",
             type: "File",
             category: "input_optional"
         }
@@ -116,14 +114,6 @@ workflow PyPGx {
         }
         model_onnx: {
             help: "TensorRT model for calling variants (onnx format)",
-            category: "input_optional"
-        }
-        ref_dbsnp: {
-            help: "DbSNP vcf for the annotation of known variants",
-            category: "input_optional"
-        }
-        ref_dbsnp_index: {
-            help: "DbSNP vcf index",
             category: "input_optional"
         }
         ref_files_for_tarball: {
@@ -183,19 +173,29 @@ workflow PyPGx {
             type: "File",
             category: "input_optional"
         }
+        output_vcf: {
+            help: "Output VCF file (either the input VCF file or the one produced by Efficient DV if no input VCF file was provided)",
+            type: "File",
+            category: "output"
+        }
+        output_vcf_index: {
+            help: "Output VCF index file (either the input VCF index file or the one produced by Efficient DV if no input VCF index file was provided)",
+            type: "File",
+            category: "output"
+        }
      }
 
 
     String cloud_provider = select_first([cloud_provider_override, 'gcp'])
     Boolean no_address = select_first([no_address_override, true ])
 
-    call Globals.Globals as Globals
-    GlobalVariables global = Globals.global_dockers
+    call Globals.Globals as Glob
+    GlobalVariables global = Glob.global_dockers
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
 
     # Get genome resources based on reference_genome
-    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResourcesCall
 
     call UGAlignment.CreateReferenceCache {
         input:
@@ -210,7 +210,7 @@ workflow PyPGx {
         call ExtractGeneIntervals {
             input:
                 gene_symbols = gene_symbols,
-                ref_dict = GenomeResources.resources[reference_genome].ref_dict,
+                ref_dict = GenomeResourcesCall.resources[reference_genome].ref_dict,
                 monitoring_script = monitoring_script,
                 no_address = no_address,
                 docker = global.pypgx_docker,
@@ -233,8 +233,6 @@ workflow PyPGx {
             keep_duplicates = true,
             override_target_intervals = ExtractGeneIntervals.interval_list,
             model_onnx = select_first([model_onnx]),
-            ref_dbsnp = ref_dbsnp,
-            ref_dbsnp_index = ref_dbsnp_index,
             min_variant_quality_hmer_indels = 5,
             min_variant_quality_non_hmer_indels = 0,
             min_variant_quality_snps = 0,
@@ -252,8 +250,8 @@ workflow PyPGx {
         }
     }
 
-    File vcf_file = select_first([input_vcf_file, EfficientDV.output_vcf])
-    File vcf_index_file = select_first([input_vcf_index_file, EfficientDV.output_vcf_index])
+    File vcf_file = select_first([input_vcf_file, EfficientDV.vcf_no_ref_calls])
+    File vcf_index_file = select_first([input_vcf_index_file, EfficientDV.vcf_no_ref_calls_index])
 
     call DepthOfCoverage{
         input:
@@ -306,6 +304,8 @@ workflow PyPGx {
         Array[File] phased_variants = NGSPipeline.phased_variants
         Array[File] phenotypes = NGSPipeline.phenotypes
         Array[File] read_depths = NGSPipeline.read_depth
+        File output_vcf = vcf_file
+        File output_vcf_index = vcf_index_file
         File results = ConcatResults.results
     }
 }
@@ -410,7 +410,10 @@ task NGSPipeline {
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        pypgx run-ngs-pipeline ~{gene_symbol} outputs  --assembly GRCh38 --variants ~{vcf_file} --depth-of-coverage ~{depth_of_coverage} --control-statistics ~{control_statistics}
+        bcftools view -f PASS ~{vcf_file} -Oz -o filtered.vcf.gz
+        bcftools index -t filtered.vcf.gz
+
+        pypgx run-ngs-pipeline ~{gene_symbol} outputs  --assembly GRCh38 --variants filtered.vcf.gz --depth-of-coverage ~{depth_of_coverage} --control-statistics ~{control_statistics}
 
         # Some files do not get created, so I use touch to create empty files if they do not exist
         touch outputs/imported-variants.zip

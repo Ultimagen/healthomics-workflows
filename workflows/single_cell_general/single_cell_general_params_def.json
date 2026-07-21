@@ -8,11 +8,15 @@
         "optional": true
     },
     "SingleCell.TrimAlignSort.aligner": {
-        "description": "Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected.",
+        "description": "Aligner to be used. Options are: ua, ua-meth, star, giraffe. Mandatory if align step is selected.",
         "optional": true
     },
     "SingleCell.TrimAlignSort.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
+        "optional": true
+    },
+    "SingleCell.TrimAlignSort.giraffe_parameters": {
+        "description": "Graph reference bundle for the Giraffe aligner + extra parameters for vg giraffe. Mandatory if aligner is giraffe.",
         "optional": true
     },
     "SingleCell.TrimAlignSort.star_align_extra_args": {

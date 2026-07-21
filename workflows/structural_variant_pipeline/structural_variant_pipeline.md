@@ -105,7 +105,7 @@ The steps of the pipeline are as following:
 </p>
 <p name="SVPipeline.giraffe_parameters">
         <b>SVPipeline.giraffe_parameters</b><br />
-        <i>GiraffeReferences? &mdash; Default: None</i><br />
+        <i>GiraffeParameters? &mdash; Default: None</i><br />
         vg giraffe index files to improve haplotype interpretation using population graphs
 </p>
 <p name="SVPipeline.min_indel_sc_size_to_include">

@@ -27,18 +27,19 @@ version 1.0
 
 import "tasks/globals.wdl" as Globals
 import "tasks/structs.wdl"
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow STRGenotyper {
     input {
-        String pipeline_version = "1.32.1" # !UnusedDeclaration
+        String pipeline_version = "1.33.0" # !UnusedDeclaration
         # Required inputs
         String base_file_name
         File cram_file
         File cram_index
-        File variant_catalog
-        
-        # Reference files using the standard References struct
-        References references
+
+        # Genome resources
+        String reference_genome = "hg38"
+        File variant_catalog  # Optional override for custom catalog
         
         # Optional parameters
         Int ref_padding = 500
@@ -64,27 +65,24 @@ workflow STRGenotyper {
         Boolean no_address = true
         File? monitoring_script_input
     }
-    
-    # Calculate disk size from input files automatically
-    Int disk_gb = ceil(size(cram_file, "GB") + size(references.ref_fasta, "GB") + size(variant_catalog, "GB")) + 10
-    
-    # Default memory is 16GB, can be overridden
-    Int memory_gb = select_first([memory_gb_override, 16])
-    
+
     meta {
         description: "Alignment-based STR genotype caller using Smith-Waterman alignment"
         author: "Ultima Genomics"
         version: "1.0"
         WDL_AID: {
-            exclude: [ 
+            exclude: [
                 "pipeline_version",
                 "GlobalsCall.glob",
+                "GenomeResourcesCall",
                 "no_address",
                 "preemptible_tries",
                 "monitoring_script_input"
             ]
         }
     }
+
+    #@wv reference_genome in {"hg38", "hg38_nist_v3_with_decoy"}
     
     parameter_meta {
         base_file_name: {
@@ -102,75 +100,80 @@ workflow STRGenotyper {
             type: "File",
             category: "input_required"
         }
-        variant_catalog: {
-            help: "JSON file containing STR variant catalog with locus definitions",
-            type: "File",
+        reference_genome: {
+            help: "Reference genome name (supported: 'hg38', 'hg38_nist_v3_with_decoy'). Automatically loads genome-specific reference files.",
+            type: "input_required",
             category: "input_required"
         }
-        references: {
-            help: "Reference genome files (fasta, fasta.fai, dict) as References struct",
-            type: "References",
-            category: "input_required"
+        variant_catalog: {
+            help: "Variant catalog (json). Example: https://github.com/broadinstitute/str-analysis/blob/main/str_analysis/variant_catalogs/variant_catalog_with_offtargets.GRCh38.json",
+            type: "File",
+            category: "input_optional"
         }
         ref_padding: {
             help: "Number of bases to extend around the STR repeat region when building auxiliary references for alignment. Larger values provide more flanking sequence context for accurate alignment.",
             type: "Int",
-            category: "param_optional"
+            category: "input_optional"
         }
         min_repeat: {
             help: "Minimum number of repeat units to include in auxiliary reference sequences",
             type: "Int",
-            category: "param_optional"
+            category: "input_optional"
         }
         max_repeat: {
             help: "Maximum number of repeat units to include in auxiliary reference sequences",
             type: "Int",
-            category: "param_optional"
+            category: "input_optional"
         }
         min_score_ratio: {
             help: "Minimum ratio of alignment score to the theoretical maximum score (read_length * match_score). Alignments below this threshold are filtered out. Range: 0.0-1.0, where 1.0 requires perfect alignment.",
             type: "Float",
-            category: "param_optional"
+            category: "input_optional"
         }
         spanning_flank_bases: {
             help: "Minimum number of bases that must align on each side of the STR repeat region for a read to be considered 'spanning' the locus",
             type: "Int",
-            category: "param_optional"
+            category: "input_optional"
         }
         min_mapping_quality: {
             help: "Minimum mapping quality for reads to be included in analysis",
             type: "Int",
-            category: "param_optional"
+            category: "input_optional"
         }
         threads: {
             help: "Number of threads for parallel processing",
             type: "Int",
-            category: "param_optional"
+            category: "input_advanced"
         }
-        memory_gb_override: {
+        memory_gb_override : {
             help: "Optional memory allocation override in GB (default: 16)",
             type: "Int",
-            category: "param_advanced"
+            category: "input_advanced"
         }
         output_detailed_csv: {
             help: "Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O.",
             type: "Boolean",
-            category: "param_optional"
+            category: "input_advanced"
         }
         output_summary_csv: {
             help: "Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O.",
             type: "Boolean",
-            category: "param_optional"
+            category: "input_optional"
         }
         haploid: {
             help: "Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms.",
             type: "Boolean",
-            category: "param_optional"
+            category: "input_optional"
         }
         preemptible_tries: {
             help: "Number of preemptible tries before running on non-preemptible",
             type: "Int",
-            category: "param_advanced"
+            category: "input_advanced"
+        }
+        monitoring_script_input: {
+            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+            type: "File",
+            category: "input_advanced"
         }
         detailed_csv_files: {
             help: "Detailed per-read alignment results in CSV format, containing alignment scores, repeat counts, and read metadata for each alignment. Empty array if output_detailed_csv=false.",
@@ -197,17 +200,25 @@ workflow STRGenotyper {
             type: "File",
             category: "output"
         }
-        monitoring_script_input: {
-            help: "Monitoring script override for AWS HealthOmics workflow templates multi-region support",
-            type: "File",
-            category: "input_optional"
-        }
     }
 
     call Globals.Globals as GlobalsCall
     GlobalVariables global = GlobalsCall.global_dockers
 
     String monitoring_script = select_first([monitoring_script_input, global.monitoring_script])
+
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResourcesCall
+
+    References references = object {
+        ref_fasta: GenomeResourcesCall.resources[reference_genome].ref_fasta,
+        ref_fasta_index: GenomeResourcesCall.resources[reference_genome].ref_fasta_index,
+        ref_dict: GenomeResourcesCall.resources[reference_genome].ref_dict
+    }
+
+
+
+    # Default memory is 16GB, can be overridden
+    Int memory_gb = select_first([memory_gb_override, 16])
     
     call GenotypeSTR {
         input:
@@ -228,7 +239,6 @@ workflow STRGenotyper {
             haploid = haploid,
             threads = threads,
             memory_gb = memory_gb,
-            disk_gb = disk_gb,
             docker = global.str_genotyper_docker,
             monitoring_script = monitoring_script,
             preemptible_tries = preemptible_tries,
@@ -266,13 +276,14 @@ task GenotypeSTR {
         
         Int threads
         Int memory_gb
-        Int disk_gb
         String docker
         String monitoring_script
         Int preemptible_tries
         Boolean no_address
     }
-    
+    # Calculate disk size from input files automatically
+    Int disk_gb = ceil(size(cram_file, "GB") + size(reference_fasta, "GB") + size(variant_catalog, "GB")) + 10
+
     command <<<
         set -exo pipefail
         

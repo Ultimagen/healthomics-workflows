@@ -15,7 +15,10 @@ version 1.0
 #   limitations under the License.
 
 # DESCRIPTION
-# Segmental duplication processing workflow
+# Segmental duplication processing workflow.
+# Runs Parascopy over the segdup regions to produce CNV calls and small
+# variants, then runs the LPA KIV-2 targeted caller on the same input
+# alignment and merges those variants into the primary small_variants VCF.
 #
 # CHANGELOG
 
@@ -27,7 +30,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.32.1" # !UnusedDeclaration
+        String pipeline_version = "1.33.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -185,12 +188,27 @@ workflow SegDupAnalysis {
             category: "output"
         }
         small_variants: {
-            help: "Small variants (VCF)",
+            help: "Small variants (VCF) combining ParascopyCall output and LPA KIV-2 targeted small variants",
             type: "File",
             category: "output"
         }
         small_variants_idx: {
             help: "Small variants index",
+            type: "File",
+            category: "output"
+        }
+        lpa_vcf: {
+            help: "LPA KIV-2 targeted caller VCF (full: KIV-2 CNV symbolic record + LPA small variants)",
+            type: "File",
+            category: "output"
+        }
+        lpa_vcf_index: {
+            help: "LPA KIV-2 targeted caller VCF index",
+            type: "File",
+            category: "output"
+        }
+        lpa_json: {
+            help: "LPA KIV-2 targeted caller JSON report",
             type: "File",
             category: "output"
         }
@@ -209,6 +227,16 @@ workflow SegDupAnalysis {
         ref_fasta: GenomeResources.resources[reference_genome].ref_fasta,
         ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
         ref_dict: GenomeResources.resources[reference_genome].ref_dict
+    }
+    call UGGeneral.ExtractSampleNameFlowOrder as ExtractSampleNameFlowOrder {
+        input:
+            input_bam         = input_cram_bam,
+            monitoring_script = monitoring_script,
+            preemptible_tries = preemptible_tries,
+            docker            = global.broad_gatk_docker,
+            references        = references,
+            no_address        =  no_address,
+            cloud_provider_override = cloud_provider_override
     }
 
     call PoolReads {
@@ -311,14 +339,67 @@ workflow SegDupAnalysis {
             no_address = no_address
     }
 
+    call LpaCaller {
+        input:
+            base_file_name = base_file_name,
+            sample_name = ExtractSampleNameFlowOrder.sample_name,
+            input_cram_bam = input_cram_bam,
+            input_crai_bai = input_crai_bai,
+            references = references,
+            monitoring_script = monitoring_script,
+            docker = global.ugbio_cnv_docker,
+            preemptible_tries = preemptible_tries,
+            no_address = no_address
+    }
+
+    call ConcatSmallVariants {
+        input:
+            base_file_name = base_file_name,
+            small_variants_vcf = ParascopyCall.small_variants,
+            small_variants_vcf_index = ParascopyCall.small_variants_index,
+            lpa_small_variants_vcf = LpaCaller.lpa_small_variants_vcf,
+            lpa_small_variants_vcf_index = LpaCaller.lpa_small_variants_vcf_index,
+            monitoring_script = monitoring_script,
+            docker = global.bcftools_docker,
+            preemptible_tries = preemptible_tries,
+            no_address = no_address
+    }
+
+    call ConcatCnvBed as ConcatAcnv {
+        input:
+            base_file_name = base_file_name,
+            suffix = "acnv",
+            parascopy_bed = FixCNVFormat.out_acnv_calls,
+            lpa_bed = LpaCaller.lpa_acnv_bed,
+            monitoring_script = monitoring_script,
+            docker = global.ugbio_cnv_docker,
+            preemptible_tries = preemptible_tries,
+            no_address = no_address
+    }
+
+    call ConcatCnvBed as ConcatPcnv {
+        input:
+            base_file_name = base_file_name,
+            suffix = "pcnv",
+            parascopy_bed = FixCNVFormat.out_pcnv_calls,
+            lpa_bed = LpaCaller.lpa_pcnv_bed,
+            monitoring_script = monitoring_script,
+            docker = global.ugbio_cnv_docker,
+            preemptible_tries = preemptible_tries,
+            no_address = no_address
+    }
+
 
     output { 
         File remap_bam = PoolReads.remap_cram
         File remap_bam_index = PoolReads.remap_cram_index
-        File acnv_calls = FixCNVFormat.out_acnv_calls
-        File pcnv_calls = FixCNVFormat.out_pcnv_calls 
-        File small_variants = ParascopyCall.small_variants
-        File small_variants_idx = ParascopyCall.small_variants_index
+        File acnv_calls = ConcatAcnv.out_bed
+        File pcnv_calls = ConcatPcnv.out_bed
+        File small_variants = ConcatSmallVariants.output_vcf
+        File small_variants_idx = ConcatSmallVariants.output_vcf_index
+        File lpa_vcf = LpaCaller.lpa_vcf
+        File lpa_vcf_index = LpaCaller.lpa_vcf_index
+        File lpa_json = LpaCaller.lpa_json
     }
 
 }
@@ -514,6 +595,166 @@ task FixCNVFormat {
     runtime {
         docker: docker
         memory: "8 GB"
+        preemptible: preemptible_tries
+        cpu: 1
+        disks: "local-disk " + disk_size + " HDD"
+        noAddress: no_address
+    }
+}
+
+task LpaCaller {
+    input {
+        String base_file_name
+        String sample_name
+        File input_cram_bam
+        File input_crai_bai
+        References references
+        File monitoring_script
+        String docker
+        Int preemptible_tries
+        Boolean no_address = true
+    }
+    Int disk_size = ceil(size(input_cram_bam, "GB") + size(references.ref_fasta, "GB") + 10)
+    command <<<
+        set -eo pipefail
+        set -x
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        # lpa_caller reads the CRAM/CRAI directly from the localized paths
+        # (--crai avoids requiring the index to sit next to the CRAM, which
+        # matters on AWS HealthOmics where the input dir is read-only).
+        # It writes: <prefix>.targeted.{json, vcf.gz(+.tbi),
+        # small_variants.vcf.gz(+.tbi), acnv.bed, pcnv.bed}
+        python -m ugbio_cnv.lpa_caller \
+            --cram ~{input_cram_bam} \
+            --crai ~{input_crai_bai} \
+            --reference ~{references.ref_fasta} \
+            --sample-id ~{sample_name} \
+            --output-prefix ~{base_file_name}
+    >>>
+    output {
+        File lpa_vcf = "~{base_file_name}.targeted.vcf.gz"
+        File lpa_vcf_index = "~{base_file_name}.targeted.vcf.gz.tbi"
+        File lpa_small_variants_vcf = "~{base_file_name}.targeted.small_variants.vcf.gz"
+        File lpa_small_variants_vcf_index = "~{base_file_name}.targeted.small_variants.vcf.gz.tbi"
+        File lpa_acnv_bed = "~{base_file_name}.targeted.acnv.bed"
+        File lpa_pcnv_bed = "~{base_file_name}.targeted.pcnv.bed"
+        File lpa_json = "~{base_file_name}.targeted.json"
+    }
+    runtime {
+        docker: docker
+        memory: "8 GB"
+        preemptible: preemptible_tries
+        cpu: 2
+        disks: "local-disk " + disk_size + " HDD"
+        noAddress: no_address
+    }
+}
+
+task ConcatSmallVariants {
+    input {
+        String base_file_name
+        File small_variants_vcf
+        File small_variants_vcf_index
+        File lpa_small_variants_vcf
+        File lpa_small_variants_vcf_index
+        File monitoring_script
+        String docker
+        Int preemptible_tries
+        Boolean no_address = true
+    }
+    Int disk_size = ceil(2 * (size(small_variants_vcf, "GB") + size(lpa_small_variants_vcf, "GB")) + 5)
+    String output_vcf_name = "~{base_file_name}.small_variants.vcf.gz"
+    command <<<
+        set -eo pipefail
+        set -x
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        # -a allows overlapping records (LPA sites lie inside the segdup region
+        # already covered by ParascopyCall)
+        bcftools concat -a -Ou ~{small_variants_vcf} ~{lpa_small_variants_vcf} \
+            | bcftools sort -T . -Oz -o ~{output_vcf_name} -
+        bcftools index -t ~{output_vcf_name}
+    >>>
+    output {
+        File output_vcf = "~{output_vcf_name}"
+        File output_vcf_index = "~{output_vcf_name}.tbi"
+    }
+    runtime {
+        docker: docker
+        memory: "4 GB"
+        preemptible: preemptible_tries
+        cpu: 1
+        disks: "local-disk " + disk_size + " HDD"
+        noAddress: no_address
+    }
+}
+
+task ConcatCnvBed {
+    input {
+        String base_file_name
+        String suffix
+        File parascopy_bed
+        File lpa_bed
+        File monitoring_script
+        String docker
+        Int preemptible_tries
+        Boolean no_address = true
+    }
+    Int disk_size = ceil(2 * (size(parascopy_bed, "GB") + size(lpa_bed, "GB")) + 1)
+    String output_bed_name = "~{base_file_name}.~{suffix}.bed"
+    command <<<
+        set -eo pipefail
+        set -x
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        # Concatenate two #gffTags 4-column BED files (parascopy + LPA) and
+        # sort by contig order taken from the parascopy BED (LPA rows are
+        # always chr6). Preserves the single #gffTags header line at the top.
+        python <<'PY'
+        parascopy = "~{parascopy_bed}"
+        lpa       = "~{lpa_bed}"
+        out       = "~{output_bed_name}"
+
+        def _read(path):
+            rows = []
+            with open(path) as f:
+                for line in f:
+                    if line.startswith("#") or not line.strip():
+                        continue
+                    rows.append(line.rstrip("\n"))
+            return rows
+
+        contig_order = {}
+        with open(parascopy) as f:
+            for line in f:
+                if line.startswith("#") or not line.strip():
+                    continue
+                c = line.split("\t", 1)[0]
+                if c not in contig_order:
+                    contig_order[c] = len(contig_order)
+        for row in _read(lpa):
+            c = row.split("\t", 1)[0]
+            if c not in contig_order:
+                contig_order[c] = len(contig_order)
+
+        rows = _read(parascopy) + _read(lpa)
+        rows.sort(key=lambda r: (contig_order[r.split("\t", 1)[0]],
+                                 int(r.split("\t", 3)[1]),
+                                 int(r.split("\t", 3)[2])))
+
+        with open(out, "w") as f:
+            f.write("#gffTags\n")
+            for r in rows:
+                f.write(r + "\n")
+        PY
+    >>>
+    output {
+        File out_bed = "~{output_bed_name}"
+    }
+    runtime {
+        docker: docker
+        memory: "4 GB"
         preemptible: preemptible_tries
         cpu: 1
         disks: "local-disk " + disk_size + " HDD"

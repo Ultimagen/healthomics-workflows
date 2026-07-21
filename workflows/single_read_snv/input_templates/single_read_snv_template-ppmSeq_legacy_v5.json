@@ -22,6 +22,8 @@
     "SingleReadSNV.train_on_gpu": true,
     "SingleReadSNV.random_sample_trinuc_freq": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv",
     "SingleReadSNV.min_coverage_to_train_model": 8.0,
+    "SingleReadSNV.num_shards_featuremap": 100,
+    "SingleReadSNV.scatter_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
     "SingleReadSNV.preemptible_tries": 1,
     "SingleReadSNV.raise_exceptions_in_report": false,
     "SingleReadSNV.create_md5_checksum_outputs": false,

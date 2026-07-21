@@ -2,12 +2,8 @@
     "STRGenotyper.base_file_name": "NA24385",
     "STRGenotyper.cram_file": "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/NA24385-Z0027.cram",
     "STRGenotyper.cram_index": "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/NA24385-Z0027.cram.crai",
+    "STRGenotyper.reference_genome": "hg38",
     "STRGenotyper.variant_catalog": "s3://ultimagen-workflow-resources-us-east-1/sample_data/str_genotyper/clinical_variant_catalog.json",
-    "STRGenotyper.references": {
-        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-    },
     "STRGenotyper.ref_padding": 500,
     "STRGenotyper.min_repeat": 1,
     "STRGenotyper.max_repeat": 100,

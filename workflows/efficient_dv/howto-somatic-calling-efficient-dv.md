@@ -128,7 +128,7 @@ The call_variants step combines the tfrecords from all make_examples jobs. The a
 onnxFileName = model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx
 useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
-numInferTreadsPerGpu = 2
+numInferThreadsPerGpu = 2
 useGPUs = 1
 gpuid = 0
 
@@ -145,9 +145,9 @@ outputFileName = call_variants
 numConversionThreads = 2
 numExampleFiles = 40
 
-exampleFile 1 = input_dir/001.tfrecord.gz
-exampleFile 2 = input_dir/002.tfrecord.gz
-exampleFile 3 = input_dir/003.tfrecord.gz
+exampleFile1 = input_dir/001.tfrecord.gz
+exampleFile2 = input_dir/002.tfrecord.gz
+exampleFile3 = input_dir/003.tfrecord.gz
 ...
 ```
 

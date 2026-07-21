@@ -42,7 +42,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.32.1" # !UnusedDeclaration
+        String pipeline_version = "1.33.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -51,7 +51,7 @@ workflow SVPipeline {
         Array[File] input_tumor_crams_indexes = []
         String reference_genome = "hg38"
         UaParameters ua_parameters
-        GiraffeReferences? giraffe_parameters
+        GiraffeParameters? giraffe_parameters
         File wgs_calling_interval_list
         Int min_base
         Int min_mapq
@@ -158,7 +158,9 @@ workflow SVPipeline {
             "SortGiraffeAlignment.gitc_path",
             "IndexGiraffeAlignment.disk_size",
             "MergeMd5sToJson.output_json",
-            "AlignWithGiraffe.threads"
+            "AlignWithGiraffe.threads",
+            "AlignWithGiraffe.ref_min_basename",
+            "AlignWithGiraffe.ref_zipcodes_basename"
             ]}
     }
     parameter_meta {
@@ -198,7 +200,7 @@ workflow SVPipeline {
             category: "required"
         }
         giraffe_parameters: {
-            type: "GiraffeReferences",
+            type: "GiraffeParameters",
             help: "vg giraffe index files to improve haplotype interpretation using population graphs",
             category: "optional"
         }

@@ -27,6 +27,16 @@ The following input templates are available for different kinds of input data:
         <i>String </i> &mdash;
          Base file name for output files. The output files will be named [base_file_name].with_ml_qual.vcf.gz <br />
 </p>
+<p name="SingleReadSNV.num_shards_featuremap">
+        <b>SingleReadSNV.num_shards_featuremap</b><br />
+        <i>Int </i> &mdash;
+         Number of genomic shards to scatter the snvfind (CreateFeatureMap) step across. Higher values reduce wall-clock time but add scatter overhead. <br />
+</p>
+<p name="SingleReadSNV.scatter_interval_list">
+        <b>SingleReadSNV.scatter_interval_list</b><br />
+        <i>File </i> &mdash;
+         Interval list defining the genomic regions to scatter snvfind across. Should match the regions in featuremap_params.bed_file. <br />
+</p>
 
 ### Required parameters
 <p name="SingleReadSNV.train_on_gpu">
@@ -94,11 +104,6 @@ The following input templates are available for different kinds of input data:
         <b>SingleReadSNV.override_memory_gb_TrainModel</b><br />
         <i>Int? &mdash; Default: None</i><br />
         Override memory in GB for the TrainModel task, default: 32 (GiB). If an out of memory error occurs in the TrainModel task, try increasing this value, e.g. double it.
-</p>
-<p name="SingleReadSNV.FeatureMapPrep.CreateFeatureMap.model_files">
-        <b>SingleReadSNV.FeatureMapPrep.CreateFeatureMap.model_files</b><br />
-        <i>Array[SingleReadSNVModel]? &mdash; Default: None</i><br />
-        Optional array of SingleReadSNVModel structs for model-aware featuremap creation
 </p>
 
 ### Optional inputs
@@ -179,6 +184,36 @@ The following input templates are available for different kinds of input data:
 </p>
 <p name="SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.cpus">
         <b>SingleReadSNV.FeatureMapPrep.FilterIncludeVcf.cpus</b><br />
+        <i>Int </i> &mdash;
+         Number of cpus to use for this task. Default is 4. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.base_file_name">
+        <b>SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.base_file_name</b><br />
+        <i>String? </i> &mdash;
+         Base file name for output files. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.exclude_regions">
+        <b>SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.exclude_regions</b><br />
+        <i>Array[File]? </i> &mdash;
+         Regions to exclude from the output vcf. Supported formats are bed, bed.gz, vcf, vcf.gz. VCF exclusion is done using bcftools view -T ^regions, by position and not by ref and alt. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.include_regions">
+        <b>SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.include_regions</b><br />
+        <i>Array[File]? </i> &mdash;
+         Regions to include in the output vcf. Supported formats are bed, bed.gz. Inclusion is done using 'bcftools view -T'. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.disk_size">
+        <b>SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.disk_size</b><br />
+        <i>Int </i> &mdash;
+         Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes. <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.memory_gb">
+        <b>SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.memory_gb</b><br />
+        <i>Int </i> &mdash;
+         Amount of memory to use for this task, in GB. Default is 4 (GB). <br />
+</p>
+<p name="SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.cpus">
+        <b>SingleReadSNV.FeatureMapPrepPathB.FilterIncludeVcf.cpus</b><br />
         <i>Int </i> &mdash;
          Number of cpus to use for this task. Default is 4. <br />
 </p>

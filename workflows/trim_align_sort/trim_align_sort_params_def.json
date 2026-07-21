@@ -1,6 +1,6 @@
 {
     "TrimAlignSort.aligner": {
-        "description": "Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected.",
+        "description": "Aligner to be used. Options are: ua, ua-meth, star, giraffe. Mandatory if align step is selected.",
         "optional": true
     },
     "TrimAlignSort.base_file_name": {
@@ -17,6 +17,10 @@
     },
     "TrimAlignSort.dummy_input_for_call_caching": {
         "description": "dummy_input_for_call_caching",
+        "optional": true
+    },
+    "TrimAlignSort.giraffe_parameters": {
+        "description": "Graph reference bundle for the Giraffe aligner + extra parameters for vg giraffe. Mandatory if aligner is giraffe.",
         "optional": true
     },
     "TrimAlignSort.input_cram_bam_list": {

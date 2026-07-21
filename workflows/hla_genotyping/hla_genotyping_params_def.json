@@ -8,8 +8,12 @@
         "optional": true
     },
     "HLAGenotyping.graphs_files_tar": {
-        "description": "HLA-LA graphs files tar",
+        "description": "HLA-LA graphs files tar (required if using HLA-LA)",
         "optional": true
+    },
+    "HLAGenotyping.hla_genotyping_tool": {
+        "description": "HLA genotyping tool to use. Options: 'HLA-LA' or 'T1K'",
+        "optional": false
     },
     "HLAGenotyping.input_cram_bam": {
         "description": "Input CRAM or BAM file for annalysing HLA genotyping",
@@ -31,8 +35,12 @@
         "description": "preemptible_tries_override",
         "optional": true
     },
-    "HLAGenotyping.references": {
-        "description": "Reference files: fasta, dict and fai, recommended value set in the template",
+    "HLAGenotyping.reference_genome": {
+        "description": "Genome type selector (hg38 or hg38_nist_v3_with_decoy). Determines which reference files to use.",
         "optional": false
+    },
+    "HLAGenotyping.t1k_index_tar": {
+        "description": "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa). Required if using T1K.",
+        "optional": true
     }
 }

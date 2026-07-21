@@ -40,7 +40,7 @@ task MrdDataAnalysis {
   >>>
   runtime {
     preemptible: 0
-    cpu: "~{cpus}"
+    cpu: cpus
     memory: "~{memory_gb} GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker
@@ -84,7 +84,7 @@ task GenerateControlSignaturesFromDatabase {
   >>>
   runtime {
     preemptible: 0
-    cpu: "~{cpus}"
+    cpu: cpus
     memory: "~{memory_gb} GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker
@@ -146,7 +146,7 @@ task FeatureMapIntersectWithSignatures {
   >>>
   runtime {
     preemptible: 0
-    cpu: "~{cpus}"
+    cpu: cpus
     memory: "~{memory_gb} GB"
     disks: "local-disk " + ceil(disk_size) + " HDD"
     docker: docker
@@ -189,7 +189,7 @@ task BedIntersectAndExclude {
 
     runtime {
       preemptible: "~{preemptibles}"
-      cpu: "~{cpus}"
+      cpu: cpus
       memory: "~{memory_gb} GB"
       disks: "local-disk " + ceil(disk_size) + " HDD"
       docker: docker
@@ -227,7 +227,7 @@ task MergeVcfsIntoBed {
 
     runtime {
       preemptible: "~{preemptibles}"
-      cpu: "~{cpus}"
+      cpu: cpus
       memory: "~{memory_gb} GB"
       disks: "local-disk " + ceil(disk_size) + " HDD"
       docker: docker
@@ -294,7 +294,7 @@ task ExtractCoverageOverVcfFiles {
 
     runtime {
       preemptible: "~{preemptibles}"
-      cpu: "~{cpus}"
+      cpu: cpus
       memory: "~{memory_gb} GB"
       disks: "local-disk " + ceil(disk_size) + " HDD"
       docker: docker
@@ -343,7 +343,7 @@ task PadVcf {
   
   runtime {
     preemptible: preemptible_tries
-    cpu: "~{cpus}"
+    cpu: cpus
     memory: "~{memory_gb} GB"
     disks: "local-disk " + disk_size + " HDD"
     docker: docker

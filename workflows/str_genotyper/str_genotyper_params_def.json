@@ -45,7 +45,7 @@
     },
     "STRGenotyper.output_detailed_csv": {
         "description": "Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O.",
-        "optional": true
+        "optional": false
     },
     "STRGenotyper.output_summary_csv": {
         "description": "Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O.",
@@ -59,8 +59,8 @@
         "description": "Number of bases to extend around the STR repeat region when building auxiliary references for alignment. Larger values provide more flanking sequence context for accurate alignment.",
         "optional": true
     },
-    "STRGenotyper.references": {
-        "description": "Reference genome files (fasta, fasta.fai, dict) as References struct",
+    "STRGenotyper.reference_genome": {
+        "description": "Reference genome name (supported: 'hg38', 'hg38_nist_v3_with_decoy'). Automatically loads genome-specific reference files.",
         "optional": false
     },
     "STRGenotyper.spanning_flank_bases": {
@@ -69,10 +69,10 @@
     },
     "STRGenotyper.threads": {
         "description": "Number of threads for parallel processing",
-        "optional": true
+        "optional": false
     },
     "STRGenotyper.variant_catalog": {
-        "description": "JSON file containing STR variant catalog with locus definitions",
-        "optional": false
+        "description": "Variant catalog (json). Example: https://github.com/broadinstitute/str-analysis/blob/main/str_analysis/variant_catalogs/variant_catalog_with_offtargets.GRCh38.json",
+        "optional": true
     }
 }

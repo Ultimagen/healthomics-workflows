@@ -61,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.2.4
+ultimagenomics/make_examples:3.3.0
 ```
 
 Generate interval bed : 
@@ -85,7 +85,7 @@ tool \
 	--max-num-haps 10 \
 	--max-reads-per-region 1500 \
 	--prog \
-	--interval-nreads 10000 \
+	--interval-target-nreads 10000 \
 	--sv \
     --realigned-sam
 
@@ -111,7 +111,7 @@ tool \
 	--max-num-haps 10 \
 	--max-reads-per-region 1500 \
 	--prog \
-	--interval-nreads 10000 \
+	--interval-target-nreads 10000 \
 	--sv \
     --realigned-sam
 
@@ -136,7 +136,7 @@ tool \
 	--max-num-haps 10 \
 	--max-reads-per-region 1500 \
 	--prog \
-	--interval-nreads 10000 \
+	--interval-target-nreads 10000 \
 	--sv \
     --realigned-sam
     
@@ -150,7 +150,7 @@ samtools index output_basename_assembly_hap_out_sorted.bam
 UA Docker:
 
 ```
-ultimagenomics/alignment:3.0.6
+ultimagenomics/alignment:3.0.8
 ```
 UA realignment command: (realignment is done on a merged bam consisting of a merge of all the BAMs produced in the scattered assembly)
 ```
@@ -175,7 +175,7 @@ samtools index output_basename_assembly_file_ua_aligned_sorted.bam
 
 Docker:
 ```
-ultimagenomics/gridss:03117df
+ultimagenomics/gridss:1.0.2
 ```
 
 Run: 
@@ -194,7 +194,7 @@ samtools index output_basename_assembly_ua_realigned.bam
 
 Docker:
 
-    ultimagenomics/gridss:03117df
+    ultimagenomics/gridss:1.0.2
 
 ```
     python3 /opt/gridss/align_long_homopolymers.py \
@@ -211,7 +211,7 @@ Here we assign the reads to the best supported haplotype.
 
 Docker: 
 
-    ultimagenomics/rematcher:main_04615d5
+    ultimagenomics/rematcher:1.1.2_08f0df1
 
 ```
     sv_rematch -b interval.bed \
@@ -424,7 +424,7 @@ bcftools index -t output_basename.ann.vcf.gz
 For germline mode, run GermlineLinkVariants (on the GRIDSS docker) using :
 
 ```
-Rscript /opt/gridss/link_breakpoints \
+Rscript /opt/gridss/link_breakpoints.R \
     --input  output_basename.ann.vcf.gz \
     --fulloutput output_basename_linked.vcf \
     --ref Homo_sapiens_assembly38.fasta \

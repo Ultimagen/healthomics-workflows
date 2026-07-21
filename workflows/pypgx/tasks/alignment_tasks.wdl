@@ -31,7 +31,7 @@ task SplitCram {
     runtime {
         preemptible: preemptible_tries
         memory: "8 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + disk_size + " LOCAL"
         docker: docker
         noAddress: no_address
@@ -115,7 +115,7 @@ task CreateReferenceCache {
     runtime {
         preemptible: preemptible_tries
         memory: "4 GB"
-        cpu: "2"
+        cpu: 2
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         maxRetries: 1
@@ -177,7 +177,7 @@ task ConvertCramOrBamToUBam {
     runtime {
         preemptible: preemptible_tries
         memory: "13 GB"
-        cpu: "3"
+        cpu: 3
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address
@@ -272,7 +272,7 @@ task SamToFastqAndBwaMemAndMba {
     runtime {
         preemptible: preemptible_tries
         memory: "28 GB"
-        cpu: "16"
+        cpu: 16
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address
@@ -365,7 +365,7 @@ task SamToFastqAndBwaMeth {
     runtime {
         preemptible: preemptible_tries
         memory: "32 GB"
-        cpu: "25"
+        cpu: 25
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         noAddress: no_address
@@ -409,7 +409,7 @@ task BuildUaIndex{
     >>>
 
     runtime {
-        cpu : "1"
+        cpu: 1
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries
         memory: "200 GB"
@@ -456,7 +456,7 @@ task BuildUaMethIndex {
     >>>
 
     runtime {
-        cpu : "1"
+        cpu: 1
         preemptible: preemptible_tries
         memory: "200 GB"
         disks: "local-disk " + disk_size + " HDD"
@@ -534,7 +534,7 @@ task AlignWithUA {
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries_final
         memory: "~{memory_gb} GiB"
-        cpu: "~{cpu}"
+        cpu: cpu
         disks: "local-disk " + disk_size + " HDD"
         docker: ua_docker
         noAddress: no_address
@@ -615,7 +615,7 @@ task AlignWithUAMeth {
         cpuPlatform: "Intel Skylake"
         preemptible: preemptible_tries_final
         memory: "~{memory_gb} GiB"
-        cpu: "~{cpu}"
+        cpu: cpu
         disks: "local-disk " + disk_size + " HDD"
         docker: ua_docker
         noAddress: no_address
@@ -629,12 +629,13 @@ task AlignWithUAMeth {
 }
 
 # Read unmapped BAM, convert to FASTQ, align with vg giraffe and cobvert to bam with vg surject, then stream to MergeBamAlignment
+# DEPRECATED!! Use UGGiraffeAlignment in TrimAlignSort instead
 task SamToFastqAndGiraffeAndMba {
     input {
         File input_bam
         String output_bam_basename
         References references
-        GiraffeReferences giraffe_references
+        GiraffeParameters giraffe_references
         File monitoring_script
         Boolean no_address
         # The merged bam can be bigger than only the aligned bam,
@@ -642,13 +643,15 @@ task SamToFastqAndGiraffeAndMba {
         Int preemptible_tries
         String docker
         Int threads = 16
+        String ref_min_basename = basename(giraffe_references.ref_min)
+        String ref_zipcodes_basename = basename(giraffe_references.ref_zipcodes)
     }
     Int disk_size = ceil(3*size(input_bam,"GB") + 
         size(references.ref_fasta,"GB") +
         size(giraffe_references.ref_gbz,"GB") +
         size(giraffe_references.ref_dist,"GB") +
         size(giraffe_references.ref_min,"GB") +
-        80)
+        100)
 
     command <<<
         set -xeo pipefail
@@ -663,13 +666,17 @@ task SamToFastqAndGiraffeAndMba {
 
         echo "Writing FASTQ complete."
 
+        # To avoid an error that dist is newer than min
+        cp ~{giraffe_references.ref_min} .
+        cp ~{giraffe_references.ref_zipcodes} .
+
         vg giraffe \
          --fastq-in ~{output_bam_basename}.fq \
          --output-format BAM \
          -Z ~{giraffe_references.ref_gbz} \
          -d ~{giraffe_references.ref_dist} \
-         -z ~{giraffe_references.ref_zipcodes} \
-         -m ~{giraffe_references.ref_min} \
+         -z ~{ref_zipcodes_basename} \
+         -m ~{ref_min_basename} \
          --ref-paths ~{giraffe_references.ref_paths} \
          --parameter-preset default \
          --progress \
@@ -899,7 +906,7 @@ task ConvertToCram {
     runtime {
         preemptible: preemptible_tries
         memory: "8 GB"
-        cpu: "1"
+        cpu: 1
         disks: "local-disk " + disk_size + " HDD"
         docker: docker
         maxRetries: 1
@@ -944,7 +951,7 @@ task ValidateSamFile {
         OUTPUT=~{report_filename} \
         REFERENCE_SEQUENCE=~{references.ref_fasta} \
         ~{"MAX_OUTPUT=" + max_output} \
-        IGNORE=~{default="null" sep=" IGNORE=" ignore} \
+        IGNORE=~{sep=" IGNORE=" select_first([ignore, ["null"]])} \
         MODE=VERBOSE \
         SKIP_MATE_VALIDATION=true \
         IS_BISULFITE_SEQUENCED=is_methyl_seq
@@ -1014,7 +1021,7 @@ task StarAlign {
 
     runtime {
         preemptible: "~{preemptible_tries}"
-        cpu: "~{cpu}"
+        cpu: cpu
         memory: "~{memory_gb} GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1070,7 +1077,7 @@ task StarGenomeGenerate {
 
     runtime {
         preemptible: "~{preemptible_tries}"
-        cpu: "~{cpu}"
+        cpu: cpu
         memory: "40 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1129,7 +1136,7 @@ task StarAlignStats {
     >>>
     runtime {
         preemptible: "~{preemptible_tries}"
-        cpu: "1"
+        cpu: 1
         memory: "8 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1163,7 +1170,7 @@ task SortBam {
             SORT_ORDER=~{sort_order}
     >>>
     runtime {
-        cpu: "1"
+        cpu: 1
         memory: "8 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1194,7 +1201,7 @@ task IndexBam {
         samtools index ~{input_bam}
     >>>  
     runtime {
-        cpu: "1"
+        cpu: 1
         memory: "8 GB"
         disks: "local-disk " + ceil(disk_size) + " HDD"
         docker: docker
@@ -1203,6 +1210,77 @@ task IndexBam {
     }   
     output {
         File bam_index = "~{input_bam}.bai"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
+task UGGiraffeAlignment {
+    input {
+        Array[File] input_bams
+        File? cache_tarball
+        String output_bam_basename
+        GiraffeParameters giraffe_indices
+        File ref_dict
+        String? extra_args
+        File monitoring_script
+        Int preemptible_tries
+        Boolean no_address
+        String vg_docker
+        Int cpu = 40
+    }
+    Int disk_size = ceil(3*size(input_bams, "GB") + 20 + 
+                            2*size(cache_tarball, "GB") + size(giraffe_indices.ref_gbz, "GB") + 
+                            size(giraffe_indices.ref_min, "GB") + size(giraffe_indices.ref_dist, "GB") + 
+                            size(giraffe_indices.ref_zipcodes, "GB") +  size(giraffe_indices.ref_paths, "GB"))
+    
+    Int memory_gb = ceil(2*size(giraffe_indices.ref_min, "GB")) + 10
+
+    Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
+    Boolean defined_cache_tarball = defined(cache_tarball)
+    command <<<
+    set -exuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    if [[ ~{defined_cache_tarball} == true ]]; then
+        echo "Unzipping cache tarball"
+        ~{"tar -zxf "+cache_tarball}
+    
+        export REF_CACHE=cache/%2s/%2s/ 
+        export REF_PATH='.' 
+    fi
+    
+    # for compatibility with the old image where ua was in /ua/ua and not in PATH
+
+    samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{sep=" " input_bams} | \
+    samtools view -@ 2 -h -F 2048 - | 
+    vg giraffe \
+        --threads ~{cpu} \
+        --hts-in - \
+        --output-format SAM \
+        --gbz-name ~{giraffe_indices.ref_gbz} \
+        --dist-name ~{giraffe_indices.ref_dist} \
+        --zipcode-name ~{giraffe_indices.ref_zipcodes} \
+        --minimizer-name ~{giraffe_indices.ref_min} \
+        --ref-paths ~{giraffe_indices.ref_paths} \
+        --ref-dict ~{ref_dict} \
+        --parameter-preset default \
+        --progress \
+        ~{extra_args} | \
+    samtools view -@ ~{cpu} -o ~{output_bam_basename}.bam -
+    >>>
+
+    runtime {
+        preemptible: preemptible_tries_final
+        memory: "~{memory_gb} GiB"
+        cpu: "~{cpu}"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: vg_docker
+        noAddress: no_address
+        maxRetries: 1
+    }
+
+    output {
+        File output_bam = "~{output_bam_basename}.bam"
         File monitoring_log = "monitoring.log"
     }
 }

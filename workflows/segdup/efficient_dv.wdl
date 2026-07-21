@@ -29,11 +29,12 @@ import "tasks/globals.wdl" as Globals
 import "tasks/genome_resources.wdl" as GenomeResourcesLib
 import "tasks/single_sample_vc_tasks.wdl" as VCTasks
 import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
+import "haplotype_sampling.wdl" as HSampling
 
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.32.1" # !UnusedDeclaration
+    String pipeline_version = "1.33.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -47,6 +48,7 @@ workflow EfficientDV {
     Boolean recalibrate_vaf
     Boolean is_somatic  # Enable somatic calling mode
     Boolean show_bg_fields = is_somatic # Show background fields in the output vcf
+    Boolean run_haplotype_sampling = false # Run haplotype sampling to create pangenome haplotypes
 
     # Scatter interval list args
     Int num_shards = 40
@@ -88,6 +90,13 @@ workflow EfficientDV {
     File? germline_vcf
     File? pangenome_haplotypes
     File? pangenome_haplotypes_index
+
+    # Haplotype sampling parameters (required if run_haplotype_sampling is true)
+    File? ref_gbz_for_haplotypes
+    File? ref_hapl
+    Int? num_haplotypes
+    Boolean? include_reference_in_haplotypes
+    Boolean? diploid_sampling_in_haplotypes
 
     # Background files (for somatic calling)
     Array[File] background_cram_files = []
@@ -158,7 +167,7 @@ workflow EfficientDV {
    #@wv cloud_provider_override == "gcp" -> suffix(cram_index_files) <= {".crai", ".bai", ".csi"}
    #@wv prefix(cram_index_files) == cram_files
    #@wv len(cram_files) >= 0
-   #@wv reference_genome in {"hg38", "b37", "hg38_taps", "hg38_nist_v3", "hg38_nist_v3_with_decoy", "hg38_no_alt", "mm10"}
+   #@wv reference_genome in {"hg38", "b37", "hg38_taps", "hg38_nist_v3", "hg38_nist_v3_with_decoy", "hg38_no_alt", "mm10", "mm39"}
    #@wv len(background_cram_files) == len(background_cram_index_files)
    #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
    #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".csi"}
@@ -170,6 +179,11 @@ workflow EfficientDV {
    #@wv defined(pangenome_haplotypes) <-> defined(pangenome_haplotypes_index)
    #@wv defined(gq_bins) -> not defined(gq_resolution_override)
    #@wv defined(gq_resolution_override) -> not defined(gq_bins)
+   #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(ref_gbz_for_haplotypes)
+   #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(ref_hapl)
+   #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(num_haplotypes)
+   #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(diploid_sampling_in_haplotypes)
+   #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(include_reference_in_haplotypes)
   }
   meta {
       description:"Performs variant calling on an input cram, using a re-write of (DeepVariant)[https://www.nature.com/articles/nbt.4235] which is adapted for Ultima Genomics data. There are three stages to the variant calling: (1) make_examples - Looks for “active regions” with potential candidates. Within these regions, it performs local assembly (haplotypes), re-aligns the reads, and defines candidate variant. Images of the reads in the vicinity of the candidates are saved as protos in a tfrecord format. (2) call_variants - Collects the images from make_examples and uses a deep learning model to infer the statistics of each variant (i.e. quality, genotype likelihoods etc.). (3) post_process - Uses the output of call_variants to generate a vcf and annotates it."
@@ -216,10 +230,14 @@ workflow EfficientDV {
 
     reference_genome: {
       type: "String",
-      help: "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10. Default to hg38",
+      help: "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm39. Default to hg38",
       category: "input_optional"
     }
-
+    run_haplotype_sampling: {
+      type: "Boolean",
+      help: "Whether to run haplotype sampling to create pangenome haplotypes. Default: false",
+      category: "param_optional"
+    }
     make_gvcf: {
       type: "Boolean",
       help: "Whether to generate a gvcf. Default: False",
@@ -410,6 +428,29 @@ workflow EfficientDV {
     pangenome_haplotypes_index: {
         category: "param_optional",
         help: "Optional pangenome haplotypes cram index file"
+    }
+    ref_gbz_for_haplotypes: {
+        category: "ref_optional",
+        help: "Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)"
+    }
+    ref_hapl: {
+        category: "ref_optional",
+        help: "Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)"
+    }
+    num_haplotypes: {
+        type: "Int",
+        help: "Number of haplotypes to sample from the pangenome graph (must fit the model)",
+        category: "param_optional"
+    }
+    include_reference_in_haplotypes: {
+        type: "Boolean",
+        help: "Include the reference sequence in the sampled haplotypes (must fit the model)",
+        category: "param_optional"
+    }
+    diploid_sampling_in_haplotypes: {
+        type: "Boolean",
+        help: "Use diploid sampling strategy for haplotype selection (must fit the model)",
+        category: "param_optional"
     }
     model_onnx: {
       help: "TensorRT model for calling variants (onnx format)",
@@ -749,6 +790,28 @@ workflow EfficientDV {
         preemptible_tries = preemptible_tries
     }
   }
+
+  if (run_haplotype_sampling && !defined(pangenome_haplotypes)) {
+      call HSampling.HaplotypeSampling as HaplotypeSampling {
+          input:
+              input_cram_bam_list = cram_files,
+              cram_reference_fasta = references.ref_fasta,
+              cram_reference_fasta_index = references.ref_fasta_index,
+              gbz_file = select_first([ref_gbz_for_haplotypes]),
+              hapl_file = select_first([ref_hapl]),
+              num_haplotypes = select_first([num_haplotypes]),
+              include_reference = select_first([include_reference_in_haplotypes]),
+              diploid_sampling =  select_first([diploid_sampling_in_haplotypes]),
+              alignment_reference_fasta = references.ref_fasta,
+              alignment_reference_fasta_index = references.ref_fasta_index,
+              sample_name = base_file_name
+      }
+  }
+
+  # Select pangenome haplotypes: use HaplotypeSampling output if generated, otherwise use input
+  File? pangenome_haplotypes_to_use = if defined(HaplotypeSampling.output_cram) then HaplotypeSampling.output_cram else pangenome_haplotypes
+  File? pangenome_haplotypes_index_to_use = if defined(HaplotypeSampling.output_cram_index) then HaplotypeSampling.output_cram_index else pangenome_haplotypes_index
+
   Int gq_resolution = select_first([gq_resolution_override, 5])
   scatter (interval in ScatterIntervalList.out){
     call UGDVTasks.UGMakeExamples {
@@ -766,8 +829,8 @@ workflow EfficientDV {
         median_coverage = CalculateCoverage.median_coverage,
         background_median_coverage = select_first([CalculateBackgroundCoverage.median_coverage, 0]),
         germline_vcf = germline_vcf,
-        pangenome_haplotypes = pangenome_haplotypes,
-        pangenome_haplotypes_index = pangenome_haplotypes_index,
+        pangenome_haplotypes = pangenome_haplotypes_to_use,
+        pangenome_haplotypes_index = pangenome_haplotypes_index_to_use,
         min_base_quality = min_base_quality,
         min_mapq = min_mapping_quality,
         min_read_count_snps = min_read_count_snps,

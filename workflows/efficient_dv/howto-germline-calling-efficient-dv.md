@@ -40,15 +40,15 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.2.4
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.3.0
 or
-ultimagenomics/make_examples:3.2.4
+ultimagenomics/make_examples:3.3.0
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:4.1.0
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:4.1.2
 or
-ultimagenomics/call_variants:4.1.0
+ultimagenomics/call_variants:4.1.2
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
@@ -124,7 +124,7 @@ onnxFileName = model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regn
 builderOptimizationLevel = 1
 useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
-numInferTreadsPerGpu = 2
+numInferThreadsPerGpu = 2
 useGPUs = 1
 vGPUTileSize = 4
 gpuid = 0
@@ -133,7 +133,7 @@ gpuid = 0
 logFileFolder = .
 
 [ensemble]
-ensembleSize = 0
+ensembleSize = 5
 randomSeed = 42
 referenceRows = 5
 sampleHeights = 100
@@ -153,9 +153,9 @@ outputFileName = call_variants
 numConversionThreads = 2
 numExampleFiles = 40
 
-exampleFile 1 = input_dir/001.tfrecord.gz
-exampleFile 2 = input_dir/002.tfrecord.gz
-exampleFile 3 = input_dir/003.tfrecord.gz
+exampleFile1 = input_dir/001.tfrecord.gz
+exampleFile2 = input_dir/002.tfrecord.gz
+exampleFile3 = input_dir/003.tfrecord.gz
 ...
 ```
 
@@ -182,7 +182,7 @@ When `ensembleSize` is `0` or `1`, ensemble is fully disabled: each input image 
 Images above `threshold` are "strong calls" and are not reprocessed, so the runtime overhead is proportional to the fraction of weak candidates rather than the full dataset.
 
 Key parameters:
-- `ensembleSize`: number of augmented inference passes for weak candidates. `0` or `1` disables ensemble entirely (no augmentation is applied); set to e.g. `7` to enable.
+- `ensembleSize`: number of augmented inference passes for weak candidates. `0` or `1` disables ensemble entirely (no augmentation is applied); set to e.g. `5` to enable.
 - `threshold` (workflow parameter `strong_call_threshold`, default `0.995`): the max-class probability below which a candidate is considered weak and reprocessed.
 - `randomSeed` (workflow parameter `random_seed`, default `42`): random seed for the row-shuffle augmentation, ensuring reproducible results.
 - `referenceRows` (workflow parameter `ensemble_reference_rows`, default `5`): number of reference rows at the top of the image that are not shuffled.
@@ -249,11 +249,15 @@ dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v
 
 ### Workflow That Includes Haplotype Data from Pangenomes
 
-As demonstrated by [Asri et al.](https://www.biorxiv.org/content/10.1101/2025.06.05.657102v1), incorporating pangenome-derived personalized haplotype data into sequencing images can significantly improve accuracy. Haplotype information in CRAM format can be generated using the Giraffe alignment workflow described in `how-to-giraffe-alignment.md`.
+As demonstrated by [Asri et al.](https://www.biorxiv.org/content/10.1101/2025.06.05.657102v1), accuracy of variant calling can be significantly improved by using pangenome-aligned reads as input to DeepVariant, together with pangenome-derived personalized haplotype data.
 
-#### Running `make_examples` with Haplotype Data
+Pangenome-aligned reads can be generated using [`vg giraffe`](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe). Haplotypes are sample-specific sequences selected from a pangenome graph based on the k-mer content of the input reads, and aligned to the reference genome. For detailed instructions on generating haplotypes from pangenome graphs, see [howto-haplotype-sampling.md](howto-haplotype-sampling.md).
 
-Below is the command to generate images that include haplotype data. The key differences from standard variant calling are the addition of `--exp-pangenome-haps haplotypes.cram`, and `--min-mapq 1`:
+*Important note:* The number of haplotypes in the image should fit the model that is being used in the call_variants step.
+
+#### Running `make_examples` with Pangenome-aligned Haplotype Data
+
+Below is the command to generate images of pangenome-aligned data that include haplotype data. The key differences from standard variant calling are the addition of `--exp-pangenome-haps haplotypes.cram` and `--min-mapq 1`:
 
 ```bash
 tool \
@@ -306,22 +310,12 @@ In case a GVCF is desired, then the commands should be modified in the following
 2. When running post_process, add the argument `--gvcf_outfile output_prefix.g.vcf.gz` and provide the `gvcf.tfrecord.gz` files as input using the `--nonvariant_site_tfrecord_path` argument. The `gvcf.tfrecord.gz` files can be provided to `--nonvariant_site_tfrecord_path` either as a comma-separated list, or a text file that contains all the paths. In the latter case use the name of the ```--nonvariant_site_tfrecord_path @gvcf_records.txt```.
 3. Optionally, use the `--gq-resolution` or `--gq-thresholds` arguments to reduce the output gvcf size, by binning intervals with similar GQ values together. `--gq-resolution` sets a constant difference between the bins, and `--gq-thresholds` accepts a list of specific bin thresholds, e.g. `--gq-thresholds 0,1,8,15,22` (the rounding is downwards). A value of 0 is special and results in a bin of 0.
 
-## Debugging tfrecords using dvtools
-The make_examples code also has a handy utility called `dvtools` to view the data in the tfrecord files. It can accept a tfrecord.gz file, and output a vcf with the records (without the images):
-```    
-docker run -v <path mapping> <docker name> \
-  dvtools --infile debug.tfrecord.gz \
-  --filetype dv --op vcf \
-  --outfile debug.dvtools.vcf
-```
+### Legacy models
 
-It can also be used to view the sequences in the image:
-```    
-docker run -v <path mapping> <docker name> \
-  dvtools --infile debug.tfrecord.gz \
-  --filetype dv --op image \
-  --outfile debug.dvtools.vcf
-```
+#### Solaris 1.0 
+The models described above apply to Solaris 2.0 data. For processing WGS Solaris 1.0 data we recommend the following changes to the workflow:
 
+1. Use the following model: `s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx`
+2. Set `ensembleSize` parameter to 0 or omit `[ensemble]` section from the configuration file. 
 
 

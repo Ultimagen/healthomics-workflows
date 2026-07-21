@@ -16,7 +16,8 @@ import "tasks/globals.wdl" as Globals
 workflow HaplotypeSampling {
     input {
         # Required inputs
-        Array[File] input_cram_bam_list        # Input CRAM files
+        Array[File]? input_cram_bam_list   # Input CRAM files
+        File? input_fastq                  # Optional input FASTQ file (if not using CRAM)
         File cram_reference_fasta          # Reference FASTA used for CRAM encoding
         File? cram_reference_fasta_index   # Optional .fai index for CRAM reference
         File gbz_file                      # Pangenome GBZ index file
@@ -28,30 +29,34 @@ workflow HaplotypeSampling {
 
         # Optional parameters
         Int kmer_length = 29               # K-mer length for KMC counting
+        Int min_kmer_count = 2             # Minimum k-mer count threshold for sampling
         Int num_haplotypes = 32            # Number of haplotypes to sample
-        Boolean include_reference = true   # Include reference in sampled haplotypes
-        Boolean diploid_sampling = true    # Use diploid sampling strategy
+        Boolean include_reference = false   # Include reference in sampled haplotypes
+        Boolean diploid_sampling = false    # Use diploid sampling strategy
         Int window_size = 50000            # Sliding window size for seqkit
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.32.1"   #!UnusedDeclaration
+        String pipeline_version = "1.33.0"   #!UnusedDeclaration
         # Resource parameters
-        Int index_cores = 32
-        Int index_mem_gb = 64
-        Int kmc_mem_gb = 128               # Memory (GB) for KMC k-mer counting
-        Int map_cores = 30
+        Int cram_to_fastq_cores = 2
+        Int kmc_mem_gb = 64               # Memory (GB) for KMC k-mer counting
+        Int kmc_cores = 16
+        Int map_cores = 24
         Int map_mem_gb = 64
+        Int sort_cores = 8
+        String? minimap_extra_args
 
+    #@wv defined(input_fastq) <-> not defined(input_cram_bam_list)
     }
 
     meta {
         description: "## Haplotype Sampling Workflow\n\nThis workflow performs haplotype sampling from a CRAM file using VG pangenome tools. The workflow:\n1. Converts CRAM to FASTQ\n2. Counts k-mers using KMC\n3. Samples haplotypes based on k-mer content\n4. Extracts FASTA sequences from sampled graph\n5. Creates sliding windows for alignment\n6. Aligns to reference using minimap2\n\nNote: Pre-computed index files (GBZ, hapl) are required as inputs."
         author: "Ultima Genomics"
         WDL_AID: {
-          exclude: ["pipeline_version","index_cores",
-          "index_mem_gb",
+          exclude: ["pipeline_version",
             "map_cores",
+            "sort_cores",
             "map_mem_gb",
             "Glob.glob",
             "ConvertCramToFastq.mem_gb",
@@ -74,6 +79,11 @@ workflow HaplotypeSampling {
             help: "Input CRAM files containing sequencing reads",
             type: "Array[File]",
             category: "param_required"
+        }
+        input_fastq: {
+            help: "Optional input FASTQ file (if not using CRAM)",
+            type: "File",
+            category: "param_optional"
         }
         cram_reference_fasta: {
             help: "Reference FASTA file used for CRAM encoding/decoding",
@@ -115,8 +125,23 @@ workflow HaplotypeSampling {
             type: "Int",
             category: "param_optional"
         }
+        min_kmer_count: {
+            help: "Minimum k-mer count threshold for sampling (default: 2)",
+            type: "Int",
+            category: "param_optional"
+        }
         kmc_mem_gb: {
-            help: "Memory (GB) for KMC k-mer counting (default: 128)",
+            help: "Memory (GB) for KMC k-mer counting (default: 64)",
+            type: "Int",
+            category: "param_optional"
+        }
+        kmc_cores: {
+            help: "Number of CPU cores for KMC (default: 16)",
+            type: "Int",
+            category: "param_optional"
+        }
+        cram_to_fastq_cores: {
+            help: "Number of CPU cores for CRAM to FASTQ conversion (default: 2)",
             type: "Int",
             category: "param_optional"
         }
@@ -150,6 +175,11 @@ workflow HaplotypeSampling {
             type: "String",
             category: "param_optional"
         }
+        minimap_extra_args: {
+            help: "Additional extra arguments to pass to minimap2 (default: empty)",
+            type: "String",
+            category: "param_optional"
+        }
         output_cram: {
             help: "Final CRAM file containing aligned haplotype sequences with embedded reference",
             type: "File",
@@ -157,6 +187,11 @@ workflow HaplotypeSampling {
         }
         output_cram_index: {
             help: "Index file (.crai) for the output CRAM file",
+            type: "File",
+            category: "output"
+        }
+        sampled_gbz: {
+            help: "Graph in GBZ format containing the sampled haplotypes",
             type: "File",
             category: "output"
         }
@@ -171,26 +206,32 @@ workflow HaplotypeSampling {
     String seqkit_docker = global.giraffe_docker
     String minimap2_docker = global.giraffe_docker
     String monitoring_script = global.monitoring_script
+    
     # Step 1: Convert CRAM to FASTQ
-    call ConvertCramToFastq {
-        input:
-            input_cram_bam_list = input_cram_bam_list,
-            reference_fasta = cram_reference_fasta,
-            reference_fasta_index = cram_reference_fasta_index,
-            sample_name = sample_name,
-            cores = index_cores,
-            samtools_docker = samtools_docker,
-            monitoring_script = monitoring_script #!FileCoercion
+    if (defined(input_cram_bam_list)) {
+        call ConvertCramToFastq {
+            input:
+                input_cram_bam_list = select_first([input_cram_bam_list]),
+                reference_fasta = cram_reference_fasta,
+                reference_fasta_index = cram_reference_fasta_index,
+                sample_name = sample_name,
+                cores = cram_to_fastq_cores,
+                samtools_docker = samtools_docker,
+                monitoring_script = monitoring_script #!FileCoercion
+        }
     }
+
+    File fastq_file = select_first([ConvertCramToFastq.fastq_file, input_fastq])
 
     # Step 2: K-mer counting with KMC
     call KmerCountingKMC {
         input:
-            fastq_file = ConvertCramToFastq.fastq_file,
+            fastq_file = fastq_file,
             sample_name = sample_name,
             kmer_length = kmer_length,
+            min_kmer_count = min_kmer_count,
             mem_gb = kmc_mem_gb,
-            cores = 16,
+            cores = kmc_cores,
             kmc_docker = kmc_docker,
             monitoring_script = monitoring_script   #!FileCoercion
     }
@@ -206,7 +247,7 @@ workflow HaplotypeSampling {
             include_reference = include_reference,
             diploid_sampling = diploid_sampling,
             cores = 16,
-            mem_gb = index_mem_gb,
+            mem_gb = 64,
             vg_docker = vg_docker,
             monitoring_script = monitoring_script   #!FileCoercion
     }
@@ -239,8 +280,10 @@ workflow HaplotypeSampling {
             reference_fasta_index = alignment_reference_fasta_index,
             sample_name = sample_name,
             preset = minimap2_preset,
-            cores = map_cores,
+            map_cores = map_cores,
+            sort_cores = sort_cores,
             mem_gb = map_mem_gb,
+            minimap_extra_args = select_first([minimap_extra_args, ""]),
             minimap2_docker = minimap2_docker,
             monitoring_script = monitoring_script    #!FileCoercion
     }
@@ -249,6 +292,7 @@ workflow HaplotypeSampling {
         # Final alignment (CRAM with embedded reference)
         File output_cram = Minimap2Align.output_cram
         File output_cram_index = Minimap2Align.output_cram_index
+        File sampled_gbz = SampleHaplotypes.sampled_gbz
     }
 }
 
@@ -263,9 +307,9 @@ task ConvertCramToFastq {
         File? reference_fasta_index
         File monitoring_script
         String sample_name
-        Int cores = 32
-        Int mem_gb = 16
-        Int disk_size_gb = 200
+        Int cores = 2
+        Int mem_gb = 4
+        Int disk_size_gb = ceil(2*size(input_cram_bam_list,"GB") + 50)
         String samtools_docker
     }
 
@@ -273,29 +317,15 @@ task ConvertCramToFastq {
         set -euxo pipefail
         bash ~{monitoring_script} > monitoring.log &
 
-        output_fastq=~{sample_name}.fastq
-        mkdir -p fastq_parts
-        i=0
+        samtools cat ~{sep=' ' input_cram_bam_list} \
+        | samtools fastq -@ ~{cores-1} -0 /dev/stdout -n --reference ~{reference_fasta} - \
+        | gzip > ~{sample_name}.fastq.gz
 
-        for cram in ~{sep=' ' input_cram_bam_list}; do
-            part_fastq="fastq_parts/part_${i}.fastq"
-            samtools fastq \
-                -0 "$part_fastq" \
-                -@ ~{cores} \
-                --reference ~{reference_fasta} \
-                "$cram"
-            i=$((i+1))
-        done
-
-        cat fastq_parts/*.fastq > "$output_fastq"
-        rm -rf fastq_parts
     >>>
-
     output {
-        File fastq_file = "~{sample_name}.fastq"
+        File fastq_file = "~{sample_name}.fastq.gz"
         File monitoring_log = "monitoring.log"
     }
-
     runtime {
         docker: samtools_docker
         cpu: cores
@@ -310,6 +340,7 @@ task KmerCountingKMC {
         File monitoring_script
         String sample_name
         Int kmer_length = 29
+        Int min_kmer_count = 2
         Int mem_gb = 128
         Int cores = 16
         Int disk_size_gb = 200
@@ -329,10 +360,12 @@ task KmerCountingKMC {
         # Run KMC
         kmc \
             -k~{kmer_length} \
-            -m~{mem_gb} \
+            -m~{mem_gb-2} \
+            -sm \
             -okff \
             -t~{cores} \
             -hp \
+            -ci~{min_kmer_count} \
             $INPUT_FILE \
             ~{sample_name} \
             kmc_tmp
@@ -475,9 +508,11 @@ task Minimap2Align {
         File monitoring_script
         String sample_name
         String preset = "asm5"
-        Int cores = 30
+        Int map_cores = 24
+        Int sort_cores = 8
         Int mem_gb = 64
         Int disk_size_gb = 100
+        String minimap_extra_args = ""
         String minimap2_docker
     }
 
@@ -489,20 +524,22 @@ task Minimap2Align {
         # Using embedded reference for self-contained CRAM file
         minimap2 \
             -x ~{preset} \
-            -t ~{cores} \
+            -t ~{map_cores} \
             -a \
+            ~{minimap_extra_args} \
             ~{reference_fasta} \
             ~{query_fasta} \
         | samtools sort \
-            -@ ~{cores} \
+            -@ ~{sort_cores} \
             -O CRAM \
             --reference ~{reference_fasta} \
             --output-fmt-option embed_ref=1 \
+            -m 2G \
             -o ~{sample_name}.haplotypes.cram \
             -
 
         # Create index for the CRAM file
-        samtools index ~{sample_name}.haplotypes.cram
+        samtools index ~{sample_name}.haplotypes.cram -@ ~{sort_cores}
     >>>
 
     output {
@@ -513,7 +550,7 @@ task Minimap2Align {
 
     runtime {
         docker: minimap2_docker
-        cpu: cores
+        cpu: map_cores + sort_cores
         memory: mem_gb + " GB"
         disks: "local-disk " + disk_size_gb + " SSD"
     }

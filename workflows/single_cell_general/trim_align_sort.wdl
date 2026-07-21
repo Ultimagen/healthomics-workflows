@@ -36,7 +36,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.32.1" # !UnusedDeclaration
+        String pipeline_version = "1.33.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File]? ref_fastas_cram
         String base_file_name
@@ -49,9 +49,10 @@ workflow TrimAlignSort {
         TrimmerParameters? trimmer_parameters
 
         # alignment parameters
-        String? aligner # ua, ua-meth, star
+        String? aligner # ua, ua-meth, star, giraffe
         UaParameters? ua_parameters
         UaMethParameters? ua_meth_parameters
+        GiraffeParameters? giraffe_parameters
 
         ## STAR param
         File? star_genome
@@ -64,7 +65,7 @@ workflow TrimAlignSort {
 
         # general parameters
         Boolean no_address = true
-        Int preemptible_tries = 1
+        Int preemptible_tries = 0
         Int cpu
 
         # Used for running on other clouds (aws)
@@ -90,12 +91,14 @@ workflow TrimAlignSort {
         #@wv defined(trimmer_parameters) and ('failure_read_group_args' in trimmer_parameters) -> not('output_trimmed_failed_file_name' in trimmer_parameters)
 
         ## Align checks
-        #@wv 'align' in steps and steps['align'] -> defined(aligner) and aligner in {"ua", "ua-meth", "star"}
+        #@wv 'align' in steps and steps['align'] -> defined(aligner) and aligner in {"ua", "ua-meth", "star", "giraffe"}
         ## UA
         #@wv 'align' in steps and steps['align'] and aligner == "ua" -> defined(ua_parameters)
         ## UA-meth
         #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) and 'index_g2a' in ua_meth_parameters -> suffix(ua_meth_parameters['index_g2a']) == '.g2a'
         #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) and 'index_c2t' in ua_meth_parameters -> suffix(ua_meth_parameters['index_c2t']) == '.c2t'
+        ## Giraffe
+        #@wv 'align' in steps and steps['align'] and aligner == "giraffe" -> defined(giraffe_parameters)
         ## STAR
         #@wv 'align' in steps and steps['align'] and aligner == "star" -> defined(star_genome) or defined(star_genome_generate_params)
         #@wv 'align' in steps and steps['align'] and aligner == "star" and defined(star_genome) -> suffix(star_genome) == '.zip'
@@ -188,7 +191,7 @@ workflow TrimAlignSort {
             category: "input_optional"
         }
         aligner: {
-            help: "Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected.",
+            help: "Aligner to be used. Options are: ua, ua-meth, star, giraffe. Mandatory if align step is selected.",
             type: "String",
             category: "input_optional"
         }
@@ -199,6 +202,11 @@ workflow TrimAlignSort {
         }
         ua_meth_parameters: {
             help: "Parameters for the UA meth aligner. Mandatory if aligner is ua-meth.",
+            type: "String",
+            category: "input_optional"
+        }
+        giraffe_parameters: {
+            help: "Graph reference bundle for the Giraffe aligner + extra parameters for vg giraffe. Mandatory if aligner is giraffe.",
             type: "String",
             category: "input_optional"
         }
@@ -526,6 +534,24 @@ workflow TrimAlignSort {
             }
         }
 
+        if (aligner_override == "giraffe") {
+            GiraffeParameters gp = select_first([giraffe_parameters])
+            call UGAlignment.UGGiraffeAlignment {
+                input:
+                    input_bams          = input_for_alignment_list,
+                    cache_tarball       = CreateReferenceCache.cache_tarball,
+                    output_bam_basename = base_file_name,
+                    giraffe_indices     = gp,
+                    ref_dict            = references.ref_dict,
+                    extra_args          = gp.extra_args,
+                    preemptible_tries   = preemptible_tries,
+                    vg_docker           = global.ug_vg_docker,
+                    monitoring_script   = monitoring_script,
+                    no_address          = no_address,
+                    cpu                 = cpu,
+            }
+        }
+
         if (aligner_override == "star" ){
             call StarAlignWorkflow.StarAlignment {
                 input:
@@ -541,7 +567,7 @@ workflow TrimAlignSort {
                     monitoring_script_input = monitoring_script_input,
             }
         }
-        Array[File] align_output_list = [select_first([UAAlignment.ua_output_bam, UAMethAlignment.ua_output_bam ,StarAlignment.output_bam])]
+        Array[File] align_output_list = [select_first([UAAlignment.ua_output_bam, UAMethAlignment.ua_output_bam, UGGiraffeAlignment.output_bam, StarAlignment.output_bam])]
     }
 
     Array[File] input_for_sort_list = select_first([align_output_list, trimmer_output_ucram_list, input_cram_bam_list])

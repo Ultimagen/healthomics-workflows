@@ -2,12 +2,10 @@
     "HLAGenotyping.base_file_name": "NA24385",
     "HLAGenotyping.input_cram_bam": "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/NA24385-Z0027.cram",
     "HLAGenotyping.input_cram_bam_index": "s3://ultimagen-workflow-resources-us-east-1/sample_data/germline/NA24385-Z0027.cram.crai",
-    "HLAGenotyping.graphs_files_tar": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.tar.gz",
-    "HLAGenotyping.references": {
-        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-    },
+    "HLAGenotyping.reference_genome": "hg38",
+    "HLAGenotyping.hla_genotyping_tool": "T1K",
+    "HLAGenotyping.t1k_index_tar": "s3://ultimagen-workflow-resources-us-east-1/hla/t1k_index_hladb_v3.63.0.tar.gz",
+    "HLAGenotyping.graphs_files_tar": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.260627.tar.gz",
     "HLAGenotyping.cloud_provider_override": "aws",
     "HLAGenotyping.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

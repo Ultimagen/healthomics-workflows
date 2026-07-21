@@ -73,6 +73,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Boolean </i> &mdash;
          Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling. <br />
 </p>
+<p name="SegDupAnalysis.DV.run_haplotype_sampling">
+        <b>SegDupAnalysis.DV.run_haplotype_sampling</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to run haplotype sampling to create pangenome haplotypes. Default: false <br />
+</p>
 <p name="SegDupAnalysis.DV.scatter_intervals_break">
         <b>SegDupAnalysis.DV.scatter_intervals_break</b><br />
         <i>Int </i> &mdash;
@@ -188,6 +193,21 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>File? </i> &mdash;
          Optional pangenome haplotypes cram index file <br />
 </p>
+<p name="SegDupAnalysis.DV.num_haplotypes">
+        <b>SegDupAnalysis.DV.num_haplotypes</b><br />
+        <i>Int? </i> &mdash;
+         Number of haplotypes to sample from the pangenome graph (must fit the model) <br />
+</p>
+<p name="SegDupAnalysis.DV.include_reference_in_haplotypes">
+        <b>SegDupAnalysis.DV.include_reference_in_haplotypes</b><br />
+        <i>Boolean? </i> &mdash;
+         Include the reference sequence in the sampled haplotypes (must fit the model) <br />
+</p>
+<p name="SegDupAnalysis.DV.diploid_sampling_in_haplotypes">
+        <b>SegDupAnalysis.DV.diploid_sampling_in_haplotypes</b><br />
+        <i>Boolean? </i> &mdash;
+         Use diploid sampling strategy for haplotype selection (must fit the model) <br />
+</p>
 <p name="SegDupAnalysis.DV.optimization_level">
         <b>SegDupAnalysis.DV.optimization_level</b><br />
         <i>Int? </i> &mdash;
@@ -298,8 +318,68 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Int </i> &mdash;
          Virtual GPU tile size for call_variants <br />
 </p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.input_fastq">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.input_fastq</b><br />
+        <i>File? </i> &mdash;
+         Optional input FASTQ file (if not using CRAM) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.kmer_length">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.kmer_length</b><br />
+        <i>Int </i> &mdash;
+         K-mer length for KMC counting (default: 29) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.min_kmer_count">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.min_kmer_count</b><br />
+        <i>Int </i> &mdash;
+         Minimum k-mer count threshold for sampling (default: 2) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.window_size">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.window_size</b><br />
+        <i>Int </i> &mdash;
+         Sliding window size for seqkit (default: 50000) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.step_size">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.step_size</b><br />
+        <i>Int </i> &mdash;
+         Sliding window step size for seqkit (default: 50000) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.minimap2_preset">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.minimap2_preset</b><br />
+        <i>String </i> &mdash;
+         Minimap2 preset for alignment (default: asm5) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.cram_to_fastq_cores">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.cram_to_fastq_cores</b><br />
+        <i>Int </i> &mdash;
+         Number of CPU cores for CRAM to FASTQ conversion (default: 2) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.kmc_mem_gb">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.kmc_mem_gb</b><br />
+        <i>Int </i> &mdash;
+         Memory (GB) for KMC k-mer counting (default: 64) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.kmc_cores">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.kmc_cores</b><br />
+        <i>Int </i> &mdash;
+         Number of CPU cores for KMC (default: 16) <br />
+</p>
+<p name="SegDupAnalysis.DV.HaplotypeSampling.minimap_extra_args">
+        <b>SegDupAnalysis.DV.HaplotypeSampling.minimap_extra_args</b><br />
+        <i>String? </i> &mdash;
+         Additional extra arguments to pass to minimap2 (default: empty) <br />
+</p>
 
 ### Optional reference files
+<p name="SegDupAnalysis.DV.ref_gbz_for_haplotypes">
+        <b>SegDupAnalysis.DV.ref_gbz_for_haplotypes</b><br />
+        <i>File? </i> &mdash;
+         Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
+</p>
+<p name="SegDupAnalysis.DV.ref_hapl">
+        <b>SegDupAnalysis.DV.ref_hapl</b><br />
+        <i>File? </i> &mdash;
+         Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
+</p>
 <p name="SegDupAnalysis.DV.annotation_intervals">
         <b>SegDupAnalysis.DV.annotation_intervals</b><br />
         <i>Array[File]? </i> &mdash;
@@ -332,12 +412,27 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.small_variants">
         <b>SegDupAnalysis.small_variants</b><br />
         <i>File</i><br />
-        Small variants (VCF)
+        Small variants (VCF) combining ParascopyCall output and LPA KIV-2 targeted small variants
 </p>
 <p name="SegDupAnalysis.small_variants_idx">
         <b>SegDupAnalysis.small_variants_idx</b><br />
         <i>File</i><br />
         Small variants index
+</p>
+<p name="SegDupAnalysis.lpa_vcf">
+        <b>SegDupAnalysis.lpa_vcf</b><br />
+        <i>File</i><br />
+        LPA KIV-2 targeted caller VCF (full: KIV-2 CNV symbolic record + LPA small variants)
+</p>
+<p name="SegDupAnalysis.lpa_vcf_index">
+        <b>SegDupAnalysis.lpa_vcf_index</b><br />
+        <i>File</i><br />
+        LPA KIV-2 targeted caller VCF index
+</p>
+<p name="SegDupAnalysis.lpa_json">
+        <b>SegDupAnalysis.lpa_json</b><br />
+        <i>File</i><br />
+        LPA KIV-2 targeted caller JSON report
 </p>
 
 <hr />

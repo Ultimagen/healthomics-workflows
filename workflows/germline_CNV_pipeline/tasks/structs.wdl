@@ -41,7 +41,7 @@ struct AlignmentReferences {
   File ref_sa
 }
 
-struct GiraffeReferences {
+struct GiraffeParameters {
   File ref_gbz
   File ref_dist
   File ref_min
@@ -52,6 +52,7 @@ struct GiraffeReferences {
   File? ref_gbz_for_haplotypes
   File? alignment_reference_fasta_for_haplotypes
   File? alignment_reference_fasta_index_for_haplotypes
+  String? extra_args
 }
 
 # BWA-METH alignment
@@ -347,5 +348,6 @@ struct DeepSRSNVParams {
     String? inference_backend         # "trt" or "pytorch" (default: trt)
     Float? low_qual_threshold         # SNVQ threshold for PASS filter (default: 40.0)
     # Feature channels
-    String? dnn_channels              # "pos1:pos2:...|const1:const2:..." (default: qual:tp:mask:focus:softclip_mask:t0|strand:mapq:rq:mixed)
+    File channel_registry             # Required: channel_registry.json (cloud URI: gs:// or s3://)
+    File vocab_config                 # Required: vocab.json (cloud URI: gs:// or s3://)
 }

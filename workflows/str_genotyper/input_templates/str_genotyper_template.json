@@ -2,12 +2,8 @@
     "STRGenotyper.base_file_name": "<base_file_name>",
     "STRGenotyper.cram_file": "<cram_file>.cram",
     "STRGenotyper.cram_index": "<cram_file>.cram.crai",
+    "STRGenotyper.reference_genome": "hg38",
     "STRGenotyper.variant_catalog": "<variant_catalog>.json",
-    "STRGenotyper.references": {
-        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
-        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict"
-    },
     "STRGenotyper.ref_padding": 500,
     "STRGenotyper.min_repeat": 1,
     "STRGenotyper.max_repeat": 100,

@@ -61,6 +61,12 @@ workflow GenomeResourcesWorkflow {
         "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/mm10/mm10.dict",
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/mm10/mm10.fa",
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/mm10/mm10.fa.fai"
+},
+      "mm39": {
+        "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/mouse_GRCm39_M31/GRCm39.primary_assembly.genome.interval_list",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/mouse_GRCm39_M31/GRCm39.primary_assembly.genome.dict",
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/mouse_GRCm39_M31/GRCm39.primary_assembly.genome.fa",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/bioinfo-resources/tools/mouse_GRCm39_M31/GRCm39.primary_assembly.genome.fa.fai"
 }
     }
   }

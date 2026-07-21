@@ -19,18 +19,18 @@ Alignment-based STR genotype caller using Smith-Waterman alignment
         <i>File </i> &mdash;
          CRAM index file (.crai) <br />
 </p>
+<p name="STRGenotyper.reference_genome">
+        <b>STRGenotyper.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Reference genome name (supported: 'hg38', 'hg38_nist_v3_with_decoy'). Automatically loads genome-specific reference files. <br />
+</p>
+
+### Optional inputs
 <p name="STRGenotyper.variant_catalog">
         <b>STRGenotyper.variant_catalog</b><br />
         <i>File </i> &mdash;
-         JSON file containing STR variant catalog with locus definitions <br />
+         Variant catalog (json). Example: https://github.com/broadinstitute/str-analysis/blob/main/str_analysis/variant_catalogs/variant_catalog_with_offtargets.GRCh38.json <br />
 </p>
-<p name="STRGenotyper.references">
-        <b>STRGenotyper.references</b><br />
-        <i>References </i> &mdash;
-         Reference genome files (fasta, fasta.fai, dict) as References struct <br />
-</p>
-
-### Optional parameters
 <p name="STRGenotyper.ref_padding">
         <b>STRGenotyper.ref_padding</b><br />
         <i>Int </i> &mdash;
@@ -60,16 +60,6 @@ Alignment-based STR genotype caller using Smith-Waterman alignment
         <b>STRGenotyper.min_mapping_quality</b><br />
         <i>Int </i> &mdash;
          Minimum mapping quality for reads to be included in analysis <br />
-</p>
-<p name="STRGenotyper.threads">
-        <b>STRGenotyper.threads</b><br />
-        <i>Int </i> &mdash;
-         Number of threads for parallel processing <br />
-</p>
-<p name="STRGenotyper.output_detailed_csv">
-        <b>STRGenotyper.output_detailed_csv</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O. <br />
 </p>
 <p name="STRGenotyper.output_summary_csv">
         <b>STRGenotyper.output_summary_csv</b><br />

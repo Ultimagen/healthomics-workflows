@@ -44,7 +44,7 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
 <p name="TrimAlignSort.aligner">
         <b>TrimAlignSort.aligner</b><br />
         <i>String? </i> &mdash;
-         Aligner to be used. Options are: ua, ua-meth, star. Mandatory if align step is selected. <br />
+         Aligner to be used. Options are: ua, ua-meth, star, giraffe. Mandatory if align step is selected. <br />
 </p>
 <p name="TrimAlignSort.ua_parameters">
         <b>TrimAlignSort.ua_parameters</b><br />
@@ -55,6 +55,11 @@ Pipeline for trimming, aligning and sorting Ultima data in a fast, cost-effectiv
         <b>TrimAlignSort.ua_meth_parameters</b><br />
         <i>UaMethParameters? </i> &mdash;
          Parameters for the UA meth aligner. Mandatory if aligner is ua-meth. <br />
+</p>
+<p name="TrimAlignSort.giraffe_parameters">
+        <b>TrimAlignSort.giraffe_parameters</b><br />
+        <i>GiraffeParameters? </i> &mdash;
+         Graph reference bundle for the Giraffe aligner + extra parameters for vg giraffe. Mandatory if aligner is giraffe. <br />
 </p>
 <p name="TrimAlignSort.star_genome">
         <b>TrimAlignSort.star_genome</b><br />

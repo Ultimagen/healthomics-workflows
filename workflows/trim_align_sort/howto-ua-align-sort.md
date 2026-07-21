@@ -24,10 +24,10 @@ The most up-to-date docker images can be found in the `workflows/trim_align_sort
     ultimagenomics/ (hosted on DockerHub)
 
 ### UA docker:
-    ultimagenomics/alignment:3.0.6
+    ultimagenomics/alignment:3.0.8
 
 ### Sorter docker:
-    ultimagenomics/sorter:1.5.18
+    ultimagenomics/sorter:1.6.11
 
 ## System Requirements
     1. CPUs: 32-40 

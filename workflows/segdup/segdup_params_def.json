@@ -1,4 +1,44 @@
 {
+    "SegDupAnalysis.DV.HaplotypeSampling.cram_to_fastq_cores": {
+        "description": "Number of CPU cores for CRAM to FASTQ conversion (default: 2)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.input_fastq": {
+        "description": "Optional input FASTQ file (if not using CRAM)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.kmc_cores": {
+        "description": "Number of CPU cores for KMC (default: 16)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.kmc_mem_gb": {
+        "description": "Memory (GB) for KMC k-mer counting (default: 64)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.kmer_length": {
+        "description": "K-mer length for KMC counting (default: 29)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.min_kmer_count": {
+        "description": "Minimum k-mer count threshold for sampling (default: 2)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.minimap2_preset": {
+        "description": "Minimap2 preset for alignment (default: asm5)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.minimap_extra_args": {
+        "description": "Additional extra arguments to pass to minimap2 (default: empty)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.step_size": {
+        "description": "Sliding window step size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.HaplotypeSampling.window_size": {
+        "description": "Sliding window size for seqkit (default: 50000)",
+        "optional": true
+    },
     "SegDupAnalysis.DV.ScatterIntervalList.convert_to_bed": {
         "description": "If true, convert interval_list files to BED format in addition to interval_list format",
         "optional": true
@@ -47,6 +87,10 @@
         "description": "Minimal base quality for local assembly of haplotypes",
         "optional": true
     },
+    "SegDupAnalysis.DV.diploid_sampling_in_haplotypes": {
+        "description": "Use diploid sampling strategy for haplotype selection (must fit the model)",
+        "optional": true
+    },
     "SegDupAnalysis.DV.ensemble_reference_rows": {
         "description": "Number of reference rows for ensemble inference",
         "optional": true
@@ -77,6 +121,10 @@
     },
     "SegDupAnalysis.DV.hard_qual_filter": {
         "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.include_reference_in_haplotypes": {
+        "description": "Include the reference sequence in the sampled haplotypes (must fit the model)",
         "optional": true
     },
     "SegDupAnalysis.DV.input_flow_order": {
@@ -135,6 +183,10 @@
         "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
         "optional": true
     },
+    "SegDupAnalysis.DV.num_haplotypes": {
+        "description": "Number of haplotypes to sample from the pangenome graph (must fit the model)",
+        "optional": true
+    },
     "SegDupAnalysis.DV.optimization_level": {
         "description": "Optimization level for TensorRT engine in call_variants",
         "optional": true
@@ -169,6 +221,18 @@
     },
     "SegDupAnalysis.DV.random_seed": {
         "description": "Random seed for ensemble inference",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ref_gbz_for_haplotypes": {
+        "description": "Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ref_hapl": {
+        "description": "Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.run_haplotype_sampling": {
+        "description": "Whether to run haplotype sampling to create pangenome haplotypes. Default: false",
         "optional": true
     },
     "SegDupAnalysis.DV.scatter_intervals_break": {
