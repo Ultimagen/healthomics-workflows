@@ -10,8 +10,6 @@
     "SegDupAnalysis.homology_table_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz.tbi",
     "SegDupAnalysis.background_bed": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz",
     "SegDupAnalysis.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx",
-    "SegDupAnalysis.dbsnp": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf",
-    "SegDupAnalysis.dbsnp_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx",
     "SegDupAnalysis.preemptible_tries": 3,
     "SegDupAnalysis.no_address": true,
     "SegDupAnalysis.cloud_provider_override": "aws",

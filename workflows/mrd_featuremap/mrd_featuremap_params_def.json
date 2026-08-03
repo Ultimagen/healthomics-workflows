@@ -1,4 +1,16 @@
 {
+    "MRDFeatureMap.CollectFilterFunnel.cpus": {
+        "description": "Number of CPUs.",
+        "optional": true
+    },
+    "MRDFeatureMap.CollectFilterFunnel.disk_size": {
+        "description": "Disk size in GB.",
+        "optional": true
+    },
+    "MRDFeatureMap.CollectFilterFunnel.memory_gb": {
+        "description": "Memory in GB.",
+        "optional": true
+    },
     "MRDFeatureMap.FilterControlSignatures.base_file_name": {
         "description": "Base file name for output files.",
         "optional": true
@@ -107,8 +119,8 @@
         "description": "Optional signatures from other individuals to be used as controls in the MRD analysis",
         "optional": true
     },
-    "MRDFeatureMap.external_matched_signatures": {
-        "description": "Optional signatures matched to the patient from whom the cfDNA sample was taken, to be used as matched signatures in the MRD analysis, leave blank if running a healthy control donor",
+    "MRDFeatureMap.external_matched_signature": {
+        "description": "Optional signature matched to the patient from whom the cfDNA sample was taken, to be used as matched signature in the MRD analysis, leave blank if running a healthy control donor",
         "optional": true
     },
     "MRDFeatureMap.featuremap_df_file": {
@@ -119,16 +131,12 @@
         "description": "Genomic regions to include in the analysis, bed files are accepted",
         "optional": false
     },
-    "MRDFeatureMap.mapping_quality_threshold": {
-        "description": "Mapping quality threshold for reads to be included in the coverage analysis, default 0 as srsnv mapq filtering is included in srsnv_metadata_json",
-        "optional": false
-    },
     "MRDFeatureMap.monitoring_script_input": {
         "description": "monitoring_script_input",
         "optional": true
     },
     "MRDFeatureMap.mrd_analysis_params": {
-        "description": "Parameters for the MRD analysis",
+        "description": "MRD analysis params. Required: signature_filter_query, read_filter_query. Optional: mrd_detection_fpr, lod_fpr, lod_recall, thresh_noise_lq_reads, thresh_noise_hq_exemption, thresh_multi_read_pvalue.",
         "optional": false
     },
     "MRDFeatureMap.n_synthetic_signatures": {
@@ -145,6 +153,10 @@
     },
     "MRDFeatureMap.override_memory_gb_FeatureMapIntersect": {
         "description": "Override memory in GB for the FeatureMapIntersectXXXX tasks, default: 4 (GiB). If an out of memory error occurs in the these tasks, try increasing this value, e.g. double it.",
+        "optional": true
+    },
+    "MRDFeatureMap.override_memory_gb_MrdDataAnalysis": {
+        "description": "Override memory in GB for the MrdDataAnalysis (report generation) task, default: 16 (GiB). If an out of memory error occurs in the MrdDataAnalysis task, try increasing this value, e.g. double it.",
         "optional": true
     },
     "MRDFeatureMap.preemptible_tries": {

@@ -16,10 +16,9 @@ import "tasks/globals.wdl" as Globals
 workflow HaplotypeSampling {
     input {
         # Required inputs
-        Array[File]? input_cram_bam_list   # Input CRAM files
-        File? input_fastq                  # Optional input FASTQ file (if not using CRAM)
+        Array[File] input_cram_bam_list    # Input CRAM files
         File cram_reference_fasta          # Reference FASTA used for CRAM encoding
-        File? cram_reference_fasta_index   # Optional .fai index for CRAM reference
+        File cram_reference_fasta_index    # Reference fasta index
         File gbz_file                      # Pangenome GBZ index file
         File hapl_file                     # Pre-computed haplotype index file (.hapl)
         File alignment_reference_fasta     # Reference FASTA for final minimap2 alignment
@@ -37,9 +36,8 @@ workflow HaplotypeSampling {
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.33.0"   #!UnusedDeclaration
+        String pipeline_version = "1.34.0"   #!UnusedDeclaration
         # Resource parameters
-        Int cram_to_fastq_cores = 2
         Int kmc_mem_gb = 64               # Memory (GB) for KMC k-mer counting
         Int kmc_cores = 16
         Int map_cores = 24
@@ -47,7 +45,6 @@ workflow HaplotypeSampling {
         Int sort_cores = 8
         String? minimap_extra_args
 
-    #@wv defined(input_fastq) <-> not defined(input_cram_bam_list)
     }
 
     meta {
@@ -61,6 +58,7 @@ workflow HaplotypeSampling {
             "Glob.glob",
             "ConvertCramToFastq.mem_gb",
             "ConvertCramToFastq.disk_size_gb",
+            "ConvertCramToFastq.cores",
             "KmerCountingKMC.disk_size_gb",
             "SampleHaplotypes.disk_size_gb",
             "ExtractPathsFasta.cores",
@@ -79,11 +77,6 @@ workflow HaplotypeSampling {
             help: "Input CRAM files containing sequencing reads",
             type: "Array[File]",
             category: "param_required"
-        }
-        input_fastq: {
-            help: "Optional input FASTQ file (if not using CRAM)",
-            type: "File",
-            category: "param_optional"
         }
         cram_reference_fasta: {
             help: "Reference FASTA file used for CRAM encoding/decoding",
@@ -137,11 +130,6 @@ workflow HaplotypeSampling {
         }
         kmc_cores: {
             help: "Number of CPU cores for KMC (default: 16)",
-            type: "Int",
-            category: "param_optional"
-        }
-        cram_to_fastq_cores: {
-            help: "Number of CPU cores for CRAM to FASTQ conversion (default: 2)",
             type: "Int",
             category: "param_optional"
         }
@@ -207,26 +195,23 @@ workflow HaplotypeSampling {
     String minimap2_docker = global.giraffe_docker
     String monitoring_script = global.monitoring_script
     
-    # Step 1: Convert CRAM to FASTQ
-    if (defined(input_cram_bam_list)) {
+    # Step 1: Convert each CRAM to BAM (scatter)
+    scatter (idx in range(length(input_cram_bam_list))) {
         call ConvertCramToFastq {
             input:
-                input_cram_bam_list = select_first([input_cram_bam_list]),
+                input_cram = input_cram_bam_list[idx],
                 reference_fasta = cram_reference_fasta,
                 reference_fasta_index = cram_reference_fasta_index,
-                sample_name = sample_name,
-                cores = cram_to_fastq_cores,
+                sample_name = "~{sample_name}.~{idx}",
                 samtools_docker = samtools_docker,
                 monitoring_script = monitoring_script #!FileCoercion
         }
     }
 
-    File fastq_file = select_first([ConvertCramToFastq.fastq_file, input_fastq])
-
     # Step 2: K-mer counting with KMC
     call KmerCountingKMC {
         input:
-            fastq_file = fastq_file,
+            fastq_files = ConvertCramToFastq.fastq_file,
             sample_name = sample_name,
             kmer_length = kmer_length,
             min_kmer_count = min_kmer_count,
@@ -302,25 +287,24 @@ workflow HaplotypeSampling {
 
 task ConvertCramToFastq {
     input {
-        Array[File] input_cram_bam_list
+        File input_cram
         File reference_fasta
-        File? reference_fasta_index
+        File reference_fasta_index
         File monitoring_script
         String sample_name
-        Int cores = 2
+        Int cores = 4
         Int mem_gb = 4
-        Int disk_size_gb = ceil(2*size(input_cram_bam_list,"GB") + 50)
+        Int disk_size_gb = ceil(3*size(input_cram,"GB") + 20)
         String samtools_docker
     }
 
     command <<<
         set -euxo pipefail
-        bash ~{monitoring_script} > monitoring.log &
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        samtools cat ~{sep=' ' input_cram_bam_list} \
-        | samtools fastq -@ ~{cores-1} -0 /dev/stdout -n --reference ~{reference_fasta} - \
-        | gzip > ~{sample_name}.fastq.gz
-
+        samtools fastq --reference ~{reference_fasta} -@ ~{cores} -0 /dev/stdout ~{input_cram} \
+        | pigz -p ~{cores} -1 -b 512 > ~{sample_name}.fastq.gz
+        
     >>>
     output {
         File fastq_file = "~{sample_name}.fastq.gz"
@@ -336,7 +320,7 @@ task ConvertCramToFastq {
 
 task KmerCountingKMC {
     input {
-        File fastq_file
+        Array[File] fastq_files
         File monitoring_script
         String sample_name
         Int kmer_length = 29
@@ -354,10 +338,7 @@ task KmerCountingKMC {
         # Create temp directory for KMC
         mkdir -p kmc_tmp
 
-        # Decompress fastq if gzipped (KMC needs uncompressed for kff output)
-        INPUT_FILE=~{fastq_file}
-
-        # Run KMC
+        # Run KMC over all input FASTQ files (one file per line in files.txt)
         kmc \
             -k~{kmer_length} \
             -m~{mem_gb-2} \
@@ -366,7 +347,7 @@ task KmerCountingKMC {
             -t~{cores} \
             -hp \
             -ci~{min_kmer_count} \
-            $INPUT_FILE \
+            @~{write_lines(fastq_files)} \
             ~{sample_name} \
             kmc_tmp
     >>>

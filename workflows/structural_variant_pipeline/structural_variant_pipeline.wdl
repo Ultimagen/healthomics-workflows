@@ -42,7 +42,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.33.0" # !UnusedDeclaration
+        String pipeline_version = "1.34.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -120,7 +120,7 @@ workflow SVPipeline {
 
     }
     meta {
-        description : "Runs Structural variant pipeline\nThis pipeline supports germline and somatic modes\nThe input of that pipeline is cram files and the output is vcf file\nThe steps of the pipeline are as following:\n-Create an assembly file out of the cram files\n-Run UA alingnment on that\n-Fix the UA alignment which are secondarily mapped to decoy or with low mapq\n-Run gridss.IdentifyVariants and gridss.AnnotateVariants\n-Run R script / GRIPSS for filtering and linkage the variants\n\n<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>"
+        description : "Runs Structural variant pipeline\nThis pipeline supports germline and somatic modes\nThe input of that pipeline is cram files and the output is vcf file\nThe steps of the pipeline are as following:\n-Create an assembly file out of the cram files\n-Run UA alingnment on that\n-Choose which of the alignments (original or UA) are the best\nAssign reads to the haplotypes\-Run gridss.IdentifyVariants and gridss.AnnotateVariants\n-Run R script / GRIPSS for filtering and linkage the variants\n\n<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>"
         author: "Ultima Genomics"
         WDL_AID: { exclude: [
             "pipeline_version",

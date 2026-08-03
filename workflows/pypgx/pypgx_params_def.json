@@ -1,12 +1,4 @@
 {
-    "PyPGx.EfficientDV.HaplotypeSampling.cram_to_fastq_cores": {
-        "description": "Number of CPU cores for CRAM to FASTQ conversion (default: 2)",
-        "optional": true
-    },
-    "PyPGx.EfficientDV.HaplotypeSampling.input_fastq": {
-        "description": "Optional input FASTQ file (if not using CRAM)",
-        "optional": true
-    },
     "PyPGx.EfficientDV.HaplotypeSampling.kmc_cores": {
         "description": "Number of CPU cores for KMC (default: 16)",
         "optional": true

@@ -337,11 +337,6 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Int </i> &mdash;
          Virtual GPU tile size for call_variants <br />
 </p>
-<p name="EfficientDV.HaplotypeSampling.input_fastq">
-        <b>EfficientDV.HaplotypeSampling.input_fastq</b><br />
-        <i>File? </i> &mdash;
-         Optional input FASTQ file (if not using CRAM) <br />
-</p>
 <p name="EfficientDV.HaplotypeSampling.kmer_length">
         <b>EfficientDV.HaplotypeSampling.kmer_length</b><br />
         <i>Int </i> &mdash;
@@ -366,11 +361,6 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.HaplotypeSampling.minimap2_preset</b><br />
         <i>String </i> &mdash;
          Minimap2 preset for alignment (default: asm5) <br />
-</p>
-<p name="EfficientDV.HaplotypeSampling.cram_to_fastq_cores">
-        <b>EfficientDV.HaplotypeSampling.cram_to_fastq_cores</b><br />
-        <i>Int </i> &mdash;
-         Number of CPU cores for CRAM to FASTQ conversion (default: 2) <br />
 </p>
 <p name="EfficientDV.HaplotypeSampling.kmc_mem_gb">
         <b>EfficientDV.HaplotypeSampling.kmc_mem_gb</b><br />

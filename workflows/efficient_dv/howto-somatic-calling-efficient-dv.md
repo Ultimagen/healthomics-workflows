@@ -30,7 +30,7 @@ gs://concordanz/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
 ```
 3. A model checkpoint in ONNX format
 ```
-onnxFileName = gs://concordanz/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx
+onnxFileName = gs://concordanz/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx
 ```
 This model is intended for whole genome sequencing at a coverage of 40-150x for tumor and 40-100x for normal. For other applications, see the last sections of this document.
 
@@ -91,6 +91,8 @@ tool \
   --cgp-min-fraction-snps 0.03 \
   --cgp-min-fraction-hmer-indels 0.03 \
   --cgp-min-fraction-non-hmer-indels 0.03 \
+  --cgp-min-fraction-single-strand-non-snps 0.15 \
+  --cgp-min-hmer-plus-one-candidate 7 \
   --cgp-min-mapping-quality 5 \
   --max-reads-per-region 1500 \
   --assembly-min-base-quality 0 \
@@ -125,7 +127,7 @@ It’s important to note that using `--region-haplotypes-vcf` influences only th
 The call_variants step combines the tfrecords from all make_examples jobs. The arguments to the call_variants step are provided as an `.ini`-formatted file. A typical file will look like:
 ```
 [RT classification]
-onnxFileName = model/somatic/fresh_frozen/matched_normal/v1.3/wgs_somatic_matched_normal_v1.3.onnx
+onnxFileName = model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx
 useSerializedModel = 1
 trtWorkspaceSizeMB = 2000
 numInferThreadsPerGpu = 2
@@ -251,14 +253,13 @@ Efficient DV can support somatic calling in more scenarios, with the following m
 
 ### WGS somatic calling from FFPE 
 Calling somatic variants from a tumor FFPE sample at a coverage of 100x and a normal sample at a coverage of 40-80x. The modifications required to use this application are:
-1. Add the argument `--channels` to the make_examples steps with the value of:
+1. Change the model of call_variants to:
 ```
---channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality,soft_clips
+gs://concordanz/deepvariant/model/somatic/wgs/ffpe/v1.8/deepvariant-ultima-somatic-wgs-ffpe-model-v1.8.onnx
 ```
-This adds a channel with information about soft-clipped reads.
-2. Change the model of call_variants to:
+2. Add the following argument to the make_examples step:
 ```
-gs://concordanz/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wgs-ffpe-model-v1.3.ckpt-890000.onnx
+--channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality
 ```
 3. Change the value of the SNP quality for filtering:
 ```

@@ -5,7 +5,7 @@ SV calling pipeline detects SVs using an in-house assembly tool, GRIDSS tool for
 
 ## Workflow Overview
 
-The pipeline takes as input aligned BAM/CRAM files and outputs a filtered VCF containing annotated SV calls. The steps of the pipeline are as follows: assembly, realignment with Ultima Aligner, reverting secondary low MAPQ alignments, GRIDSS identification of SVs, GRIDSS annotation and SV filtering using GRIPSS for somatic runs and GermlineLinkVariants which links GRIDSS breakends to create an SV for germline runs. 
+The pipeline takes as input aligned BAM/CRAM files and outputs a filtered VCF containing annotated SV calls. The steps of the pipeline are as follows: assembly, realignment with Ultima Aligner, Choosing the best alignment out of the original local alignment or the ultima alignment, GRIDSS identification of SVs, GRIDSS annotation and SV filtering using GRIPSS for somatic runs and GermlineLinkVariants which links GRIDSS breakends to create an SV for germline runs. 
 
 
 ## Requirements
@@ -61,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.3.0
+ultimagenomics/make_examples:3.3.2
 ```
 
 Generate interval bed : 

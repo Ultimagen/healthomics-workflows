@@ -187,6 +187,11 @@ struct MrdAnalysisParams {
   String signature_filter_query
   String read_filter_query
   String? tumor_sample # Optional, used to specify the tumor sample name in singature vcf
+  Float? thresh_noise_lq_reads # Optional, default: disabled (lq-reads filter is off by default). Set to e.g. 0.7 to enable.
+  Float? thresh_multi_read_pvalue # Optional, default: module default (0.001). Set to 0.0 to disable.
+  Float? mrd_detection_fpr # Optional, significance threshold (alpha) for MRD detection call. Default: module default.
+  Float? lod_fpr # Optional, false-positive rate for sample-specific LOD estimation. Default: module default.
+  Float? lod_recall # Optional, target recall for sample-specific LOD estimation. Default: module default (0.95).
 }
 
 struct StarsoloBamParams {
@@ -350,4 +355,13 @@ struct DeepSRSNVParams {
     # Feature channels
     File channel_registry             # Required: channel_registry.json (cloud URI: gs:// or s3://)
     File vocab_config                 # Required: vocab.json (cloud URI: gs:// or s3://)
+}
+
+struct DeepSRSNVModel {
+    # A pre-trained N-fold DeepSRSNV model, used by DeepSingleReadSNV mode="inference_only".
+    # num_folds is derived as length(fold_metadata) - no separate field.
+    Array[File] fold_metadata         # recalibrated per-fold metadata (updated_fold_metadata from a train run)
+    Array[File] fold_checkpoints      # per-fold model checkpoints (.ckpt)
+    Array[File]? fold_onnx_models     # per-fold ONNX models (.onnx); REQUIRED for inference_only (engine is rebuilt in-runtime from ONNX)
+    Array[File]? fold_engines         # per-fold TensorRT engines (.engine); optional/ignored for inference_only (rebuilt from ONNX)
 }

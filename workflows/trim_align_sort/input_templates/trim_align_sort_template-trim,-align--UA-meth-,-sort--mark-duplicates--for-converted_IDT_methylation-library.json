@@ -15,11 +15,11 @@
         "sort": true
     },
     "TrimAlignSort.trimmer_parameters": {
-        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.11/public/trim_align_sort/trim-ILMN-adapters-and-low-complexity-tail.json",
+        "formats_description": "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.12/public/trim_align_sort/trim-ILMN-adapters-and-low-complexity-tail.json",
         "failure_read_group": "unmatched",
         "format": "trim ILMN adapters and low complexity tail",
         "pattern_files": [
-            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.11/public/trim_align_sort/catchall.csv"
+            "s3://ultimagen-workflow-resources-us-east-1/trimmer-formats/3.12/public/trim_align_sort/catchall.csv"
         ]
     },
     "TrimAlignSort.aligner": "ua-meth",

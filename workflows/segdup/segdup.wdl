@@ -30,7 +30,7 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.33.0" # !UnusedDeclaration
+        String pipeline_version = "1.34.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
@@ -43,8 +43,6 @@ workflow SegDupAnalysis {
         Int n_threads
         File model_onnx
         File? model_serialized
-        File dbsnp
-        File dbsnp_index
         # Used for running on other clouds (aws)
         String? cloud_provider_override
         File? monitoring_script_input
@@ -55,7 +53,7 @@ workflow SegDupAnalysis {
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv suffix(input_cram_bam) in {".bam", ".cram"}
         #@wv suffix(input_crai_bai) in {".bai", ".crai"}
-        #@wv reference_genome in {"hg38"}
+        #@wv reference_genome in {"hg38","hg38_nist_v3_with_decoy"}
         #@wv suffix(homology_table) == '.gz'
         #@wv suffix(homology_table_index) == '.tbi'
 	}
@@ -136,16 +134,6 @@ workflow SegDupAnalysis {
             help: "Serialized model for variant calling",
             type: "File",
             category: "input_advanced"
-        }
-        dbsnp: {
-            help: "dbSNP reference file (for annotation)",
-            type: "File",
-            category: "input_required"
-        }
-        dbsnp_index: {
-            help: "dbSNP reference index file (for annotation)",
-            type: "File",
-            category: "input_required"
         }
         cloud_provider_override: {
             help: "Cloud provider override (for running on other clouds): gcp or aws",
@@ -302,9 +290,6 @@ workflow SegDupAnalysis {
             model_onnx = model_onnx,
             model_serialized = model_serialized,
             override_target_intervals = BedToIntervalList.interval_list,
-            ref_dbsnp = dbsnp,
-            ref_dbsnp_index = dbsnp_index,
-
             # Used for running on other clouds (aws)
             cloud_provider_override = cloud_provider_override,
             monitoring_script_input = monitoring_script_input,

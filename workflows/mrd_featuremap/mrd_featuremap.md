@@ -63,11 +63,6 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>File </i> &mdash;
          Respective index <br />
 </p>
-<p name="MRDFeatureMap.mapping_quality_threshold">
-        <b>MRDFeatureMap.mapping_quality_threshold</b><br />
-        <i>Int </i> &mdash;
-         Mapping quality threshold for reads to be included in the coverage analysis, default 0 as srsnv mapq filtering is included in srsnv_metadata_json <br />
-</p>
 <p name="MRDFeatureMap.bcftools_extra_args">
         <b>MRDFeatureMap.bcftools_extra_args</b><br />
         <i>String? </i> &mdash;
@@ -76,7 +71,7 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
 <p name="MRDFeatureMap.mrd_analysis_params">
         <b>MRDFeatureMap.mrd_analysis_params</b><br />
         <i>MrdAnalysisParams </i> &mdash;
-         Parameters for the MRD analysis <br />
+         MRD analysis params. Required: signature_filter_query, read_filter_query. Optional: mrd_detection_fpr, lod_fpr, lod_recall, thresh_noise_lq_reads, thresh_noise_hq_exemption, thresh_multi_read_pvalue. <br />
 </p>
 
 ### Required references
@@ -92,19 +87,10 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
 </p>
 
 ### Optional inputs
-<details>
-<summary> Show/Hide </summary>
-<p name="MRDFeatureMap.override_memory_gb_FeatureMapIntersect">
-        <b>MRDFeatureMap.override_memory_gb_FeatureMapIntersect</b><br />
-        <i>Int? &mdash; Default: None</i><br />
-        Override memory in GB for the FeatureMapIntersectXXXX tasks, default: 4 (GiB). If an out of memory error occurs in the these tasks, try increasing this value, e.g. double it.
-</p>
-
-### Optional inputs
-<p name="MRDFeatureMap.external_matched_signatures">
-        <b>MRDFeatureMap.external_matched_signatures</b><br />
-        <i>Array[File]? </i> &mdash;
-         Optional signatures matched to the patient from whom the cfDNA sample was taken, to be used as matched signatures in the MRD analysis, leave blank if running a healthy control donor <br />
+<p name="MRDFeatureMap.external_matched_signature">
+        <b>MRDFeatureMap.external_matched_signature</b><br />
+        <i>File? </i> &mdash;
+         Optional signature matched to the patient from whom the cfDNA sample was taken, to be used as matched signature in the MRD analysis, leave blank if running a healthy control donor <br />
 </p>
 <p name="MRDFeatureMap.external_control_signatures">
         <b>MRDFeatureMap.external_control_signatures</b><br />
@@ -130,6 +116,16 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <b>MRDFeatureMap.override_memory_gb_ExtractCoverageOverVcfFiles</b><br />
         <i>Int? </i> &mdash;
          Override memory in GB for the ExtractCoverageOverVcfFiles task, default: 8 (GiB). If an out of memory error occurs in the ExtractCoverageOverVcfFiles task, try increasing this value, e.g. double it. <br />
+</p>
+<p name="MRDFeatureMap.override_memory_gb_FeatureMapIntersect">
+        <b>MRDFeatureMap.override_memory_gb_FeatureMapIntersect</b><br />
+        <i>Int? </i> &mdash;
+         Override memory in GB for the FeatureMapIntersectXXXX tasks, default: 4 (GiB). If an out of memory error occurs in the these tasks, try increasing this value, e.g. double it. <br />
+</p>
+<p name="MRDFeatureMap.override_memory_gb_MrdDataAnalysis">
+        <b>MRDFeatureMap.override_memory_gb_MrdDataAnalysis</b><br />
+        <i>Int? </i> &mdash;
+         Override memory in GB for the MrdDataAnalysis (report generation) task, default: 16 (GiB). If an out of memory error occurs in the MrdDataAnalysis task, try increasing this value, e.g. double it. <br />
 </p>
 <p name="MRDFeatureMap.create_md5_checksum_outputs">
         <b>MRDFeatureMap.create_md5_checksum_outputs</b><br />
@@ -201,6 +197,21 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>Int </i> &mdash;
          Number of cpus to use for this task. Default is 4. <br />
 </p>
+<p name="MRDFeatureMap.CollectFilterFunnel.disk_size">
+        <b>MRDFeatureMap.CollectFilterFunnel.disk_size</b><br />
+        <i>Int </i> &mdash;
+         Disk size in GB. <br />
+</p>
+<p name="MRDFeatureMap.CollectFilterFunnel.memory_gb">
+        <b>MRDFeatureMap.CollectFilterFunnel.memory_gb</b><br />
+        <i>Int </i> &mdash;
+         Memory in GB. <br />
+</p>
+<p name="MRDFeatureMap.CollectFilterFunnel.cpus">
+        <b>MRDFeatureMap.CollectFilterFunnel.cpus</b><br />
+        <i>Int </i> &mdash;
+         Number of CPUs. <br />
+</p>
 
 ### Optional reference files
 <p name="MRDFeatureMap.exclude_regions_bed">
@@ -237,10 +248,25 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>File</i><br />
         HTML report of the MRD analysis
 </p>
+<p name="MRDFeatureMap.mrd_qc_html">
+        <b>MRDFeatureMap.mrd_qc_html</b><br />
+        <i>File</i><br />
+        QC HTML report of the MRD analysis
+</p>
+<p name="MRDFeatureMap.detection_result_json">
+        <b>MRDFeatureMap.detection_result_json</b><br />
+        <i>File</i><br />
+        JSON file with MRD detection results
+</p>
 <p name="MRDFeatureMap.ctdna_vaf_h5">
         <b>MRDFeatureMap.ctdna_vaf_h5</b><br />
         <i>File</i><br />
         HDF5 file of the ctDNA VAF and other results of the MRD analysis
+</p>
+<p name="MRDFeatureMap.filter_funnel_json">
+        <b>MRDFeatureMap.filter_funnel_json</b><br />
+        <i>File?</i><br />
+        JSON file with step-by-step filter funnel counts for the matched signature
 </p>
 <p name="MRDFeatureMap.intersected_featuremaps_parquet">
         <b>MRDFeatureMap.intersected_featuremaps_parquet</b><br />
@@ -262,10 +288,10 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
         <i>Array[File]?</i><br />
         VCF file of the filtered control signatures
 </p>
-<p name="MRDFeatureMap.matched_signatures_vcf">
-        <b>MRDFeatureMap.matched_signatures_vcf</b><br />
-        <i>Array[File]?</i><br />
-        VCF file of the filtered matched signatures
+<p name="MRDFeatureMap.matched_signature_vcf">
+        <b>MRDFeatureMap.matched_signature_vcf</b><br />
+        <i>File?</i><br />
+        VCF file of the filtered matched signature
 </p>
 <p name="MRDFeatureMap.db_signatures_vcf">
         <b>MRDFeatureMap.db_signatures_vcf</b><br />

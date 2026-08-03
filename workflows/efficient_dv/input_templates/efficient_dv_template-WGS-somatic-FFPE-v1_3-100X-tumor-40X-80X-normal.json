@@ -24,10 +24,10 @@
     "EfficientDV.background_cram_index_files": [
         "<normal_cram_file>.cram.crai"
     ],
-    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/ffpe/deepvariant-ultima-somatic-wgs-ffpe-model-v1.3.ckpt-890000.onnx",
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/ffpe/v1.8/deepvariant-ultima-somatic-wgs-ffpe-model-v1.8.onnx",
     "EfficientDV.keep_duplicates": false,
     "EfficientDV.add_ins_size_channel": true,
-    "EfficientDV.ug_make_examples_extra_args": "--channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality,soft_clips",
+    "EfficientDV.ug_make_examples_extra_args": "--channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality",
     "EfficientDV.min_fraction_hmer_indels": 0.03,
     "EfficientDV.min_fraction_non_hmer_indels": 0.03,
     "EfficientDV.min_fraction_snps": 0.03,

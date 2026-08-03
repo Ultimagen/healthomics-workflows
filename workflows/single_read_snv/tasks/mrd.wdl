@@ -5,7 +5,7 @@ import "structs.wdl" as Structs
 task MrdDataAnalysis {
   input {
     Array[File] intersected_featuremaps_parquet
-    Array[File]? matched_signatures_vcf
+    File? matched_signature_vcf
     Array[File]? control_signatures_vcf
     Array[File]? db_signatures_vcf
     File coverage_bed
@@ -13,6 +13,7 @@ task MrdDataAnalysis {
     String basename
     File featuremap_df_file
     File srsnv_metadata_json
+    File? filter_funnel_json
     String docker
     Float disk_size
     Int memory_gb
@@ -26,7 +27,7 @@ task MrdDataAnalysis {
     generate_report \
       --intersected-featuremaps ~{sep=" " intersected_featuremaps_parquet} \
       --coverage-bed ~{coverage_bed} \
-      ~{true="--matched-signatures-vcf " false="" defined(matched_signatures_vcf)}~{sep=" " matched_signatures_vcf} \
+      ~{true="--matched-signature-vcf " false="" defined(matched_signature_vcf)}~{matched_signature_vcf} \
       ~{true="--control-signatures-vcf " false="" defined(control_signatures_vcf)}~{sep=" " control_signatures_vcf} \
       ~{true="--db-control-signatures-vcf " false="" defined(db_signatures_vcf)}~{sep=" " db_signatures_vcf} \
       --output-dir "$PWD" \
@@ -35,7 +36,13 @@ task MrdDataAnalysis {
       --read-filter-query "~{mrd_analysis_params.read_filter_query}" \
       ~{true="--tumor-sample " false="" defined(mrd_analysis_params.tumor_sample)}~{mrd_analysis_params.tumor_sample} \
       --featuremap-file "~{featuremap_df_file}" \
-      --srsnv-metadata-json "~{srsnv_metadata_json}"
+      --srsnv-metadata-json "~{srsnv_metadata_json}" \
+      ~{true="--filter-funnel-json " false="" defined(filter_funnel_json)}~{filter_funnel_json} \
+      ~{true="--thresh-noise-lq-reads " false="" defined(mrd_analysis_params.thresh_noise_lq_reads)}~{mrd_analysis_params.thresh_noise_lq_reads} \
+      ~{true="--thresh-multi-read-pvalue " false="" defined(mrd_analysis_params.thresh_multi_read_pvalue)}~{mrd_analysis_params.thresh_multi_read_pvalue} \
+      ~{true="--alpha " false="" defined(mrd_analysis_params.mrd_detection_fpr)}~{mrd_analysis_params.mrd_detection_fpr} \
+      ~{true="--lod-fpr " false="" defined(mrd_analysis_params.lod_fpr)}~{mrd_analysis_params.lod_fpr} \
+      ~{true="--lod-recall " false="" defined(mrd_analysis_params.lod_recall)}~{mrd_analysis_params.lod_recall}
 
   >>>
   runtime {
@@ -49,8 +56,12 @@ task MrdDataAnalysis {
     File monitoring_log = "monitoring.log"
     File features = "~{basename}.features.parquet"
     File signatures = "~{basename}.signatures.parquet"
-    File mrd_analysis_html = "~{basename}.mrd_data_analysis.html"
+    File mrd_analysis_html = "~{basename}.mrd_analysis_report.html"
+    File mrd_qc_html = "~{basename}.mrd_qc_report.html"
+    File detection_result_json = "~{basename}.detection_result.json"
     File ctdna_vaf_h5 = "~{basename}.ctdna_vaf.h5"
+    # Only produced when a matched signature is present (filter funnels are matched-only).
+    File? output_filter_funnel_json = "~{basename}.filter_funnel.json"
   }
 }
 
@@ -135,6 +146,7 @@ task FeatureMapIntersectWithSignatures {
 
     echo "******** Converting to dataframe ********"
     number_of_lines=$(bcftools view "$output_vcf" -H | wc -l)
+    echo "{\"intersected_reads\": $number_of_lines}" > intersection_funnel.json
     if [[ $number_of_lines -eq 0 ]]; then
       echo "Skipping empty VCF: $output_vcf"
       touch "${output_vcf%.vcf.gz}.parquet"
@@ -156,6 +168,154 @@ task FeatureMapIntersectWithSignatures {
     File intersected_featuremap = output_vcf_basename + ".vcf.gz"
     File intersected_featuremap_index = output_vcf_basename + ".vcf.gz.tbi"
     File intersected_featuremap_parquet = output_vcf_basename + ".parquet"
+    File intersection_funnel_json = "intersection_funnel.json"
+  }
+}
+
+task CollectFilterFunnel {
+  input {
+    Array[File] filter_funnel_jsons
+    Array[File?]? exact_alt_funnel_jsons
+    Array[File] intersection_funnel_jsons
+    String? bcftools_extra_args
+    Array[String] include_region_names = []
+    Array[String] exclude_region_names = []
+    Array[String] exact_alt_region_names = []
+    String docker
+    Int disk_size = 2
+    Int memory_gb = 2
+    Int cpus = 1
+  }
+  parameter_meta {
+    filter_funnel_jsons: {
+      help: "Per-signature filter funnel JSON files from FilterVcfWithBcftools.",
+      type: "Array[File]",
+      category: "input_required"
+    }
+    exact_alt_funnel_jsons: {
+      help: "Per-signature exact alt allele filter count JSON files.",
+      type: "Array[File?]",
+      category: "input_optional"
+    }
+    intersection_funnel_jsons: {
+      help: "Per-signature intersection count JSON files from FeatureMapIntersectWithSignatures.",
+      type: "Array[File]",
+      category: "input_required"
+    }
+    bcftools_extra_args: {
+      help: "bcftools view extra args used for signature filtering; recorded as the 'After bcftools extra args' funnel step description.",
+      type: "String",
+      category: "input_optional"
+    }
+    include_region_names: {
+      help: "Basenames of the include-region files; recorded as the 'After include regions' funnel step description.",
+      type: "Array[String]",
+      category: "input_optional"
+    }
+    exclude_region_names: {
+      help: "Basenames of the exclude-region files; recorded as the 'After exclude regions' funnel step description.",
+      type: "Array[String]",
+      category: "input_optional"
+    }
+    exact_alt_region_names: {
+      help: "Basenames of the exact-alt-allele exclude VCFs; recorded as the 'After exact alt allele filter' funnel step description.",
+      type: "Array[String]",
+      category: "input_optional"
+    }
+    docker: {
+      help: "Docker image with Python 3.",
+      type: "String",
+      category: "input_required"
+    }
+    disk_size: {
+      help: "Disk size in GB.",
+      type: "Int",
+      category: "input_optional"
+    }
+    memory_gb: {
+      help: "Memory in GB.",
+      type: "Int",
+      category: "input_optional"
+    }
+    cpus: {
+      help: "Number of CPUs.",
+      type: "Int",
+      category: "input_optional"
+    }
+  }
+  Array[File] exact_alt_files_resolved = select_all(select_first([exact_alt_funnel_jsons, []]))
+  # Pass free-text / list inputs through files to avoid shell-quoting issues
+  # (bcftools_extra_args contains quotes, e.g. -i 'QUAL>10').
+  File bcftools_extra_args_file = write_lines(select_all([bcftools_extra_args]))
+  File include_region_names_file = write_lines(include_region_names)
+  File exclude_region_names_file = write_lines(exclude_region_names)
+  File exact_alt_region_names_file = write_lines(exact_alt_region_names)
+  command <<<
+    set -xeuo pipefail
+    python3 <<'PYEOF'
+import json
+import os
+
+funnel_files = "~{sep="," filter_funnel_jsons}".split(",")
+exact_alt_files_str = "~{sep="," exact_alt_files_resolved}"
+exact_alt_files = exact_alt_files_str.split(",") if exact_alt_files_str else []
+intersection_files = "~{sep="," intersection_funnel_jsons}".split(",")
+
+signatures = []
+for i, f in enumerate(funnel_files):
+    with open(f.strip()) as fh:
+        data = json.load(fh)
+    if i < len(exact_alt_files) and exact_alt_files[i].strip():
+        with open(exact_alt_files[i].strip()) as fh2:
+            data.update(json.load(fh2))
+    if i < len(intersection_files) and intersection_files[i].strip():
+        with open(intersection_files[i].strip()) as fh3:
+            data.update(json.load(fh3))
+    signatures.append(data)
+
+
+def read_lines(path):
+    with open(path) as fh:
+        return [line.strip() for line in fh if line.strip()]
+
+
+def basename_no_ext(name):
+    # Strip directory and common bed/vcf(.gz) extensions -> e.g. ug_hcr.bed -> ug_hcr
+    base = os.path.basename(name.strip())
+    for ext in (".bed.gz", ".vcf.gz", ".bed", ".vcf", ".gz"):
+        if base.endswith(ext):
+            return base[: -len(ext)]
+    return base
+
+
+bcftools_args = read_lines("~{bcftools_extra_args_file}")
+include_names = [basename_no_ext(n) for n in read_lines("~{include_region_names_file}")]
+exclude_names = [basename_no_ext(n) for n in read_lines("~{exclude_region_names_file}")]
+exact_alt_names = [basename_no_ext(n) for n in read_lines("~{exact_alt_region_names_file}")]
+
+# Descriptions shared by all signatures, keyed by the funnel step they annotate.
+descriptions = {}
+if bcftools_args:
+    descriptions["After bcftools extra args"] = bcftools_args[0]
+if include_names:
+    descriptions["After include regions"] = ", ".join(include_names)
+if exclude_names:
+    descriptions["After exclude regions"] = ", ".join(exclude_names)
+if exact_alt_names:
+    descriptions["After exact alt allele filter"] = ", ".join(exact_alt_names)
+
+with open("filter_funnel.json", "w") as out:
+    json.dump({"signatures": signatures, "descriptions": descriptions}, out, indent=2)
+PYEOF
+  >>>
+  runtime {
+    cpu: "~{cpus}"
+    memory: "~{memory_gb} GB"
+    disks: "local-disk " + disk_size + " HDD"
+    docker: docker
+  }
+  output {
+    File collected_funnel_json = "filter_funnel.json"
   }
 }
 
@@ -447,6 +607,10 @@ task FilterSignatureOnExactAltAllele {
       -Oz -o ~{output_basename}.vcf.gz
 
     bcftools index -t ~{output_basename}.vcf.gz
+
+    # Emit count after exact alt allele filtering
+    AFTER_EXACT_ALT=$(bcftools view -H ~{output_basename}.vcf.gz | wc -l)
+    echo "{\"after_exact_alt_allele_filter\": $AFTER_EXACT_ALT}" > exact_alt_funnel.json
   >>>
   runtime {
     preemptible: preemptible_tries
@@ -459,5 +623,6 @@ task FilterSignatureOnExactAltAllele {
     File monitoring_log = "monitoring.log"
     File output_vcf = "~{output_basename}.vcf.gz"
     File output_vcf_index = "~{output_basename}.vcf.gz.tbi"
+    File exact_alt_funnel_json = "exact_alt_funnel.json"
   }
 }

@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.33.0" # !UnusedDeclaration
+        String pipeline_version = "1.34.0" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -44,9 +44,8 @@ workflow MRDFeatureMap {
         # for coverage collection with gatk DepthOfCoverage (cfDNA sample)
         File cfdna_cram_bam
         File cfdna_cram_bam_index
-        Int mapping_quality_threshold
         # Somatic signature files, matched from the same patient as the cfDNA sample, or control signatures
-        Array[File]? external_matched_signatures
+        File? external_matched_signature
         Array[File]? external_control_signatures
         # filter signatures
         String? bcftools_extra_args
@@ -64,6 +63,7 @@ workflow MRDFeatureMap {
         # option to increase memory for the specific tasks
         Int? override_memory_gb_ExtractCoverageOverVcfFiles
         Int? override_memory_gb_FeatureMapIntersect
+        Int? override_memory_gb_MrdDataAnalysis
 
         References references
         
@@ -85,8 +85,7 @@ workflow MRDFeatureMap {
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
 
         # signatures
-        #@wv defined(external_matched_signatures) or defined(external_control_signatures)
-        #@wv defined(external_matched_signatures) -> len(external_matched_signatures) > 0
+        #@wv defined(external_matched_signature) or defined(external_control_signatures)
         #@wv defined(external_control_signatures) -> len(external_control_signatures) > 0
         #@wv defined(snv_database) <-> defined(n_synthetic_signatures)
         #@wv defined(snv_database) -> suffix(snv_database) == '.vcf' or suffix(prefix(snv_database)) == '.vcf'
@@ -180,14 +179,9 @@ workflow MRDFeatureMap {
           type: "File",
           category: "input_required"
       }
-      mapping_quality_threshold: {
-          help: "Mapping quality threshold for reads to be included in the coverage analysis, default 0 as srsnv mapq filtering is included in srsnv_metadata_json",
-          type: "Int",
-          category: "input_required"
-      }
-      external_matched_signatures: {
-          help: "Optional signatures matched to the patient from whom the cfDNA sample was taken, to be used as matched signatures in the MRD analysis, leave blank if running a healthy control donor",
-          type: "Array[File]",
+      external_matched_signature: {
+          help: "Optional signature matched to the patient from whom the cfDNA sample was taken, to be used as matched signature in the MRD analysis, leave blank if running a healthy control donor",
+          type: "File",
           category: "input_optional"
       }
       external_control_signatures: {
@@ -226,7 +220,7 @@ workflow MRDFeatureMap {
           category: "input_optional"
       }
       mrd_analysis_params: {
-          help: "Parameters for the MRD analysis",
+          help: "MRD analysis params. Required: signature_filter_query, read_filter_query. Optional: mrd_detection_fpr, lod_fpr, lod_recall, thresh_noise_lq_reads, thresh_noise_hq_exemption, thresh_multi_read_pvalue.",
           type: "MrdAnalysisParams",
           category: "input_required"
       }
@@ -248,7 +242,12 @@ workflow MRDFeatureMap {
       override_memory_gb_FeatureMapIntersect: {
         type: "Int",
         help: "Override memory in GB for the FeatureMapIntersectXXXX tasks, default: 4 (GiB). If an out of memory error occurs in the these tasks, try increasing this value, e.g. double it.",
-        category: "optional"
+        category: "input_optional"
+      }
+      override_memory_gb_MrdDataAnalysis: {
+        help: "Override memory in GB for the MrdDataAnalysis (report generation) task, default: 16 (GiB). If an out of memory error occurs in the MrdDataAnalysis task, try increasing this value, e.g. double it.",
+        type: "Int",
+        category: "input_optional"
       }
       create_md5_checksum_outputs: {
            help: "Create md5 checksum for requested output files",
@@ -285,6 +284,16 @@ workflow MRDFeatureMap {
           type: "File",
           category: "output"
       }
+      mrd_qc_html: {
+          help: "QC HTML report of the MRD analysis",
+          type: "File",
+          category: "output"
+      }
+      detection_result_json: {
+          help: "JSON file with MRD detection results",
+          type: "File",
+          category: "output"
+      }
       ctdna_vaf_h5: {
           help: "HDF5 file of the ctDNA VAF and other results of the MRD analysis",
           type: "File",
@@ -310,9 +319,9 @@ workflow MRDFeatureMap {
           type: "Array[File]",
           category: "output"
       }
-      matched_signatures_vcf: {
-          help: "VCF file of the filtered matched signatures",
-          type: "Array[File]",
+      matched_signature_vcf: {
+          help: "VCF file of the filtered matched signature",
+          type: "File",
           category: "output"
       }
       db_signatures_vcf: {
@@ -330,6 +339,11 @@ workflow MRDFeatureMap {
         type: "File",
         category: "output"
       }
+      filter_funnel_json: {
+        help: "JSON file with step-by-step filter funnel counts for the matched signature",
+        type: "File",
+        category: "output"
+      }
       md5_checksums_json: {
         help: "json file that will contain md5 checksums for requested output files",
         type: "File",
@@ -342,7 +356,7 @@ workflow MRDFeatureMap {
   call Globals.Globals as Globals
   GlobalVariables global = Globals.global_dockers
 
-  Boolean defined_external_matched_signatures = defined(external_matched_signatures)
+  Boolean defined_external_matched_signature = defined(external_matched_signature)
   Boolean defined_external_control_signatures = defined(external_control_signatures)
   Boolean defined_somatic_snv_database = defined(snv_database) && (select_first([n_synthetic_signatures]) > 0)
   Boolean defined_diluent_germline_vcfs = defined(diluent_germline_vcfs)
@@ -366,40 +380,37 @@ workflow MRDFeatureMap {
     }
   }
 
-  if (defined_external_matched_signatures) {
-    Array[File] all_matched_signatures = select_first([external_matched_signatures,])
+  if (defined_external_matched_signature) {
     Array[Array[File]] matched_exclude_regions_array = select_all([exclude_regions_bed, PadDiluentVcf.padded_bed])
     Array[File] matched_exclude_regions = flatten(matched_exclude_regions_array)
-    scatter (i in range(length(all_matched_signatures))) {
-      call UGGeneralTasks.FilterVcfWithBcftools as FilterMatched {
-        input:
-          input_vcf = all_matched_signatures[i],
-          docker = global.bcftools_docker,
-          bcftools_extra_args = bcftools_extra_args,
-          exclude_regions = matched_exclude_regions,
-          include_regions = include_regions,
-          preemptible_tries = preemptibles,
-          monitoring_script = monitoring_script, #!FileCoercion
-      }
-      if (has_exclude_regions_vcf) {
-        call UGMrdTasks.FilterSignatureOnExactAltAllele as FilterMatchedOnExactAltAllele {
-          input:
-            signature_vcf = FilterMatched.output_vcf,
-            signature_vcf_index = FilterMatched.output_vcf_index,
-            exclude_vcfs = exclude_regions_vcf,
-            exclude_vcf_indices = exclude_regions_vcf_indices,
-            docker = global.bcftools_docker,
-            preemptible_tries = preemptibles,
-            monitoring_script = monitoring_script,
-        }
-      }
-      File matched_filtered_vcf = select_first([FilterMatchedOnExactAltAllele.output_vcf, FilterMatched.output_vcf])
-      File matched_filtered_vcf_index = select_first([FilterMatchedOnExactAltAllele.output_vcf_index, FilterMatched.output_vcf_index])
+    call UGGeneralTasks.FilterVcfWithBcftools as FilterMatched {
+      input:
+        input_vcf = select_first([external_matched_signature]),
+        docker = global.bcftools_docker,
+        bcftools_extra_args = bcftools_extra_args,
+        exclude_regions = matched_exclude_regions,
+        include_regions = include_regions,
+        preemptible_tries = preemptibles,
+        monitoring_script = monitoring_script, #!FileCoercion
     }
+    if (has_exclude_regions_vcf) {
+      call UGMrdTasks.FilterSignatureOnExactAltAllele as FilterMatchedOnExactAltAllele {
+        input:
+          signature_vcf = FilterMatched.output_vcf,
+          signature_vcf_index = FilterMatched.output_vcf_index,
+          exclude_vcfs = exclude_regions_vcf,
+          exclude_vcf_indices = exclude_regions_vcf_indices,
+          docker = global.bcftools_docker,
+          preemptible_tries = preemptibles,
+          monitoring_script = monitoring_script,
+      }
+    }
+    File matched_filtered_vcf_file = select_first([FilterMatchedOnExactAltAllele.output_vcf, FilterMatched.output_vcf])
+    File matched_filtered_vcf_index_file = select_first([FilterMatchedOnExactAltAllele.output_vcf_index, FilterMatched.output_vcf_index])
   }
 
   # for the external and db controls, exclude the regions from the matched signatures
-  Array[Array[File]] control_exclude_regions_array = select_all([exclude_regions_bed, external_matched_signatures, PadDiluentVcf.padded_bed])
+  Array[Array[File]] control_exclude_regions_array = select_all([exclude_regions_bed, select_all([external_matched_signature]), PadDiluentVcf.padded_bed])
   Array[File] control_exclude_regions = flatten(control_exclude_regions_array)
   if (defined_external_control_signatures) {
     Array[File] external_control_signatures_array = select_first([external_control_signatures,])
@@ -457,9 +468,10 @@ workflow MRDFeatureMap {
     }
     File db_filtered_vcf = select_first([FilterDbOnExactAltAllele.output_vcf, FilterDb.output_vcf])
 
-    # use the first matched signature as the reference for the db signatures, unless it is not given, then use the first control signature
-    Array[File] filtered_signature_files = select_first([matched_filtered_vcf, control_filtered_vcf])
-    File filtered_signature_file = filtered_signature_files[0]
+    # use the matched signature as the reference for the db signatures, unless it is not given, then use the first control signature
+    File filtered_signature_file = if defined(matched_filtered_vcf_file)
+                                   then select_first([matched_filtered_vcf_file])
+                                   else select_first([control_filtered_vcf])[0]
     call UGMrdTasks.GenerateControlSignaturesFromDatabase as GenerateControlSignaturesFromDatabase {
       input:
         signature_file = filtered_signature_file,
@@ -476,13 +488,13 @@ workflow MRDFeatureMap {
     }
   }
 
-  Array[File]? filtered_matched_control_signatures = matched_filtered_vcf
   Array[File]? filtered_external_control_signatures = control_filtered_vcf
   Array[File]? filtered_db_control_signatures = GenerateControlSignaturesFromDatabase.db_signatures
 
   # Part 2 - Collect coverage over signatures
-  Array[File] all_vcf_files = flatten(select_all([filtered_matched_control_signatures, filtered_external_control_signatures, filtered_db_control_signatures]))
+  Array[File] all_vcf_files = flatten([select_all([matched_filtered_vcf_file]), select_first([filtered_external_control_signatures, []]), select_first([filtered_db_control_signatures, []])])
   Int memory_extract_coverage = select_first([override_memory_gb_ExtractCoverageOverVcfFiles, 8])
+  Int memory_mrd_report = select_first([override_memory_gb_MrdDataAnalysis, 16])
 
   call UGMrdTasks.MergeVcfsIntoBed as MergeVcfsIntoBed {
     input:
@@ -501,7 +513,7 @@ workflow MRDFeatureMap {
       input_cram_bam = cfdna_cram_bam,
       input_cram_bam_index = cfdna_cram_bam_index,
       base_file_name = base_file_name,
-      mapping_quality_threshold = mapping_quality_threshold,
+      mapping_quality_threshold = 0,
       references = references,
       docker = global.mosdepth_docker,
       memory_gb = memory_extract_coverage,
@@ -512,27 +524,24 @@ workflow MRDFeatureMap {
 
   # Part 3 - Intersect FeatureMap with signatures (one small task per signature: 2 CPU, 4 GiB)
   Float featuremap_size = size(cfdna_featuremap, "GB")
-  Array[File] matched_sigs = select_first([filtered_matched_control_signatures, []])
-  Array[File] matched_idxs = select_first([matched_filtered_vcf_index, []])
   Array[File] control_sigs = select_first([filtered_external_control_signatures, []])
   Array[File] control_idxs = select_first([control_filtered_vcf_index, []])
   Array[File] db_sigs = select_first([filtered_db_control_signatures, []])
   Array[File] db_idxs = select_first([GenerateControlSignaturesFromDatabase.db_signatures_indices, []])
-  Array[Int] matched_indices = range(length(matched_sigs))
   Array[Int] control_indices = range(length(control_sigs))
   Array[Int] db_indices = range(length(db_sigs))
   Int memory_gb_featuremap_intersect = select_first([override_memory_gb_FeatureMapIntersect, 4])
 
-  scatter (i in matched_indices) {
+  if (defined_external_matched_signature) {
     call UGMrdTasks.FeatureMapIntersectWithSignatures as FeatureMapIntersectMatched {
       input:
         featuremap = cfdna_featuremap,
         featuremap_index = cfdna_featuremap_index,
-        signature = matched_sigs[i],
-        signature_index = matched_idxs[i],
+        signature = select_first([matched_filtered_vcf_file]),
+        signature_index = select_first([matched_filtered_vcf_index_file]),
         signature_type = "matched",
         docker = global.ugbio_featuremap_docker,
-        disk_size = 2 * featuremap_size + size(matched_sigs[i], "GB") + 10,
+        disk_size = 2 * featuremap_size + size(select_first([matched_filtered_vcf_file]), "GB") + 10,
         memory_gb = memory_gb_featuremap_intersect,
         cpus = 2,
         monitoring_script = monitoring_script  #!FileCoercion
@@ -569,15 +578,33 @@ workflow MRDFeatureMap {
     }
   }
 
-  Array[File] intersected_featuremaps_parquet_all = flatten([FeatureMapIntersectMatched.intersected_featuremap_parquet, FeatureMapIntersectControl.intersected_featuremap_parquet, FeatureMapIntersectDb.intersected_featuremap_parquet])
-  Array[File] intersected_featuremaps_all = flatten([FeatureMapIntersectMatched.intersected_featuremap, FeatureMapIntersectControl.intersected_featuremap, FeatureMapIntersectDb.intersected_featuremap])
-  Array[File] intersected_featuremaps_indices_all = flatten([FeatureMapIntersectMatched.intersected_featuremap_index, FeatureMapIntersectControl.intersected_featuremap_index, FeatureMapIntersectDb.intersected_featuremap_index])
+  Array[File] intersected_featuremaps_parquet_all = flatten([select_all([FeatureMapIntersectMatched.intersected_featuremap_parquet]), FeatureMapIntersectControl.intersected_featuremap_parquet, FeatureMapIntersectDb.intersected_featuremap_parquet])
+  Array[File] intersected_featuremaps_all = flatten([select_all([FeatureMapIntersectMatched.intersected_featuremap]), FeatureMapIntersectControl.intersected_featuremap, FeatureMapIntersectDb.intersected_featuremap])
+  Array[File] intersected_featuremaps_indices_all = flatten([select_all([FeatureMapIntersectMatched.intersected_featuremap_index]), FeatureMapIntersectControl.intersected_featuremap_index, FeatureMapIntersectDb.intersected_featuremap_index])
+
+  # Part 3b - Collect filter funnel for matched signatures
+  if (defined_external_matched_signature) {
+    Array[File] matched_filter_funnels = select_all([FilterMatched.filter_funnel_json])
+    Array[File] matched_intersection_funnels = select_all([FeatureMapIntersectMatched.intersection_funnel_json])
+
+    call UGMrdTasks.CollectFilterFunnel as CollectFilterFunnel {
+      input:
+        filter_funnel_jsons = matched_filter_funnels,
+        exact_alt_funnel_jsons = [FilterMatchedOnExactAltAllele.exact_alt_funnel_json],
+        intersection_funnel_jsons = matched_intersection_funnels,
+        bcftools_extra_args = bcftools_extra_args,
+        include_region_names = include_regions,
+        exclude_region_names = matched_exclude_regions,
+        exact_alt_region_names = exclude_regions_vcf,
+        docker = global.ugbio_mrd_docker,
+    }
+  }
 
   # Part 4 - Integrate all the processed data in the MRD data analysis
   call UGMrdTasks.MrdDataAnalysis as MrdDataAnalysis{
     input:
       intersected_featuremaps_parquet = intersected_featuremaps_parquet_all,
-      matched_signatures_vcf = filtered_matched_control_signatures,
+      matched_signature_vcf = matched_filtered_vcf_file,
       control_signatures_vcf = filtered_external_control_signatures,
       db_signatures_vcf = filtered_db_control_signatures,
       coverage_bed = ExtractCoverageOverVcfFiles.coverage_bed,
@@ -585,9 +612,10 @@ workflow MRDFeatureMap {
       basename = base_file_name,
       featuremap_df_file = featuremap_df_file,
       srsnv_metadata_json = srsnv_metadata_json,
+      filter_funnel_json = CollectFilterFunnel.collected_funnel_json,  # optional — only defined when matched signatures exist
       docker = global.ugbio_mrd_docker,
       disk_size = 3 * featuremap_size + 30,
-      memory_gb = memory_extract_coverage,
+      memory_gb = memory_mrd_report,
       cpus = 4,
       monitoring_script = monitoring_script  #!FileCoercion
   }
@@ -595,7 +623,11 @@ workflow MRDFeatureMap {
     File features_dataframe_ = MrdDataAnalysis.features
     File signatures_dataframe_ = MrdDataAnalysis.signatures
     File report_html_ = MrdDataAnalysis.mrd_analysis_html
+    File mrd_qc_html_ = MrdDataAnalysis.mrd_qc_html
+    File detection_result_json_ = MrdDataAnalysis.detection_result_json
     File ctdna_vaf_h5_ = MrdDataAnalysis.ctdna_vaf_h5
+    # Optional: only produced when a matched signature is present.
+    File? filter_funnel_json_ = MrdDataAnalysis.output_filter_funnel_json
 
     if (create_md5_checksum_outputs) {
 
@@ -603,7 +635,10 @@ workflow MRDFeatureMap {
                                                       select_first([[features_dataframe_], []]),
                                                       select_first([[signatures_dataframe_], []]),
                                                       select_first([[report_html_], []]),
+                                                      select_first([[mrd_qc_html_], []]),
+                                                      select_first([[detection_result_json_], []]),
                                                       select_first([[ctdna_vaf_h5_], []]),
+                                                      select_first([[filter_funnel_json_], []]),
                                                       ]))
 
         scatter (file in output_files) {
@@ -625,14 +660,17 @@ workflow MRDFeatureMap {
     File features_dataframe = features_dataframe_
     File signatures_dataframe = signatures_dataframe_
     File report_html = report_html_
+    File mrd_qc_html = mrd_qc_html_
+    File detection_result_json = detection_result_json_
     File ctdna_vaf_h5 = ctdna_vaf_h5_
+    File? filter_funnel_json = filter_funnel_json_
     # Intersected featuremaps
     Array[File] intersected_featuremaps_parquet = intersected_featuremaps_parquet_all
     Array[File] intersected_featuremaps = intersected_featuremaps_all
     Array[File] intersected_featuremaps_indices = intersected_featuremaps_indices_all
     # filtered signatures
     Array[File]? control_signatures_vcf = filtered_external_control_signatures
-    Array[File]? matched_signatures_vcf = filtered_matched_control_signatures
+    File? matched_signature_vcf = matched_filtered_vcf_file
     Array[File]? db_signatures_vcf = filtered_db_control_signatures
     # Coverage stats
     File coverage_bed = ExtractCoverageOverVcfFiles.coverage_bed

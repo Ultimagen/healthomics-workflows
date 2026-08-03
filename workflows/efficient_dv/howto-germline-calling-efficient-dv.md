@@ -40,9 +40,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.3.0
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.3.2
 or
-ultimagenomics/make_examples:3.3.0
+ultimagenomics/make_examples:3.3.2
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -100,11 +100,13 @@ tool \
   --cgp-min-fraction-snps 0.12 \
   --cgp-min-fraction-hmer-indels 0.12 \
   --cgp-min-fraction-non-hmer-indels 0.06 \
+  --cgp-min-fraction-single-strand-non-snps 0.15 \
   --max-reads-per-region 1500 \
   --assembly-min-base-quality 0 \
   --optimal-coverages 50 \
   --median-coverage <median_coverage> \
-  --add-ins-size-channel
+  --add-ins-size-channel \
+  --single-strand-filter
 ```
 
 The input cram files and the corresponding index files are provided to `--input` and `--cram-index`, respectively. Multiple cram files can be provided as a comma separated list.

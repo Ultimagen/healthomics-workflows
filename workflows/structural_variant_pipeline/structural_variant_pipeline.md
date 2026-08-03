@@ -5,8 +5,8 @@ The input of that pipeline is cram files and the output is vcf file
 The steps of the pipeline are as following:
 -Create an assembly file out of the cram files
 -Run UA alingnment on that
--Fix the UA alignment which are secondarily mapped to decoy or with low mapq
--Run gridss.IdentifyVariants and gridss.AnnotateVariants
+-Choose which of the alignments (original or UA) are the best
+Assign reads to the haplotypes\-Run gridss.IdentifyVariants and gridss.AnnotateVariants
 -Run R script / GRIPSS for filtering and linkage the variants
 
 <b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>

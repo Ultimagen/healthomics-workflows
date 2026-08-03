@@ -29,16 +29,6 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Int </i> &mdash;
          Number of threads to use <br />
 </p>
-<p name="SegDupAnalysis.dbsnp">
-        <b>SegDupAnalysis.dbsnp</b><br />
-        <i>File </i> &mdash;
-         dbSNP reference file (for annotation) <br />
-</p>
-<p name="SegDupAnalysis.dbsnp_index">
-        <b>SegDupAnalysis.dbsnp_index</b><br />
-        <i>File </i> &mdash;
-         dbSNP reference index file (for annotation) <br />
-</p>
 
 ### Optional inputs
 <p name="SegDupAnalysis.cloud_provider_override">
@@ -318,11 +308,6 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Int </i> &mdash;
          Virtual GPU tile size for call_variants <br />
 </p>
-<p name="SegDupAnalysis.DV.HaplotypeSampling.input_fastq">
-        <b>SegDupAnalysis.DV.HaplotypeSampling.input_fastq</b><br />
-        <i>File? </i> &mdash;
-         Optional input FASTQ file (if not using CRAM) <br />
-</p>
 <p name="SegDupAnalysis.DV.HaplotypeSampling.kmer_length">
         <b>SegDupAnalysis.DV.HaplotypeSampling.kmer_length</b><br />
         <i>Int </i> &mdash;
@@ -347,11 +332,6 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.HaplotypeSampling.minimap2_preset</b><br />
         <i>String </i> &mdash;
          Minimap2 preset for alignment (default: asm5) <br />
-</p>
-<p name="SegDupAnalysis.DV.HaplotypeSampling.cram_to_fastq_cores">
-        <b>SegDupAnalysis.DV.HaplotypeSampling.cram_to_fastq_cores</b><br />
-        <i>Int </i> &mdash;
-         Number of CPU cores for CRAM to FASTQ conversion (default: 2) <br />
 </p>
 <p name="SegDupAnalysis.DV.HaplotypeSampling.kmc_mem_gb">
         <b>SegDupAnalysis.DV.HaplotypeSampling.kmc_mem_gb</b><br />
@@ -384,6 +364,16 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.annotation_intervals</b><br />
         <i>Array[File]? </i> &mdash;
          List of bed files for VCF annotation <br />
+</p>
+<p name="SegDupAnalysis.DV.ref_dbsnp">
+        <b>SegDupAnalysis.DV.ref_dbsnp</b><br />
+        <i>File? </i> &mdash;
+         DbSNP vcf for the annotation of known variants <br />
+</p>
+<p name="SegDupAnalysis.DV.ref_dbsnp_index">
+        <b>SegDupAnalysis.DV.ref_dbsnp_index</b><br />
+        <i>File? </i> &mdash;
+         DbSNP vcf index <br />
 </p>
 </details>
 

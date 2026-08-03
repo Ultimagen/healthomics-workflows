@@ -1,12 +1,4 @@
 {
-    "SegDupAnalysis.DV.HaplotypeSampling.cram_to_fastq_cores": {
-        "description": "Number of CPU cores for CRAM to FASTQ conversion (default: 2)",
-        "optional": true
-    },
-    "SegDupAnalysis.DV.HaplotypeSampling.input_fastq": {
-        "description": "Optional input FASTQ file (if not using CRAM)",
-        "optional": true
-    },
     "SegDupAnalysis.DV.HaplotypeSampling.kmc_cores": {
         "description": "Number of CPU cores for KMC (default: 16)",
         "optional": true
@@ -223,6 +215,14 @@
         "description": "Random seed for ensemble inference",
         "optional": true
     },
+    "SegDupAnalysis.DV.ref_dbsnp": {
+        "description": "DbSNP vcf for the annotation of known variants",
+        "optional": true
+    },
+    "SegDupAnalysis.DV.ref_dbsnp_index": {
+        "description": "DbSNP vcf index",
+        "optional": true
+    },
     "SegDupAnalysis.DV.ref_gbz_for_haplotypes": {
         "description": "Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
         "optional": true
@@ -297,14 +297,6 @@
     },
     "SegDupAnalysis.cn_model": {
         "description": "CNV model file from parascopy, see template",
-        "optional": false
-    },
-    "SegDupAnalysis.dbsnp": {
-        "description": "dbSNP reference file (for annotation)",
-        "optional": false
-    },
-    "SegDupAnalysis.dbsnp_index": {
-        "description": "dbSNP reference index file (for annotation)",
         "optional": false
     },
     "SegDupAnalysis.homology_table": {

@@ -975,19 +975,29 @@ task FilterVcfWithBcftools {
         TEMP_BCF="filter_temp.bcf"
         TEMP_BCF2="filter_temp2.bcf"
 
+        # Count input variants
+        INPUT_COUNT=$(bcftools view -H ~{input_vcf} | wc -l)
+        echo "{\"input\": $INPUT_COUNT" > filter_funnel.json
+
         bcftools view --threads ~{cpus} ~{bcftools_extra_args} ~{input_vcf} -Ou -o "$TEMP_BCF"
+        AFTER_EXTRA_ARGS=$(bcftools view -H "$TEMP_BCF" | wc -l)
+        echo ", \"after_bcftools_extra_args\": $AFTER_EXTRA_ARGS" >> filter_funnel.json
 
         INCLUDE_REGIONS=(~{sep=" " include_regions})
         for f in "${INCLUDE_REGIONS[@]}"; do
             bcftools view --threads ~{cpus} "$TEMP_BCF" -T "$f" -Ou -o "$TEMP_BCF2"
             mv "$TEMP_BCF2" "$TEMP_BCF"
         done
+        AFTER_INCLUDE=$(bcftools view -H "$TEMP_BCF" | wc -l)
+        echo ", \"after_include_regions\": $AFTER_INCLUDE" >> filter_funnel.json
 
         EXCLUDE_REGIONS=(~{sep=" " exclude_regions})
         for f in "${EXCLUDE_REGIONS[@]}"; do
             bcftools view --threads ~{cpus} "$TEMP_BCF" -T ^"$f" -Ou -o "$TEMP_BCF2"
             mv "$TEMP_BCF2" "$TEMP_BCF"
         done
+        AFTER_EXCLUDE=$(bcftools view -H "$TEMP_BCF" | wc -l)
+        echo ", \"after_exclude_regions\": $AFTER_EXCLUDE}" >> filter_funnel.json
 
         bcftools view --threads ~{cpus} "$TEMP_BCF" -Oz -o ~{output_vcf_filename}
         rm -f "$TEMP_BCF"
@@ -997,6 +1007,7 @@ task FilterVcfWithBcftools {
         File monitoring_log = "monitoring.log"
         File output_vcf = "~{output_vcf_filename}"
         File output_vcf_index = "~{output_vcf_filename}.tbi"
+        File filter_funnel_json = "filter_funnel.json"
     }
     runtime {
         memory: "~{memory_gb} GB"

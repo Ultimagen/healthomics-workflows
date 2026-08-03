@@ -31,7 +31,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow STRGenotyper {
     input {
-        String pipeline_version = "1.33.0" # !UnusedDeclaration
+        String pipeline_version = "1.34.0" # !UnusedDeclaration
         # Required inputs
         String base_file_name
         File cram_file

@@ -1,5 +1,27 @@
 # MRD WG Analysis
 
+## Table of Contents
+- [Introduction](#introduction)
+- [Template descriptions](#template-descriptions)
+- [Running the pipeline](#running-the-pipeline)
+  - [Step 1: Somatic variant calling](#step-1-somatic-variant-calling)
+  - [Step 2: Single Read SNV (SRSNV) pipeline](#step-2-single-read-snv-srsnv-pipeline)
+  - [Step 3: Intersection and MRD data analysis](#step-3-intersection-and-mrd-data-analysis)
+- [MRD detection and reporting](#mrd-detection-and-reporting)
+  - [Locus filters](#locus-filters)
+  - [Statistical detection](#statistical-detection)
+  - [Sample-specific LOD](#sample-specific-lod)
+  - [QC checks](#qc-checks)
+  - [Filter funnels](#filter-funnels)
+- [WDL task reference](#wdl-task-reference)
+  - [Part 1 — Filter signatures](#part-1--filter-signatures)
+  - [Part 2 — Coverage extraction](#part-2--coverage-extraction)
+  - [Part 3 — FeatureMap intersection](#part-3--featuremap-intersection)
+  - [Part 4 — MRD data analysis](#part-4--mrd-data-analysis)
+- [Summary of the important MRD output files](#summary-of-the-important-mrd-output-files)
+- [Summary of the relevant files](#summary-of-the-relevant-files)
+- [test files](#test-files)
+
 ## Introduction
 
 The UG pipeline for tumor informed MRD measures the tumor fraction in cfDNA from the presence of tumor-specific SNVs. The input data is generally 3 aligned cram files:
@@ -12,7 +34,7 @@ It is possible to provide the cfDNA cram file only, with an existing somatic vcf
 The analysis is composed of three parts:
 1. Tumor signature mutation calling, where the tumor and normal tissues are used for finding the tumor somatic mutations signature with somatic variant calling (by default UG Somatic Efficient DeepVariant [efficient_dv.wdl], though these can be provided from other callers).
 2. Single Read SNV pipeline, where all the SNV candidates compared to the reference genome are extracted from the cfDNA cram file to a FeatureMap vcf, annotated and assigned a quality score (SNVQ).
-3. Intersection and MRD data analysis, where the FeatureMap and signature are intersected and filtered, then reads supporting the tumor mutations are counted and a circulating tumor variant allele fraction (ctDNA VAF) is measured. Control signatures can be added to estimate the background noise, e.g. from other cohort patients, and in addition control signatures are generated from a somatic mutation database. 
+3. Intersection and MRD data analysis, where the FeatureMap and signature are intersected and filtered, then reads supporting the tumor mutations are counted and a circulating tumor variant allele fraction (ctDNA VAF) is measured. Control signatures can be added to estimate the background noise, e.g. from other cohort patients, and in addition control signatures are generated from a somatic mutation database. A statistical detection call (MRD Detected / Not Detected / Indeterminate) is made against the noise model derived from the synthetic control signatures, and a sample-specific limit of detection (LOD) is estimated.
 
 <img src="mrd_pipeline_scheme.png" width="800"/>
 
@@ -55,9 +77,8 @@ The following outputs from this workflow are needed:
 
 ### Step 3: Intersection and MRD data analysis 
 In this stage the FeatureMap and signature are intersected, reads supporting the tumor mutations are counted and the circulating tumor variant allele fraction (ctDNA VAF) is measured. ctDNA VAF can be used to estimate the tumor fraction in plasma. 
-In this stage control signatures can (and should) be added to estimate the background noise. In addition a mutation database is used for estimating background noise (see below).
+In this stage control signatures can (and should) be added to estimate the background noise. In addition a mutation database is used for estimating background noise (see below). The synthetic (database) control signatures are what makes the statistical detection call possible — without them the call is Indeterminate (see [MRD detection and reporting](#mrd-detection-and-reporting)).
 The WDL used in this stage is: mrd_featuremap.wdl
-Standalone - howto-mrd-featuremap.md
 
 Either when using the WDL or running as standalone, the following inputs are needed:
 1. General parameters
@@ -74,29 +95,41 @@ Either when using the WDL or running as standalone, the following inputs are nee
       "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v1.3/ug_hcr.bed"
     ]
 
-  c. exclude_regions - regions that will be excluded from the analysis, supporting bed and vcf formats. Default:
+  c. exclude_regions_bed - BED regions that will be excluded from the analysis by position. Default:
+
+    1. MRD_blacklist: loci with high error rate in an internal HapMap project in UG
+
+    Optionally, one can add a bed file of germline variants of the corresponding sample, to exclude from MRD analysis.
+
+    [
+      "gs://concordanz/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+    ]
+    or
+    [
+      "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed"
+    ]
+
+  d. exclude_regions_vcf / exclude_regions_vcf_indices - VCF files whose variants are excluded from the signatures by **exact locus and alt allele** (not by position), so a signature SNV is only dropped when the same substitution appears in the exclusion VCF. Must be bgzipped and tabix-indexed, and the two arrays must be given in the same order. Default:
 
     1. [GNOMAD](https://gnomad.broadinstitute.org/): common population variants.
 
     2. [db_snp](https://www.ncbi.nlm.nih.gov/snp/): common population variants.
 
-    3. MRD_blacklist: loci with high error rate in an internal HapMap project in UG
+    3. PON (panel of normals): recurrent artifactual substitutions observed in UG healthy cfDNA samples.
 
-    Optionaly, one can add a list of germline variants of the corresponding sample, to exclude from MRD analysis.
-    
     [
       "gs://concordanz/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
       "gs://concordanz/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
-      "gs://concordanz/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed.gz"
+      "gs://concordanz/hg38/mrd/pon.version1.vcf.gz"
     ]
     or
     [
       "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz",
       "s3://ultimagen-workflow-resources-us-east-1/hg38/somatic/Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz",
-      "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/UG_MRD_blacklist_v0.bed.gz"
+      "s3://ultimagen-workflow-resources-us-east-1/hg38/mrd/pon.version1.vcf.gz"
     ]
 
-  d. references - Reference genome. Default:
+  e. references - Reference genome. Default:
 
     {
       "ref_fasta": "gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta",
@@ -106,8 +139,7 @@ Either when using the WDL or running as standalone, the following inputs are nee
 
 2. Input signatures
 
-  a. external_matched_signatures - a list of somatic vcf files matching the plasma sample. 
-  An option to use multiple inputs is supported (e.g. signatures from different callers/tissues) and intersections are calculated for all options, but the first entry is used as the signature to sample for database controls. All loci in this signature will be excluded from the control signatures, implemented with bcftools_extra_args string (see below) before intersection with the FeatureMap.
+  a. external_matched_signature - a single somatic vcf file matching the plasma sample (e.g. a signature from a tumor biopsy). All loci in this signature will be excluded from the control signatures, implemented with bcftools_extra_args string (see below) before intersection with the FeatureMap.
 
   b. external_control_signatures - A list of control signatures that can be added to estimate the background noise, e.g. from other cohort patients. The control signatures are filtered with bcftools_extra_args.
 
@@ -119,13 +151,13 @@ Either when using the WDL or running as standalone, the following inputs are nee
     
     "-f PASS --type snps -m2 -M2"
 
-  d. snv_database - a large database of whole-genome somatic cancer mutations from which variants for synthetic control signatures (also called database controls) will be drawn. Default is the PCAWG database (Nature 2020). The synthetic signatures (default: 5 synthetic signatures) are generated based on the matched signature: they have the same size and same trinucleotide motif distribution as the first matched signature. In case matched signatures are not part of the input, the sythetic signatures mimic the first control signature. The synthetic signatures appear as "db_control" signatures in the output ctdna_vaf.h5. snv_database default:
+  d. snv_database - a large database of whole-genome somatic cancer mutations from which variants for synthetic control signatures (also called database controls) will be drawn. Default is the PCAWG database (Nature 2020). The synthetic signatures are generated based on the matched signature: they have the same size and same trinucleotide motif distribution as the first matched signature. In case matched signatures are not part of the input, the sythetic signatures mimic the first control signature. The synthetic signatures appear as "db_control" signatures in the output ctdna_vaf.h5, and are the source of the background noise rate used by the statistical detection. snv_database default:
   
     "gs://concordanz/hg38/pcawg/pancan.filtered.vcf.gz"
     or
     "s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan.filtered.vcf.gz"
 
-  e. n_synthetic_signatures - number of synthetic signatures to generate from the database. Default: 5
+  e. n_synthetic_signatures - number of synthetic signatures to generate from the database. Default: 30. This is also the QC threshold for a reliable null distribution — with fewer synthetic controls the "Synthetic controls" QC check is flagged. Set to 0 to disable generation of database controls altogether (the detection call then becomes Indeterminate).
 
   f. diluent_germline_vcfs - optional argument. A list of vcf files which are output of germline calling of the diluent's DNA, in case of an experiment where patient's cfDNA was diluted into a cfDNA coming from a healthy donor, or a similar mixing experiment. Default: empty array []
   
@@ -141,329 +173,358 @@ Either when using the WDL or running as standalone, the following inputs are nee
   d. srsnv_metadata_json - SRSNV output: srsnv_metadata_json
     
 4. Analysis filters
-
-  a. mapping_quality_threshold - minimum mapping quality of reads supporting a mutation, used only when estimating effective coverage. The FeatureMap is assumed to be filtered with the same value in the SRSNV pipeline. Default: 0
   
-  b. mrd_analysis_params - filters used in the final analysis steps.
-    1. "signature_filter_query": the default is: "(norm_coverage <= 2.5) and (norm_coverage >= 0.6)"
-    It filters out variants found in regions of extreme coverage of the cfDNA sample
-    2. "signature_filter_query": the default is: "filt>0 and snvq>60 and mapq>=60"
-    Taking only featuremap entries with pass filter, have high SNVQ and maximal mapping quality.
-    In order to take only mixed reads from a ppmSeq data, the following read_filter_query should be applied:
+  b. mrd_analysis_params - filters and statistical parameters used in the final analysis step (`MrdDataAnalysis`). Only the two query fields are required; the rest are optional and fall back to the module defaults.
+
+  | Field | Required | Default | Description |
+  |---|---|---|---|
+  | `signature_filter_query` | yes | `"(norm_coverage <= 2.5) and (norm_coverage >= 0.6)"` | Locus-level filter on the signature. Filters out variants found in regions of extreme coverage of the cfDNA sample. |
+  | `read_filter_query` | yes | `"filt>0 and snvq>60 and mapq>=60"` | Read-level filter on the intersected FeatureMap: take only entries with pass filter, high SNVQ and maximal mapping quality. |
+  | `tumor_sample` | no | auto-discovered | Sample name in the signature vcf from which the allele fraction (AF) is taken. |
+  | `mrd_detection_fpr` | no | `0.01` | Significance threshold for the detection call (see [Statistical detection](#statistical-detection)). |
+  | `lod_fpr` | no | `0.05` | False-positive rate used to set the detection threshold for the sample-specific LOD. |
+  | `lod_recall` | no | `0.95` | Target recall (detection probability) for the sample-specific LOD. |
+  | `thresh_noise_lq_reads` | no | disabled | Noisy-loci filter threshold, in (0, 1]. Set e.g. `0.7` to enable (see [Locus filters](#locus-filters)). |
+  | `thresh_multi_read_pvalue` | no | `0.001` | Multi-read locus filter threshold. Set `0.0` to disable. |
+
+  In order to take only mixed reads from a ppmSeq data, the following read_filter_query should be applied:
+
     "read_filter_query" : "(st == 'MIXED') and (et == 'MIXED')"
 
-## Manual execution (outside WDL)
+## MRD detection and reporting
 
-### Environment / dockers
-Pull (matching versions referenced in workflows/single_read_snv/tasks/globals.wdl in this repository):
+The final analysis step (`MrdDataAnalysis`, running `generate_report` from the `ugbio_mrd` package) produces
+two HTML reports — a results report (`mrd_analysis_report.html`) and a QC report (`mrd_qc_report.html`) — plus
+a machine-readable `detection_result.json` and full tables in `ctdna_vaf_h5`. Beyond the ctDNA VAF measurement it applies optional per-locus
+noise filters, makes a statistical detection call, and estimates a sample-specific limit of detection.
 
-1. ugbio_core_docker
-2. bcftools_docker
-3. ugbio_mrd_docker
-4. mosdepth_docker
+### Locus filters
 
-### Step-by-step commands
-Below is a bash script emulating the mrd_featuremap.wdl. Variable names mirror WDL inputs; example corresponds to test data provided (see file paths for test data in the last section of this deocument). See input templates for full filenames, only base names are used below for clarity.
+Two optional pre-detection filters remove noisy loci before the detection test is run. Both are configured
+via `mrd_analysis_params`, and loci removed by either filter are also removed from the coverage denominator so
+the ctDNA VAF stays consistent.
 
-```bash
-# Set base name & inputs
-BASE_FILE_NAME="Pa_46_333_LuNgs_08"
-CFDNA_FEATUREMAP="Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz"
-CFDNA_FEATUREMAP_INDEX="Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi"
-CFDNA_CRAM_BAM="Pa_46.333_LuNgs_08.Lb_744.chr20.cram"
-CFDNA_CRAM_BAM_INDEX="Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai"
-FEATUREMAP_DF_FILE="Pa_46_333_LuNgs_08.featuremap_df.parquet"
-SRSNV_METADATA_JSON="Pa_46_333_LuNgs_08.srsnv_metadata.json"
+#### Noisy-loci filter (`thresh_noise_lq_reads`)
 
-# External signatures (arrays)
-EXTERNAL_MATCHED_SIGNATURES=("Pa_46_FreshFrozen.ann.chr20.vcf.gz")
-EXTERNAL_CONTROL_SIGNATURES=("Pa_67_FFPE.ann.chr20.vcf.gz")
-DILUENT_GERMLINE_VCFS=()  # Optional, empty in this example
+Removes loci where the fraction of low-quality reads (reads *failing* `read_filter_query`) exceeds the
+threshold. This targets loci systematically affected by assay noise rather than true ctDNA signal.
 
-# Reference files
-REF_FASTA="Homo_sapiens_assembly38.fasta"
-REF_FASTA_INDEX="Homo_sapiens_assembly38.fasta.fai"
-REF_DICT="Homo_sapiens_assembly38.dict"
+The threshold must be in the range (0, 1]. **Disabled by default**; a value of `1.0` is equivalent to
+disabling it (a fraction can never exceed 1). Set e.g. `0.7` to remove loci where more than 70% of the reads
+are low quality.
 
-# Regions and database
-INCLUDE_REGIONS=("ug_hcr.bed")
-EXCLUDE_REGIONS=(
-    "af-only-gnomad.hg38.snps.AF_over_1e-3.vcf.gz"
-    "Homo_sapiens_assembly38.dbsnp138.chr1-22XY.snps.vcf.gz"
-    "UG_MRD_blacklist_v0.bed.gz"
-)
-SNV_DATABASE="pancan_pcawg_2020.chr20.vcf.gz"
+#### Multi-read locus filter (`thresh_multi_read_pvalue`)
 
-# Parameters
-MAPPING_QUALITY_THRESHOLD=0
-N_SYNTHETIC_SIGNATURES=5
-BCFTOOLS_EXTRA_ARGS="-f PASS --type snps -m2 -M2 -i 'QUAL>10'"
-SIGNATURE_FILTER_QUERY="(norm_coverage <= 2.5) and (norm_coverage >= 0.6)"
-READ_FILTER_QUERY="filt>0 and snvq>60 and mapq>=60"
+Removes loci whose per-locus supporting-read count is a significant outlier under a Poisson null model. The
+primary target is germline or mosaic variants leaking into the matched signature, but the test is applied
+identically per signature — the matched signature, each cohort control and each synthetic replicate are each
+tested on their own. Default: `0.001`; set `0.0` to disable.
 
-# Initialize arrays for tracking filtered signatures
-filtered_matched_signatures=()
-filtered_control_signatures=()
-db_signatures=()
-padded_diluent_files=()
+**λ estimation:** for each signature, the VAF is estimated from all of its loci
+(`VAF = total reads / corrected_coverage`, with a Jeffreys prior `0.5 / (N+1)` when no reads are observed at
+all), and the per-locus expectation uses the *local* coverage rather than a single global mean:
 
-# Define signature filtering function
-filter_signatures() {
-    local signature_type="$1"
-    local array_name="$2"
-    local bcftools_extra_args="${3:-$BCFTOOLS_EXTRA_ARGS}"  # Optional, defaults to global value
-    shift 3
-    local exclude_regions=("$@")
-    
-    # Extract signature files array
-    eval "local signature_files=(\"\${${array_name}[@]}\")"
-    
-    echo "Filtering ${signature_type} signatures..."
-    # run inside bcftools_docker
-    
-    for input_vcf in "${signature_files[@]}"; do
-        basename_vcf=$(basename "$input_vcf" .vcf.gz)
-        output_vcf="${basename_vcf}.filtered.vcf.gz"
-        
-        # Start with basic filtering and include regions
-        cmd="bcftools view --threads 4 $bcftools_extra_args \"$input_vcf\""
-        
-        # Add include regions (pipe through each one)
-        for include_region in "${INCLUDE_REGIONS[@]}"; do
-            cmd="$cmd | bcftools view - -T \"$include_region\""
-        done
-        
-        # Add exclude regions (pipe through each one)
-        for exclude_region in "${exclude_regions[@]}"; do
-            if [[ -n "$exclude_region" ]]; then
-                cmd="$cmd | bcftools view - -T ^\"$exclude_region\""
-            fi
-        done
-        
-        # Finalize command with output
-        cmd="$cmd -Oz -o \"$output_vcf\""
-        
-        # Execute the command
-        echo "Executing command: $cmd"
-        eval "$cmd"
-        bcftools index -t "$output_vcf"
-    done
-}
+$$\lambda_i = \mathrm{VAF} \times \text{coverage}_i$$
 
-# 1. OPTIONAL: Pad diluent VCF files (if provided)
-# Skip in this example since DILUENT_GERMLINE_VCFS is empty
-if [[ ${#DILUENT_GERMLINE_VCFS[@]} -gt 0 ]]; then
-    echo "Processing diluent germline VCFs..."
-    # run inside ugbio_core_docker
-    for input_vcf in "${DILUENT_GERMLINE_VCFS[@]}"; do
-        basename_vcf=$(basename "$input_vcf" .vcf.gz)
-        
-        # Extract variant positions and pad them
-        bcftools query -f '%CHROM\t%POS0\t%END\t%REF\t%ALT\n' "$input_vcf" | \
-        awk -F'\t' 'BEGIN{OFS="\t"}{
-            s=$2;
-            m=length($4);
-            n=split($5,a,",");
-            for(i=1;i<=n;i++) if(length(a[i])>m) m=length(a[i]);
-            print $1, s, s+m
-        }' | gzip > variants.bed.gz
-        
-        # Create genome file for bedtools
-        cut -f1,2 "$REF_FASTA_INDEX" > genome.txt
-        
-        # Pad variants using bedtools
-        zcat variants.bed.gz | bedtools slop -i stdin -g genome.txt -b 2 | \
-        gzip > "${basename_vcf}.padded.bed.gz"
-        
-        padded_diluent_files+=("${basename_vcf}.padded.bed.gz")
-    done
-fi
+so high-coverage loci naturally expect more reads and need a higher count before being flagged.
 
-# 2. Filter matched signatures
-all_exclude_regions=("${EXCLUDE_REGIONS[@]}" "${padded_diluent_files[@]}")
-if [[ ${#EXTERNAL_MATCHED_SIGNATURES[@]} -gt 0 ]]; then
-    filter_signatures "matched" "EXTERNAL_MATCHED_SIGNATURES" "$BCFTOOLS_EXTRA_ARGS" "${all_exclude_regions[@]}"
-    # Collect filtered outputs
-    for input_vcf in "${EXTERNAL_MATCHED_SIGNATURES[@]}"; do
-        basename_vcf=$(basename "$input_vcf" .vcf.gz)
-        filtered_matched_signatures+=("${basename_vcf}.filtered.vcf.gz")
-    done
-fi
+**Bonferroni N — per signature:** each signature is tested independently using **its own locus count** as the
+family size N. This is the same logic used by the QC check (see below):
 
-# 3. Filter control signatures (exclude matched signature loci too)
-control_exclude_regions=("${EXCLUDE_REGIONS[@]}" "${EXTERNAL_MATCHED_SIGNATURES[@]}" "${padded_diluent_files[@]}")
-if [[ ${#EXTERNAL_CONTROL_SIGNATURES[@]} -gt 0 ]]; then
-    filter_signatures "control" "EXTERNAL_CONTROL_SIGNATURES"  "$BCFTOOLS_EXTRA_ARGS" "${control_exclude_regions[@]}"
-    # Collect filtered outputs
-    for input_vcf in "${EXTERNAL_CONTROL_SIGNATURES[@]}"; do
-        basename_vcf=$(basename "$input_vcf" .vcf.gz)
-        filtered_control_signatures+=("${basename_vcf}.filtered.vcf.gz")
-    done
-fi
+| Signature type | Bonferroni N |
+|---|---|
+| Matched | matched signature's own locus count |
+| Synthetic control (db_control) | that replicate's own locus count |
+| Cohort control | that patient's own signature locus count |
 
-# 4. Filter database and generate synthetic controls
-echo "Filtering SNV database and generating synthetic controls..."
-# run inside bcftools_docker
-if [[ -n "$SNV_DATABASE" ]]; then
-    # Create a temporary array with just the database file
-    temp_db_array=("$SNV_DATABASE")
-    filter_signatures "database" "temp_db_array" " " "${control_exclude_regions[@]}"
-    
-    # Get the filtered database file
-    basename_db=$(basename "$SNV_DATABASE" .vcf.gz)
-    filtered_db_vcf="${basename_db}.filtered.vcf.gz"
-else
-    filtered_db_vcf="filtered_db.vcf.gz"
-fi
+Using the matched `signature_size` as a shared N would under-correct large signatures and over-correct small ones.
 
-# run inside ugbio_mrd_docker
-# Use first filtered signature as reference (prefer matched over control)
-reference_signature="${filtered_matched_signatures[0]:-${filtered_control_signatures[0]}}"
+A locus is flagged when:
 
-generate_synthetic_signatures \
-  --signature_vcf "$reference_signature" \
-  --db_vcf "$filtered_db_vcf" \
-  --n_synthetic_signatures $N_SYNTHETIC_SIGNATURES \
-  --ref_fasta "$REF_FASTA" \
-  --output_dir ./
+$$p_i \times N < \text{thresh\_multi\_read\_pvalue} \quad \text{and} \quad k_i \geq 2$$
 
-# Collect generated database signatures
-db_signatures=(syn*.vcf.gz)
+The minimum-reads guard (`k ≥ 2`) prevents single-read loci from being removed; a single read is
+indistinguishable from background noise regardless of how small λ is. Flagged loci are removed from **all
+reads of that signature type**.
 
-# 5. Extract coverage over all signatures
-echo "Extracting coverage over signature loci..."
-# Combine all signature VCF files for coverage calculation
-all_signature_files=("${filtered_matched_signatures[@]}" "${filtered_control_signatures[@]}" "${db_signatures[@]}")
+### Statistical detection
 
-# run inside ugbio_core_docker
-# Convert VCF loci to BED format
-echo "Combining all VCF loci into one BED file..."
-for vcf in "${all_signature_files[@]}"; do
-    zcat "$vcf" | grep -v "^#" | awk '{print $1"\t"($2-1)"\t"$2}' >> combined_loci.bed
-done
+MRD detection is based on a Binomial test comparing the observed supporting read count at the patient's
+matched signature loci against a background noise model derived from the synthetic (`db_control`) signatures.
 
-# Sort and merge overlapping regions
-echo "Sorting and merging the combined BED..."
-sort -k1,1 -k2,2n combined_loci.bed | bedtools merge > merged_loci.bed
+**Detection p-value:**
 
-# run inside mosdepth_docker
-# Extract coverage using mosdepth
-echo "Extracting coverage from CRAM for the specified loci..."
-mosdepth --by merged_loci.bed -f "$REF_FASTA" -Q $MAPPING_QUALITY_THRESHOLD --fast-mode \
-"$BASE_FILE_NAME" "$CFDNA_CRAM_BAM"
+$$p = P(X \geq \text{observed reads} \mid \mathrm{Binom}(N,\, p_{err}))$$
 
-coverage_bed="${BASE_FILE_NAME}.per-base.bed.gz"
-coverage_bed_index="${BASE_FILE_NAME}.per-base.bed.gz.csi"
+where $N$ is the corrected coverage over the final matched signature loci
+(signature size × mean coverage × `denom_ratio`, the same denominator used for the reported ctDNA VAF, so
+p-value, LOD and VAF all share one N), and $p_{err}$ is the background error rate estimated from the
+synthetic controls: the MLE `total db_control reads / total db_control corrected coverage`, or a Jeffreys
+prior floor `0.5 / (N + 1)` when zero background reads are observed (avoiding a degenerate null).
 
-# 6. Intersect FeatureMap with signatures
-echo "Intersecting FeatureMap with signatures..."
-# run inside ugbio_mrd_docker
-intersection_files=()
-intersection_parquet_files=()
+**Detection call**, reported in `detection_result.json` and at the top of both reports:
 
-# Process matched signatures
-for signature in "${filtered_matched_signatures[@]}"; do
-    featuremap_base=$(basename "$CFDNA_FEATUREMAP")
-    signature_base=$(basename "$signature")
-    signature_type="matched"
-    output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
-    
-    # Perform intersection
-    bcftools isec -n=2 -w1 "$CFDNA_FEATUREMAP" "$signature" -Oz -o "$output_vcf"
-    bcftools index -t "$output_vcf"
-    intersection_files+=("$output_vcf")
-    
-    # Convert to parquet if not empty
-    if [[ $(bcftools view "$output_vcf" -H | wc -l) -gt 0 ]]; then
-        output_parquet="${output_vcf%.vcf.gz}.parquet"
-        featuremap_to_dataframe --in "$output_vcf" --out "$output_parquet" --jobs 4 --drop-format AD GT
-        intersection_parquet_files+=("$output_parquet")
-    fi
-done
+| Call | Condition |
+|---|---|
+| MRD Detected | p ≤ `alpha` (default 0.01) |
+| MRD Not Detected | p > `alpha` |
+| Indeterminate | no synthetic controls present, or zero effective coverage — the null model cannot be built |
 
-# Process control signatures
-for signature in "${filtered_control_signatures[@]}"; do
-    featuremap_base=$(basename "$CFDNA_FEATUREMAP")
-    signature_base=$(basename "$signature")
-    signature_type="control"
-    output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
-    
-    bcftools isec -n=2 -w1 "$CFDNA_FEATUREMAP" "$signature" -Oz -o "$output_vcf"
-    bcftools index -t "$output_vcf"
-    intersection_files+=("$output_vcf")
-    
-    if [[ $(bcftools view "$output_vcf" -H | wc -l) -gt 0 ]]; then
-        output_parquet="${output_vcf%.vcf.gz}.parquet"
-        featuremap_to_dataframe --in "$output_vcf" --out "$output_parquet" --jobs 4 --drop-format AD GT
-        intersection_parquet_files+=("$output_parquet")
-    fi
-done
+The reported **detection threshold** is the smallest read count at which the null hypothesis is rejected at
+`alpha`, expressed as a VAF (divided by the corrected coverage).
 
-# Process database control signatures
-for signature in "${db_signatures[@]}"; do
-    featuremap_base=$(basename "$CFDNA_FEATUREMAP")
-    signature_base=$(basename "$signature")
-    signature_type="db_control"
-    output_vcf="${featuremap_base%%.*}.${signature_base%%.*}.${signature_type}.intersection.vcf.gz"
-    
-    bcftools isec -n=2 -w1 "$CFDNA_FEATUREMAP" "$signature" -Oz -o "$output_vcf"
-    bcftools index -t "$output_vcf"
-    intersection_files+=("$output_vcf")
-    
-    if [[ $(bcftools view "$output_vcf" -H | wc -l) -gt 0 ]]; then
-        output_parquet="${output_vcf%.vcf.gz}.parquet"
-        featuremap_to_dataframe --in "$output_vcf" --out "$output_parquet" --jobs 4 --drop-format AD GT
-        intersection_parquet_files+=("$output_parquet")
-    fi
-done
+### Sample-specific LOD
 
-# 7. MRD data analysis - Generate final report and ctDNA VAF calculations
-echo "Running MRD data analysis..."
-# run inside ugbio_mrd_docker
+The **sample-specific Limit of Detection (LOD)** is the minimum tumor fraction (TF) at which this sample would
+be detected with ≥ `lod_recall` probability (default 95%), given this sample's specific assay parameters. It is
+*sample-specific* because it depends on the individual signature size, mean coverage, and measured noise rate.
 
-# Build arguments for different signature types
-matched_sigs_args=""
-if [[ ${#filtered_matched_signatures[@]} -gt 0 ]]; then
-    matched_sigs_args="--matched-signatures-vcf $(IFS=' '; echo "${filtered_matched_signatures[*]}")"
-fi
+**Derivation:**
 
-control_sigs_args=""
-if [[ ${#filtered_control_signatures[@]} -gt 0 ]]; then
-    control_sigs_args="--control-signatures-vcf $(IFS=' '; echo "${filtered_control_signatures[*]}")"
-fi
+1. **Detection threshold** $n_{th}$: the smallest read count where the null hypothesis is rejected at
+   FPR = `lod_fpr` (default 5%):
 
-db_sigs_args=""
-if [[ ${#db_signatures[@]} -gt 0 ]]; then
-    db_sigs_args="--db-control-signatures-vcf $(IFS=' '; echo "${db_signatures[*]}")"
-fi
+$$n_{th} = \min\{k : P(X \geq k \mid \mathrm{Binom}(N,\, p_{err})) < \mathrm{lod\_fpr}\}$$
 
-# Run final MRD data analysis
-generate_report \
-    --intersected-featuremaps $(IFS=' '; echo "${intersection_parquet_files[*]}") \
-    --coverage-bed "$coverage_bed" \
-    $matched_sigs_args \
-    $control_sigs_args \
-    $db_sigs_args \
-    --output-dir "$PWD" \
-    --output-basename "$BASE_FILE_NAME" \
-    --signature-filter-query "$SIGNATURE_FILTER_QUERY" \
-    --read-filter-query "$READ_FILTER_QUERY" \
-    --featuremap-file "$FEATUREMAP_DF_FILE" \
-    --srsnv-metadata-json "$SRSNV_METADATA_JSON"
+2. **LOD** at the target recall (default 95%): the smallest TF such that a true positive sample crosses the
+   threshold at the target recall rate:
 
-echo "MRD analysis complete!"
-echo "Output files:"
-echo "  - ${BASE_FILE_NAME}.features.parquet"
-echo "  - ${BASE_FILE_NAME}.signatures.parquet"
-echo "  - ${BASE_FILE_NAME}.mrd_data_analysis.html"
-echo "  - ${BASE_FILE_NAME}.ctdna_vaf.h5"
-```
+$$\mathrm{LOD} = \min\{\mathrm{TF} : P(X \geq n_{th} \mid \mathrm{Binom}(N,\, p_{err} + \mathrm{TF})) \geq \mathrm{lod\_recall}\}$$
+
+where $N$ is the same corrected coverage used for the detection p-value. Since recall is monotone increasing
+in TF, the root is bracketed on $[0, 1 - p_{err}]$ and solved numerically.
+
+The value reported in `detection_result.json` and in the reports is the **total** VAF, $p_{err} + \mathrm{TF}$,
+so it sits on the same scale as the measured ctDNA VAF and as the LOD line drawn in the
+"Patient vs. Controls" plot.
+
+The LOD decreases (improves) with larger signature size, higher coverage, or lower noise rate. It is `None`
+when no threshold satisfies the FPR constraint (e.g. signature too small or coverage too low), or when the
+target recall cannot be reached at any TF.
+
+Note that `lod_fpr` (5%) is deliberately kept separate from the call `alpha` (1%): the LOD answers "what TF
+could this assay detect 95% of the time", while `alpha` sets the stringency of the actual call on this sample.
+
+### QC checks
+
+Up to six QC checks are displayed above the Assay Metrics in both reports. They are informational flags and do
+**not** force an Indeterminate call.
+
+| Check | Threshold | Rationale |
+|---|---|---|
+| Signature size | ≥ 500 loci | Too few loci reduce statistical power |
+| Mean coverage | ≥ 15× | Low coverage inflates noise rate variance |
+| Synthetic controls | ≥ 30 | Fewer controls make the null distribution unreliable |
+| Expected multi-read support distribution (matched) | 0 outlier loci (Bonferroni-corrected p ≥ 1%) | See below |
+| Expected multi-read support distribution (synthetic controls) | 0 outlier loci (Bonferroni-corrected p ≥ 1%) | See below — only shown when synthetic controls are present |
+| Expected multi-read support distribution (cohort controls) | 0 outlier loci (Bonferroni-corrected p ≥ 1%) | See below — only shown when cohort controls are present |
+
+#### Expected multi-read support distribution
+
+These checks detect loci with a significantly higher read count than expected under the respective Poisson
+model. A flagged check may indicate germline variants (matched), contamination, or somatic variants leaking
+into control signatures. They are computed only when the multi-read locus filter is disabled — when the filter
+is active it has already removed those loci, so the check would be vacuous.
+
+**Per-locus Poisson test:** for each locus with `k` observed supporting reads, the right-tail p-value is
+
+$$p_i = P(X \geq k_i \mid \mathrm{Poisson}(\lambda))$$
+
+The expected rate λ differs by check:
+
+| Check | λ per locus | Bonferroni N |
+|---|---|---|
+| Matched signature | `mean_coverage × matched_vaf` (measured tumor fraction) | matched signature size |
+| Synthetic controls (db_control) | `mean_coverage × p_err` (background noise rate) | each synthetic signature's own locus count |
+| Cohort controls | `mean_coverage × p_err` (background noise rate) | each cohort signature's own locus count |
+
+**Bonferroni correction for outliers:** a locus is declared an outlier when its p-value falls below the
+Bonferroni-corrected threshold $p_i < \alpha_{QC} / N$ with $\alpha_{QC}$ = 1%, and it has at least 2
+supporting reads (same guard as the multi-read filter). The family size $N$ differs by group:
+
+- **Matched signature**: $N$ = matched signature size (number of filtered loci passing the signature filter).
+- **Synthetic controls** (db_control): each synthetic replicate is tested independently; $N$ = that
+  replicate's own locus count. A locus is declared an outlier if the test fires for any single replicate.
+  Synthetic controls are population-panel signatures drawn from unrelated samples, so their locus counts can
+  differ substantially from the matched signature and from each other.
+- **Cohort controls**: same per-signature treatment; $N$ = each cohort patient's own signature size. Cohort
+  controls are other patients' matched signatures evaluated on *this* patient's plasma, so their sizes can
+  vary widely.
+
+Using the matched `signature_size` as a shared $N$ for either control type would be incorrect: under-correcting
+large signatures and over-correcting small ones. The check is flagged when at least one outlier locus is found
+across any signature of that type.
+
+### Filter funnels
+
+When a matched signature is given, the reports include two funnels tracking how many variants / reads survive
+each filtering step, and the same data is written to `filter_funnel.json`:
+
+- **Signature filter funnel** (loci perspective): the WDL-level steps (`bcftools_extra_args`, include regions,
+  exclude regions, exact alt allele filter — collected by the `CollectFilterFunnel` task), then the coverage
+  filter (`signature_filter_query`), the LQ-reads locus filter and the multi-read locus filter. The last
+  locus-level step is labelled "final signature".
+- **Read filter funnel** (plasma read perspective, over final-signature loci): reads covering the signature
+  (corrected coverage), reads matching the signature (containing the variant), and reads passing
+  `read_filter_query` — the last count is the detection's supporting-read count.
+
+Both funnels are matched-signature only; without a matched signature no `filter_funnel.json` is produced.
+
+## WDL task reference
+
+The `MRDFeatureMap` workflow executes tasks in four sequential parts. The tasks below are defined in
+`wdls/tasks/mrd.wdl` (and `wdls/tasks/general_tasks.wdl` for `FilterVcfWithBcftools`).
+
+---
+
+### Part 1 — Filter signatures
+
+#### PadVcf *(optional — only when `diluent_germline_vcfs` is provided)*
+
+Pads each diluent germline variant by ±2 bp and emits a BED file. The padded BED is added to the matched
+signature's exclude regions so that germline variants of the diluent donor are not mistaken for signal.
+
+| | |
+|---|---|
+| **Inputs** | `input_vcf` — diluent germline VCF; `ref_fai` — reference FAI for chromosome sizes |
+| **Outputs** | `padded_bed` — BED file of padded variant positions |
+
+---
+
+#### FilterVcfWithBcftools *(applied separately to matched, each cohort control, and the SNV database)*
+
+Filters each signature VCF with `bcftools view` using `bcftools_extra_args` (default: `"-f PASS --type snps
+-m2 -M2 -i 'QUAL>10'"`), then restricts to `include_regions` and removes `exclude_regions_bed`. For matched
+signatures, the exclude list is the BED-format exclude regions plus any diluent germline padded BED. For
+control signatures, the matched signature VCF is additionally added to the exclude list so control loci never
+overlap the patient's own mutations.
+
+| | |
+|---|---|
+| **Inputs** | `input_vcf`; `bcftools_extra_args`; `include_regions` (BED array); `exclude_regions_bed` (BED array) |
+| **Outputs** | `output_vcf` + index; `filter_funnel_json` — per-step count JSON (input → after bcftools args → after include → after exclude) |
+
+---
+
+#### FilterSignatureOnExactAltAllele *(optional — only when `exclude_regions_vcf` is provided)*
+
+Removes variants from a signature where the **exact locus and alt allele** appear in any of the exclusion
+VCFs (dbSNP, gnomAD, PON). Unlike the region BED exclude, a variant is only removed when the identical
+substitution is present in the exclusion VCF — a different alt allele at the same position is kept.
+
+| | |
+|---|---|
+| **Inputs** | `signature_vcf` + index; `exclude_regions_vcf` — array of bgzipped/tabix-indexed VCFs (dbSNP, gnomAD, PON) |
+| **Outputs** | `output_vcf` + index; `exact_alt_funnel_json` — count after exact-alt filtering |
+
+---
+
+#### GenerateControlSignaturesFromDatabase *(optional — only when `snv_database` + `n_synthetic_signatures` are provided)*
+
+Generates `n_synthetic_signatures` synthetic control signatures by sampling from a somatic mutation database
+(default: PCAWG), preserving the trinucleotide motif distribution of the reference signature. Synthetic
+signatures are the source of the background noise rate for statistical detection — without them the detection
+call is Indeterminate. The reference signature is the filtered matched signature when available, otherwise the first cohort control. 
+However, statistical inference is applied only when a matched signature is given (See [Part 4 — MRD data analysis](#part-4--mrd-data-analysis)).
+
+| | |
+|---|---|
+| **Inputs** | `signature_file` — reference signature VCF (for motif profile); `snv_database` — somatic mutation database VCF; `n_synthetic_signatures`; reference genome (fasta + index + dict) |
+| **Outputs** | `db_signatures` — array of synthetic VCFs (`syn*.vcf.gz`); `db_signatures_indices` |
+
+---
+
+### Part 2 — Coverage extraction
+
+#### MergeVcfsIntoBed
+
+Combines all filtered signature VCF loci (matched + cohort controls + synthetic controls) into a single
+sorted, merged BED file. This BED is the set of positions over which coverage will be extracted.
+
+| | |
+|---|---|
+| **Inputs** | `vcf_files` — all filtered signature VCFs |
+| **Outputs** | `merged_loci_bed` — BED file of merged signature positions |
+
+---
+
+#### ExtractCoverageOverVcfFiles
+
+Runs `mosdepth` on the cfDNA CRAM restricted to the merged signature BED to obtain per-locus read depth.
+The resulting coverage BED is used in `MrdDataAnalysis` to compute the corrected coverage denominator for
+ctDNA VAF and LOD.
+
+| | |
+|---|---|
+| **Inputs** | `merged_loci_bed`; `input_cram_bam` + index (cfDNA); `references` (ref fasta/index/dict); `mapping_quality_threshold` (default 0) |
+| **Outputs** | `coverage_bed` (`*.regions.bed.gz`) + index — per-locus depth over signature positions |
+
+---
+
+### Part 3 — FeatureMap intersection
+
+#### FeatureMapIntersectWithSignatures *(one task per signature, run in parallel)*
+
+Intersects the cfDNA FeatureMap VCF with one filtered signature using `bcftools isec -n=2 -w1`, retaining
+only FeatureMap reads at loci present in the signature. The intersection VCF is then converted to a parquet
+file (one row per read) using `featuremap_to_dataframe`. The `signature_type` tag (`"matched"`,
+`"control"`, or `"db_control"`) is embedded in the output filename and carried into the parquet.
+
+| | |
+|---|---|
+| **Inputs** | `featuremap` + index (cfDNA FeatureMap VCF); `signature` + index (filtered signature VCF); `signature_type` |
+| **Outputs** | `intersected_featuremap_parquet` — per-read parquet; `intersected_featuremap` + index — intersection VCF; `intersection_funnel_json` — read count after intersection |
+
+---
+
+#### CollectFilterFunnel *(optional — only when a matched signature is present)*
+
+Aggregates the per-step filter counts from the matched signature's `FilterVcfWithBcftools`,
+`FilterSignatureOnExactAltAllele`, and `FeatureMapIntersectWithSignatures` JSON outputs into a single
+structured JSON. This JSON is consumed by `MrdDataAnalysis` to display the WDL-level steps in the signature
+filter funnel table in the HTML reports.
+
+| | |
+|---|---|
+| **Inputs** | `filter_funnel_jsons` — from `FilterVcfWithBcftools`; `exact_alt_funnel_jsons` — from `FilterSignatureOnExactAltAllele`; `intersection_funnel_jsons` — from `FeatureMapIntersectWithSignatures`; region name arrays (for funnel step labels) |
+| **Outputs** | `collected_funnel_json` — combined per-step count JSON passed to `MrdDataAnalysis` |
+
+---
+
+### Part 4 — MRD data analysis
+
+#### MrdDataAnalysis
+
+The main analysis task. Runs `generate_report` from the `ugbio_mrd` package, which:
+
+1. Loads all intersection parquets and signature VCFs.
+2. Applies read-level filtering (`read_filter_query`) and optional locus filters (`thresh_noise_lq_reads`,
+   `thresh_multi_read_pvalue`).
+3. Applies the signature coverage filter (`signature_filter_query`).
+4. Computes ctDNA VAF from filtered reads and corrected coverage.
+5. Runs statistical detection (Binomial test against the synthetic-control noise rate) and estimates the
+   sample-specific LOD.
+6. Builds the signature filter funnel and read filter funnel (matched only).
+7. Renders the analysis HTML report and the QC HTML report.
+8. Writes outputs: feature/signature parquets, detection JSON, ctDna_vaf HDF5, filter funnel JSON.
+
+See [MRD detection and reporting](#mrd-detection-and-reporting) for details on the detection logic.
+
+| | |
+|---|---|
+| **Inputs** | `intersected_featuremaps_parquet` — all intersection parquets; `matched_signature_vcf`? + `control_signatures_vcf`? + `db_signatures_vcf`?; `coverage_bed`; `mrd_analysis_params` (queries + optional filter/detection params); `featuremap_df_file` — SRSNV featuremap parquet; `srsnv_metadata_json`; `filter_funnel_json`? — from `CollectFilterFunnel` |
+| **Outputs** | `features` parquet; `signatures` parquet; `mrd_analysis_html`; `mrd_qc_html`; `detection_result_json`; `ctdna_vaf_h5`; `output_filter_funnel_json`? (matched only) |
+
+---
 
 ## Summary of the important MRD output files
-- report_html (automated analysis of the results in html format)
+- report_html (automated analysis of the results in html format: detection call, ctDNA VAF, sample-specific LOD, QC checks, assay metrics and funnels)
+- mrd_qc_html (extended QC report, including the unfiltered-signature and unfiltered-reads analyses and the applied filter summary)
+- detection_result_json (machine-readable detection results: call, p-value, supporting reads, ctDNA VAF, detection threshold, personal LOD, signature size, mean/corrected coverage, alpha and the QC checks)
 - features_dataframe (python pandas dataframe of all the substitutions in the cfDNA sample after intersection with all the signatures, parquet format)
 - signatures_dataframe (python pandas dataframe of all the variants in all the signatures, parquet format)
-- ctdna_vaf.h5 (dataframes of ctDNA VAF and supporting reads per locus)
+- ctdna_vaf.h5 (dataframes of ctDNA VAF and supporting reads per locus, plus the `detection_result` and `synthetic_signatures_supporting_reads` keys)
+- filter_funnel_json (step-by-step filter funnel counts; produced only when a matched signature is given)
 
 ## Summary of the relevant files
 - **WDLs:**
@@ -477,7 +538,7 @@ echo "  - ${BASE_FILE_NAME}.ctdna_vaf.h5"
 {cfdna_featuremap_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_333_LuNgs_08.featuremap.chr20.vcf.gz.tbi
 {cfdna_cram_bam}:s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram
 {cfdna_cram_bam_index}:s3://ultimagen-workflow-resources-us-east-1/test_data/single_read_snv/Pa_46.333_LuNgs_08.Lb_744.chr20.cram.crai
-{external_matched_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_FreshFrozen.ann.chr20.vcf.gz"]
+{external_matched_signature}: "s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_FreshFrozen.ann.chr20.vcf.gz"
 {external_control_signatures}: ["s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_67_FFPE.ann.chr20.vcf.gz"]
 {featuremap_df_file}:s3://ultimagen-workflow-resources-us-east-1/test_data/mrd/Pa_46_333_LuNgs_08.featuremap_df.parquet
 {snv_database}:s3://ultimagen-workflow-resources-us-east-1/hg38/pcawg/pancan_pcawg_2020.chr20.vcf.gz

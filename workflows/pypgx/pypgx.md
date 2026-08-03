@@ -300,11 +300,6 @@ Runs pharmacogenomics analysis on several genes.
         <i>Int </i> &mdash;
          Virtual GPU tile size for call_variants <br />
 </p>
-<p name="PyPGx.EfficientDV.HaplotypeSampling.input_fastq">
-        <b>PyPGx.EfficientDV.HaplotypeSampling.input_fastq</b><br />
-        <i>File? </i> &mdash;
-         Optional input FASTQ file (if not using CRAM) <br />
-</p>
 <p name="PyPGx.EfficientDV.HaplotypeSampling.kmer_length">
         <b>PyPGx.EfficientDV.HaplotypeSampling.kmer_length</b><br />
         <i>Int </i> &mdash;
@@ -329,11 +324,6 @@ Runs pharmacogenomics analysis on several genes.
         <b>PyPGx.EfficientDV.HaplotypeSampling.minimap2_preset</b><br />
         <i>String </i> &mdash;
          Minimap2 preset for alignment (default: asm5) <br />
-</p>
-<p name="PyPGx.EfficientDV.HaplotypeSampling.cram_to_fastq_cores">
-        <b>PyPGx.EfficientDV.HaplotypeSampling.cram_to_fastq_cores</b><br />
-        <i>Int </i> &mdash;
-         Number of CPU cores for CRAM to FASTQ conversion (default: 2) <br />
 </p>
 <p name="PyPGx.EfficientDV.HaplotypeSampling.kmc_mem_gb">
         <b>PyPGx.EfficientDV.HaplotypeSampling.kmc_mem_gb</b><br />
