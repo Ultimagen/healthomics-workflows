@@ -328,7 +328,7 @@ task FilterVCF {
   Boolean should_overwrite_quality = defined(overwrite_quality) && select_first([overwrite_quality])
   command <<<
     bash ~{monitoring_script} | tee monitoring.log >&2 &
-    set -eo pipefail
+    set -exo pipefail
 
     filter_variants_pipeline --input_file ~{input_vcf} \
                                        ~{"--model_file " + input_model} \

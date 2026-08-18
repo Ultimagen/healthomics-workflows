@@ -24,23 +24,13 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>Array[File] </i> &mdash;
          Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data). <br />
 </p>
-<p name="GermlineCNVPipeline.cohort_reads_count_matrix">
-        <b>GermlineCNVPipeline.cohort_reads_count_matrix</b><br />
-        <i>File </i> &mdash;
-         GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template. <br />
-</p>
 <p name="GermlineCNVPipeline.ploidy_file">
         <b>GermlineCNVPipeline.ploidy_file</b><br />
         <i>File </i> &mdash;
-         X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called <br />
+         X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called. Genome independent. <br />
 </p>
 
 ### Required parameters
-<p name="GermlineCNVPipeline.ref_seq_names">
-        <b>GermlineCNVPipeline.ref_seq_names</b><br />
-        <i>Array[String] </i> &mdash;
-         Chromosome names for which coverage will be calculated <br />
-</p>
 <p name="GermlineCNVPipeline.skip_filtering">
         <b>GermlineCNVPipeline.skip_filtering</b><br />
         <i>Boolean </i> &mdash;
@@ -53,22 +43,22 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
 </p>
 
 ### Required references
-<p name="GermlineCNVPipeline.reference">
-        <b>GermlineCNVPipeline.reference</b><br />
-        <i>References </i> &mdash;
-         Genome reference object <br />
+<p name="GermlineCNVPipeline.reference_genome">
+        <b>GermlineCNVPipeline.reference_genome</b><br />
+        <i>String </i> &mdash;
+         Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly <br />
 </p>
 
 ### Optional inputs
-<p name="GermlineCNVPipeline.ug_cnv_lcr_file">
-        <b>GermlineCNVPipeline.ug_cnv_lcr_file</b><br />
-        <i>File? </i> &mdash;
-         UG-CNV-LCR bed file <br />
-</p>
 <p name="GermlineCNVPipeline.filtering_model">
         <b>GermlineCNVPipeline.filtering_model</b><br />
         <i>File? </i> &mdash;
          CNV filtering model, default in template, calls are not filtered if not provided <br />
+</p>
+<p name="GermlineCNVPipeline.cohort_reads_count_matrix_override">
+        <b>GermlineCNVPipeline.cohort_reads_count_matrix_override</b><br />
+        <i>File? </i> &mdash;
+         GenomicRanges object of the cohort reads count matrix in rds file format. By default the cohort matching reference_genome is taken from the genome resources. <br />
 </p>
 <p name="GermlineCNVPipeline.sv_calls_vcf">
         <b>GermlineCNVPipeline.sv_calls_vcf</b><br />
@@ -100,6 +90,16 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <i>File? </i> &mdash;
          Inputs sample windowed coverage stored as GenomicRanges object in rds file. can be calculated using cn.mops::getReadCountsFromBAM R function.  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set <br />
 </p>
+<p name="GermlineCNVPipeline.CnmopsCNVCalling.SingleSampleReadsCount.ref_seq_names">
+        <b>GermlineCNVPipeline.CnmopsCNVCalling.SingleSampleReadsCount.ref_seq_names</b><br />
+        <i>Array[String]? </i> &mdash;
+         Chromosome names for which reads counts will be calculated. Mutually exclusive with genome_windows <br />
+</p>
+<p name="GermlineCNVPipeline.CnmopsCNVCalling.SingleSampleReadsCount.window_length">
+        <b>GermlineCNVPipeline.CnmopsCNVCalling.SingleSampleReadsCount.window_length</b><br />
+        <i>Int? </i> &mdash;
+         Window lenght for which reads counts will be calculated for. Mutually exclusive with genome_windows <br />
+</p>
 
 ### Optional parameters
 <p name="GermlineCNVPipeline.filtering_model_decision_threshold">
@@ -110,17 +110,7 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
 <p name="GermlineCNVPipeline.skip_figure_generation">
         <b>GermlineCNVPipeline.skip_figure_generation</b><br />
         <i>Boolean? </i> &mdash;
-         Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False <br />
-</p>
-<p name="GermlineCNVPipeline.CnmopsCNVCalling.chrX_name">
-        <b>GermlineCNVPipeline.CnmopsCNVCalling.chrX_name</b><br />
-        <i>String? </i> &mdash;
-         The name of the female sex chromosome in the genome. default is: chrX <br />
-</p>
-<p name="GermlineCNVPipeline.CnmopsCNVCalling.chrY_name">
-        <b>GermlineCNVPipeline.CnmopsCNVCalling.chrY_name</b><br />
-        <i>String? </i> &mdash;
-         The name of the male sex chromosome in the genome. default is: chrY <br />
+         Skip CNV calls figure generation. Default is: False <br />
 </p>
 <p name="GermlineCNVPipeline.CnmopsCNVCalling.cap_coverage_override">
         <b>GermlineCNVPipeline.CnmopsCNVCalling.cap_coverage_override</b><br />

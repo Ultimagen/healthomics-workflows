@@ -10,9 +10,12 @@
     "STRGenotyper.min_score_ratio": 0.85,
     "STRGenotyper.spanning_flank_bases": 10,
     "STRGenotyper.min_mapping_quality": 1,
-    "STRGenotyper.threads": 8,
+    "STRGenotyper.threads": 2,
     "STRGenotyper.output_detailed_csv": true,
     "STRGenotyper.output_summary_csv": true,
     "STRGenotyper.haploid": false,
+    "STRGenotyper.report_micro_alleles": false,
+    "STRGenotyper.micro_allele_consensus_ratio": 0.8,
+    "STRGenotyper.micro_allele_min_reads": 10,
     "STRGenotyper.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

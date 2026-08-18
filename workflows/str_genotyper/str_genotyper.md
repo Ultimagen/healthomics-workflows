@@ -71,6 +71,21 @@ Alignment-based STR genotype caller using Smith-Waterman alignment
         <i>Boolean </i> &mdash;
          Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms. <br />
 </p>
+<p name="STRGenotyper.report_micro_alleles">
+        <b>STRGenotyper.report_micro_alleles</b><br />
+        <i>Boolean </i> &mdash;
+         Report micro-alleles (e.g. 15.3) for haploid loci when a partial-repeat insertion is present. REPCN stays the integer floor; the micro-allele decimal appears in the genotype (GT) and a new RCMA VCF/BED field. No-op for diploid loci. Default: off. <br />
+</p>
+<p name="STRGenotyper.micro_allele_consensus_ratio">
+        <b>STRGenotyper.micro_allele_consensus_ratio</b><br />
+        <i>Float </i> &mdash;
+         Minimum fraction of supporting spanning reads required to report a micro-allele decimal. Only used when report_micro_alleles is true. Range 0.0-1.0. <br />
+</p>
+<p name="STRGenotyper.micro_allele_min_reads">
+        <b>STRGenotyper.micro_allele_min_reads</b><br />
+        <i>Int </i> &mdash;
+         Minimum number of spanning reads supporting the consensus tract length required to report a micro-allele. Guards against low-coverage indel artifacts. Only used when report_micro_alleles is true. Default: 10. <br />
+</p>
 </details>
 
 

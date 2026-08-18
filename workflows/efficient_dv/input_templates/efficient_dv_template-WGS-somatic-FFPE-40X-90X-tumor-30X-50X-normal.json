@@ -37,8 +37,8 @@
     "EfficientDV.min_variant_quality_snps": 10,
     "EfficientDV.allele_frequency_ratio": 10,
     "EfficientDV.optimal_coverages": [
-        100,
-        80
+        86,
+        52
     ],
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.ug_call_variants_extra_mem": 16,

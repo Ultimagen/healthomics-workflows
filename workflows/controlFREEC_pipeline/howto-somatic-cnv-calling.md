@@ -30,7 +30,7 @@ The following files are publicly available
     gs://concordanz/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi
     gs://concordanz/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed
     gs://concordanz/hg38/out100m2_hg38.gem
-    gs://concordanz/hg38/UG-High-Confidence-Regions/v1.4/ug_cnv_lcr.bed
+    gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed
 
 ## Generating Germline CNV calls for a single sample
 
@@ -39,12 +39,12 @@ The following files are publicly available
 	Pull ugbio_freec and ugbio_cnv docker images :
 	```
 	docker pull ultimagenomics/ugbio_freec:1.28.0
-	docker pull ultimagenomics/ugbio_cnv:1.28.1
+	docker pull ultimagenomics/ugbio_cnv:1.30.0
 	```
 	Run docker in interactive mode: 
 	```
 	docker run -it -v /data:/data ultimagenomics/ugbio_freec:1.28.0 /bin/bash
-	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.28.1 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.30.0 /bin/bash
 	```
 	for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/902c0def79e17c71ef810f7cdd887e06e736c5b4/workflows/single_read_snv/tasks/globals.wdl#L68C31-L68C64)<br>
 * manual installation: 

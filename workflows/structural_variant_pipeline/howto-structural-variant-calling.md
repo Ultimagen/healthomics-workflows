@@ -61,7 +61,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.3.2
+ultimagenomics/make_examples:3.3.4
 ```
 
 Generate interval bed : 
@@ -82,7 +82,7 @@ tool \
 	--min-mapq 5 \
 	--min-feature-length '20;0' \
     --min-mismatch-count '5;0' \
-	--max-num-haps 10 \
+	--max-num-haps 40 \
 	--max-reads-per-region 1500 \
 	--prog \
 	--interval-target-nreads 10000 \
@@ -133,7 +133,7 @@ tool \
 	--min-mapq 5 \
 	--min-feature-length '10' \
     --min-mismatch-count '5' \
-	--max-num-haps 10 \
+	--max-num-haps 40 \
 	--max-reads-per-region 1500 \
 	--prog \
 	--interval-target-nreads 10000 \
@@ -295,6 +295,7 @@ variantcalling.callUnassembledBreakends = true
 variantcalling.callUnassembledBreakpoints = true
 variantcalling.breakendMaxAssemblySupportBias = 100
 variantcalling.breakpointMaxAssemblySupportBias = 100
+variantcalling.includeSingleAssemblyFilter = false
 variantcalling.requiredReadAndAssemblyBreakpointOverlap = 5
 ``` 
 

@@ -20,7 +20,15 @@
         "optional": true
     },
     "STRGenotyper.memory_gb_override": {
-        "description": "Optional memory allocation override in GB (default: 16)",
+        "description": "Optional memory allocation override in GB (default: 4)",
+        "optional": true
+    },
+    "STRGenotyper.micro_allele_consensus_ratio": {
+        "description": "Minimum fraction of supporting spanning reads required to report a micro-allele decimal. Only used when report_micro_alleles is true. Range 0.0-1.0.",
+        "optional": true
+    },
+    "STRGenotyper.micro_allele_min_reads": {
+        "description": "Minimum number of spanning reads supporting the consensus tract length required to report a micro-allele. Guards against low-coverage indel artifacts. Only used when report_micro_alleles is true. Default: 10.",
         "optional": true
     },
     "STRGenotyper.min_mapping_quality": {
@@ -62,6 +70,10 @@
     "STRGenotyper.reference_genome": {
         "description": "Reference genome name (supported: 'hg38', 'hg38_nist_v3_with_decoy'). Automatically loads genome-specific reference files.",
         "optional": false
+    },
+    "STRGenotyper.report_micro_alleles": {
+        "description": "Report micro-alleles (e.g. 15.3) for haploid loci when a partial-repeat insertion is present. REPCN stays the integer floor; the micro-allele decimal appears in the genotype (GT) and a new RCMA VCF/BED field. No-op for diploid loci. Default: off.",
+        "optional": true
     },
     "STRGenotyper.spanning_flank_bases": {
         "description": "Minimum number of bases that must align on each side of the STR repeat region for a read to be considered 'spanning' the locus",

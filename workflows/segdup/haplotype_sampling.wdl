@@ -36,7 +36,7 @@ workflow HaplotypeSampling {
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.34.0"   #!UnusedDeclaration
+        String pipeline_version = "1.35.0"   #!UnusedDeclaration
         # Resource parameters
         Int kmc_mem_gb = 64               # Memory (GB) for KMC k-mer counting
         Int kmc_cores = 16

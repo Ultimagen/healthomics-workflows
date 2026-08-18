@@ -494,10 +494,10 @@ task DownsampleCramBam {
         File monitoring_script
         String docker
         Int preemptibles
-        Int disk_size = ceil((1.1+(downsample_frac*4))*size(input_cram_bam,"GB") + 20)
         Int cpus = 16
         Int memory_gb = 1
     }
+    Int disk_size = ceil((1.1+(downsample_frac*4))*size(input_cram_bam,"GB") + 20)
     String output_format_flag = if output_format == "cram" then "-C" else "-b"
     String output_format_extension = if output_format == "cram" then ".cram" else ".bam"
     String output_index_format_extension = if output_format == "cram" then ".crai" else ".bai"

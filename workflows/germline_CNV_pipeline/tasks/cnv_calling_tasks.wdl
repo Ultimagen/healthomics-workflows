@@ -5,12 +5,15 @@ import "structs.wdl"
 task CnmopsGetReadCountsFromBam{
     input {
         File input_bam_file
-        File input_bai_file
+        File input_bai_file #!UnusedDeclaration
         File reference_genome
         File reference_genome_index
         Int mapq
-        Array[String] ref_seq_names
-        Int window_length
+        # Either genome_windows (count in predefined intervals, e.g. the cohort's windows)
+        # or ref_seq_names + window_length (bin the genome from the BAM header) must be given
+        File? genome_windows
+        Array[String]? ref_seq_names
+        Int? window_length
         String base_file_name
         Boolean save_hdf
         String docker
@@ -21,9 +24,10 @@ task CnmopsGetReadCountsFromBam{
 
     Float input_bam_file_size = size(input_bam_file, "GB")
     Float additional_disk = 100
-    Int disk_size = ceil(input_bam_file_size + input_bam_file_size + additional_disk)
-    Int cpu = if size(input_bam_file, "GB")<8 then 2 else ceil(size(input_bam_file, "GB"))/8
-
+    Int disk_size = ceil(input_bam_file_size + input_bam_file_size + size(genome_windows, "GB") + additional_disk)
+    
+    Array[String] ref_seq_names_ = select_first([ref_seq_names, []])
+    Boolean use_ref_seq_names = length(ref_seq_names_) > 0
 
     String out_bam_filtered='~{base_file_name}.MAPQ~{mapq}.bam'
     command <<<
@@ -35,9 +39,9 @@ task CnmopsGetReadCountsFromBam{
 
         Rscript --vanilla  /home/ugbio/src/cnv/cnmops/get_reads_count_from_bam.R \
             -i ~{out_bam_filtered} \
-            -refseq ~{sep="," ref_seq_names} \
-            -wl ~{window_length} \
-            -p ~{cpu} \
+            ~{"--intervals " + genome_windows} \
+            ~{true="-refseq" false="" use_ref_seq_names} ~{sep="," ref_seq_names_} \
+            ~{"-wl " + window_length} \
             -o ~{base_file_name} \
             ~{true="--save_hdf" false='' save_hdf}
 
@@ -49,7 +53,7 @@ task CnmopsGetReadCountsFromBam{
         disks: "local-disk " + ceil(disk_size) + " LOCAL"
         docker: docker
         noAddress: no_address
-        cpu: cpu
+        cpu: 1
     }
     output {
         File out_reads_count="~{base_file_name}.ReadCounts.rds"
@@ -141,6 +145,9 @@ task ExtractGenomeWindows {
         Rscript --vanilla /home/ugbio/src/cnv/cnmops/export_cohort_matrix_to_bed.R \
             ~{cohort_reads_count_matrix} \
             --intervals_only
+
+        # Chromosome names, in the order they appear in the cohort
+        cut -f1 intervals.bed | uniq > ref_seq_names.txt
     >>>
 
     runtime {
@@ -154,6 +161,7 @@ task ExtractGenomeWindows {
 
     output {
         File genome_windows = "intervals.bed"
+        Array[String] ref_seq_names = read_lines("ref_seq_names.txt")
         File monitoring_log = "monitoring.log"
     }
 }
@@ -387,7 +395,7 @@ task ProcessCnmopsCnvs {
         Int min_cnv_length
         Array[File] sample_norm_coverage_file
         File cohort_norm_avg_coverage_file
-        Float intersection_cutoff
+        Float? intersection_cutoff
         File? cnv_lcr_file
         File ref_genome_file
         File germline_coverage_rds
@@ -398,7 +406,6 @@ task ProcessCnmopsCnvs {
         Int preemptible_tries
     }
 
-    Boolean filter_lcr = defined(cnv_lcr_file)
     Float cohort_cnvs_csv_file_size = size(cohort_cnvs_csv, "GB")
     Float ref_genome_file_size = size(ref_genome_file, "GB")
     Float additional_disk = 25
@@ -433,29 +440,17 @@ task ProcessCnmopsCnvs {
                 done < filelist.txt
                 
                 echo "$sample_name coverage file: $desired_file" >&2
-                if ~{filter_lcr}; then 
-                    process_cnvs \
-                        --sample_name "$sample_name" \
-                        --input_bed_file $sample_name.cnvs.bed \
-                        --intersection_cutoff ~{intersection_cutoff} \
-                        --cnv_lcr_file ~{cnv_lcr_file} \
-                        --min_cnv_length ~{min_cnv_length} \
-                        --out_directory . \
-                        --sample_norm_coverage_file "$desired_file" \
-                        --cohort_avg_coverage_file ~{cohort_norm_avg_coverage_file} \
-                        --fasta_index_file ~{ref_genome_file}                                        
-                else
-                    #convert bed file to vcf
-                    process_cnvs \
-                        --sample_name "$sample_name" \
-                        --input_bed_file $sample_name.cnvs.bed \
-                        --intersection_cutoff ~{intersection_cutoff} \
-                        --min_cnv_length ~{min_cnv_length} \
-                        --out_directory . \
-                        --sample_norm_coverage_file "$desired_file" \
-                        --cohort_avg_coverage_file ~{cohort_norm_avg_coverage_file} \
-                        --fasta_index_file ~{ref_genome_file} 
-                fi
+                #convert bed file to vcf
+                process_cnvs \
+                    --sample_name "$sample_name" \
+                    --input_bed_file $sample_name.cnvs.bed \
+                    --min_cnv_length ~{min_cnv_length} \
+                    --out_directory . \
+                    --sample_norm_coverage_file "$desired_file" \
+                    --cohort_avg_coverage_file ~{cohort_norm_avg_coverage_file} \
+                    --fasta_index_file ~{ref_genome_file} \
+                    ~{"--cnv_lcr_file " + cnv_lcr_file} \
+                    ~{"--intersection_cutoff " + intersection_cutoff}
 
                 bcftools view -i "INFO/SVTYPE='DEL'" $sample_name.cnvs.annotate.vcf.gz | \
                 bcftools query -f '%CHROM\t%POS0\t%INFO/END\t%INFO;FILTER=%FILTER\n' - > "$sample_name".DEL.bed

@@ -344,6 +344,7 @@ struct DeepSRSNVParams {
     Float learning_rate               # learning rate
     String lr_scheduler               # "cosine" or "onecycle"
     Boolean use_amp                   # mixed-precision training
+    Boolean? deterministic            # reproducible train+inference (disables TF32/AMP, single GPU); default false
     File? pretrained_checkpoint       # optional pretrained .ckpt for fine-tuning
     # Hardware
     Int gpu_count                     # GPUs for training tasks (default 4; inference hardcodes 1)
@@ -352,6 +353,9 @@ struct DeepSRSNVParams {
     # Inference
     String? inference_backend         # "trt" or "pytorch" (default: trt)
     Float? low_qual_threshold         # SNVQ threshold for PASS filter (default: 40.0)
+    # DNNMergeAndAnnotate memory tuning (config-only; no docker rebuild needed)
+    Int? dnn_merge_chunk_size         # max prediction rows per DNNMergeAndAnnotate chunk (default: 2500000)
+    Int? dnn_merge_max_parallel_chunks # max chunks processed concurrently in DNNMergeAndAnnotate (default: 4)
     # Feature channels
     File channel_registry             # Required: channel_registry.json (cloud URI: gs:// or s3://)
     File vocab_config                 # Required: vocab.json (cloud URI: gs:// or s3://)
@@ -364,4 +368,5 @@ struct DeepSRSNVModel {
     Array[File] fold_checkpoints      # per-fold model checkpoints (.ckpt)
     Array[File]? fold_onnx_models     # per-fold ONNX models (.onnx); REQUIRED for inference_only (engine is rebuilt in-runtime from ONNX)
     Array[File]? fold_engines         # per-fold TensorRT engines (.engine); optional/ignored for inference_only (rebuilt from ONNX)
+    Array[File]? fold_timing_caches   # per-fold TensorRT timing caches from the training run; optional. When provided, the in-runtime engine rebuild reuses the training tactic selection -> bit-identical engine on the same GPU + TRT version.
 }

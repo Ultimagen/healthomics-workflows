@@ -27,26 +27,26 @@ The workflow assume that you have the following files:
 1. BAM/CRAM - an aligned, sorted, duplicate marked UG BAM/CRAM file.
 2. BedGraph - Previously calculated input bedGraph holding the coverage per base (outputs with the sequencing data).
 
+
 ### Files required for the analysis (download locally)
 The following required files are publicly available:
 
-    gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
-    gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
-    
-	s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds
-    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_female.ploidy
-    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_male.ploidy
-	s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.chr1-24.w1000.bed
-    s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1.2/ug_cnv_lcr.bed (used for cn.mops annotation only)
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 
-**Note:** For male samples use 
-    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v2.0/HapMap2_65samples_cohort_v2.0.plus_male.ploidy
-    The ploidy file contains single number per row that indicates the expected ploidy of the X chromosome. The sample being 
-    called corresponds to the **last** number in the ploidy file. 
+The cohort reads count matrix for the default `hg38` genome is:
+
+    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v3.0/solaris2_60samples_cohort_v3.0.hg38.ReadsCount.rds
+
+The ploidy files are genome independent - the same files are used for every reference genome,
+since all cohorts were built with the same sample order:
+
+    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v3.0/solaris2_60samples_cohort_v3.0.plus_female.ploidy
+    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v3.0/solaris2_60samples_cohort_v3.0.plus_male.ploidy
 	
 ML filtering model can be found here: 
     
-    s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.7.3.pkl
+    s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.7.4.pkl
 
 ## Generating Germline CNV calls for a single sample
 
@@ -58,22 +58,22 @@ Finally, we apply simple ML model to filter candidates according to the length, 
 * for running cnmops, cnvpytor, and post processing use ugbio_cnv docker: <br>
 	Pull **ugbio_cnv** docker image :
 	```
-	docker pull ultimagenomics/ugbio_cnv:1.28.1
+	docker pull ultimagenomics/ugbio_cnv:1.30.0
 	```
 	Run docker in interactive mode:
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.28.1 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.30.0 /bin/bash
 	```
 for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/germline_CNV_pipeline/tasks/globals.wdl)
 
 
 * For running ML-based filtering - use **ugbio_filtering** docker image.
 	```
-	docker pull ultimagenomics/ugbio_filtering:1.28.0
+	docker pull ultimagenomics/ugbio_filtering:1.30.0
 	```
 	Run docker in interactive mode:
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.28.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.30.0 /bin/bash
 	```	
 
 
@@ -81,11 +81,34 @@ for latest docker version please see : (https://github.com/Ultimagen/healthomics
 
 use ugbio_cnv docker
 
+#### cn.mops: Change the bin size of the cohort (optional)
+The default cohort uses bin size of 1Kb which we found to perform well at high (20x or more) coverages. In case of low coverage data it is sometimes desirable to perform the calling over larger bins. 
+
+In this case provide the new window length to the following script. Note  that the new window length should be a multiple of the original cohort window length (1Kb). 
+
+```
+    Rscript --vanilla /home/ugbio/src/cnv/cnmops/rebin_cohort_reads_count.R \
+            --input_cohort_file HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds \
+            --new_window_length {new_window_length} \
+            -o rebinned_cohort_reads_count.rds 
+```
+
+#### cn.mops: Extract the analysis windows from the cohort
+The cohort reads count matrix defines the windows (and therefore the chromosomes and the
+window length) in which CNVs are called, so no interval list is needed as input. (use rebinned_cohort_reads_count.rds if needed)
+```
+Rscript --vanilla /home/ugbio/src/cnv/cnmops/export_cohort_matrix_to_bed.R \
+	HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds \
+	--intervals_only
+```
+
+The output is `intervals.bed`.
+
 #### cn.mops: Single Sample coverage collection for the case input format is BedGraph
 ```
 bedtools map \
 	-g Homo_sapiens_assembly38.fasta.fai \
-	-a Homo_sapiens_assembly38.chr1-24.w1000.bed \
+	-a intervals.bed \
 	-b {input_bed_graph} \
 	-c 4 -o mean |\
 	awk '{if($4=="."){print $1"\t"$2"\t"$3"\t"0}else{print $1"\t"$2"\t"$3"\t"$4}}' \
@@ -100,7 +123,7 @@ Rscript --vanilla /home/ugbio/src/cnv/cnmops/convert_bedGraph_to_Granges.R \
 #### cn.mops: Add sample coverage profile to the cohort
 ```
 Rscript --vanilla /home/ugbio/src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
-	-cohort_rc HapMap2_65samples_cohort_v2.0.hg38.ReadsCount.rds \
+	-cohort_rc solaris2_60samples_cohort_v3.0.hg38.ReadsCount.rds \
 	-sample_rc {sample_name}.ReadCounts.rds \
 	--save_hdf
 ```
@@ -146,8 +169,6 @@ awk -F "," '{print $1"\t"$2-1"\t"$3"\t"$NF}' {sample_name}.cnvs.csv > {sample_na
 process_cnvs \
 	--sample_name {sample_name} \
 	--input_bed_file {sample_name}.cnvs.bed \
-	--intersection_cutoff 0.5 \
-	--cnv_lcr_file ug_cnv_lcr.bed \
 	--min_cnv_length 10000 \
 	--out_directory . \
 	--sample_norm_coverage_file {sample_name}.cov.bed \
@@ -161,10 +182,13 @@ This produces the result: `{sample_name}.cnvs.annotate.vcf.gz`
 To improve robustness of the results it is recommended to run CNVPytor with two window sizes: 500 and 2500 bases. 
 
 This is an example of one run, should be run twice. Use `ugbio_cnv` docker
+
+The chromosome list is the one of the cohort, so that both callers cover the same
+chromosomes: `cut -f1 intervals.bed | uniq `
 ```
     cnvpytor -root {sample_name}.pytor \
         -rd {input_bam} \
-        -chrom chr1 chr2 .... chrY \
+        -chrom $(cut -f1 intervals.bed | sort | uniq | tr '\n' ' ') \
         -T Homo_sapiens_assembly38.fasta \ 
     
     cnvpytor -root {sample_name}.pytor \

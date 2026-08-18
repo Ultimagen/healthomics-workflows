@@ -37,13 +37,13 @@ The STR Genotyper workflow performs Short Tandem Repeat (STR) genotyping on whol
 ### Docker Image
 
 ```
-337532070941.dkr.ecr.us-east-1.amazonaws.com/str_genotyper:1.0.4
+337532070941.dkr.ecr.us-east-1.amazonaws.com/str_genotyper:1.1.0_da93d4a
 ```
 
 ### Hardware Requirements
 
-- **CPU**: 8 cores recommended (configurable via `threads` parameter)
-- **Memory**: 16 GB default (can be overridden via `memory_gb_override`)
+- **CPU**: 2 cores default (configurable via `threads` parameter)
+- **Memory**: 4 GB default (can be overridden via `memory_gb_override`)
 - **Disk**: Automatically calculated based on input file sizes plus 10 GB overhead
 
 ## Variant Catalog Format
@@ -126,7 +126,11 @@ The STR genotyper is available as a WDL workflow (`str_genotyper.wdl`). Create a
     "STRGenotyper.min_score_ratio": 0.85,
     "STRGenotyper.spanning_flank_bases": 10,
     "STRGenotyper.min_mapping_quality": 1,
-    "STRGenotyper.threads": 8
+    "STRGenotyper.threads": 2,
+    "STRGenotyper.haploid": false,
+    "STRGenotyper.report_micro_alleles": false,
+    "STRGenotyper.micro_allele_consensus_ratio": 0.8,
+    "STRGenotyper.micro_allele_min_reads": 10
 }
 ```
 
@@ -147,7 +151,7 @@ python -m alignment_str_len_caller.main \
     --min-score-ratio 0.85 \
     --spanning-flank-bases 5 \
     --min-mapping-quality 1 \
-    --threads 8 \
+    --threads 2 \
     --output-dir ./results \
     --output-prefix sample_name
 ```
@@ -162,10 +166,21 @@ python -m alignment_str_len_caller.main \
 | min_score_ratio | 0.85 | Minimum ratio of alignment score to theoretical maximum (0.0-1.0). Lower values allow more alignments; 1.0 requires perfect alignment |
 | spanning_flank_bases | 10 | Minimum number of bases that must align on each side of the STR repeat region for a read to be considered "spanning" |
 | min_mapping_quality | 1 | Minimum mapping quality for reads to be included in analysis |
-| threads | 8 | Number of threads for parallel processing |
+| threads | 2 | Number of threads for parallel processing |
 | output_detailed_csv | true | Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O |
 | output_summary_csv | true | Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O |
 | haploid | false | Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms |
+| report_micro_alleles | false | Report micro-alleles (e.g. `15.3`) for haploid loci when a partial-repeat insertion is present. `REPCN` stays the integer floor; the decimal appears in `GT` and a new `RCMA` field. No-op for diploid loci. See [Micro-Alleles](#micro-alleles-haploid-loci) |
+| micro_allele_consensus_ratio | 0.8 | Minimum fraction of supporting spanning reads required to report a micro-allele decimal. Only used when `report_micro_alleles` is true |
+| micro_allele_min_reads | 10 | Minimum number of spanning reads supporting the consensus tract length required to report a micro-allele. Guards against low-coverage indel artifacts. Only used when `report_micro_alleles` is true |
+
+## Micro-Alleles (Haploid Loci)
+
+A **micro-allele** is a repeat count with a partial-repeat remainder, written `N.r`
+([ISOGG](https://isogg.org/wiki/Micro-allele)/forensic notation) where `r` is the number of
+leftover base pairs beyond the last complete repeat unit (`0 <= r < period`). For example,
+a period-4 locus with a measured repeat tract of 63 bp is `63 // 4 = 15`
+complete units plus `63 % 4 = 3` leftover bp → **`15.3`**.
 
 ## Output Files
 
@@ -186,6 +201,7 @@ The workflow generates the following output files:
 The VCF output contains genotype calls with the following INFO/FORMAT fields:
 - **ADSP**: Allele depth from spanning reads (reads that fully span the STR region)
 - **ADFL**: Allele depth from flanking reads
+- **RCMA**: (Optional, haploid only) Repeat Count Micro-Allele — the repeat count with a partial-repeat decimal (e.g. `15.3`), present only when `report_micro_alleles` is enabled and a micro-allele is detected. See [Micro-Alleles](#micro-alleles-haploid-loci)
 
 The BED file can be loaded directly into genome browsers for visual inspection of STR calls alongside aligned reads.
 

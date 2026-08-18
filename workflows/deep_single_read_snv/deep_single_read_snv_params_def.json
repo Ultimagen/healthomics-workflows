@@ -1,0 +1,150 @@
+{
+    "DeepSingleReadSNV.FeatureMapPrep.FilterIncludeVcf.base_file_name": {
+        "description": "Base file name for output files.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.FeatureMapPrep.FilterIncludeVcf.cpus": {
+        "description": "Number of cpus to use for this task. Default is 4.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.FeatureMapPrep.FilterIncludeVcf.disk_size": {
+        "description": "Size of the local disk to use for this task, in GB. By default it is calculated from the input file sizes.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.FeatureMapPrep.FilterIncludeVcf.exclude_regions": {
+        "description": "Regions to exclude from the output vcf. Supported formats are bed, bed.gz, vcf, vcf.gz. VCF exclusion is done using bcftools view -T ^regions, by position and not by ref and alt.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.FeatureMapPrep.FilterIncludeVcf.include_regions": {
+        "description": "Regions to include in the output vcf. Supported formats are bed, bed.gz. Inclusion is done using 'bcftools view -T'.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.FeatureMapPrep.FilterIncludeVcf.memory_gb": {
+        "description": "Amount of memory to use for this task, in GB. Default is 4 (GB).",
+        "optional": true
+    },
+    "DeepSingleReadSNV.annotation_files": {
+        "description": "Annotation files for featuremap generation: dbSNP, gnomAD, and UG High Confidence Regions with their indices",
+        "optional": false
+    },
+    "DeepSingleReadSNV.base_file_name": {
+        "description": "Base file name for output files",
+        "optional": false
+    },
+    "DeepSingleReadSNV.cloud_provider_override": {
+        "description": "cloud_provider_override",
+        "optional": true
+    },
+    "DeepSingleReadSNV.deep_srsnv_params": {
+        "description": "Deep SRSNV (DNN) parameters. Controls training hyperparameters, fold count, GPU resources, and inference backend.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.exclude_from_training_field_name": {
+        "description": "INFO field name for the exclude-from-training annotation in the featuremap VCF.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.featuremap_params": {
+        "description": "FeatureMap parameters, recommended value set in the template.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.features": {
+        "description": "Features to be used for the report quality plots, should match the XGBoost feature set.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.include_in_inference_field_name": {
+        "description": "INFO field name for the include-in-inference annotation in the featuremap VCF.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.include_vcf_bcftools_filter_args": {
+        "description": "Bcftools filter arguments applied to include-in-inference VCFs before annotation.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.inference_models": {
+        "description": "Pre-trained N-fold model for mode='inference_only'. fold_metadata (recalibrated), fold_checkpoints, and fold_onnx_models are REQUIRED (engine rebuilt from ONNX in-runtime); fold_engines optional. Fold count inferred from the arrays.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.input_cram_bam": {
+        "description": "Input CRAM file",
+        "optional": false
+    },
+    "DeepSingleReadSNV.input_cram_bam_index": {
+        "description": "Input CRAM index file",
+        "optional": false
+    },
+    "DeepSingleReadSNV.input_featuremap_vcf": {
+        "description": "(inference_only) Pre-computed FeatureMap VCF. If provided, CreateFeatureMap is skipped and inference runs directly on it.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.input_featuremap_vcf_index": {
+        "description": "(inference_only) Index for input_featuremap_vcf. Required if input_featuremap_vcf is provided.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.mean_coverage": {
+        "description": "(Optional) Mean coverage value. Provide together with total_aligned_bases and without sorter_json_stats_file_list.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.mode": {
+        "description": "Pipeline mode (set in the input template): 'full' (train + inference), 'train_only' (training + QC report), 'inference_only' (apply provided model, requires inference_models), or 'data_prep_only' (produce training tensor caches and stop).",
+        "optional": false
+    },
+    "DeepSingleReadSNV.monitoring_script_input": {
+        "description": "monitoring_script_input",
+        "optional": true
+    },
+    "DeepSingleReadSNV.no_address_override": {
+        "description": "no_address_override",
+        "optional": true
+    },
+    "DeepSingleReadSNV.num_shards_featuremap": {
+        "description": "Number of genomic shards to scatter the snvfind (CreateFeatureMap) step across. Higher values reduce wall-clock time but add scatter overhead.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.override_memory_gb_CreateFeatureMap": {
+        "description": "Override memory in GB for the CreateFeatureMap task. If an out of memory error occurs, try increasing this value.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.override_memory_gb_PrepareRandomSampleFeatureMap": {
+        "description": "Override memory in GB for the PrepareRandomSampleFeatureMap task. If an out of memory error occurs, try increasing this value.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.override_memory_gb_PrepareRawFeatureMap": {
+        "description": "Override memory in GB for the PrepareRawFeatureMap task. If an out of memory error occurs, try increasing this value.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.pcawg_field_name": {
+        "description": "INFO field name for the PCAWG annotation in the featuremap VCF.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.preemptible_tries": {
+        "description": "preemptible_tries",
+        "optional": true
+    },
+    "DeepSingleReadSNV.raise_exceptions_in_report": {
+        "description": "Raise an exception and fail the pipeline if an error is raised in the QC report",
+        "optional": true
+    },
+    "DeepSingleReadSNV.random_sample_trinuc_freq": {
+        "description": "(Optional) CSV or TSV file with trinucleotide frequencies for the random sample.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.reference_genome": {
+        "description": "Genome type selector. The workflow currently supports only hg38.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.scatter_interval_list": {
+        "description": "Interval list defining the genomic regions to scatter snvfind across. Should match the regions in featuremap_params.bed_file.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.single_read_snv_params": {
+        "description": "SingleReadSNV parameters for training set preparation.",
+        "optional": false
+    },
+    "DeepSingleReadSNV.sorter_json_stats_file_list": {
+        "description": "(Optional) Sorter json stats files. Provide EITHER these files OR both mean_coverage and total_aligned_bases.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.total_aligned_bases": {
+        "description": "(Optional) Total aligned bases used for downsampling rate calculation.",
+        "optional": true
+    }
+}

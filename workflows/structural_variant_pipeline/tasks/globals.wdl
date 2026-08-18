@@ -19,7 +19,7 @@ workflow Globals {
         "ubuntu_docker": "ubuntu:focal",
         "ug_gatk_picard_docker": "ultimagenomics/ug_gatk_picard:0.16_fixup",
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
-        "ug_make_examples_docker": "ultimagenomics/make_examples:3.3.2",
+        "ug_make_examples_docker": "ultimagenomics/make_examples:3.3.4",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ua_docker": "ultimagenomics/alignment:3.0.8",
         "giraffe_docker": "ultimagenomics/giraffe:1.74.0-r1",

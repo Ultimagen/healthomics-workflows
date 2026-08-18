@@ -1,14 +1,14 @@
 {
+    "GermlineCNVPipeline.CnmopsCNVCalling.SingleSampleReadsCount.ref_seq_names": {
+        "description": "Chromosome names for which reads counts will be calculated. Mutually exclusive with genome_windows",
+        "optional": true
+    },
+    "GermlineCNVPipeline.CnmopsCNVCalling.SingleSampleReadsCount.window_length": {
+        "description": "Window lenght for which reads counts will be calculated for. Mutually exclusive with genome_windows",
+        "optional": true
+    },
     "GermlineCNVPipeline.CnmopsCNVCalling.cap_coverage_override": {
         "description": "whether to cap extremely high average coverage windows to 2*cohort's average coverage quantile 99.9% value",
-        "optional": true
-    },
-    "GermlineCNVPipeline.CnmopsCNVCalling.chrX_name": {
-        "description": "The name of the female sex chromosome in the genome. default is: chrX",
-        "optional": true
-    },
-    "GermlineCNVPipeline.CnmopsCNVCalling.chrY_name": {
-        "description": "The name of the male sex chromosome in the genome. default is: chrY",
         "optional": true
     },
     "GermlineCNVPipeline.CnmopsCNVCalling.input_bam_file": {
@@ -39,12 +39,16 @@
         "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).",
         "optional": false
     },
-    "GermlineCNVPipeline.cloud_provider_override": {
-        "description": "cloud_provider_override",
+    "GermlineCNVPipeline.chrX_name_override": {
+        "description": "Name of the X chromosome in the cohort reads count matrix, needed for the ploidy correction. By default derived from reference_genome ('X' for b37, 'chrX' otherwise)",
         "optional": true
     },
-    "GermlineCNVPipeline.cnmops_intersection_cutoff_override": {
-        "description": "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
+    "GermlineCNVPipeline.chrY_name_override": {
+        "description": "Name of the Y chromosome in the cohort reads count matrix, needed for the ploidy correction. By default derived from reference_genome ('Y' for b37, 'chrY' otherwise)",
+        "optional": true
+    },
+    "GermlineCNVPipeline.cloud_provider_override": {
+        "description": "cloud_provider_override",
         "optional": true
     },
     "GermlineCNVPipeline.cnmops_mapq_override": {
@@ -64,16 +68,16 @@
         "optional": true
     },
     "GermlineCNVPipeline.cnmops_window_length_override": {
-        "description": "Window length on which the read counts will be aggregated, default value is 500",
+        "description": "Window length on which the read counts will be aggregated, default value is 1000",
         "optional": true
     },
     "GermlineCNVPipeline.cnvpytor_window_length_override": {
         "description": "Window length on which the read counts will be aggregated, default value is [500,2500]",
         "optional": true
     },
-    "GermlineCNVPipeline.cohort_reads_count_matrix": {
-        "description": "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
-        "optional": false
+    "GermlineCNVPipeline.cohort_reads_count_matrix_override": {
+        "description": "GenomicRanges object of the cohort reads count matrix in rds file format. By default the cohort matching reference_genome is taken from the genome resources.",
+        "optional": true
     },
     "GermlineCNVPipeline.create_md5_checksum_outputs": {
         "description": "Create md5 checksum for requested output files",
@@ -112,23 +116,19 @@
         "optional": true
     },
     "GermlineCNVPipeline.ploidy_file": {
-        "description": "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called",
+        "description": "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called. Genome independent.",
         "optional": false
     },
     "GermlineCNVPipeline.preemptible_tries_override": {
         "description": "preemptible_tries_override",
         "optional": true
     },
-    "GermlineCNVPipeline.ref_seq_names": {
-        "description": "Chromosome names for which coverage will be calculated",
-        "optional": false
-    },
-    "GermlineCNVPipeline.reference": {
-        "description": "Genome reference object",
+    "GermlineCNVPipeline.reference_genome": {
+        "description": "Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
         "optional": false
     },
     "GermlineCNVPipeline.skip_figure_generation": {
-        "description": "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
+        "description": "Skip CNV calls figure generation. Default is: False",
         "optional": true
     },
     "GermlineCNVPipeline.skip_filtering": {
@@ -141,10 +141,6 @@
     },
     "GermlineCNVPipeline.sv_calls_vcf_index": {
         "description": "Index file for the SV calls VCF",
-        "optional": true
-    },
-    "GermlineCNVPipeline.ug_cnv_lcr_file": {
-        "description": "UG-CNV-LCR bed file",
         "optional": true
     }
 }

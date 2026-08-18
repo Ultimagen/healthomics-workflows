@@ -22,6 +22,11 @@ version 1.0
 # 4. Filtering sample's CNV calls
 
 # CHANGELOG in reverse chronological order
+# 1.35.0 Removed UG-CNV-LCR  annotation - no longer needed
+#        The intervals and the chromosome list are taken from the cohort reads count matrix, ref_seq_names was removed
+#        The reference is selected with reference_genome (hg38, b37, hg38_nist_v3_with_decoy) instead of a fasta+fai pair
+#        The cohort reads count matrix comes from the genome resources and can be overridden with cohort_reads_count_matrix_override
+#        The sex chromosome names are derived from reference_genome so the ploidy file takes effect on b37
 # 1.11.0 Added an option to call CNVs that are less than duplications (mosaic?)
 # 1.9.0 Support bedGraph input format as external pre-calculated sample's coverage.
 # 1.6.0 Normalization now genome-wide rather than per chromosome (allows correct calling of chrY, chrX)
@@ -30,20 +35,19 @@ version 1.0
 import "single_sample_cnmops_reads_count.wdl" as ReadsCount
 import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 import "tasks/globals.wdl" as Globals
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.34.0" # !UnusedDeclaration
+        String pipeline_version = "1.35.0" # !UnusedDeclaration
 
         String base_file_name
         String? sample_name
         File? input_bam_file
         File? input_bam_file_index
-        File reference_genome      #ref-genome+idx to enable cram as input file
-        File reference_genome_index
+        String reference_genome = "hg38"
         Int mapq
-        Array[String] ref_seq_names
         Int window_length
         Int parallel
 
@@ -51,16 +55,14 @@ workflow SingleSampleCnmopsCNVCalling {
         File? input_sample_reads_count
         Array[File]? bed_graph
 
-        File cohort_reads_count_matrix
+        File? cohort_reads_count_matrix_override
         File? ploidy_file
-        String? chrX_name
-        String? chrY_name
+        String? chrX_name_override
+        String? chrY_name_override
         Boolean? cap_coverage_override
         Int min_width_value = 2
 
         Int min_cnv_length = 10000
-        Float intersection_cutoff = 0.5
-        File? cnv_lcr_file
         Boolean? enable_mod_cnv_override
 
         Boolean? skip_figure_generation
@@ -77,22 +79,17 @@ workflow SingleSampleCnmopsCNVCalling {
         #@wv defined(input_bam_file) -> (prefix(input_bam_file_index) == input_bam_file)
         #@wv defined(input_bam_file) -> (suffix(input_bam_file) in {".bam", ".cram"})
 
-        #@wv reference_genome == prefix(reference_genome_index)
-        #@wv suffix(reference_genome) in {'.fasta', '.fa', '.fna'}
-        #@wv suffix(reference_genome_index) == '.fai'
+        #@wv reference_genome in {"hg38", "b37", "hg38_nist_v3_with_decoy"}
 
         #@wv defined(bed_graph) -> not(defined(input_sample_reads_count))
         #@wv defined(input_sample_reads_count) -> not(defined(bed_graph))
 
-        #@wv intersection_cutoff <= 1 and intersection_cutoff >= 0
         #@wv min_width_value > 0
-        #@wv len(ref_seq_names) >= 0
-        #@wv min_cnv_length >= window_length
 
     }
 
     meta {
-        description: "Runs single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)\n\nThe pipeline uses a given cohort's coverage profile for normalization.\n\nThe pipeline can recieve one of the following options as input:\n\n&nbsp;&nbsp;1. Input CRAM/BAM file. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_template.json\n\n&nbsp;&nbsp;2. A rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_skip_reads_count_template.json\n\n&nbsp;&nbsp;3. A BedGraph holding the coverage per location. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_input_bedGraph_template.json\n\nThe pipeline calls CNVs for the given sample and filters them by length (>10,000b) and overlap with UG-CNV-LCR.\n\n<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>"
+        description: "Runs single sample germline CNV calling workflow based on [cn.mops](https://bioconductor.org/packages/release/bioc/html/cn.mops.html)\n\nThe pipeline uses a given cohort's coverage profile for normalization.\n\nThe pipeline can receive one of the following options as input:\n\n&nbsp;&nbsp;1. Input CRAM/BAM file. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_template.json\n\n&nbsp;&nbsp;2. A rds file which stores a GenomicRanges object with coverage collected in the same windows as the given cohort. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_skip_reads_count_template.json\n\n&nbsp;&nbsp;3. A BedGraph holding the coverage per location. Corresponding template: Input_templates/single_sample_cnmops_CNV_calling_input_bedGraph_template.json\n\nThe pipeline calls CNVs for the given sample and filters them by length (>10,000b).\n\n<b>When Running in AWS HealthOmics this pipeline should run with [dynamic storage](https://docs.omics.ai/products/workbench/engines/parameters/aws-healthomics#storage_type-dynamic-or-static)</b>"
         author: "Ultima Genomics"
         WDL_AID: {
             exclude: ["pipeline_version",
@@ -100,7 +97,8 @@ workflow SingleSampleCnmopsCNVCalling {
                 "SingleSampleReadsCount.monitoring_script_input",
                 "no_address_override",
                 "Glob.glob",
-                "SingleSampleReadsCount.Globals.glob"
+                'ProcessCnmopsCnvs.intersection_cutoff',
+                'ProcessCnmopsCnvs.cnv_lcr_file'
                 ]}
     }
     parameter_meta {
@@ -125,27 +123,17 @@ workflow SingleSampleCnmopsCNVCalling {
             category: "input_optional"
        }
         reference_genome: {
-            help: "Genome fasta file associated with the CRAM file",
-            type: "File",
+            help: "Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
+            type: "String",
             category: "ref_required"
          }
-        reference_genome_index: {
-            help : "Fai index of the fasta file",
-            type: "File",
-            category: "ref_required"
-        }
         mapq: {
             help : "Reads mapping-quality cutoff for coverage aggregation, recommended value set in the template",
             type: "Int",
             category: "param_required"
        }
-        ref_seq_names: {
-            help : "Chromosome names for which coverage will be calculated",
-            type: "Array[String]",
-            category: "param_required"
-        }
         window_length: {
-            help: "Window length on which the read counts will be aggregated",
+            help: "Window length on which the read counts will be aggregated. The cohort reads count matrix is rebinned to this window length (must be a multiple of the cohort's window length)",
             type: "Int",
             category: "param_required"
         }
@@ -164,23 +152,26 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "File",
             category: "input_optional"
         }
-        cohort_reads_count_matrix: {
-            help : "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template. can be created by cn.mops::getReadCountsFromBAM R function ",
+        cohort_reads_count_matrix_override: {
+            help : "GenomicRanges object of the cohort reads count matrix in rds file format. By default the cohort matching reference_genome is taken from the genome resources. Can be created by cn.mops::getReadCountsFromBAM R function ",
             type: "File",
-            category: "input_required"
+            category: "input_optional"
          }
+        # TODO(BIOIN-3020): bundle the ploidy file with the cohort in genome_resources so a future
+        # genome-specific ploidy file is selected automatically. Kept as a plain File for now because
+        # all three v3.0 cohorts share a byte-identical ploidy file (same 60-sample batch order).
         ploidy_file: {
-            help : "X chromosome ploidy in the cohort. 1 for male and 2 for female, per sample. The number of lines should be the same as the number of samples in cohort + current_sample. if not given, defaults to 2 for all samples.",
+            help : "X chromosome ploidy in the cohort. 1 for male and 2 for female, per sample. The number of lines should be the same as the number of samples in cohort + current_sample. if not given, defaults to 2 for all samples. Genome independent.",
             type: "File",
             category: "input_optional"
         }
-        chrX_name: {
-            help: "The name of the female sex chromosome in the genome. default is: chrX",
+        chrX_name_override: {
+            help: "The name of the female sex chromosome in the cohort reads count matrix. By default derived from reference_genome ('X' for b37, 'chrX' otherwise)",
             type: "String",
             category: "param_optional"
         }
-        chrY_name: {
-           help: "The name of the male sex chromosome in the genome. default is: chrY",
+        chrY_name_override: {
+           help: "The name of the male sex chromosome in the cohort reads count matrix. By default derived from reference_genome ('Y' for b37, 'chrY' otherwise)",
            type: "String",
            category: "param_optional"
        }
@@ -194,18 +185,8 @@ workflow SingleSampleCnmopsCNVCalling {
             type: "Int",
             category: "param_required"
         }
-        intersection_cutoff: {
-            help: "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
-            type: "Float",
-            category: "param_required"
-        }
-        cnv_lcr_file: {
-            help: "UG-CNV-LCR bed file",
-            type: "File",
-            category: "param_optional"
-        }
         skip_figure_generation: {
-            help: "Whether to skip figure generation. set true when using reference genome different than hg38.  Default is: False",
+            help: "Whether to skip figure generation. Default is: False",
             type: "Boolean",
             category: "param_optional"
         }
@@ -240,7 +221,7 @@ workflow SingleSampleCnmopsCNVCalling {
             category: "output"
         }
         out_sample_cnvs_filtered_bed:{
-            help: "Bed file with CNVs filtered by length and overlap with low confidence regions",
+            help: "Bed file with CNVs filtered by length",
             type: "File",
             category: "output"
         }
@@ -314,12 +295,39 @@ workflow SingleSampleCnmopsCNVCalling {
 
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script])    #!FileCoercion
 
+    # Get genome resources based on reference_genome
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
+    File ref_fasta = GenomeResources.resources[reference_genome].ref_fasta
+    File ref_fasta_index = GenomeResources.resources[reference_genome].ref_fasta_index
+
+    File cohort_reads_count_matrix = select_first([cohort_reads_count_matrix_override,
+        GenomeResources.resources[reference_genome].cnv_normalization_cohort])
+
+    # The sex chromosome names must match the contig naming of the cohort reads count matrix,
+    # otherwise the ploidy correction in cn.mops is silently skipped.
+    # TODO(BIOIN-3021): move these into genome_resources once it supports String/Array[String]
+    # values (today it only holds cloud-path File values, so the derivation stays inline here).
+    String chrX_name = select_first([chrX_name_override, if reference_genome == "b37" then "X" else "chrX"])
+    String chrY_name = select_first([chrY_name_override, if reference_genome == "b37" then "Y" else "chrY"])
+
     # Always rebin cohort to match workflow window_length
     # R script handles no-op case when cohort already at correct window size
     call CnvTasks.RebinCohortReadsCount {
         input:
             cohort_reads_count_matrix = cohort_reads_count_matrix,
             new_window_length = window_length,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
+    }
+
+    # Extract the genome windows and the chromosome names from the rebinned cohort matrix.
+    # The cohort defines the intervals in which CNVs are called, so no interval input is needed.
+    call CnvTasks.ExtractGenomeWindows as ExtractGenomeWindows {
+        input:
+            cohort_reads_count_matrix = RebinCohortReadsCount.rebinned_cohort_reads_count_matrix,
             docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,
             no_address = no_address,
@@ -333,11 +341,10 @@ workflow SingleSampleCnmopsCNVCalling {
                 input:
                 input_bam_file = input_bam,
                 input_bam_file_index = input_bai,
-                reference_genome = reference_genome,      #ref-genome+idx to enable cram as input file
-                reference_genome_index = reference_genome_index,
+                reference_genome = ref_fasta,      #ref-genome+idx to enable cram as input file
+                reference_genome_index = ref_fasta_index,
                 mapq = mapq,
-                ref_seq_names = ref_seq_names,
-                window_length = window_length,
+                genome_windows = ExtractGenomeWindows.genome_windows,
                 base_file_name = base_file_name,
                 save_hdf_override = save_hdf,
                 no_address_override = no_address_override,
@@ -351,22 +358,12 @@ workflow SingleSampleCnmopsCNVCalling {
     {
         Array[File] input_bed_graph = select_first([bed_graph])
 
-        # Extract genome windows from cohort matrix
-        call CnvTasks.ExtractGenomeWindows as ExtractGenomeWindows {
-            input:
-                cohort_reads_count_matrix = RebinCohortReadsCount.rebinned_cohort_reads_count_matrix,
-                docker = global.ugbio_cnv_docker,
-                monitoring_script = monitoring_script,
-                no_address = no_address,
-                preemptible_tries = preemptible_tries
-        }
-
         call CnvTasks.ConvertBedGraphToGranges as ConvertBedGraphToGranges{
         input:
             sample_name = sample_name_defined,
             input_bed_graph = input_bed_graph,
             genome_windows = ExtractGenomeWindows.genome_windows,
-            genome_file = reference_genome_index,
+            genome_file = ref_fasta_index,
             docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,
             no_address = no_address,
@@ -422,12 +419,10 @@ workflow SingleSampleCnmopsCNVCalling {
             cohort_cnvs_csv = RunCnmops.cohort_cnvs_csv,
             sample_names = sample_names,
             min_cnv_length = min_cnv_length,
-            intersection_cutoff = intersection_cutoff,
-            cnv_lcr_file = cnv_lcr_file,
             sample_norm_coverage_file = ExtractNormalizedReadCount.sample_reads_count_bed,
             cohort_norm_avg_coverage_file = ExtractNormalizedReadCount.cohort_reads_count_bed,
             skip_figure_generation = skip_figure_generation_value,
-            ref_genome_file = reference_genome_index,
+            ref_genome_file = ref_fasta_index,
             germline_coverage_rds = sample_reads_count_file,
             docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,

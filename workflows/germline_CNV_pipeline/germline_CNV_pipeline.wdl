@@ -22,6 +22,11 @@ version 1.0
 
 
 # CHANGELOG in reverse chronological order
+# 1.35.0 UG-CNV-LCR is no longer used
+#        The intervals and the chromosome list are taken from the cohort reads count matrix, ref_seq_names was removed
+#        The reference is selected with reference_genome (hg38, b37, hg38_nist_v3_with_decoy) instead of a References object
+#        The cohort reads count matrix comes from the genome resources and can be overridden with cohort_reads_count_matrix_override
+#        The sex chromosome names are derived from reference_genome so the ploidy file takes effect on b37
 # 1.26.0 - Updated annotations and filtering model, quality significantly improved
 # 1.24.0 - Removed filtering on UG-CNV-LCR, updated filtering model
 
@@ -31,18 +36,18 @@ import "combine_germline_CNV_calls.wdl" as CombineGermlineCNVCalls
 import "tasks/globals.wdl" as Globals
 import "tasks/general_tasks.wdl" as UGGeneralTasks
 import "tasks/cnv_calling_tasks.wdl" as CnvTasks
+import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.34.0" # !UnusedDeclaration
+        String pipeline_version = "1.35.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
         File input_bam_file_index
-        References reference
-        Array[String] ref_seq_names
-        File? ug_cnv_lcr_file
+        String reference_genome = "hg38"
+
 
         Boolean skip_filtering
         File? filtering_model
@@ -52,12 +57,13 @@ workflow GermlineCNVPipeline {
         Int? cnmops_window_length_override
         Int? cnmops_parallel_override
         Array[File] bed_graph
-        File cohort_reads_count_matrix
+        File? cohort_reads_count_matrix_override
         File ploidy_file
         Int? cnmops_min_width_value_override
         Int? cnmops_min_cnv_length_override
-        Float? cnmops_intersection_cutoff_override
         Boolean? disable_mod_cnv
+        String? chrX_name_override
+        String? chrY_name_override
 
         #cnvpytor params
         Array[Int]? cnvpytor_window_length_override
@@ -75,6 +81,7 @@ workflow GermlineCNVPipeline {
         Boolean create_md5_checksum_outputs = false
 
         # winval validations
+        #@wv reference_genome in {"hg38", "b37", "hg38_nist_v3_with_decoy"}
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv prefix(input_bam_file_index) == input_bam_file
         #@wv suffix(input_bam_file) in {".bam", ".cram"}
@@ -100,7 +107,9 @@ workflow GermlineCNVPipeline {
                 'CombineCNVCalls.FilterVCF.ref_fasta_idx',
                 'CombineCNVCalls.FilterVCF.blacklist_file',
                 'CombineCNVCalls.FilterVCF.custom_annotations',
-                'CombineCNVCalls.FilterVCF.disk_size'
+                'CombineCNVCalls.FilterVCF.disk_size',
+                'CnmopsCNVCalling.ProcessCnmopsCnvs.intersection_cutoff',
+                'CnmopsCNVCalling.ProcessCnmopsCnvs.cnv_lcr_file'
         ]}
     }
     parameter_meta {
@@ -119,20 +128,10 @@ workflow GermlineCNVPipeline {
             type: "File",
             category: "input_required"
         }
-        reference: {
-            help: "Genome reference object",
-            type: "References",
+        reference_genome: {
+            help: "Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
+            type: "String",
             category: "ref_required"
-        }
-        ref_seq_names: {
-            help : "Chromosome names for which coverage will be calculated",
-            type: "Array[String]",
-            category: "param_required"
-        }
-        ug_cnv_lcr_file: {
-            help: "UG-CNV-LCR bed file",
-            type: "File",
-            category: "input_optional"
         }
         filtering_model: {
             help: "CNV filtering model, default in template, calls are not filtered if not provided",
@@ -155,12 +154,7 @@ workflow GermlineCNVPipeline {
             category: "param_advanced"
         }
         cnmops_window_length_override: {
-            help: "Window length on which the read counts will be aggregated, default value is 500",
-            type: "Int",
-            category: "param_advanced"
-        }
-        window_length_override: {
-            help: "Window length on which the read counts will be aggregated, default value is 500",
+            help: "Window length on which the read counts will be aggregated, default value is 1000",
             type: "Int",
             category: "param_advanced"
         }
@@ -174,13 +168,16 @@ workflow GermlineCNVPipeline {
             type: "Array[File]",
             category: "input_required"
         }
-        cohort_reads_count_matrix: {
-            help : "GenomicRanges object of the cohort reads count matrix in rds file format. default cohort can be found in the template.",
+        cohort_reads_count_matrix_override: {
+            help : "GenomicRanges object of the cohort reads count matrix in rds file format. By default the cohort matching reference_genome is taken from the genome resources.",
             type: "File",
-            category: "input_required"
+            category: "input_optional"
         }
+        # TODO(BIOIN-3020): bundle the ploidy file with the cohort in genome_resources so a future
+        # genome-specific ploidy file is selected automatically. Kept as a plain File for now because
+        # all three v3.0 cohorts share a byte-identical ploidy file (same 60-sample batch order).
         ploidy_file: {
-            help : "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called",
+            help : "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called. Genome independent.",
             type: "File",
             category: "input_required"
         }
@@ -194,15 +191,20 @@ workflow GermlineCNVPipeline {
             type: "Int",
             category: "param_advanced"
         }
-        cnmops_intersection_cutoff_override: {
-            help: "Intersection cutoff with UG-CNV-LCR regions to filter out CNV calls. Default is:  0.5",
-            type: "Float",
-            category: "param_advanced"
-        }
         disable_mod_cnv:
         {
             help: "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
             type: "Boolean",
+            category: "param_advanced"
+        }
+        chrX_name_override: {
+            help: "Name of the X chromosome in the cohort reads count matrix, needed for the ploidy correction. By default derived from reference_genome ('X' for b37, 'chrX' otherwise)",
+            type: "String",
+            category: "param_advanced"
+        }
+        chrY_name_override: {
+            help: "Name of the Y chromosome in the cohort reads count matrix, needed for the ploidy correction. By default derived from reference_genome ('Y' for b37, 'chrY' otherwise)",
+            type: "String",
             category: "param_advanced"
         }
         cnvpytor_window_length_override: {
@@ -211,7 +213,7 @@ workflow GermlineCNVPipeline {
             category: "param_advanced"
         }
         skip_figure_generation: {
-            help: "Skip CNV calls figure generation. please set to True if reference genome is not hg38. Default is: False",
+            help: "Skip CNV calls figure generation. Default is: False",
             type: "Boolean",
             category: "param_optional"
         }
@@ -339,7 +341,6 @@ workflow GermlineCNVPipeline {
     Int cnmops_parallel = select_first([cnmops_parallel_override, 4])
     Int cnmops_min_width_value = select_first([cnmops_min_width_value_override, 2])
     Int cnmops_min_cnv_length = select_first([cnmops_min_cnv_length_override, 0])
-    Float cnmops_intersection_cutoff = select_first([cnmops_intersection_cutoff_override, 0.5])
     Boolean enable_mod_cnv = select_first([disable_mod_cnv, true])
     Array[Int] cnvpytor_window_lengths = select_first([cnvpytor_window_length_override, [500,2500]])
     Int preemptible_tries = select_first([preemptible_tries_override, 1])
@@ -352,12 +353,32 @@ workflow GermlineCNVPipeline {
     File monitoring_script = select_first([monitoring_script_input, global.monitoring_script]) #!FileCoercion
     String cloud_provider = select_first([cloud_provider_override, 'gcp'])
 
+    # Get genome resources based on reference_genome
+    call GenomeResourcesLib.GenomeResourcesWorkflow as GenomeResources
+
+    # Construct References struct from genome resources for tasks that still need it
+    References reference = object {
+        ref_fasta: GenomeResources.resources[reference_genome].ref_fasta,
+        ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
+        ref_dict: GenomeResources.resources[reference_genome].ref_dict
+    }
+
+    File cohort_reads_count_matrix = select_first([cohort_reads_count_matrix_override,
+        GenomeResources.resources[reference_genome].cnv_normalization_cohort])
+
+    # The sex chromosome names must match the contig naming of the cohort reads count matrix,
+    # otherwise the ploidy correction in cn.mops is silently skipped.
+    # TODO(BIOIN-3021): move these into genome_resources once it supports String/Array[String]
+    # values (today it only holds cloud-path File values, so the derivation stays inline here).
+    String chrX_name = select_first([chrX_name_override, if reference_genome == "b37" then "X" else "chrX"])
+    String chrY_name = select_first([chrY_name_override, if reference_genome == "b37" then "Y" else "chrY"])
+
     call UGGeneralTasks.ExtractSampleNameFlowOrder {
         input:
             input_bam = input_bam_file,
             monitoring_script = monitoring_script,
             preemptible_tries = preemptible_tries,
-            docker = global.broad_gatk_docker, 
+            docker = global.broad_gatk_docker,
             references = reference,
             no_address = no_address,
             cloud_provider_override = cloud_provider
@@ -367,24 +388,34 @@ workflow GermlineCNVPipeline {
         input:
             base_file_name = base_file_name,
             sample_name = ExtractSampleNameFlowOrder.sample_name,
-            reference_genome = reference.ref_fasta,
-            reference_genome_index = reference.ref_fasta_index,
+            reference_genome = reference_genome,
             mapq = cnmops_mapq,
-            ref_seq_names = ref_seq_names,
             window_length = cnmops_window_length,
             parallel = cnmops_parallel,
             bed_graph = bed_graph,
-            cohort_reads_count_matrix = cohort_reads_count_matrix,
+            cohort_reads_count_matrix_override = cohort_reads_count_matrix,
             ploidy_file = ploidy_file,
+            chrX_name_override = chrX_name,
+            chrY_name_override = chrY_name,
             min_width_value = cnmops_min_width_value,
             min_cnv_length = cnmops_min_cnv_length,
-            intersection_cutoff = cnmops_intersection_cutoff,
-            cnv_lcr_file = ug_cnv_lcr_file,
             enable_mod_cnv_override = enable_mod_cnv,
             skip_figure_generation = skip_figure_generation_value,
             preemptible_tries_override = preemptible_tries,
             no_address_override = no_address,
             monitoring_script_input = monitoring_script
+    }
+
+    # The cohort reads count matrix defines the genomic scope of the analysis, so the
+    # chromosome list for CNVpytor is derived from it rather than given as an input.
+    # Rebinning never changes the chromosome set, hence the raw cohort is used here.
+    call CnvTasks.ExtractGenomeWindows {
+        input:
+            cohort_reads_count_matrix = cohort_reads_count_matrix,
+            docker = global.ugbio_cnv_docker,
+            monitoring_script = monitoring_script,
+            no_address = no_address,
+            preemptible_tries = preemptible_tries
     }
 
     call SingleSampleCNVpytorCalling.SingleSampleCNVpytorCalling as CnvpytorCNVCalling{
@@ -395,7 +426,7 @@ workflow GermlineCNVPipeline {
         input_bam_file_index = input_bam_file_index,
         reference_genome = reference.ref_fasta,
         reference_genome_index = reference.ref_fasta_index,
-        ref_seq_names = ref_seq_names,
+        ref_seq_names = ExtractGenomeWindows.ref_seq_names,
         window_lengths = cnvpytor_window_lengths,
         preemptible_tries_override = preemptible_tries,
         no_address_override = no_address,

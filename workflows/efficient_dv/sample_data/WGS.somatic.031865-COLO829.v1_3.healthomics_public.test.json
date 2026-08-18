@@ -37,8 +37,8 @@
     "EfficientDV.allele_frequency_ratio": 10,
     "EfficientDV.override_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
     "EfficientDV.optimal_coverages": [
-        200,
-        200
+        150,
+        150
     ],
     "EfficientDV.ug_make_examples_memory_override": 4,
     "EfficientDV.call_variants_uncompr_buf_size_gb": 2,

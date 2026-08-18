@@ -1,5 +1,7 @@
 # Single Read SNV (SRSNV) pipeline (v1.25.0)
 
+> **Note:** This workflow is suitable for **UG100**. For UG200 (R-amp library) data, see the [Deep Single Read SNV (DeepSRSNV) pipeline](howto-deep-single-read-snv.md).
+
 ## Table of Contents
 - [Introduction](#introduction)
   - [SNV denoising and quality recalibration](#snv-denoising-and-quality-recalibration)

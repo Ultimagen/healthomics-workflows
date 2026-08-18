@@ -31,7 +31,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow STRGenotyper {
     input {
-        String pipeline_version = "1.34.0" # !UnusedDeclaration
+        String pipeline_version = "1.35.0" # !UnusedDeclaration
         # Required inputs
         String base_file_name
         File cram_file
@@ -50,7 +50,7 @@ workflow STRGenotyper {
         Int min_mapping_quality = 1
         
         # Resource configuration
-        Int threads = 8
+        Int threads = 2
         Int? memory_gb_override
         
         # Output options (set to false to skip CSV outputs for large catalogs)
@@ -59,7 +59,10 @@ workflow STRGenotyper {
         
         # Genotype calling options
         Boolean haploid = false
-        
+        Boolean report_micro_alleles = false
+        Float micro_allele_consensus_ratio = 0.8
+        Int micro_allele_min_reads = 10
+
         # Runtime parameters
         Int preemptible_tries = 1
         Boolean no_address = true
@@ -146,7 +149,7 @@ workflow STRGenotyper {
             category: "input_advanced"
         }
         memory_gb_override : {
-            help: "Optional memory allocation override in GB (default: 16)",
+            help: "Optional memory allocation override in GB (default: 4)",
             type: "Int",
             category: "input_advanced"
         }
@@ -163,6 +166,21 @@ workflow STRGenotyper {
         haploid: {
             help: "Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms.",
             type: "Boolean",
+            category: "input_optional"
+        }
+        report_micro_alleles: {
+            help: "Report micro-alleles (e.g. 15.3) for haploid loci when a partial-repeat insertion is present. REPCN stays the integer floor; the micro-allele decimal appears in the genotype (GT) and a new RCMA VCF/BED field. No-op for diploid loci. Default: off.",
+            type: "Boolean",
+            category: "input_optional"
+        }
+        micro_allele_consensus_ratio: {
+            help: "Minimum fraction of supporting spanning reads required to report a micro-allele decimal. Only used when report_micro_alleles is true. Range 0.0-1.0.",
+            type: "Float",
+            category: "input_optional"
+        }
+        micro_allele_min_reads: {
+            help: "Minimum number of spanning reads supporting the consensus tract length required to report a micro-allele. Guards against low-coverage indel artifacts. Only used when report_micro_alleles is true. Default: 10.",
+            type: "Int",
             category: "input_optional"
         }
         preemptible_tries: {
@@ -217,8 +235,8 @@ workflow STRGenotyper {
 
 
 
-    # Default memory is 16GB, can be overridden
-    Int memory_gb = select_first([memory_gb_override, 16])
+    # Default memory is 4GB, can be overridden
+    Int memory_gb = select_first([memory_gb_override, 4])
     
     call GenotypeSTR {
         input:
@@ -237,6 +255,9 @@ workflow STRGenotyper {
             output_detailed_csv = output_detailed_csv,
             output_summary_csv = output_summary_csv,
             haploid = haploid,
+            report_micro_alleles = report_micro_alleles,
+            micro_allele_consensus_ratio = micro_allele_consensus_ratio,
+            micro_allele_min_reads = micro_allele_min_reads,
             threads = threads,
             memory_gb = memory_gb,
             docker = global.str_genotyper_docker,
@@ -273,7 +294,10 @@ task GenotypeSTR {
         Boolean output_detailed_csv
         Boolean output_summary_csv
         Boolean haploid
-        
+        Boolean report_micro_alleles
+        Float micro_allele_consensus_ratio
+        Int micro_allele_min_reads
+
         Int threads
         Int memory_gb
         String docker
@@ -310,7 +334,8 @@ task GenotypeSTR {
             --output-prefix ~{base_file_name} \
             ~{if output_detailed_csv then "" else "--skip-detailed-csv"} \
             ~{if output_summary_csv then "" else "--skip-summary-csv"} \
-            ~{if haploid then "--haploid" else ""}
+            ~{if haploid then "--haploid" else ""} \
+            ~{if report_micro_alleles then "--report-micro-alleles --micro-allele-consensus-ratio " + micro_allele_consensus_ratio + " --micro-allele-min-reads " + micro_allele_min_reads else ""}
     >>>
     
     output {

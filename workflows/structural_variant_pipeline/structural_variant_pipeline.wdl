@@ -42,7 +42,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.34.0" # !UnusedDeclaration
+        String pipeline_version = "1.35.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []

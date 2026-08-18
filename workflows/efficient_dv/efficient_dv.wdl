@@ -34,7 +34,7 @@ import "haplotype_sampling.wdl" as HSampling
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.34.0" # !UnusedDeclaration
+    String pipeline_version = "1.35.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -161,18 +161,14 @@ workflow EfficientDV {
    #@mv min_read_count_snps >= 1
    #@mv min_read_count_hmer_indels >= 1
    #@mv min_read_count_non_hmer_indels >= 1
-   #@wv cloud_provider_override == "aws" -> suffix(cram_files) <= {".cram"}
-   #@wv cloud_provider_override == "aws" -> suffix(cram_index_files) <= {".crai", ".csi"}
-   #@wv cloud_provider_override == "gcp" -> suffix(cram_files) <= {".cram", ".bam"}
-   #@wv cloud_provider_override == "gcp" -> suffix(cram_index_files) <= {".crai", ".bai", ".csi"}
+   #@wv suffix(cram_files) <= {".cram", ".bam"}
+   #@wv suffix(cram_index_files) <= {".crai", ".csi", ".bai"}
    #@wv prefix(cram_index_files) == cram_files
    #@wv len(cram_files) >= 0
    #@wv reference_genome in {"hg38", "b37", "hg38_taps", "hg38_nist_v3", "hg38_nist_v3_with_decoy", "hg38_no_alt", "mm10", "mm39"}
    #@wv len(background_cram_files) == len(background_cram_index_files)
-   #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram"}
-   #@wv cloud_provider_override == "aws" and len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".csi"}
-   #@wv cloud_provider_override == "gcp" and len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram", ".bam"}
-   #@wv cloud_provider_override == "gcp" and len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".bai", ".csi"}
+   #@wv len(background_cram_files) > 0 ->  suffix(background_cram_files) <= {".cram", ".bam"}
+   #@wv len(background_cram_files) > 0 ->  suffix(background_cram_index_files) <= {".crai", ".csi", ".bai"}
    #@wv len(optimal_coverages) == 1 + (len(background_cram_files) > 0)
    #@wv is_somatic -> len(background_cram_files) > 0
    #@wv is_somatic -> defined(allele_frequency_ratio)
