@@ -194,7 +194,7 @@ The table below lists recommended resources for each workflow, based on the EC2 
 | Workflow Name (Subdirectory)   |   CPU(s) |   Memory (GiB) | GPU Type / #    | EC2 Instance Type   |
 |:-------------------------------|---------:|---------------:|:----------------|:--------------------|
 | controlFREEC_pipeline          |        4 |              8 | -               | c5.xlarge           |
-| deep_single_read_snv           |       32 |            128 | NVIDIA A10G / 1 | g5.8xlarge          |
+| deep_single_read_snv           |       64 |            256 | NVIDIA A10G / 1 | g5.16xlarge         |
 | efficient_dv                   |       16 |             64 | NVIDIA A10G / 1 | g5.4xlarge          |
 | germline_CNV_pipeline          |       36 |             72 | -               | c5.9xlarge          |
 | hla_genotyping                 |       16 |             64 | -               | m5.4xlarge          |

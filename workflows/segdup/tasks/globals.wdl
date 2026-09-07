@@ -9,6 +9,7 @@ struct GlobalVariables {
   String monitoring_script
   String giraffe_docker
   String segdup_docker
+  String ugbio_core_docker
   String ugbio_cnv_docker
   String ugbio_filtering_docker
 }
@@ -23,6 +24,7 @@ workflow Globals {
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "giraffe_docker": "ultimagenomics/giraffe:1.74.0-r1",
         "segdup_docker": "ultimagenomics/parascopy:1.2.0_f42c9e4",
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.30.2",
         "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.30.0",
         "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.30.0"
 }

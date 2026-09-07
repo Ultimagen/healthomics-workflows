@@ -29,7 +29,7 @@ import "tasks/alignment_tasks.wdl" as UGAlignment
 
 workflow PyPGx {
     input {
-        String pipeline_version = "1.35.0" # !UnusedDeclaration
+        String pipeline_version = "1.35.1" # !UnusedDeclaration
         String base_file_name
         File cram_file
         File cram_index_file

@@ -544,41 +544,37 @@ task DownsampleCramBam {
     }
 }
 
-task ToFastq {
+task ConvertCramToFastq {
     input {
         File input_cram
-        String base_file_name
-        References references
+        File reference_fasta
+        File reference_fasta_index
         File monitoring_script
-        String docker
-        Boolean no_address
-        Int preemptibles
-        Int disk_size = ceil(3*size(input_cram,"GB") + 20)
+        String sample_name
+        String samtools_docker
     }
-    String output_fq_name = base_file_name + ".fq.gz"
-    command <<<
-        set -xeo pipefail
 
+    Int cores = 4
+    Int mem_gb = 4
+    Int disk_size_gb = ceil(3*size(input_cram,"GB") + 20)
+
+    command <<<
+        set -euxo pipefail
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-        samtools fastq \
-          --reference ~{references.ref_fasta}\
-          -F 0x900 \
-          -0 ~{output_fq_name} \
-          --threads 2 \
-          ~{input_cram}
+        samtools fastq --reference ~{reference_fasta} -@ ~{cores} ~{input_cram} \
+        | pigz -p ~{cores} -1 -b 512 > ~{sample_name}.fastq.gz
+
     >>>
-    runtime {
-        disks: "local-disk " + disk_size + " HDD"
-        cpu: 2
-        memory: "1 GB"
-        preemptible: preemptibles
-        docker: docker
-        noAddress: no_address
-    }
     output {
-        File output_fastq = "~{output_fq_name}"
+        File fastq_file = "~{sample_name}.fastq.gz"
         File monitoring_log = "monitoring.log"
+    }
+    runtime {
+        docker: samtools_docker
+        cpu: cores
+        memory: mem_gb + " GB"
+        disks: "local-disk " + disk_size_gb + " SSD"
     }
 }
 

@@ -186,17 +186,17 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.num_haplotypes">
         <b>SegDupAnalysis.DV.num_haplotypes</b><br />
         <i>Int? </i> &mdash;
-         Number of haplotypes to sample from the pangenome graph (must fit the model) <br />
+         Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image. <br />
 </p>
 <p name="SegDupAnalysis.DV.include_reference_in_haplotypes">
         <b>SegDupAnalysis.DV.include_reference_in_haplotypes</b><br />
         <i>Boolean? </i> &mdash;
-         Include the reference sequence in the sampled haplotypes (must fit the model) <br />
+         Include the reference sequence in the sampled haplotypes <br />
 </p>
 <p name="SegDupAnalysis.DV.diploid_sampling_in_haplotypes">
         <b>SegDupAnalysis.DV.diploid_sampling_in_haplotypes</b><br />
         <i>Boolean? </i> &mdash;
-         Use diploid sampling strategy for haplotype selection (must fit the model) <br />
+         Use diploid sampling strategy for haplotype selection <br />
 </p>
 <p name="SegDupAnalysis.DV.optimization_level">
         <b>SegDupAnalysis.DV.optimization_level</b><br />
@@ -332,16 +332,6 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.HaplotypeSampling.minimap2_preset</b><br />
         <i>String </i> &mdash;
          Minimap2 preset for alignment (default: asm5) <br />
-</p>
-<p name="SegDupAnalysis.DV.HaplotypeSampling.kmc_mem_gb">
-        <b>SegDupAnalysis.DV.HaplotypeSampling.kmc_mem_gb</b><br />
-        <i>Int </i> &mdash;
-         Memory (GB) for KMC k-mer counting (default: 64) <br />
-</p>
-<p name="SegDupAnalysis.DV.HaplotypeSampling.kmc_cores">
-        <b>SegDupAnalysis.DV.HaplotypeSampling.kmc_cores</b><br />
-        <i>Int </i> &mdash;
-         Number of CPU cores for KMC (default: 16) <br />
 </p>
 <p name="SegDupAnalysis.DV.HaplotypeSampling.minimap_extra_args">
         <b>SegDupAnalysis.DV.HaplotypeSampling.minimap_extra_args</b><br />

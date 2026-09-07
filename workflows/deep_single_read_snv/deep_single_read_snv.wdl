@@ -40,7 +40,7 @@ input {
   File input_cram_bam_index
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.35.0"
+  String pipeline_version = "1.35.1"
 
   # Genome resources
   String reference_genome = "hg38"
@@ -675,6 +675,9 @@ parameter_meta {
     Int num_folds_for_inference = if do_training then deep_srsnv_params.num_folds else length(fold_metadata_used)
     # Tensors from the data-prep block above become optional outside their conditional scope.
     Array[Array[File]] inference_tensor_shards = select_first([DNNCramToTensorsInference.tensor_shards])
+    # Exactly one of these is non-empty per fold: the shards, or the archive the producing task
+    # writes instead when it runs under singularity (per-file binds break there).
+    Array[Array[File]] inference_tensor_cache_tars = select_first([DNNCramToTensorsInference.tensor_cache_tar])
 
     # Per-fold GPU inference. onnx/engine fall back to the metadata file when the (optional)
     # model arrays are absent (non-trt backend), mirroring the inference-only reference workflow.
@@ -687,6 +690,7 @@ parameter_meta {
       call DeepSRSNVTasks.DNNFoldInference {
         input:
           tensor_shards = inference_tensor_shards[infer_fold_idx],
+          tensor_cache_tar = inference_tensor_cache_tars[infer_fold_idx],
           fold_metadata = fold_metadata_used[infer_fold_idx],
           fold_checkpoint = fold_checkpoints_used[infer_fold_idx],
           # inference_only REQUIRES ONNX (the engine is rebuilt from it); select_first fails loudly

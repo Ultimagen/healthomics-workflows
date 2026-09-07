@@ -26,7 +26,7 @@ workflow Globals {
         "rematching_docker": "ultimagenomics/rematcher:1.1.2_08f0df1",
         "gridss_docker": "ultimagenomics/gridss:1.0.2",
         "gripss_docker": "ultimagenomics/gripss:ug_2.4.1_165b492",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.28.0"
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.30.2"
 }
 }
 

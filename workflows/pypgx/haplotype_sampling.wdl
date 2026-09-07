@@ -12,6 +12,7 @@ version 1.0
 # CHANGELOG:
 # 1.0.0 - Initial implementation
 import "tasks/globals.wdl" as Globals
+import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow HaplotypeSampling {
     input {
@@ -36,10 +37,8 @@ workflow HaplotypeSampling {
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.35.0"   #!UnusedDeclaration
+        String pipeline_version = "1.35.1"   #!UnusedDeclaration
         # Resource parameters
-        Int kmc_mem_gb = 64               # Memory (GB) for KMC k-mer counting
-        Int kmc_cores = 16
         Int map_cores = 24
         Int map_mem_gb = 64
         Int sort_cores = 8
@@ -55,19 +54,7 @@ workflow HaplotypeSampling {
             "map_cores",
             "sort_cores",
             "map_mem_gb",
-            "Glob.glob",
-            "ConvertCramToFastq.mem_gb",
-            "ConvertCramToFastq.disk_size_gb",
-            "ConvertCramToFastq.cores",
-            "KmerCountingKMC.disk_size_gb",
-            "SampleHaplotypes.disk_size_gb",
-            "ExtractPathsFasta.cores",
-            "ExtractPathsFasta.mem_gb",
-            "ExtractPathsFasta.disk_size_gb",
-            "SlidingWindows.cores",
-            "SlidingWindows.mem_gb",
-            "SlidingWindows.disk_size_gb",
-            "Minimap2Align.disk_size_gb"
+            "Glob.glob"
           ]}
 
     }
@@ -120,16 +107,6 @@ workflow HaplotypeSampling {
         }
         min_kmer_count: {
             help: "Minimum k-mer count threshold for sampling (default: 2)",
-            type: "Int",
-            category: "param_optional"
-        }
-        kmc_mem_gb: {
-            help: "Memory (GB) for KMC k-mer counting (default: 64)",
-            type: "Int",
-            category: "param_optional"
-        }
-        kmc_cores: {
-            help: "Number of CPU cores for KMC (default: 16)",
             type: "Int",
             category: "param_optional"
         }
@@ -189,7 +166,7 @@ workflow HaplotypeSampling {
     call Globals.Globals as Glob
     GlobalVariables global = Glob.global_dockers
     String vg_docker = global.giraffe_docker
-    String samtools_docker = global.giraffe_docker
+    String samtools_docker = global.ugbio_core_docker
     String kmc_docker = global.giraffe_docker
     String seqkit_docker = global.giraffe_docker
     String minimap2_docker = global.giraffe_docker
@@ -197,7 +174,7 @@ workflow HaplotypeSampling {
     
     # Step 1: Convert each CRAM to BAM (scatter)
     scatter (idx in range(length(input_cram_bam_list))) {
-        call ConvertCramToFastq {
+        call UGGeneralTasks.ConvertCramToFastq {
             input:
                 input_cram = input_cram_bam_list[idx],
                 reference_fasta = cram_reference_fasta,
@@ -215,8 +192,6 @@ workflow HaplotypeSampling {
             sample_name = sample_name,
             kmer_length = kmer_length,
             min_kmer_count = min_kmer_count,
-            mem_gb = kmc_mem_gb,
-            cores = kmc_cores,
             kmc_docker = kmc_docker,
             monitoring_script = monitoring_script   #!FileCoercion
     }
@@ -231,8 +206,6 @@ workflow HaplotypeSampling {
             num_haplotypes = num_haplotypes,
             include_reference = include_reference,
             diploid_sampling = diploid_sampling,
-            cores = 16,
-            mem_gb = 64,
             vg_docker = vg_docker,
             monitoring_script = monitoring_script   #!FileCoercion
     }
@@ -285,39 +258,6 @@ workflow HaplotypeSampling {
 # TASK DEFINITIONS
 # ============================================================================
 
-task ConvertCramToFastq {
-    input {
-        File input_cram
-        File reference_fasta
-        File reference_fasta_index
-        File monitoring_script
-        String sample_name
-        Int cores = 4
-        Int mem_gb = 4
-        Int disk_size_gb = ceil(3*size(input_cram,"GB") + 20)
-        String samtools_docker
-    }
-
-    command <<<
-        set -euxo pipefail
-        bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-        samtools fastq --reference ~{reference_fasta} -@ ~{cores} -0 /dev/stdout ~{input_cram} \
-        | pigz -p ~{cores} -1 -b 512 > ~{sample_name}.fastq.gz
-        
-    >>>
-    output {
-        File fastq_file = "~{sample_name}.fastq.gz"
-        File monitoring_log = "monitoring.log"
-    }
-    runtime {
-        docker: samtools_docker
-        cpu: cores
-        memory: mem_gb + " GB"
-        disks: "local-disk " + disk_size_gb + " SSD"
-    }
-}
-
 task KmerCountingKMC {
     input {
         Array[File] fastq_files
@@ -325,11 +265,12 @@ task KmerCountingKMC {
         String sample_name
         Int kmer_length = 29
         Int min_kmer_count = 2
-        Int mem_gb = 128
-        Int cores = 16
-        Int disk_size_gb = 200
         String kmc_docker
     }
+
+    Int mem_gb = 64
+    Int cores = 16
+    Int disk_size_gb = 200
 
     command <<<
         set -euxo pipefail
@@ -341,7 +282,7 @@ task KmerCountingKMC {
         # Run KMC over all input FASTQ files (one file per line in files.txt)
         kmc \
             -k~{kmer_length} \
-            -m~{mem_gb-2} \
+            -m~{mem_gb-10} \
             -sm \
             -okff \
             -t~{cores} \
@@ -375,11 +316,12 @@ task SampleHaplotypes {
         Int num_haplotypes = 32
         Boolean include_reference = true
         Boolean diploid_sampling = true
-        Int cores = 16
-        Int mem_gb = 64
-        Int disk_size_gb = 100
         String vg_docker
     }
+    
+    Int cores = 16
+    Int mem_gb = 64
+    Int disk_size_gb = 100
 
     command <<<
         set -euxo pipefail
@@ -415,11 +357,12 @@ task ExtractPathsFasta {
         File gbz_file
         File monitoring_script
         String sample_name
-        Int cores = 4
-        Int mem_gb = 32
-        Int disk_size_gb = 100
         String vg_docker
     }
+
+    Int cores = 4
+    Int mem_gb = 32
+    Int disk_size_gb = 100
 
     command <<<
         set -euxo pipefail
@@ -451,11 +394,12 @@ task SlidingWindows {
         String sample_name
         Int window_size = 50000
         Int step_size = 50000
-        Int cores = 4
-        Int mem_gb = 16
-        Int disk_size_gb = 50
         String seqkit_docker
     }
+
+    Int cores = 4
+    Int mem_gb = 16
+    Int disk_size_gb = 50
 
     command <<<
         set -euxo pipefail
@@ -489,13 +433,14 @@ task Minimap2Align {
         File monitoring_script
         String sample_name
         String preset = "asm5"
+        String minimap_extra_args = ""
+        String minimap2_docker
         Int map_cores = 24
         Int sort_cores = 8
         Int mem_gb = 64
-        Int disk_size_gb = 100
-        String minimap_extra_args = ""
-        String minimap2_docker
+
     }
+    Int disk_size_gb = 100
 
     command <<<
         set -euxo pipefail

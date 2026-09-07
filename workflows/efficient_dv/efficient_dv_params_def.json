@@ -1,12 +1,4 @@
 {
-    "EfficientDV.HaplotypeSampling.kmc_cores": {
-        "description": "Number of CPU cores for KMC (default: 16)",
-        "optional": true
-    },
-    "EfficientDV.HaplotypeSampling.kmc_mem_gb": {
-        "description": "Memory (GB) for KMC k-mer counting (default: 64)",
-        "optional": true
-    },
     "EfficientDV.HaplotypeSampling.kmer_length": {
         "description": "K-mer length for KMC counting (default: 29)",
         "optional": true
@@ -104,7 +96,7 @@
         "optional": true
     },
     "EfficientDV.diploid_sampling_in_haplotypes": {
-        "description": "Use diploid sampling strategy for haplotype selection (must fit the model)",
+        "description": "Use diploid sampling strategy for haplotype selection",
         "optional": true
     },
     "EfficientDV.dummy_input_for_call_caching": {
@@ -144,7 +136,7 @@
         "optional": true
     },
     "EfficientDV.include_reference_in_haplotypes": {
-        "description": "Include the reference sequence in the sampled haplotypes (must fit the model)",
+        "description": "Include the reference sequence in the sampled haplotypes",
         "optional": true
     },
     "EfficientDV.input_flow_order": {
@@ -252,7 +244,7 @@
         "optional": false
     },
     "EfficientDV.num_haplotypes": {
-        "description": "Number of haplotypes to sample from the pangenome graph (must fit the model)",
+        "description": "Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image.",
         "optional": true
     },
     "EfficientDV.num_shards": {

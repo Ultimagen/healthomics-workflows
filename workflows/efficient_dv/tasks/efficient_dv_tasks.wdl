@@ -17,6 +17,7 @@ task UGMakeExamples{
     File? germline_vcf
     File? pangenome_haplotypes
     File? pangenome_haplotypes_index
+    Int? haps_height  # Haplotype band size in read rows (excluding reference rows). Controls how many rows in the pileup image are allocated for pangenome haplotype reads. Set to 2 * the number of haplotypes in the pangenome CRAM (e.g., 16 for 8 haplotypes). Omit to use full band.
 
     Int min_base_quality
     Int min_mapq
@@ -263,6 +264,7 @@ task UGMakeExamples{
         ~{true="--progress" false="" log_progress} \
         ~{if defined(germline_vcf) then "--region-haplotypes-vcf ~{germline_vcf}" else ""} \
         ~{if defined(pangenome_haplotypes) then "--exp-pangenome-haps $(basename ~{pangenome_haplotypes})" else ""} \
+        ~{if defined(pangenome_haplotypes) && defined(haps_height) then "--haps-height ~{haps_height}" else ""} \
          &
         
       # Save the PID of the process

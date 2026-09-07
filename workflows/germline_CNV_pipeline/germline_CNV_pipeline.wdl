@@ -41,7 +41,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.35.0" # !UnusedDeclaration
+        String pipeline_version = "1.35.1" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file

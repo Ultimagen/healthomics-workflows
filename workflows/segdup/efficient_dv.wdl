@@ -34,7 +34,7 @@ import "haplotype_sampling.wdl" as HSampling
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.35.0" # !UnusedDeclaration
+    String pipeline_version = "1.35.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -173,6 +173,8 @@ workflow EfficientDV {
    #@wv is_somatic -> len(background_cram_files) > 0
    #@wv is_somatic -> defined(allele_frequency_ratio)
    #@wv defined(pangenome_haplotypes) <-> defined(pangenome_haplotypes_index)
+   #@wv defined(pangenome_haplotypes) -> defined(num_haplotypes)
+   #@wv defined(num_haplotypes) -> num_haplotypes > 0
    #@wv defined(gq_bins) -> not defined(gq_resolution_override)
    #@wv defined(gq_resolution_override) -> not defined(gq_bins)
    #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(ref_gbz_for_haplotypes)
@@ -435,17 +437,17 @@ workflow EfficientDV {
     }
     num_haplotypes: {
         type: "Int",
-        help: "Number of haplotypes to sample from the pangenome graph (must fit the model)",
+        help: "Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image.",
         category: "param_optional"
     }
     include_reference_in_haplotypes: {
         type: "Boolean",
-        help: "Include the reference sequence in the sampled haplotypes (must fit the model)",
+        help: "Include the reference sequence in the sampled haplotypes",
         category: "param_optional"
     }
     diploid_sampling_in_haplotypes: {
         type: "Boolean",
-        help: "Use diploid sampling strategy for haplotype selection (must fit the model)",
+        help: "Use diploid sampling strategy for haplotype selection",
         category: "param_optional"
     }
     model_onnx: {
@@ -808,6 +810,20 @@ workflow EfficientDV {
   File? pangenome_haplotypes_to_use = if defined(HaplotypeSampling.output_cram) then HaplotypeSampling.output_cram else pangenome_haplotypes
   File? pangenome_haplotypes_index_to_use = if defined(HaplotypeSampling.output_cram_index) then HaplotypeSampling.output_cram_index else pangenome_haplotypes_index
 
+  # Derive band heights consistently from ensemble_reference_rows
+  Int main_band_height = 100  # total height of the main pileup band (read rows + reference rows)
+  Int max_pileup_read_rows = main_band_height - ensemble_reference_rows  # 95 when ref_rows=5
+
+  # Only pass --haps-height when num_haplotypes is explicitly set.
+  # When undefined, don't pass the flag — the tool uses full band by default.
+  Boolean use_custom_haps_height = defined(num_haplotypes) && select_first([num_haplotypes, 0]) > 0
+  if (use_custom_haps_height) {
+    Int raw_haps = select_first([num_haplotypes]) * 2
+    Int computed_haps_read_rows = if raw_haps > 50 then max_pileup_read_rows else raw_haps
+  }
+  # hap_band_total_height for sample_heights: custom height + ref rows, or full main_band_height
+  Int hap_band_total_height = select_first([computed_haps_read_rows, max_pileup_read_rows]) + ensemble_reference_rows
+
   Int gq_resolution = select_first([gq_resolution_override, 5])
   scatter (interval in ScatterIntervalList.out){
     call UGDVTasks.UGMakeExamples {
@@ -827,6 +843,7 @@ workflow EfficientDV {
         germline_vcf = germline_vcf,
         pangenome_haplotypes = pangenome_haplotypes_to_use,
         pangenome_haplotypes_index = pangenome_haplotypes_index_to_use,
+        haps_height = computed_haps_read_rows,
         min_base_quality = min_base_quality,
         min_mapq = min_mapping_quality,
         min_read_count_snps = min_read_count_snps,
@@ -890,7 +907,9 @@ workflow EfficientDV {
       strong_call_threshold = strong_call_threshold,
       reference_rows = ensemble_reference_rows,
       random_seed = random_seed,
-      sample_heights = if length(background_cram_files) > 0 || defined(pangenome_haplotypes) then [100, 100] else [100],
+      sample_heights = if defined(pangenome_haplotypes_to_use) then [main_band_height, hap_band_total_height]
+                       else if length(background_cram_files) > 0 then [main_band_height, main_band_height]
+                       else [main_band_height],
       shuffle_all_samples = shuffle_all_samples
   }
 

@@ -333,6 +333,7 @@ task DNNCramToTensorsInference {
   Int disk_size = ceil(input_size * 3 + 50)
   String holdout = select_first([deep_srsnv_params.holdout_chromosomes, "chr21"])
   Int effective_num_folds = select_first([num_folds, deep_srsnv_params.num_folds])
+  String tensor_cache_tar_name = "tensor_cache.tar"
 
   command <<<
     set -xeuo pipefail
@@ -357,6 +358,13 @@ task DNNCramToTensorsInference {
       --vocab-config ~{deep_srsnv_params.vocab_config}
 
     ls -ltr tensor_cache/
+
+    # Singularity binds each input file as a separate argument, so a fold's ~1000 shards overflow
+    # the exec argument limit in DNNFoldInference (index.json excluded: not in its tensor_cache/).
+    if [ -n "${SINGULARITY_CONTAINER:-}${APPTAINER_CONTAINER:-}" ]; then
+      tar -chf ~{tensor_cache_tar_name} --exclude index.json tensor_cache/
+      rm -f tensor_cache/shard_*.pt.gz
+    fi
   >>>
 
   runtime {
@@ -369,6 +377,7 @@ task DNNCramToTensorsInference {
 
   output {
     Array[File] tensor_shards = glob("tensor_cache/shard_*.pt.gz")
+    Array[File] tensor_cache_tar = glob(tensor_cache_tar_name)
     File tensor_cache_index = "tensor_cache/index.json"
     File monitoring_log = "monitoring.log"
   }
@@ -376,7 +385,9 @@ task DNNCramToTensorsInference {
 
 task DNNFoldInference {
   input {
-    Array[File] tensor_shards
+    Array[File] tensor_shards = []
+    # Set instead of tensor_shards when the producing task archived them (singularity backend).
+    Array[File] tensor_cache_tar = []
     File fold_metadata
     File fold_checkpoint
     File fold_onnx_model
@@ -399,8 +410,8 @@ task DNNFoldInference {
     Int cpus = 4
   }
 
-  Float input_size = size(tensor_shards, "GiB")
-  Int disk_size = ceil(input_size + 20)
+  Float input_size = size(tensor_shards, "GiB") + size(tensor_cache_tar, "GiB")
+  Int disk_size = ceil(input_size + size(tensor_cache_tar, "GiB") + 20)
   String out_parquet = "~{base_file_name}.fold_~{fold_idx}.predictions.parquet"
   Int gpu_count = 1
   String gpu_type = select_first([deep_srsnv_params.gpu_type, "nvidia-tesla-t4"])
@@ -421,9 +432,14 @@ task DNNFoldInference {
     # Link tensor shards into a single directory for inference.
     # Use ln -sf to handle potential duplicates from HealthOmics caching.
     mkdir -p tensor_cache
-    cat ~{write_lines(tensor_shards)} | while read -r shard; do
-      ln -sf "$shard" tensor_cache/
-    done
+    tar_list=~{write_lines(tensor_cache_tar)}
+    if [ -s "$tar_list" ]; then
+      tar -xf "$(head -n 1 "$tar_list")" -C tensor_cache --strip-components=1
+    else
+      cat ~{write_lines(tensor_shards)} | while read -r shard; do
+        ln -sf "$shard" tensor_cache/
+      done
+    fi
     echo "Linked $(ls tensor_cache/ | wc -l) shards into tensor_cache/"
 
     # Copy model files to working directory so metadata can find them by relative path

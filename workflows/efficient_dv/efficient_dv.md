@@ -210,17 +210,17 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.num_haplotypes">
         <b>EfficientDV.num_haplotypes</b><br />
         <i>Int? </i> &mdash;
-         Number of haplotypes to sample from the pangenome graph (must fit the model) <br />
+         Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image. <br />
 </p>
 <p name="EfficientDV.include_reference_in_haplotypes">
         <b>EfficientDV.include_reference_in_haplotypes</b><br />
         <i>Boolean? </i> &mdash;
-         Include the reference sequence in the sampled haplotypes (must fit the model) <br />
+         Include the reference sequence in the sampled haplotypes <br />
 </p>
 <p name="EfficientDV.diploid_sampling_in_haplotypes">
         <b>EfficientDV.diploid_sampling_in_haplotypes</b><br />
         <i>Boolean? </i> &mdash;
-         Use diploid sampling strategy for haplotype selection (must fit the model) <br />
+         Use diploid sampling strategy for haplotype selection <br />
 </p>
 <p name="EfficientDV.optimization_level">
         <b>EfficientDV.optimization_level</b><br />
@@ -361,16 +361,6 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.HaplotypeSampling.minimap2_preset</b><br />
         <i>String </i> &mdash;
          Minimap2 preset for alignment (default: asm5) <br />
-</p>
-<p name="EfficientDV.HaplotypeSampling.kmc_mem_gb">
-        <b>EfficientDV.HaplotypeSampling.kmc_mem_gb</b><br />
-        <i>Int </i> &mdash;
-         Memory (GB) for KMC k-mer counting (default: 64) <br />
-</p>
-<p name="EfficientDV.HaplotypeSampling.kmc_cores">
-        <b>EfficientDV.HaplotypeSampling.kmc_cores</b><br />
-        <i>Int </i> &mdash;
-         Number of CPU cores for KMC (default: 16) <br />
 </p>
 <p name="EfficientDV.HaplotypeSampling.minimap_extra_args">
         <b>EfficientDV.HaplotypeSampling.minimap_extra_args</b><br />

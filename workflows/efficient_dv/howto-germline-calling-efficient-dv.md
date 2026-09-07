@@ -188,7 +188,7 @@ Key parameters:
 - `threshold` (workflow parameter `strong_call_threshold`, default `0.995`): the max-class probability below which a candidate is considered weak and reprocessed.
 - `randomSeed` (workflow parameter `random_seed`, default `42`): random seed for the row-shuffle augmentation, ensuring reproducible results.
 - `referenceRows` (workflow parameter `ensemble_reference_rows`, default `5`): number of reference rows at the top of the image that are not shuffled.
-- `sampleHeights`: image height in rows per input sample. Use `100` for standard germline calling (single input CRAM). Use `100,100` when using pangenome haplotype calling (reads + haplotype CRAM).
+- `sampleHeights`: image height in rows per input sample. Use `100` for standard germline calling (single input CRAM). For pangenome haplotype calling the second value is the haplotype band height, derived from `num_haplotypes` (e.g. `100,100` for 32 haplotypes, `100,21` for 8 haplotypes). The workflow computes this automatically; manual runs should match the model's expected geometry.
 - `criteria`: selection criterion for identifying weak candidates. Always `max_prob_threshold` in the workflow.
 - `shuffleAllSamples` (workflow parameter `shuffle_all_samples`, default `false`): when `true`, row shuffling is applied to all samples in the image; when `false`, only the primary sample is shuffled.
 

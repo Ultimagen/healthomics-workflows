@@ -40,7 +40,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.35.0" # !UnusedDeclaration
+        String pipeline_version = "1.35.1" # !UnusedDeclaration
 
         String base_file_name
         String? sample_name
