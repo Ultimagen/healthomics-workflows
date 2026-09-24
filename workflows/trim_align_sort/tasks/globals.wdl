@@ -15,12 +15,12 @@ workflow Globals {
   GlobalVariables glob ={
         "ubuntu_docker": "ubuntu:focal",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
-        "ua_docker": "ultimagenomics/alignment:3.0.8",
+        "ua_docker": "ultimagenomics/alignment:4.1.4",
         "trimmer_docker": "ultimagenomics/trimmer:2.3.7",
         "star_docker": "ultimagenomics/star:2.7.10a",
         "sorter_docker": "ultimagenomics/sorter:1.6.11",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.30.2",
-        "ug_vg_docker": "ultimagenomics/vg:1.74.1"
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.31.0",
+        "ug_vg_docker": "ultimagenomics/vg:1.74.2"
 }
 }
 

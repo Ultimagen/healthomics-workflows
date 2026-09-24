@@ -1214,6 +1214,47 @@ task IndexBam {
     }
 }
 
+task SortByNameAndKeepPaired {
+    input {
+        File input_bam
+        String output_bam_basename
+        File? cache_tarball
+        Int disk_size = ceil(4*size(input_bam, "GB") + size(cache_tarball, "GB") + 20)
+        String docker
+        File monitoring_script
+        Int preemptible_tries
+        Boolean no_address
+    }
+    Boolean defined_cache_tarball = defined(cache_tarball)
+    command <<<
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        if [[ ~{defined_cache_tarball} == true ]]; then
+            echo "Unzipping cache tarball"
+            ~{"tar -zxf "+cache_tarball}
+        
+            export REF_CACHE=cache/%2s/%2s/ 
+            export REF_PATH='.' 
+        fi
+
+        samtools sort -n -O BAM -@ 6 ~{input_bam} \
+          | samtools view -bh -@ 4 -e "flag.paired" -o ~{output_bam_basename}.bam -
+    >>>
+    runtime {
+        cpu: "8"
+        memory: "16 GB"
+        disks: "local-disk " + ceil(disk_size) + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+    }
+    output {
+        File output_bam = "~{output_bam_basename}.bam"
+        File monitoring_log = "monitoring.log"
+    }
+}
+
 task UGGiraffeAlignment {
     input {
         Array[File] input_bams
@@ -1222,18 +1263,18 @@ task UGGiraffeAlignment {
         GiraffeParameters giraffe_indices
         File ref_dict
         String? extra_args
+        Boolean is_paired_end
         File monitoring_script
         Int preemptible_tries
         Boolean no_address
         String vg_docker
-        Int cpu = 40
+        Int cpu = 48
+        Int memory_gb = 96
     }
-    Int disk_size = ceil(3*size(input_bams, "GB") + 20 + 
-                            2*size(cache_tarball, "GB") + size(giraffe_indices.ref_gbz, "GB") + 
-                            size(giraffe_indices.ref_min, "GB") + size(giraffe_indices.ref_dist, "GB") + 
+    Int disk_size = ceil(3*size(input_bams, "GB") + 20 +
+                            3*size(cache_tarball, "GB") + size(giraffe_indices.ref_gbz, "GB") +
+                            size(giraffe_indices.ref_min, "GB") + size(giraffe_indices.ref_dist, "GB") +
                             size(giraffe_indices.ref_zipcodes, "GB") +  size(giraffe_indices.ref_paths, "GB"))
-    
-    Int memory_gb = ceil(2*size(giraffe_indices.ref_min, "GB")) + 10
 
     Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
     Boolean defined_cache_tarball = defined(cache_tarball)
@@ -1249,13 +1290,13 @@ task UGGiraffeAlignment {
         export REF_PATH='.' 
     fi
     
-    # for compatibility with the old image where ua was in /ua/ua and not in PATH
-
-    samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{sep=" " input_bams} | \
-    samtools view -@ 2 -h -F 2048 - | 
-    vg giraffe \
-        --threads ~{cpu} \
-        --hts-in - \
+    samtools merge -@ 4 -c -O SAM /dev/stdout ~{true="-n" false="" is_paired_end} \
+    ~{sep=" " input_bams} \
+    | samtools view -@ 1 -h -F 2048 - \
+    | vg giraffe \
+        --threads ~{cpu - 8} \
+        --hts-in /dev/stdin \
+        ~{true="--interleaved" false="" is_paired_end} \
         --output-format SAM \
         --gbz-name ~{giraffe_indices.ref_gbz} \
         --dist-name ~{giraffe_indices.ref_dist} \
@@ -1265,8 +1306,8 @@ task UGGiraffeAlignment {
         --ref-dict ~{ref_dict} \
         --parameter-preset default \
         --progress \
-        ~{extra_args} | \
-    samtools view -@ ~{cpu} -o ~{output_bam_basename}.bam -
+        ~{extra_args} \
+    | samtools view -@ 4 -o ~{output_bam_basename}.bam -
     >>>
 
     runtime {

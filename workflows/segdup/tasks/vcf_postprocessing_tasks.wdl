@@ -122,7 +122,59 @@ task RemoveRefCalls {
   }
 }
 
-task CalibrateBridgingSnvs { 
+task CallROH {
+  input{
+    File input_vcf
+    File input_vcf_index
+    File calling_interval_list
+    File roh_blacklist
+    Float af_default
+    String output_prefix
+    File monitoring_script
+    String docker
+    Boolean no_address = true
+  }
+  Int disk_size = ceil(3 * size(input_vcf, "GB") + 2)
+  String output_file = "~{output_prefix}.roh.tsv"
+
+  command <<<
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    set -xeo pipefail
+
+    marker_filter='FILTER="PASS" && TYPE="snp" && N_ALT=1'
+
+    # Build the ROH calling whitelist: the regions this run called, minus the blacklist.
+    gatk IntervalListToBed -I ~{calling_interval_list} -O calling_regions.bed
+    bedtools subtract -a calling_regions.bed -b ~{roh_blacklist} | cut -f1-3 > regions.bed
+
+    set +x  # one iteration per region, hundreds of them
+    first=1
+    : > ~{output_file}
+    while read -r line; do
+      echo "$line" > region.bed
+      bcftools roh --AF-dflt ~{af_default} --include "$marker_filter" \
+          --regions-file region.bed --output-type r ~{input_vcf} \
+        | awk -v first=$first 'first && /^# RG/ {print} $1=="RG" {print}' >> ~{output_file}
+      first=0
+    done < regions.bed
+    set -x
+
+  >>>
+  runtime {
+    memory: "4 GB"
+    disks: "local-disk " + ceil(disk_size) + " HDD"
+    docker: docker
+    noAddress: no_address
+    maxRetries: 1
+  }
+   output {
+    File monitoring_log = "monitoring.log"
+    File roh_tsv = output_file
+  }
+}
+
+task CalibrateBridgingSnvs {
     input{
         File input_vcf
         File input_vcf_index
@@ -159,4 +211,50 @@ task CalibrateBridgingSnvs {
       File output_vcf = output_file
       File output_vcf_index = "~{output_file}.tbi"
   }
+}
+
+task SuppressHetOnSexChromosomes {
+    input {
+        File input_vcf
+        File input_vcf_index
+        String sample_id
+        File par_regions
+        String docker
+        Int preemptibles
+        File monitoring_script
+    }
+
+    Int vcf_size = ceil(size(input_vcf, "GB"))
+    Int disk_size = 2 * vcf_size + 10
+
+    command <<<
+        set -eo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        echo "******** Converting non-PAR chrX/Y to haploid genotypes ********"
+
+        convert_haploid_regions \
+            --input_vcf ~{input_vcf} \
+            --par_regions ~{par_regions} \
+            --output_vcf ~{sample_id}.haploid_chrXY.vcf.gz
+
+        bcftools index -t ~{sample_id}.haploid_chrXY.vcf.gz
+        echo "******** DONE ********"
+    >>>
+
+    output {
+        File haploid_vcf = "~{sample_id}.haploid_chrXY.vcf.gz"
+        File haploid_vcf_index = "~{sample_id}.haploid_chrXY.vcf.gz.tbi"
+        File monitoring_log = "monitoring.log"
+    }
+
+    runtime {
+        preemptible: "~{preemptibles}"
+        cpu: 2
+        memory: "4 GB"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+      noAddress: true
+      maxRetries: 1
+    }
 }

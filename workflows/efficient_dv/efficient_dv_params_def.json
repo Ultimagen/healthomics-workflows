@@ -323,12 +323,32 @@
         "description": "Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm39. Default to hg38",
         "optional": true
     },
+    "EfficientDV.roh_af_default": {
+        "description": "Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table",
+        "optional": true
+    },
+    "EfficientDV.roh_blacklist_override": {
+        "description": "BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2)",
+        "optional": true
+    },
     "EfficientDV.run_haplotype_sampling": {
         "description": "Whether to run haplotype sampling to create pangenome haplotypes. Default: false",
         "optional": true
     },
+    "EfficientDV.run_ploidy_estimation": {
+        "description": "Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases.",
+        "optional": true
+    },
+    "EfficientDV.run_roh": {
+        "description": "Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given",
+        "optional": true
+    },
     "EfficientDV.scatter_intervals_break": {
         "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "EfficientDV.sex_chromosomes": {
+        "description": "Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references.",
         "optional": true
     },
     "EfficientDV.show_bg_fields": {

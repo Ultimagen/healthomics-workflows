@@ -24,11 +24,6 @@ Deep Single Read SNV (DeepSRSNV) pipeline. A convolutional neural network on rea
         <i>String </i> &mdash;
          Pipeline mode (set in the input template): 'full' (train + inference), 'train_only' (training + QC report), 'inference_only' (apply provided model, requires inference_models), or 'data_prep_only' (produce training tensor caches and stop). <br />
 </p>
-<p name="DeepSingleReadSNV.num_shards_featuremap">
-        <b>DeepSingleReadSNV.num_shards_featuremap</b><br />
-        <i>Int </i> &mdash;
-         Number of genomic shards to scatter the snvfind (CreateFeatureMap) step across. Higher values reduce wall-clock time but add scatter overhead. <br />
-</p>
 <p name="DeepSingleReadSNV.scatter_interval_list">
         <b>DeepSingleReadSNV.scatter_interval_list</b><br />
         <i>File </i> &mdash;
@@ -138,6 +133,11 @@ Deep Single Read SNV (DeepSRSNV) pipeline. A convolutional neural network on rea
         <b>DeepSingleReadSNV.input_featuremap_vcf_index</b><br />
         <i>File? </i> &mdash;
          (inference_only) Index for input_featuremap_vcf. Required if input_featuremap_vcf is provided. <br />
+</p>
+<p name="DeepSingleReadSNV.override_num_shards_featuremap">
+        <b>DeepSingleReadSNV.override_num_shards_featuremap</b><br />
+        <i>Int? </i> &mdash;
+         Optional override for the snvfind/tensorize genomic shard count. When unset (default), the count is auto-scaled from mean coverage (ceil(mean_coverage*3)) to keep per-shard tensorize memory bounded. Set to force a fixed shard count. <br />
 </p>
 <p name="DeepSingleReadSNV.mean_coverage">
         <b>DeepSingleReadSNV.mean_coverage</b><br />

@@ -65,11 +65,6 @@ Runs pharmacogenomics analysis on several genes.
         <i>Boolean </i> &mdash;
          Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling. <br />
 </p>
-<p name="PyPGx.EfficientDV.run_haplotype_sampling">
-        <b>PyPGx.EfficientDV.run_haplotype_sampling</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to run haplotype sampling to create pangenome haplotypes. Default: false <br />
-</p>
 <p name="PyPGx.EfficientDV.scatter_intervals_break">
         <b>PyPGx.EfficientDV.scatter_intervals_break</b><br />
         <i>Int </i> &mdash;
@@ -109,11 +104,6 @@ Runs pharmacogenomics analysis on several genes.
         <b>PyPGx.EfficientDV.min_read_count_non_hmer_indels</b><br />
         <i>Int </i> &mdash;
          Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant <br />
-</p>
-<p name="PyPGx.EfficientDV.min_base_quality">
-        <b>PyPGx.EfficientDV.min_base_quality</b><br />
-        <i>Int </i> &mdash;
-         Minimal base quality for candidate generation <br />
 </p>
 <p name="PyPGx.EfficientDV.min_hmer_plus_one_candidate">
         <b>PyPGx.EfficientDV.min_hmer_plus_one_candidate</b><br />
@@ -165,11 +155,6 @@ Runs pharmacogenomics analysis on several genes.
         <i>Boolean </i> &mdash;
          Output haplotypes and re-aligned reads to a bam file. Default: false. <br />
 </p>
-<p name="PyPGx.EfficientDV.ug_make_examples_extra_args">
-        <b>PyPGx.EfficientDV.ug_make_examples_extra_args</b><br />
-        <i>String? </i> &mdash;
-         Additional arguments for make-examples tool <br />
-</p>
 <p name="PyPGx.EfficientDV.log_make_examples_progress">
         <b>PyPGx.EfficientDV.log_make_examples_progress</b><br />
         <i>Boolean </i> &mdash;
@@ -190,21 +175,6 @@ Runs pharmacogenomics analysis on several genes.
         <i>File? </i> &mdash;
          Optional pangenome haplotypes cram index file <br />
 </p>
-<p name="PyPGx.EfficientDV.num_haplotypes">
-        <b>PyPGx.EfficientDV.num_haplotypes</b><br />
-        <i>Int? </i> &mdash;
-         Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image. <br />
-</p>
-<p name="PyPGx.EfficientDV.include_reference_in_haplotypes">
-        <b>PyPGx.EfficientDV.include_reference_in_haplotypes</b><br />
-        <i>Boolean? </i> &mdash;
-         Include the reference sequence in the sampled haplotypes <br />
-</p>
-<p name="PyPGx.EfficientDV.diploid_sampling_in_haplotypes">
-        <b>PyPGx.EfficientDV.diploid_sampling_in_haplotypes</b><br />
-        <i>Boolean? </i> &mdash;
-         Use diploid sampling strategy for haplotype selection <br />
-</p>
 <p name="PyPGx.EfficientDV.optimization_level">
         <b>PyPGx.EfficientDV.optimization_level</b><br />
         <i>Int? </i> &mdash;
@@ -215,15 +185,20 @@ Runs pharmacogenomics analysis on several genes.
         <i>Boolean </i> &mdash;
          Output tfrecords from call_variants <br />
 </p>
+<p name="PyPGx.EfficientDV.run_ploidy_estimation">
+        <b>PyPGx.EfficientDV.run_ploidy_estimation</b><br />
+        <i>Boolean </i> &mdash;
+         Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases. <br />
+</p>
+<p name="PyPGx.EfficientDV.sex_chromosomes">
+        <b>PyPGx.EfficientDV.sex_chromosomes</b><br />
+        <i>Array[String] </i> &mdash;
+         Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references. <br />
+</p>
 <p name="PyPGx.EfficientDV.strong_call_threshold">
         <b>PyPGx.EfficientDV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
          Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
-</p>
-<p name="PyPGx.EfficientDV.ensemble_size">
-        <b>PyPGx.EfficientDV.ensemble_size</b><br />
-        <i>Int </i> &mdash;
-         Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
 </p>
 <p name="PyPGx.EfficientDV.ensemble_reference_rows">
         <b>PyPGx.EfficientDV.ensemble_reference_rows</b><br />
@@ -264,6 +239,16 @@ Runs pharmacogenomics analysis on several genes.
         <b>PyPGx.EfficientDV.ug_post_processing_extra_args</b><br />
         <i>String </i> &mdash;
          Additional arguments for post-processing <br />
+</p>
+<p name="PyPGx.EfficientDV.run_roh">
+        <b>PyPGx.EfficientDV.run_roh</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given <br />
+</p>
+<p name="PyPGx.EfficientDV.roh_af_default">
+        <b>PyPGx.EfficientDV.roh_af_default</b><br />
+        <i>Float </i> &mdash;
+         Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table <br />
 </p>
 <p name="PyPGx.EfficientDV.input_flow_order">
         <b>PyPGx.EfficientDV.input_flow_order</b><br />
@@ -332,20 +317,15 @@ Runs pharmacogenomics analysis on several genes.
 </p>
 
 ### Optional reference files
-<p name="PyPGx.EfficientDV.ref_gbz_for_haplotypes">
-        <b>PyPGx.EfficientDV.ref_gbz_for_haplotypes</b><br />
-        <i>File? </i> &mdash;
-         Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
-</p>
-<p name="PyPGx.EfficientDV.ref_hapl">
-        <b>PyPGx.EfficientDV.ref_hapl</b><br />
-        <i>File? </i> &mdash;
-         Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
-</p>
 <p name="PyPGx.EfficientDV.model_serialized">
         <b>PyPGx.EfficientDV.model_serialized</b><br />
         <i>File? </i> &mdash;
          TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br />
+</p>
+<p name="PyPGx.EfficientDV.roh_blacklist_override">
+        <b>PyPGx.EfficientDV.roh_blacklist_override</b><br />
+        <i>File? </i> &mdash;
+         BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2) <br />
 </p>
 <p name="PyPGx.EfficientDV.annotation_intervals">
         <b>PyPGx.EfficientDV.annotation_intervals</b><br />

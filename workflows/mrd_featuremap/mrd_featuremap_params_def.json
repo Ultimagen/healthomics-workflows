@@ -11,6 +11,10 @@
         "description": "Memory in GB.",
         "optional": true
     },
+    "MRDFeatureMap.ExtractCoverageOverVcfFiles.no_per_base": {
+        "description": "When true, pass --no-per-base to mosdepth. This skips per-base depth output while preserving regions and summary outputs.",
+        "optional": true
+    },
     "MRDFeatureMap.FilterControlSignatures.base_file_name": {
         "description": "Base file name for output files.",
         "optional": true

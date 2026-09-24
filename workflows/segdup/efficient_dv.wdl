@@ -29,12 +29,13 @@ import "tasks/globals.wdl" as Globals
 import "tasks/genome_resources.wdl" as GenomeResourcesLib
 import "tasks/single_sample_vc_tasks.wdl" as VCTasks
 import "tasks/vcf_postprocessing_tasks.wdl" as PostProcesTasks
+import "tasks/ploidy_tasks.wdl" as PloidyTasks
 import "haplotype_sampling.wdl" as HSampling
 
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.35.1" # !UnusedDeclaration
+    String pipeline_version = "1.36.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -107,6 +108,8 @@ workflow EfficientDV {
     File? model_serialized
     Int? optimization_level
     Boolean output_call_variants_tfrecords = false
+    Boolean run_ploidy_estimation = false
+    Array[String] sex_chromosomes = ["chrX", "chrY", "X", "Y"]
     
     # Ensemble inference args
     Float strong_call_threshold = 0.995
@@ -125,6 +128,11 @@ workflow EfficientDV {
     Float? h_indel_vaf_to_pass
     Float? h_indel_allele_frequency_ratio
     String ug_post_processing_extra_args = ""
+
+    # Runs-of-homozygosity args
+    Boolean run_roh = false
+    File? roh_blacklist_override
+    Float roh_af_default = 0.6
 
     String dummy_input_for_call_caching = ""
 
@@ -182,6 +190,9 @@ workflow EfficientDV {
    #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(num_haplotypes)
    #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(diploid_sampling_in_haplotypes)
    #@wv run_haplotype_sampling and not defined(pangenome_haplotypes) -> defined(include_reference_in_haplotypes)
+   #@wv run_roh and not defined(roh_blacklist_override) -> reference_genome in {"hg38", "b37", "hg38_nist_v3", "hg38_nist_v3_with_decoy", "hg38_no_alt"}
+   #@wv run_roh -> roh_af_default > 0 and roh_af_default < 1
+   #@wv run_ploidy_estimation -> reference_genome in {"hg38", "b37", "hg38_taps", "hg38_nist_v3", "hg38_nist_v3_with_decoy", "hg38_no_alt"}
   }
   meta {
       description:"Performs variant calling on an input cram, using a re-write of (DeepVariant)[https://www.nature.com/articles/nbt.4235] which is adapted for Ultima Genomics data. There are three stages to the variant calling: (1) make_examples - Looks for “active regions” with potential candidates. Within these regions, it performs local assembly (haplotypes), re-aligns the reads, and defines candidate variant. Images of the reads in the vicinity of the candidates are saved as protos in a tfrecord format. (2) call_variants - Collects the images from make_examples and uses a deep learning model to infer the statistics of each variant (i.e. quality, genotype likelihoods etc.). (3) post_process - Uses the output of call_variants to generate a vcf and annotates it."
@@ -467,6 +478,15 @@ workflow EfficientDV {
       help: "Output tfrecords from call_variants",
       category: "param_optional"
     }
+    run_ploidy_estimation: {
+      help: "Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases.",
+      category: "param_optional"
+    }
+    sex_chromosomes: {
+      help: "Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references.",
+      type: "Array[String]",
+      category: "param_optional"
+    }
     min_variant_quality_snps: {
       help: "Minimal snp variant quality in order to be labeled as PASS",
       category: "param_optional"
@@ -520,6 +540,21 @@ workflow EfficientDV {
     }
     ug_post_processing_extra_args: {
       help: "Additional arguments for post-processing",
+      category: "param_optional"
+    }
+    run_roh: {
+      help: "Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given",
+      type: "Boolean",
+      category: "param_optional"
+    }
+    roh_blacklist_override: {
+      help: "BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2)",
+      type: "File",
+      category: "ref_optional"
+    }
+    roh_af_default: {
+      help: "Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table",
+      type: "Float",
       category: "param_optional"
     }
     ug_make_examples_memory_override: {
@@ -593,6 +628,11 @@ workflow EfficientDV {
       type: "File",
       category: "output"
     }
+    roh_tsv: {
+      help: "Runs of homozygosity, as the regions tsv of bcftools roh",
+      type: "File",
+      category: "output"
+    }
     call_variants_output_tfrecords: {
       help: "The tfrecords that call_variants outputs",
       category: "output"
@@ -651,6 +691,11 @@ workflow EfficientDV {
     num_candidates_as_int: {
       help: "Number of candidates that call_variants processed (as an integer)",
       type: "Int",
+      category: "output"
+    }
+    ploidy_report: {
+      help: "Human-readable genome ploidy report with sex karyotype, per-chromosome ploidy, and BAF summary when available",
+      type: "File?",
       category: "output"
     }
 
@@ -917,17 +962,15 @@ workflow EfficientDV {
     Array[File] gvcf_records = select_all(flatten(UGMakeExamples.gvcf_records))
   }
 
-  if ( defined(input_flow_order) == false ) {
-    call UGGeneralTasks.ExtractSampleNameFlowOrder as ExtractSampleNameFlowOrder{
-        input:
-        input_bam         = cram_files[0],
-        monitoring_script = monitoring_script,
-        preemptible_tries = preemptible_tries,
-        docker            = global.broad_gatk_docker,
-        references         = references,
-        no_address        =  true,
-        cloud_provider_override = cloud_provider_override
-    }
+  call UGGeneralTasks.ExtractSampleNameFlowOrder as ExtractSampleNameFlowOrder{
+      input:
+      input_bam         = cram_files[0],
+      monitoring_script = monitoring_script,
+      preemptible_tries = preemptible_tries,
+      docker            = global.broad_gatk_docker,
+      references         = references,
+      no_address        =  true,
+      cloud_provider_override = cloud_provider_override
   }
 
   String flow_order_ = select_first([input_flow_order, ExtractSampleNameFlowOrder.flow_order])
@@ -1000,13 +1043,59 @@ workflow EfficientDV {
     } 
   }
 
+
+  if (run_ploidy_estimation && !is_somatic) {
+    File par_regions = select_first([GenomeResources.resources[reference_genome].par_regions])
+    File? ploidy_exclude_regions = GenomeResources.resources[reference_genome].ploidy_exclude_regions
+
+    call PloidyTasks.EstimatePloidyFromVcf as EstimatePloidyTask {
+      input:
+        input_vcf = raw_output_vcf,
+        input_vcf_index = raw_output_vcf_index,
+        sample_id = ExtractSampleNameFlowOrder.sample_name,
+        sex_chromosomes = sex_chromosomes,
+        ploidy_exclude_regions_bed = ploidy_exclude_regions,
+        docker = global.ugbio_core_docker,
+        preemptibles = 1,
+        monitoring_script = monitoring_script
+    }
+
+    if (select_first([EstimatePloidyTask.karyotype, "UNDETERMINED"]) == "XY") {
+      call PostProcesTasks.SuppressHetOnSexChromosomes {
+        input:
+          input_vcf = raw_output_vcf,
+          input_vcf_index = raw_output_vcf_index,
+          sample_id = base_file_name,
+          par_regions = par_regions,
+          docker = global.ugbio_filtering_docker,
+          preemptibles = 1,
+          monitoring_script = monitoring_script
+      }
+    }
+  }
+
   call PostProcesTasks.RemoveRefCalls as RemoveRefCalls {
        input:
-          input_vcf = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf]),
+      input_vcf = select_first([SuppressHetOnSexChromosomes.haploid_vcf, ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf]),
           final_vcf_base_name = base_file_name,
           monitoring_script = monitoring_script,
           bcftools_docker =  global.bcftools_docker,
           no_address = no_address
+  }
+
+  if (run_roh) {
+    call PostProcesTasks.CallROH as CallROH {
+         input:
+            input_vcf = RemoveRefCalls.output_vcf,
+            input_vcf_index = RemoveRefCalls.output_vcf_index,
+            calling_interval_list = interval_list,
+            roh_blacklist = select_first([roh_blacklist_override, GenomeResources.resources[reference_genome].roh_blacklist]),
+            af_default = roh_af_default,
+            output_prefix = output_prefix,
+            monitoring_script = monitoring_script,
+            docker = global.broad_gatk_docker,
+            no_address = no_address
+    }
   }
 
   if (make_gvcf) {
@@ -1036,14 +1125,16 @@ workflow EfficientDV {
     Array[File] call_variants_output_tfrecords_maybe = CallVariants.output_records
   }
 
+
   output 
   {
     File nvidia_smi_log     = CallVariants.nvidia_smi_log
     # File output_model_serialized   = UGCallVariants.output_model_serialized # uncomment to output the serilized model
-    File output_vcf         = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf])
-    File output_vcf_index   = select_first([ApplyAlleleFrequencyRatioFilter.output_vcf_index, raw_output_vcf_index])
+    File output_vcf         = select_first([SuppressHetOnSexChromosomes.haploid_vcf, ApplyAlleleFrequencyRatioFilter.output_vcf, raw_output_vcf])
+    File output_vcf_index   = select_first([SuppressHetOnSexChromosomes.haploid_vcf_index, ApplyAlleleFrequencyRatioFilter.output_vcf_index, raw_output_vcf_index])
     File vcf_no_ref_calls   = RemoveRefCalls.output_vcf
     File vcf_no_ref_calls_index = RemoveRefCalls.output_vcf_index
+    File? roh_tsv           = CallROH.roh_tsv
     Array[File]? call_variants_output_tfrecords = call_variants_output_tfrecords_maybe
     File? output_gvcf       = gvcf_maybe
     File? output_gvcf_index = gvcf_index_maybe
@@ -1056,5 +1147,7 @@ workflow EfficientDV {
     File qc_metrics_h5      = QCReport.qc_metrics_h5
     Array[File] num_candidates   = CallVariants.num_candidates
     Int num_candidates_as_int    = CallVariants.num_candidates_as_int
+    # Ploidy estimation outputs
+    File? ploidy_report          = EstimatePloidyTask.ploidy_report
   }
 }

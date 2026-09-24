@@ -58,6 +58,7 @@ export REF_PATH=/path/to/hg38/fasta/dir/
 # HLA genotyping
 perl run-t1k \
     -b sample.cram \
+    --abnormalUnmapFlag \
     -f hlaidx/hlaidx_dna_seq.fa \
     -c hlaidx_dna_coord.fa \
     --preset hla-wgs \
@@ -69,6 +70,7 @@ perl run-t1k \
 # KIR genotyping
 perl run-t1k \
     -b sample.cram \
+    --abnormalUnmapFlag \
     -f kiridx/kiridx_dna_seq.fa \
     -c kiridx_dna_coord.fa \
     --preset kir-wgs \

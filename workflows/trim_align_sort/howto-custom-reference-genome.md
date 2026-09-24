@@ -16,8 +16,11 @@ The workflow supports a subset of the following reference genomes (check `tasks/
 | `hg38`           | Human genome build 38 with alt contigs (b38) - default    |
 | `b37`            | Human genome build 37 (b19)                               |
 | `hg38_taps`      | hg38 with Lambda/pUC19 methylation control references     |
-| `hg38_nist_v3`   | hg38 NIST reference                                       |
+| `hg38_nist_v3`   | hg38 GIAB v3 (NIST) reference                             |
+| `hg38_nist_v3_with_decoy` | hg38 GIAB v3 (NIST) reference with hs38d1 decoy contigs |
+| `hg38_no_alt`    | hg38 analysis set without ALT contigs                     |
 | `hg38_rna_seq`   | hg38 without ALT/HLA/Decoy contigs (for RNA-seq)         |
+| `b37_ancient_dna`| b37 with pathogen references (for ancient DNA)            |
 | `mm10`           | Mouse genome build 10 (GRCm38)                           |
 | `mm10_methyl`    | Mouse genome build 10 (with methylation indices)          |
 | `mm39`           | Mouse genome build 39 (GRCm39)                           |

@@ -26,11 +26,18 @@ The following files are publicly available
     gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
     gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
     gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
-    gs://concordanz/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz
-    gs://concordanz/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi
-    gs://concordanz/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed
-    gs://concordanz/hg38/out100m2_hg38.gem
-    gs://concordanz/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed
+    or
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
+
+The following files are available in the public S3 bucket
+
+    s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz
+    s3://ultimagen-workflow-resources-us-east-1/hg38/af-only-gnomad.hg38.AF_gt0.35.CHR1-24.vcf.gz.tbi
+    s3://ultimagen-workflow-resources-us-east-1/hg38/Homo_sapiens_assembly38.w1000.chr1-23.bed
+    s3://ultimagen-workflow-resources-us-east-1/hg38/out100m2_hg38.gem
+    s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v2.1/ug_cnv_lcr.bed
 
 ## Generating Germline CNV calls for a single sample
 

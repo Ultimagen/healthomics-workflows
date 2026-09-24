@@ -16,7 +16,6 @@
         "ug_hcr_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed.gz.tbi"
     },
     "DeepSingleReadSNV.random_sample_trinuc_freq": "s3://ultimagen-workflow-resources-us-east-1/single_read_snv/ref_trinuc_freq.csv",
-    "DeepSingleReadSNV.num_shards_featuremap": 100,
     "DeepSingleReadSNV.scatter_interval_list": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list",
     "DeepSingleReadSNV.preemptible_tries": 1,
     "DeepSingleReadSNV.raise_exceptions_in_report": true,
@@ -27,8 +26,8 @@
     "DeepSingleReadSNV.deep_srsnv_params": {
         "num_folds": 3,
         "tensor_length": 300,
-        "shard_size": 25000,
-        "num_tensorize_workers": 8,
+        "tensorize_output_rows": 10000,
+        "tensorize_workers": 8,
         "holdout_chromosomes": "chr21",
         "random_seed": 0,
         "epochs": 5,
@@ -47,7 +46,11 @@
         "dnn_merge_chunk_size": 2500000,
         "dnn_merge_max_parallel_chunks": 4,
         "channel_registry": "s3://ultimagen-workflow-resources-us-east-1/deep_single_read_snv/conf/channel_registry_ramp_ppmseq.json",
-        "vocab_config": "s3://ultimagen-workflow-resources-us-east-1/deep_single_read_snv/conf/vocab.json"
+        "vocab_config": "s3://ultimagen-workflow-resources-us-east-1/deep_single_read_snv/conf/vocab.json",
+        "tensorizer": "rust",
+        "num_train_tensorize_intervals": 25,
+        "tensorize_task_cpus": 2,
+        "tensorize_task_memory_gb": 4
     },
     "DeepSingleReadSNV.features": [
         "REF",

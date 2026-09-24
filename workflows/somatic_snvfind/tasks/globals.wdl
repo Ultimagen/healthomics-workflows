@@ -12,7 +12,7 @@ workflow Globals {
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.28.0",
-        "featuremap_docker": "ultimagenomics/featuremap:1.2.0_d2dbc55"
+        "featuremap_docker": "ultimagenomics/featuremap:1.3.0"
 }
 }
 

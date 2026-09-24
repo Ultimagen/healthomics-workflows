@@ -95,10 +95,6 @@
         "description": "no_address_override",
         "optional": true
     },
-    "DeepSingleReadSNV.num_shards_featuremap": {
-        "description": "Number of genomic shards to scatter the snvfind (CreateFeatureMap) step across. Higher values reduce wall-clock time but add scatter overhead.",
-        "optional": false
-    },
     "DeepSingleReadSNV.override_memory_gb_CreateFeatureMap": {
         "description": "Override memory in GB for the CreateFeatureMap task. If an out of memory error occurs, try increasing this value.",
         "optional": true
@@ -109,6 +105,10 @@
     },
     "DeepSingleReadSNV.override_memory_gb_PrepareRawFeatureMap": {
         "description": "Override memory in GB for the PrepareRawFeatureMap task. If an out of memory error occurs, try increasing this value.",
+        "optional": true
+    },
+    "DeepSingleReadSNV.override_num_shards_featuremap": {
+        "description": "Optional override for the snvfind/tensorize genomic shard count. When unset (default), the count is auto-scaled from mean coverage (ceil(mean_coverage*3)) to keep per-shard tensorize memory bounded. Set to force a fixed shard count.",
         "optional": true
     },
     "DeepSingleReadSNV.pcawg_field_name": {

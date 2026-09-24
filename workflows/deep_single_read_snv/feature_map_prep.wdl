@@ -347,5 +347,8 @@ input {
     File? negative_parquet = PrepareRawFeatureMap.filtered_featuremap_parquet
     File? inference_filters = PrepareAnnotationVcfs.inference_filters
     File? augmented_read_filters = PrepareAnnotationVcfs.augmented_read_filters
+    # Per-shard BEDs from the snvfind scatter — reused to scatter tensorization over the same intervals.
+    # None when num_shards <= 1 (the caller falls back to the whole training interval list).
+    Array[File]? shard_beds = ScatterIntervalList.out_bed
   }
 }

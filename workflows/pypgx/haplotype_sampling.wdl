@@ -37,7 +37,7 @@ workflow HaplotypeSampling {
         Int step_size = 50000              # Sliding window step size
         String minimap2_preset = "asm5"    # Minimap2 preset for alignment
 
-        String pipeline_version = "1.35.1"   #!UnusedDeclaration
+        String pipeline_version = "1.36.0"   #!UnusedDeclaration
         # Resource parameters
         Int map_cores = 24
         Int map_mem_gb = 64
@@ -270,7 +270,7 @@ task KmerCountingKMC {
 
     Int mem_gb = 64
     Int cores = 16
-    Int disk_size_gb = 200
+    Int disk_size_gb = ceil(size(fastq_files, "GB"))*4
 
     command <<<
         set -euxo pipefail

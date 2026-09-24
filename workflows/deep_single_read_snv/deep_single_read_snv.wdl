@@ -22,6 +22,9 @@ version 1.0
 # train_only, inference_only (from a provided pre-trained model), and data_prep_only (tensor export).
 
 # CHANGELOG in reverse chronological order
+# 1.34.0 Shard-parallel VCF-direct tensorization (training + inference) on small machines, bit-exact with
+#        the prior path: DNNCramToTensorsSharded/Inference scatter over genomic-interval BEDs + Rust
+#        tensorizer + DNNConcatTensorShards; coverage-scaled shard count.
 # 1.33.0 Merge DeepSingleReadSNVTrain via `mode` selector; add inference_only (provided model,
 #        optional featuremap skip) and data_prep_only (tensor cache export) modes
 # 1.31.0 Split from single_read_snv.wdl into standalone workflow
@@ -40,7 +43,7 @@ input {
   File input_cram_bam_index
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.35.1"
+  String pipeline_version = "1.36.0"
 
   # Genome resources
   String reference_genome = "hg38"
@@ -76,8 +79,9 @@ input {
 
   Boolean raise_exceptions_in_report = false
 
-  # Scatter configuration for snvfind parallelization
-  Int num_shards_featuremap
+  # Scatter configuration for snvfind parallelization. By default the shard count is auto-scaled from
+  # mean coverage (ceil(mean_coverage*3)); set override_num_shards_featuremap to force a fixed count.
+  Int? override_num_shards_featuremap
   File scatter_interval_list
 
   Int? override_memory_gb_CreateFeatureMap
@@ -132,6 +136,12 @@ meta {
         "DNNCramToTensorsPos.cpus",
         "DNNCramToTensorsNeg.memory_gb",
         "DNNCramToTensorsNeg.cpus",
+        "DNNCramToTensorsPosShard.memory_gb",
+        "DNNCramToTensorsPosShard.cpus",
+        "DNNCramToTensorsPosShard.inference_filters_json",
+        "DNNCramToTensorsNegShard.memory_gb",
+        "DNNCramToTensorsNegShard.cpus",
+        "DNNCramToTensorsNegShard.inference_filters_json",
         "DNNCombineSplits.memory_gb",
         "DNNCombineSplits.cpus",
         "DNNTrainFold.cpus",
@@ -139,9 +149,10 @@ meta {
         "DNNRecalibrateFolds.memory_gb",
         "DNNRecalibrateFolds.cpus",
         "DNNRecalibrateFolds.featuremap_parquets",
-        "DNNVcfToParquet.memory_gb",
-        "DNNVcfToParquet.cpus",
-        "DNNCramToTensorsInference.cpus",
+        "DNNCramToTensorsInferenceShard.cpus",
+        "DNNCramToTensorsInferenceShard.memory_gb",
+        "DNNCramToTensorsInferenceShard.inference_filters_json",
+        "DNNCramToTensorsInferenceShard.interval_bed",
         "DNNFoldInference.memory_gb",
         "DNNFoldInference.cpus",
         "DNNMergeAndAnnotate.memory_gb",
@@ -259,10 +270,10 @@ parameter_meta {
         help: "Bcftools filter arguments applied to include-in-inference VCFs before annotation.",
         category: "param_required"
     }
-    num_shards_featuremap: {
+    override_num_shards_featuremap: {
         type: "Int",
-        help: "Number of genomic shards to scatter the snvfind (CreateFeatureMap) step across. Higher values reduce wall-clock time but add scatter overhead.",
-        category: "input_required"
+        help: "Optional override for the snvfind/tensorize genomic shard count. When unset (default), the count is auto-scaled from mean coverage (ceil(mean_coverage*3)) to keep per-shard tensorize memory bounded. Set to force a fixed shard count.",
+        category: "input_optional"
     }
     scatter_interval_list: {
         type: "File",
@@ -439,6 +450,18 @@ parameter_meta {
 
   File training_interval_list = GenomeResources.resources[reference_genome].srsnv_training_interval_list
 
+  # Total span of the scatter interval list (Float bp), used to size the ScatterIntervalList break-band so the
+  # coverage-scaled shard count is actually achievable (see num_shards_effective below). Computed from the
+  # real interval list (general — not a hardcoded genome size) and returned as Float, so the band math never
+  # materializes a >2^31 value as an Int.
+  call UGGeneralTasks.IntervalListTotalLength as ScatterListSpan {
+    input:
+      interval_list = scatter_interval_list,
+      docker = global.broad_gatk_docker,
+      no_address = true,
+      monitoring_script = monitoring_script
+  }
+
   # Coverage/sorter-stats resolution + FeatureMap preparation. Nested under run_featuremap_prep:
   # in inference_only-with-featuremap there is no coverage input, and select_first on an all-None
   # list is a runtime error, so these declarations must not be evaluated in that path.
@@ -455,6 +478,26 @@ parameter_meta {
     }
     Float mean_coverage_used = select_first([mean_coverage, ExtractSorterStatsMetrics.mean_coverage])
     String total_aligned_bases_used = select_first([total_aligned_bases, ExtractSorterStatsMetrics.total_aligned_bases])
+
+    # Shard count for snvfind + the (inference) sharded tensorizer. It drives both the snvfind scatter AND
+    # the shard BEDs the inference tensorizer reuses; each 4 GiB tensorize task materializes all featuremap
+    # reads in its BED region, so per-task memory scales with (coverage / num_shards). Auto-scale to
+    # ceil(coverage*3), capped at 1000 shards.
+    #
+    # CRITICAL — band size must scale with the shard count. ScatterIntervalList/IntervalListTools uses
+    # BREAK_BANDS + SUBDIVISION_MODE=BALANCING_WITHOUT_INTERVAL_SUBDIVISION_WITH_OVERFLOW: it packs whole
+    # break-bands into groups and NEVER splits below a band, so it cannot produce more shards than
+    # (span / break-band size). At the historical fixed 10 Mb band the whole-genome calling regions (~3 Gb)
+    # yield only ~300 bands, which silently CAPPED the shard count at ~302 for ANY coverage >~100X (a 200X
+    # sample got the same 302 shards -> 2x reads/shard -> tensorize OOM). So set the band to span/num_shards,
+    # capped at the historical 10 Mb: runs needing <=~300 shards keep the 10 Mb grid, higher-coverage runs
+    # get proportionally finer bands so the coverage-scaled (<=1000) shard count is actually achievable.
+    Int num_shards_raw = ceil(mean_coverage_used * 3.0)
+    Int num_shards_effective = select_first([override_num_shards_featuremap, if num_shards_raw < 1000 then num_shards_raw else 1000])
+    # band = min(10 Mb, span/num_shards). All-Float until the final ceil (only reached on the <=10 Mb branch),
+    # so nothing >2^31 is ever an Int -> no overflow at any num_shards (incl. 1) or interval-list size.
+    Float scatter_band_bp = ScatterListSpan.interval_list_length / num_shards_effective
+    Int scatter_intervals_break_effective = if scatter_band_bp > 10000000.0 then 10000000 else ceil(scatter_band_bp)
 
     # FeatureMap preparation via sub-workflow. run_training_prep gates positive/negative parquet
     # generation: needed for training and data_prep, not for inference_only.
@@ -482,7 +525,8 @@ parameter_meta {
         run_training_prep = need_training_prep,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script,
-        num_shards = num_shards_featuremap,
+        num_shards = num_shards_effective,
+        scatter_intervals_break = scatter_intervals_break_effective,
         featuremap_docker = global.featuremap_docker,
         ugbio_featuremap_docker = global.ugbio_featuremap_docker,
         gatk_docker = global.broad_gatk_docker
@@ -493,30 +537,84 @@ parameter_meta {
   File? featuremap_for_inference       = if defined(input_featuremap_vcf) then input_featuremap_vcf else FeatureMapPrep.featuremap
   File? featuremap_for_inference_index = if defined(input_featuremap_vcf_index) then input_featuremap_vcf_index else FeatureMapPrep.featuremap_index
 
+
   # ============================================================
   # Tensorize stage (shared by full, train_only, data_prep_only). data_prep_only stops here.
   # do_tensorize => need_training_prep => FeatureMapPrep ran with parquets, so select_first is safe.
   # ============================================================
   if (do_tensorize) {
-    call DeepSRSNVTasks.DNNCramToTensors as DNNCramToTensorsPos {
+    # Shard-parallel tensorization for TRAINING (positive/negative). The training tensorizers consume a
+    # downsampled selection parquet, so each task's memory is bounded by the selection (not the full read
+    # pileup) and a coarse interval grid is safe. Training gets its OWN grid
+    # (num_train_tensorize_intervals) rather than reusing the inference tensorize grid, avoiding the
+    # per-task fixed overhead of a fine grid. Coverage-identical to a fine grid (same interval source),
+    # and DNNConcatTensorShards re-imposes global (CHROM,POS,RN) order, so the cache is bit-identical.
+    call UGGeneralTasks.ScatterIntervalList as TensorizeScatter {
       input:
-        input_cram = input_cram_bam,
-        input_cram_index = input_cram_bam_index,
-        featuremap_parquet = select_first([FeatureMapPrep.positive_parquet]),
+        # Scatter TRAINING tensorization over the chr1-22 training_interval_list only. Non-autosomal contigs
+        # (chrX/chrY) are deliberately NOT tensorized here: the holdout/test set is derived from this cache
+        # (DNNCombineSplits: chr21 -> test), and we validate on an AUTOSOMAL holdout (chr21) — sex chromosomes
+        # should not enter the validation/test set (per review). Inference is a SEPARATE path that still
+        # scores every contig in the feature map, so dropping chrX/chrY here does not lose any called sites.
+        interval_list = training_interval_list,
+        # Optional param (default set in the template); fall back to 25 if a caller omits it, so an
+        # explicit partial deep_srsnv_params never null-crashes select_first at graph eval.
+        scatter_count = select_first([deep_srsnv_params.num_train_tensorize_intervals, 25]),
+        break_bands_at_multiples_of = 10000000,
+        dummy_input_for_call_caching = "",
+        docker = global.broad_gatk_docker,
+        no_address = true,
+        monitoring_script = monitoring_script,
+        convert_to_bed = true
+    }
+    Array[File] tensorize_beds = select_first([TensorizeScatter.out_bed, [training_interval_list]])
+
+    scatter (bed in tensorize_beds) {
+      call DeepSRSNVTasks.DNNCramToTensorsSharded as DNNCramToTensorsPosShard {
+        input:
+          input_cram = input_cram_bam,
+          input_cram_index = input_cram_bam_index,
+          featuremap_vcf = select_first([FeatureMapPrep.featuremap_random_sample]),
+          featuremap_vcf_index = select_first([FeatureMapPrep.featuremap_random_sample_index]),
+          interval_bed = bed,
+          label = "positive",
+          selection_parquet = select_first([FeatureMapPrep.positive_parquet]),
+          references = references,
+          deep_srsnv_params = deep_srsnv_params,
+          docker = global.ugbio_deep_srsnv_docker,
+          preemptible_tries = preemptibles,
+          monitoring_script = monitoring_script
+      }
+      call DeepSRSNVTasks.DNNCramToTensorsSharded as DNNCramToTensorsNegShard {
+        input:
+          input_cram = input_cram_bam,
+          input_cram_index = input_cram_bam_index,
+          featuremap_vcf = select_first([FeatureMapPrep.featuremap]),
+          featuremap_vcf_index = select_first([FeatureMapPrep.featuremap_index]),
+          interval_bed = bed,
+          label = "negative",
+          selection_parquet = select_first([FeatureMapPrep.negative_parquet]),
+          references = references,
+          deep_srsnv_params = deep_srsnv_params,
+          docker = global.ugbio_deep_srsnv_docker,
+          preemptible_tries = preemptibles,
+          monitoring_script = monitoring_script
+      }
+    }
+
+    call DeepSRSNVTasks.DNNConcatTensorShards as DNNCramToTensorsPos {
+      input:
+        tensor_cache_shard_tars = DNNCramToTensorsPosShard.tensor_cache_shard_tar,
         label = "positive",
-        references = references,
         deep_srsnv_params = deep_srsnv_params,
         docker = global.ugbio_deep_srsnv_docker,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script
     }
-    call DeepSRSNVTasks.DNNCramToTensors as DNNCramToTensorsNeg {
+    call DeepSRSNVTasks.DNNConcatTensorShards as DNNCramToTensorsNeg {
       input:
-        input_cram = input_cram_bam,
-        input_cram_index = input_cram_bam_index,
-        featuremap_parquet = select_first([FeatureMapPrep.negative_parquet]),
+        tensor_cache_shard_tars = DNNCramToTensorsNegShard.tensor_cache_shard_tar,
         label = "negative",
-        references = references,
         deep_srsnv_params = deep_srsnv_params,
         docker = global.ugbio_deep_srsnv_docker,
         preemptible_tries = preemptibles,
@@ -626,35 +724,112 @@ parameter_meta {
   if (do_inference) {
     Int num_folds_prep = if do_training then deep_srsnv_params.num_folds else length(select_first([inference_models]).fold_metadata)
 
-    # Convert featuremap VCF to parquet
-    call DeepSRSNVTasks.DNNVcfToParquet {
+    # Launder the optional inference read-filter JSON (a File? output of the conditional-scoped
+    # FeatureMapPrep). Cromwell cannot resolve an OPTIONAL call output referenced from inside the nested
+    # tensorize scatter below ("required input lookup failed"). PassThroughOptionalFile takes the File? as
+    # a task INPUT (always fine) and emits a REQUIRED File `out` (empty when no filters), which Cromwell
+    # exposes cleanly across scope boundaries. DNNCramToTensorsInference skips --inference-filters-json when
+    # the file is empty, preserving score-everything inference.
+    call DeepSRSNVTasks.PassThroughOptionalFile as InferenceFilters {
       input:
-        featuremap_vcf = select_first([featuremap_for_inference]),
-        featuremap_vcf_index = select_first([featuremap_for_inference_index]),
-        inference_filters = FeatureMapPrep.inference_filters,
-        base_file_name = base_file_name_sub,
-        docker = global.ugbio_featuremap_docker,
+        in_file = FeatureMapPrep.inference_filters,
+        docker = global.ugbio_deep_srsnv_docker,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script
     }
 
-    # Pre-compute inference tensors per fold (CPU-only)
-    scatter (tensor_fold_idx in range(num_folds_prep)) {
-      call DeepSRSNVTasks.DNNCramToTensorsInference {
+    # Pre-compute inference tensors, VCF-direct (no DNNVcfToParquet) and SHARD-PARALLEL: for each CV fold,
+    # tensorize only its chromosomes' snvfind shard BEDs (reused from FeatureMapPrep) in parallel on small
+    # machines, then concat that fold's shards into one per-fold cache. CPU-only; in full mode runs in
+    # PARALLEL with training.
+    #
+    # When FeatureMapPrep is skipped (inference_only with a provided featuremap VCF), there are no snvfind
+    # shard BEDs. We CANNOT fall back to [training_interval_list]: (a) it is a Picard .interval_list (header
+    # lines + not a .bed), which SelectFoldBeds/cram_to_tensors --interval-bed do not parse as BED (the path
+    # is mis-read as a literal bcftools region -> 0 reads -> 0 shards -> DNNFoldInference fails), and (b) it
+    # is AUTOSOMAL-only (chr1-22) — scattering inference over it would silently DROP chrX/chrY and fail to
+    # score sex-chromosome sites present in the provided feature map. Instead generate real per-shard BEDs
+    # over the whole-genome `scatter_interval_list` — the SAME interval list FeatureMapPrep scatters over to
+    # build the feature map and its shard_beds (feature_map_prep.wdl) — so inference-only covers exactly the
+    # contigs the feature map spans, matching the normal (shard_beds) path. Shard count: prefer an explicit
+    # override_num_shards_featuremap; else auto-scale from coverage (ceil(mean_coverage*3), same rule as the
+    # prep path) whenever the caller supplied sorter stats or mean_coverage — the CRAM's sorter stats are
+    # available in inference_only too; else a fixed 200.
+    if (!defined(FeatureMapPrep.shard_beds)) {
+      # Resolve coverage from the provided sorter stats (or mean_coverage) so we can size the inference
+      # shard grid the same way FeatureMapPrep does. This path skipped FeatureMapPrep, so the coverage
+      # block above (guarded by run_featuremap_prep) did not run; resolve it locally here.
+      if (defined(sorter_json_stats_file_list) && length(select_first([sorter_json_stats_file_list, []])) > 0) {
+        call UGGeneralTasks.ExtractSorterStatsMetrics as InferenceSorterStats {
+          input:
+            sorter_json_stats_files = select_first([sorter_json_stats_file_list]),
+            docker = global.ugbio_srsnv_docker,
+            preemptible_tries = preemptibles,
+            monitoring_script = monitoring_script,
+        }
+      }
+      Float? inference_mean_coverage = if defined(mean_coverage) then mean_coverage else InferenceSorterStats.mean_coverage
+      Int inference_shard_raw = if defined(inference_mean_coverage) then ceil(select_first([inference_mean_coverage]) * 3.0) else 200
+      Int inference_shard_count = if defined(override_num_shards_featuremap)
+        then select_first([override_num_shards_featuremap])
+        else (if inference_shard_raw < 1000 then inference_shard_raw else 1000)
+      # band = min(10 Mb, span/num_shards) so the count is achievable (see the num_shards_effective note above).
+      Float inference_band_bp = ScatterListSpan.interval_list_length / inference_shard_count
+      Int inference_break = if inference_band_bp > 10000000.0 then 10000000 else ceil(inference_band_bp)
+      call UGGeneralTasks.ScatterIntervalList as InferenceScatter {
         input:
-          input_cram = input_cram_bam,
-          input_cram_index = input_cram_bam_index,
-          featuremap_parquet = DNNVcfToParquet.featuremap_parquet,
+          interval_list = scatter_interval_list,
+          scatter_count = inference_shard_count,
+          break_bands_at_multiples_of = inference_break,
+          dummy_input_for_call_caching = "",
+          docker = global.broad_gatk_docker,
+          no_address = true,
+          monitoring_script = monitoring_script,
+          convert_to_bed = true
+      }
+    }
+    Array[File] inference_beds = select_first([FeatureMapPrep.shard_beds, InferenceScatter.out_bed])
+
+    scatter (tensor_fold_idx in range(num_folds_prep)) {
+      # Which shard BEDs belong to this fold.
+      call DeepSRSNVTasks.SelectFoldBeds {
+        input:
+          shard_beds = inference_beds,
           training_interval_list = training_interval_list,
-          references = references,
-          deep_srsnv_params = deep_srsnv_params,
           fold_idx = tensor_fold_idx,
           num_folds = num_folds_prep,
-          base_file_name = base_file_name_sub,
+          random_seed = deep_srsnv_params.random_seed,
+          holdout_chromosomes = select_first([deep_srsnv_params.holdout_chromosomes, "chr21"]),
           docker = global.ugbio_deep_srsnv_docker,
           preemptible_tries = preemptibles,
           monitoring_script = monitoring_script
       }
+
+      # Tensorize each of this fold's shard BEDs in parallel (VCF-direct, small machine).
+      scatter (fold_bed in SelectFoldBeds.fold_beds) {
+        call DeepSRSNVTasks.DNNCramToTensorsInference as DNNCramToTensorsInferenceShard {
+          input:
+            input_cram = input_cram_bam,
+            input_cram_index = input_cram_bam_index,
+            featuremap_vcf = select_first([featuremap_for_inference]),
+            featuremap_vcf_index = select_first([featuremap_for_inference_index]),
+            inference_filters_json = InferenceFilters.out,
+            interval_bed = fold_bed,
+            training_interval_list = training_interval_list,
+            references = references,
+            deep_srsnv_params = deep_srsnv_params,
+            fold_idx = tensor_fold_idx,
+            num_folds = num_folds_prep,
+            base_file_name = base_file_name_sub,
+            docker = global.ugbio_deep_srsnv_docker,
+            preemptible_tries = preemptibles,
+            monitoring_script = monitoring_script
+        }
+      }
+
+      # Collect this fold's per-shard tensor-shard globs into one flat Array[File]. DNNFoldInference scores
+      # each tensor independently, so no reordering/concat is needed — a flatten is sufficient and correct.
+      Array[File] fold_inference_tensor_shards = flatten(DNNCramToTensorsInferenceShard.tensor_shards)
     }
   }
 
@@ -673,11 +848,9 @@ parameter_meta {
     Array[File]? fold_engine_used = if do_training then DNNTrainFold.dnn_engine else select_first([inference_models]).fold_engines
     Array[File]? fold_timing_cache_used = if do_training then DNNTrainFold.dnn_trt_timing_cache else select_first([inference_models]).fold_timing_caches
     Int num_folds_for_inference = if do_training then deep_srsnv_params.num_folds else length(fold_metadata_used)
-    # Tensors from the data-prep block above become optional outside their conditional scope.
-    Array[Array[File]] inference_tensor_shards = select_first([DNNCramToTensorsInference.tensor_shards])
-    # Exactly one of these is non-empty per fold: the shards, or the archive the producing task
-    # writes instead when it runs under singularity (per-file binds break there).
-    Array[Array[File]] inference_tensor_cache_tars = select_first([DNNCramToTensorsInference.tensor_cache_tar])
+    # Tensors from the data-prep block above become optional outside their conditional scope. Each fold's
+    # shards were tensorized shard-parallel and flattened into one Array[File] per fold.
+    Array[Array[File]] inference_tensor_shards = select_first([fold_inference_tensor_shards])
 
     # Per-fold GPU inference. onnx/engine fall back to the metadata file when the (optional)
     # model arrays are absent (non-trt backend), mirroring the inference-only reference workflow.
@@ -690,7 +863,6 @@ parameter_meta {
       call DeepSRSNVTasks.DNNFoldInference {
         input:
           tensor_shards = inference_tensor_shards[infer_fold_idx],
-          tensor_cache_tar = inference_tensor_cache_tars[infer_fold_idx],
           fold_metadata = fold_metadata_used[infer_fold_idx],
           fold_checkpoint = fold_checkpoints_used[infer_fold_idx],
           # inference_only REQUIRES ONNX (the engine is rebuilt from it); select_first fails loudly

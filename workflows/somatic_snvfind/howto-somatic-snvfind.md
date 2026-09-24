@@ -41,6 +41,10 @@ The following reference files are publicly available:
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+or
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
 
 s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.without_encode_blacklist.hg38.interval_list
 s3://ultimagen-workflow-resources-us-east-1/hg38/tandem_repeats.hg38.bed

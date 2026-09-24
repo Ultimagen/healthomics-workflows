@@ -10,6 +10,7 @@
     "EfficientDV.make_gvcf": false,
     "EfficientDV.recalibrate_vaf": true,
     "EfficientDV.is_somatic": true,
+    "EfficientDV.run_roh": false,
     "EfficientDV.single_strand_filter": false,
     "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
     "EfficientDV.reference_genome": "hg38",
@@ -18,6 +19,13 @@
     "EfficientDV.normalize_strand_bias": true,
     "EfficientDV.ensemble_size": 0,
     "EfficientDV.strong_call_threshold": 1.1,
+    "EfficientDV.sex_chromosomes": [
+        "chrX",
+        "chrY",
+        "X",
+        "Y"
+    ],
+    "EfficientDV.run_ploidy_estimation": false,
     "EfficientDV.background_cram_files": [
         "<normal_bam_file>.cram"
     ],

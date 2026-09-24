@@ -2,7 +2,7 @@
 
 ## Overview
 
-Efficient DV is an analysis pipeline designed to call variants from aligned cram files using the method of (DeepVariant)[https://www.nature.com/articles/nbt.4235], adapted for Ultima Genomics data. There are three stages to the variant calling:
+Efficient DV is an analysis pipeline designed to call variants from aligned cram files using the method of  [DeepVariant](https://www.nature.com/articles/nbt.4235) , adapted for Ultima Genomics data. There are three stages to the variant calling:
 1. make_examples - Looks for “active regions” with potential candidates. Within these regions, it performs local assembly (haplotypes), re-aligns the reads, and defines candidate variant. Images of the reads in the vicinity of the candidates are saved as protos in a tfrecord format.
 2. call_variants - Collects the images from make_examples and uses a deep learning model to infer the statistics of each variant (i.e. quality, genotype likelihoods etc.), using the TensorRT framework. It outputs sorted results in a CallVariantsOutput protos saved as tfrecords files.
 3. post_process - Uses the call_variants tfrecord output. It resolves multi-allelic records and variants that overlap with indels. It annotates the variants with information such as variant type, cycle skip status and genomic intervals it appears in (e.g. exome). It filters the variants based on defined thresholds. Finally, it writes out a VCF file. Post_process can also output a gVCF file.
@@ -21,13 +21,18 @@ gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
 gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list
+or
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list
 ```
 3. A model checkpoint in ONNX format:
 ```
 gs://concordanz/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
 
-or 
+or
 ```
 s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
 ```
@@ -40,9 +45,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.3.4
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.4.1
 or
-ultimagenomics/make_examples:3.3.4
+ultimagenomics/make_examples:3.4.1
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -59,6 +64,34 @@ call_variants runs on a machine which contains a single GPU, such as nvidia-p100
 ## Workflow details
 
 The workflow is composed of three steps, as described above: make_examples, call_variants and post_process.
+
+### Ploidy estimation
+
+When `EfficientDV.run_ploidy_estimation=true`, the workflow estimates sample sex/ploidy from the filtered VCF after variant calling. The `estimate_ploidy` command uses PASS biallelic SNP depth and B-allele fractions to estimate per-chromosome ploidy and a sex karyotype:
+
+```bash
+estimate_ploidy \
+  --vcf input.vcf.gz \
+  --sample-id sample_name \
+  --sex-chromosomes chrX chrY X Y \
+  --het-sample-count 5000 \
+  --output-dir .
+```
+
+The workflow then checks the reported karyotype. For XY samples, it runs `convert_haploid_regions` on the VCF to convert non-PAR chrX/Y genotypes to haploid while preserving pseudoautosomal-region calls as diploid:
+
+```bash
+convert_haploid_regions \
+  --input_vcf input.vcf.gz \
+  --par_regions par_regions.bed \
+  --output_vcf sample_name.haploid_chrXY.vcf.gz
+```
+
+The output VCF is indexed with `bcftools index -t` and is used as the downstream VCF for XY samples. For XX or undetermined karyotypes, the workflow retains the original VCF. `ploidy_report` is the only additional ploidy-specific workflow output; the derived karyotype and intermediate haploid VCF are used internally.
+
+For CRAM-only `EstimatePloidy` runs, coverage is collected with `mosdepth` over the genome-specific `efficient_dv_target_intervals` selected from `genome_resources.yaml`; the workflow consumes the generated `<sample>.mosdepth.summary.txt` file for karyotyping.
+
+PAR intervals used for chrX/Y haploid conversion are also selected from `genome_resources.yaml` using `EfficientDV.reference_genome`, so users should not provide PAR BED files in input JSONs.
 
 ### Running make_examples
 
@@ -89,7 +122,7 @@ make_examples is invoked using `tool` command in the `make_examples` docker. A t
 tool \
   --input input_reads.cram \
   --cram-index input_reads.cram.crai \
-  --bed interval001.bed \  
+  --bed interval001.bed \
   --output 001 \
   --reference Homo_sapiens_assembly38.fasta \
   --min-base-quality 5 \
@@ -219,7 +252,7 @@ Using `--annotate` together with `--bed_annotation_files` adds annotations to th
 
 Using a `##INFO` in the header of the bed file. For example:
 ```
-##INFO=<ID=EXOME,Number=1,Type=String,Description="Genomic Region Annotation: In the exome (gs://concordanz/hg38/annotation_intervals/exome.twist.bed)">
+##INFO=<ID=EXOME,Number=1,Type=String,Description="Genomic Region Annotation: In the exome (s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed)">
 chr1    69090   70008   TRUE
 chr1    450739  451678  TRUE
 ```
@@ -229,7 +262,7 @@ If `##INFO` is not present in the bed file, then a json file with the same name 
 {
  "ID": "EXOME",
  "Type": "String",
- "Description": "Genomic Region Annotation: In the exome (gs://concordanz/hg38/annotation_intervals/exome.twist.bed)"
+ "Description": "Genomic Region Annotation: In the exome (s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed)"
 }
 ```
 
@@ -248,6 +281,7 @@ REFLEN > 220 and vc.isFiltered()
 ```
 
 dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
+or s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
 
 ### Workflow That Includes Haplotype Data from Pangenomes
 
@@ -312,12 +346,102 @@ In case a GVCF is desired, then the commands should be modified in the following
 2. When running post_process, add the argument `--gvcf_outfile output_prefix.g.vcf.gz` and provide the `gvcf.tfrecord.gz` files as input using the `--nonvariant_site_tfrecord_path` argument. The `gvcf.tfrecord.gz` files can be provided to `--nonvariant_site_tfrecord_path` either as a comma-separated list, or a text file that contains all the paths. In the latter case use the name of the ```--nonvariant_site_tfrecord_path @gvcf_records.txt```.
 3. Optionally, use the `--gq-resolution` or `--gq-thresholds` arguments to reduce the output gvcf size, by binning intervals with similar GQ values together. `--gq-resolution` sets a constant difference between the bins, and `--gq-thresholds` accepts a list of specific bin thresholds, e.g. `--gq-thresholds 0,1,8,15,22` (the rounding is downwards). A value of 0 is special and results in a bin of 0.
 
+### Calling runs of homozygosity (ROH)
+
+Runs of homozygosity are long stretches in which the sample carries no heterozygous variant, reported as the regions tsv of `bcftools roh` from the VCF that post_process produced. This is meaningful for germline whole-genome data only.
+
+```bash
+marker_filter='FILTER="PASS" && TYPE="snp" && N_ALT=1'
+
+# The calling regions used for variant calling, minus the blacklist.
+gatk IntervalListToBed -I wgs_calling_regions.hg38.interval_list -O calling_regions.bed
+bedtools subtract -a calling_regions.bed -b hg38-blacklist.v2.bed | cut -f1-3 > regions.bed
+
+first=1
+: > output_prefix.roh.tsv
+while read -r line; do
+  echo "$line" > region.bed
+  bcftools roh --AF-dflt 0.6 --include "$marker_filter" \
+      --regions-file region.bed --output-type r output_prefix.vcf.gz \
+    | awk -v first=$first 'first && /^# RG/ {print} $1=="RG" {print}' >> output_prefix.roh.tsv
+  first=0
+done < regions.bed
+```
+
+The output is the output of `bcftools roh`: the literal `RG`, sample, chromosome, start, end, length in bp, number of markers, and the mean forward-backward phred quality. Coordinates are 1-based inclusive, so the length equals `end - start + 1`.
+
+```
+# RG	[2]Sample	[3]Chromosome	[4]Start	[5]End	[6]Length (bp)	[7]Number of markers	[8]Quality (average fwd-bwd phred score)
+RG	sample_name	chr17	10274129	11420961	1146833	1119	82.4
+```
+
+### Calling variants in the mitochondrial genome (chrM)
+
+Running on mitochondrial contig is done in the following way:
+
+**Restrict the calling region to the mitochondrial contig.** Note that `wgs_calling_regions.hg38.interval_list` contains **no chrM interval lines** — so running it unchanged calls no mitochondrial variants at all. The same is true of the hg19/b37 calling regions.
+Generate the interval list from the reference index instead of using a pre-built file, since the contig is named `chrM` in hg38 and `MT` in b37:
+
+```bash
+awk 'BEGIN{OFS="\t"} $1=="chrM" {print $1, 0, $2}' Homo_sapiens_assembly38.fasta.fai > chrM.bed
+```
+
+The contig is only 16,569 bp, so there is no need to scatter it (`num_shards` is 1): this single bed file is passed to one make_examples job.
+
+**make_examples** is then run with lowered candidate fractions, so that low-heteroplasmy alleles become candidates:
+
+```
+tool \
+  --input input_reads.cram \
+  --cram-index input_reads.cram.crai \
+  --bed chrM.bed \
+  --output 001 \
+  --reference Homo_sapiens_assembly38.fasta \
+  --min-base-quality 5 \
+  --min-mapq 5 \
+  --cgp-min-count-snps 2 \
+  --cgp-min-count-hmer-indels 2 \
+  --cgp-min-count-non-hmer-indels 2 \
+  --cgp-min-fraction-snps 0.05 \
+  --cgp-min-fraction-hmer-indels 0.05 \
+  --cgp-min-fraction-non-hmer-indels 0.05 \
+  --cgp-min-fraction-single-strand-non-snps 0.06 \
+  --max-reads-per-region 1500 \
+  --assembly-min-base-quality 0 \
+  --optimal-coverages 70 \
+  --median-coverage <median_coverage> \
+  --keep-duplicates \
+  --add-ins-size-channel \
+  --single-strand-filter
+```
+
+**call_variants** uses a different model:
+
+```
+[RT classification]
+onnxFileName = model/germline/segdup_1.0/model_dyn_1500.onnx
+...
+
+[ensemble]
+ensembleSize = 0
+```
+
+The model is available in:
+
+```
+gs://concordanz/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx
+or
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx
+```
+
+**post_process** is run with the same command as above.
+
+**Interpreting the output.** EfficientDV genotypes diploid, so a homoplasmic mitochondrial allele is reported as `0/1` with an allele fraction close to 1.0. Assess heteroplasmy from the allele fraction rather than the genotype: it is the `FORMAT/VAF` field ("Variant allele fractions", one value per ALT allele).
+
 ### Legacy models
 
-#### Solaris 1.0 
+#### Solaris 1.0
 The models described above apply to Solaris 2.0 data. For processing WGS Solaris 1.0 data we recommend the following changes to the workflow:
 
 1. Use the following model: `s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx`
-2. Set `ensembleSize` parameter to 0 or omit `[ensemble]` section from the configuration file. 
-
-
+2. Set `ensembleSize` parameter to 0 or omit `[ensemble]` section from the configuration file.

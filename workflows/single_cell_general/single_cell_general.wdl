@@ -64,7 +64,7 @@ import "tasks/general_tasks.wdl" as UGGeneralTasks
 
 workflow SingleCell {
     input {
-        String pipeline_version = "1.35.1" # !UnusedDeclaration
+        String pipeline_version = "1.36.0" # !UnusedDeclaration
 
         File input_file
         String base_file_name
@@ -155,8 +155,10 @@ workflow SingleCell {
                 "StarAlignment.memory_gb",
                 "SingleCell.StarAlignSubSample.memory_gb",
                 "qc_memory_gb",
-                "MergeMd5sToJson.output_json"
-            ]
+                "MergeMd5sToJson.output_json",
+                "TrimAlignSort.SortByNameAndKeepPaired.disk_size",
+                "TrimAlignSort.UGGiraffeAlignment.memory_gb"
+                ]
         }
     }
 

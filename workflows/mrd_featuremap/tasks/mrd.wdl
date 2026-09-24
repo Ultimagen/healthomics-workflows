@@ -394,72 +394,7 @@ task MergeVcfsIntoBed {
     }
 }
 
-task ExtractCoverageOverVcfFiles {
-    # Task: ExtractCoverageOverVcfFiles
-    # Description:
-    #     This task extracts coverage metrics from a given CRAM file over specified loci provided in a bed file.
-    #     Coverage is collected with mosdepth.
-    #     The main output is a bed file containing per-locus coverage metrics.
-    
-    # Inputs:
-    #     merged_loci_bed: A bed file containing loci for coverage extraction.
-    #     input_cram_bam: Input CRAM/BAM file containing read alignments.
-    #     input_cram_bam_index: Index of respective CRAM/BAM file.
-    #     base_file_name: Base string used to name output files.
-    #     mapping_quality_threshold: Minimum mapping quality threshold for reads to be considered.
-    #     references: Reference related files - fasta, index, and dictionary.
-    #     docker: Docker image to use for task execution.
-    #     memory_gb: Amount of memory to allocate for the task.
-    #     cpus: Number of CPU cores to allocate for the task.
-    #     preemptibles: Number of preemption retries.
-    #     monitoring_script: Path to a script to monitor task execution.
 
-    # Outputs:
-    #     coverage_bed: A bed file containing coverage metrics for the specified loci.
-    #     coverage_bed_index: Index of the coverage bed file.
-    input {
-      File merged_loci_bed
-      File input_cram_bam
-      File input_cram_bam_index
-      String base_file_name
-      Int mapping_quality_threshold = 0 
-      References references
-      String docker
-      Int memory_gb
-      Int cpus = 1
-      Int preemptibles
-      File monitoring_script
-    }
-
-    Int merged_loci_bed_size = ceil(size(merged_loci_bed, "GB"))
-    Int reference_size = ceil(size(references.ref_fasta, "GB"))
-    Int input_cram_bam_size = ceil(size(input_cram_bam, "GB"))
-    Int disk_size = ceil((2*merged_loci_bed_size) + reference_size + input_cram_bam_size) + 30  # Bed and reference sizes, plus 10GB overhead
-
-    command <<<
-      set -xeo pipefail
-      bash ~{monitoring_script} | tee monitoring.log >&2 &
-
-      echo "Extracting coverage from CRAM for the specified loci..."
-      mosdepth --by ~{merged_loci_bed} -f ~{references.ref_fasta} -Q ~{mapping_quality_threshold} --fast-mode \
-      ~{base_file_name} ~{input_cram_bam}
-
-      echo "Coverage extraction completed."
-    >>>
-
-    output {
-      File coverage_bed = "~{base_file_name}.regions.bed.gz"
-      File coverage_bed_index = "~{base_file_name}.regions.bed.gz.csi"
-    }
-
-    runtime {
-      preemptible: "~{preemptibles}"
-      cpu: cpus
-      memory: "~{memory_gb} GB"
-      disks: "local-disk " + ceil(disk_size) + " HDD"
-      docker: docker
-    }
-}
 
 task PadVcf {
   input {

@@ -1,0 +1,1438 @@
+{
+    "GermlinePipeline.CNV.CnmopsCNVCalling.SingleSampleReadsCount.ref_seq_names": {
+        "description": "Chromosome names for which reads counts will be calculated. Mutually exclusive with genome_windows",
+        "optional": true
+    },
+    "GermlinePipeline.CNV.CnmopsCNVCalling.SingleSampleReadsCount.window_length": {
+        "description": "Window lenght for which reads counts will be calculated for. Mutually exclusive with genome_windows",
+        "optional": true
+    },
+    "GermlinePipeline.CNV.CnmopsCNVCalling.cap_coverage_override": {
+        "description": "whether to cap extremely high average coverage windows to 2*cohort's average coverage quantile 99.9% value",
+        "optional": true
+    },
+    "GermlinePipeline.CNV.CnmopsCNVCalling.input_bam_file": {
+        "description": "Input sample BAM/CRAM file. one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
+        "optional": true
+    },
+    "GermlinePipeline.CNV.CnmopsCNVCalling.input_bam_file_index": {
+        "description": "Input sample BAI/CRAI index file",
+        "optional": true
+    },
+    "GermlinePipeline.CNV.CnmopsCNVCalling.input_sample_reads_count": {
+        "description": "Inputs sample windowed coverage stored as GenomicRanges object in rds file. can be calculated using cn.mops::getReadCountsFromBAM R function.  one of the `input_bam_file`, `input_sample_reads_count` or `bed_graph` must be set",
+        "optional": true
+    },
+    "GermlinePipeline.CNV.CnmopsCNVCalling.save_csv_override": {
+        "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in csv format (additionally to RDS format). Default is: False.",
+        "optional": true
+    },
+    "GermlinePipeline.CNV.CnmopsCNVCalling.save_hdf_override": {
+        "description": "Whether to save sample reads counts/cohort including sample/cnmops output data in hdf5 format (additionally to RDS format). Default is: False.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.kmer_length": {
+        "description": "K-mer length for KMC counting (default: 29)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.min_kmer_count": {
+        "description": "Minimum k-mer count threshold for sampling (default: 2)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.minimap2_preset": {
+        "description": "Minimap2 preset for alignment (default: asm5)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.minimap_extra_args": {
+        "description": "Additional extra arguments to pass to minimap2 (default: empty)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.step_size": {
+        "description": "Sliding window step size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.window_size": {
+        "description": "Sliding window size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.active_areas_min_base_quality": {
+        "description": "Minimum base quality for active areas detection",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.annotation_intervals": {
+        "description": "List of bed files for VCF annotation",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.call_variants_cpus": {
+        "description": "Number of CPUs for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.call_variants_gpu_type_override": {
+        "description": "GPU type for call variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.call_variants_gpus": {
+        "description": "Number of GPUs for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.call_variants_threads": {
+        "description": "Number of decompression threads for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.call_variants_uncompr_buf_size_gb": {
+        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.dbg_min_base_quality": {
+        "description": "Minimal base quality for local assembly of haplotypes",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ensemble_reference_rows": {
+        "description": "Number of reference rows for ensemble inference",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.germline_vcf": {
+        "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.gq_bins": {
+        "description": "GQ bins to use instead of a fixed resolution (overrides gq_resolution)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.gq_resolution_override": {
+        "description": "Override for gq resolution (default: 5)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.h_indel_allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.h_indel_vaf_to_pass": {
+        "description": "Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.hard_qual_filter": {
+        "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.input_flow_order": {
+        "description": "Flow order. If not provided, it will be extracted from the CRAM header",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.intervals_string": {
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.log_make_examples_progress": {
+        "description": "Cause make_examples to output detailed progress information (for debugging)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.max_reads_per_partition": {
+        "description": "Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.min_fraction_hmer_indels": {
+        "description": "Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.min_fraction_non_hmer_indels": {
+        "description": "Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.min_fraction_snps": {
+        "description": "Minimal fraction of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.min_hmer_plus_one_candidate": {
+        "description": "Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.min_read_count_hmer_indels": {
+        "description": "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.min_read_count_non_hmer_indels": {
+        "description": "Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.min_read_count_snps": {
+        "description": "Minimal number of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.model_serialized": {
+        "description": "TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.no_address_override": {
+        "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.optimization_level": {
+        "description": "Optimization level for TensorRT engine in call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.output_call_variants_tfrecords": {
+        "description": "Output tfrecords from call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.output_realignment": {
+        "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.p_error": {
+        "description": "Basecalling error for reference confidence model in gvcf",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.pangenome_haplotypes": {
+        "description": "Optional pangenome haplotypes cram file",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.pangenome_haplotypes_index": {
+        "description": "Optional pangenome haplotypes cram index file",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.prioritize_alt_supporting_reads": {
+        "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.random_seed": {
+        "description": "Random seed for ensemble inference",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ref_dbsnp": {
+        "description": "DbSNP vcf for the annotation of known variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ref_dbsnp_index": {
+        "description": "DbSNP vcf index",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.roh_af_default": {
+        "description": "Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.roh_blacklist_override": {
+        "description": "BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2)",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.run_ploidy_estimation": {
+        "description": "Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.run_roh": {
+        "description": "Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.scatter_intervals_break": {
+        "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.sex_chromosomes": {
+        "description": "Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.show_bg_fields": {
+        "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.shuffle_all_samples": {
+        "description": "Whether to shuffle all samples during inference",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.strand_bias_normalization_thresholds": {
+        "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.strong_call_threshold": {
+        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.trim_soft_clips": {
+        "description": "Trim soft-clipped bases from pileup images",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ug_call_variants_extra_mem": {
+        "description": "Extra memory for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ug_make_examples_cpus_override": {
+        "description": "CPU number override for make_examples step",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ug_make_examples_memory_override": {
+        "description": "Memory override for make_examples step",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.ug_post_processing_extra_args": {
+        "description": "Additional arguments for post-processing",
+        "optional": true
+    },
+    "GermlinePipeline.PGx.EfficientDV.v_gpu_tile_size": {
+        "description": "Virtual GPU tile size for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SV.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.HaplotypeSampling.kmer_length": {
+        "description": "K-mer length for KMC counting (default: 29)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.HaplotypeSampling.min_kmer_count": {
+        "description": "Minimum k-mer count threshold for sampling (default: 2)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.HaplotypeSampling.minimap2_preset": {
+        "description": "Minimap2 preset for alignment (default: asm5)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.HaplotypeSampling.minimap_extra_args": {
+        "description": "Additional extra arguments to pass to minimap2 (default: empty)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.HaplotypeSampling.step_size": {
+        "description": "Sliding window step size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.HaplotypeSampling.window_size": {
+        "description": "Sliding window size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.active_areas_min_base_quality": {
+        "description": "Minimum base quality for active areas detection",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.annotation_intervals": {
+        "description": "List of bed files for VCF annotation",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.background_cram_files": {
+        "description": "Background (normal sample) cram files for somatic calling",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.background_cram_index_files": {
+        "description": "Background (normal sample) cram index files for somatic calling",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.call_variants_cpus": {
+        "description": "Number of CPUs for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.call_variants_gpu_type_override": {
+        "description": "GPU type for call variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.call_variants_gpus": {
+        "description": "Number of GPUs for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.call_variants_threads": {
+        "description": "Number of decompression threads for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.call_variants_uncompr_buf_size_gb": {
+        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.dbg_min_base_quality": {
+        "description": "Minimal base quality for local assembly of haplotypes",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.diploid_sampling_in_haplotypes": {
+        "description": "Use diploid sampling strategy for haplotype selection",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ensemble_reference_rows": {
+        "description": "Number of reference rows for ensemble inference",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ensemble_size": {
+        "description": "Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.germline_vcf": {
+        "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.gq_bins": {
+        "description": "GQ bins to use instead of a fixed resolution (overrides gq_resolution)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.gq_resolution_override": {
+        "description": "Override for gq resolution (default: 5)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.h_indel_allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.h_indel_vaf_to_pass": {
+        "description": "Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.hard_qual_filter": {
+        "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.include_reference_in_haplotypes": {
+        "description": "Include the reference sequence in the sampled haplotypes",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.input_flow_order": {
+        "description": "Flow order. If not provided, it will be extracted from the CRAM header",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.intervals_string": {
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.log_make_examples_progress": {
+        "description": "Cause make_examples to output detailed progress information (for debugging)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.max_reads_per_partition": {
+        "description": "Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_base_quality": {
+        "description": "Minimal base quality for candidate generation",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_hmer_plus_one_candidate": {
+        "description": "Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_mapping_quality": {
+        "description": "Minimum mapping quality for reads to appear in pileup images (input to CNN) and to be considered as supporting an alt-allele in candidate generation",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_read_count_hmer_indels": {
+        "description": "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_read_count_non_hmer_indels": {
+        "description": "Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_read_count_snps": {
+        "description": "Minimal number of reads, that support a snp, required to  generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_variant_quality_hmer_indels": {
+        "description": "Minimal h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_variant_quality_non_hmer_indels": {
+        "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.min_variant_quality_snps": {
+        "description": "Minimal snp variant quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.no_address_override": {
+        "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.num_haplotypes": {
+        "description": "Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.optimization_level": {
+        "description": "Optimization level for TensorRT engine in call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.output_call_variants_tfrecords": {
+        "description": "Output tfrecords from call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.output_realignment": {
+        "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.p_error": {
+        "description": "Basecalling error for reference confidence model in gvcf",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.pangenome_haplotypes": {
+        "description": "Optional pangenome haplotypes cram file",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.pangenome_haplotypes_index": {
+        "description": "Optional pangenome haplotypes cram index file",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.prioritize_alt_supporting_reads": {
+        "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.prioritize_high_quality_reads": {
+        "description": "When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.random_seed": {
+        "description": "Random seed for ensemble inference",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ref_dbsnp": {
+        "description": "DbSNP vcf for the annotation of known variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ref_dbsnp_index": {
+        "description": "DbSNP vcf index",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ref_gbz_for_haplotypes": {
+        "description": "Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ref_hapl": {
+        "description": "Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.roh_af_default": {
+        "description": "Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.roh_blacklist_override": {
+        "description": "BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2)",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.run_haplotype_sampling": {
+        "description": "Whether to run haplotype sampling to create pangenome haplotypes. Default: false",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.run_ploidy_estimation": {
+        "description": "Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.run_roh": {
+        "description": "Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.scatter_intervals_break": {
+        "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.sex_chromosomes": {
+        "description": "Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.show_bg_fields": {
+        "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.shuffle_all_samples": {
+        "description": "Whether to shuffle all samples during inference",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.strand_bias_normalization_thresholds": {
+        "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.strong_call_threshold": {
+        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.trim_soft_clips": {
+        "description": "Trim soft-clipped bases from pileup images",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ug_call_variants_extra_mem": {
+        "description": "Extra memory for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ug_make_examples_cpus_override": {
+        "description": "CPU number override for make_examples step",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ug_make_examples_extra_args": {
+        "description": "Additional arguments for make-examples tool",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ug_make_examples_memory_override": {
+        "description": "Memory override for make_examples step",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.ug_post_processing_extra_args": {
+        "description": "Additional arguments for post-processing",
+        "optional": true
+    },
+    "GermlinePipeline.SegDup.DV.v_gpu_tile_size": {
+        "description": "Virtual GPU tile size for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.VariantCalling.HaplotypeSampling.kmer_length": {
+        "description": "K-mer length for KMC counting (default: 29)",
+        "optional": true
+    },
+    "GermlinePipeline.VariantCalling.HaplotypeSampling.min_kmer_count": {
+        "description": "Minimum k-mer count threshold for sampling (default: 2)",
+        "optional": true
+    },
+    "GermlinePipeline.VariantCalling.HaplotypeSampling.minimap2_preset": {
+        "description": "Minimap2 preset for alignment (default: asm5)",
+        "optional": true
+    },
+    "GermlinePipeline.VariantCalling.HaplotypeSampling.minimap_extra_args": {
+        "description": "Additional extra arguments to pass to minimap2 (default: empty)",
+        "optional": true
+    },
+    "GermlinePipeline.VariantCalling.HaplotypeSampling.step_size": {
+        "description": "Sliding window step size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GermlinePipeline.VariantCalling.HaplotypeSampling.window_size": {
+        "description": "Sliding window size for seqkit (default: 50000)",
+        "optional": true
+    },
+    "GermlinePipeline.VariantCalling.ScatterIntervalList.convert_to_bed": {
+        "description": "If true, convert interval_list files to BED format in addition to interval_list format",
+        "optional": true
+    },
+    "GermlinePipeline.active_areas_min_base_quality": {
+        "description": "Minimum base quality for active areas detection",
+        "optional": true
+    },
+    "GermlinePipeline.add_ins_size_channel": {
+        "description": "Use a channel with the insertion size (depends on the model).",
+        "optional": false
+    },
+    "GermlinePipeline.allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for non h indels and snvs, for vcf filtering",
+        "optional": true
+    },
+    "GermlinePipeline.annotate_variants_cpu_override": {
+        "description": "cpu override for annotate_variants task",
+        "optional": true
+    },
+    "GermlinePipeline.annotate_variants_memory_override": {
+        "description": "memory override for annotate_variants task",
+        "optional": true
+    },
+    "GermlinePipeline.annotation_intervals": {
+        "description": "List of bed files for VCF annotation",
+        "optional": true
+    },
+    "GermlinePipeline.background_bed": {
+        "description": "Background regions (non-segmental duplicated) for CNV calling, see template and `parascopy`",
+        "optional": true
+    },
+    "GermlinePipeline.background_cram_files": {
+        "description": "Background (normal sample) cram files for somatic calling",
+        "optional": true
+    },
+    "GermlinePipeline.background_cram_index_files": {
+        "description": "Background (normal sample) cram index files for somatic calling",
+        "optional": true
+    },
+    "GermlinePipeline.base_file_name": {
+        "description": "(shared: VariantCalling, CNV, SV, STR, HLA, PGx, SegDup) Prefix for name of all output files",
+        "optional": false
+    },
+    "GermlinePipeline.bed_graph": {
+        "description": "Previously calculated input bedGraph files holding the coverage per base (outputs with the sequencing data).",
+        "optional": true
+    },
+    "GermlinePipeline.blacklist_bed": {
+        "description": "Gridss blacklist file. When not provided, resolved per genome from genome_resources (sv_blacklist). Provide empty file to disable",
+        "optional": true
+    },
+    "GermlinePipeline.call_variants_cpus": {
+        "description": "Number of CPUs for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.call_variants_gpu_type_override": {
+        "description": "GPU type for call variants",
+        "optional": true
+    },
+    "GermlinePipeline.call_variants_gpus": {
+        "description": "Number of GPUs for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.call_variants_threads": {
+        "description": "Number of decompression threads for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.call_variants_uncompr_buf_size_gb": {
+        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "optional": true
+    },
+    "GermlinePipeline.cap_at_optimal_coverage": {
+        "description": "Defines downsampling behavior. When false, then the reads are downsampled such that the average coverage equals \"optimal coverage\". When true, each position is downsampled to \"optimal coverage\".",
+        "optional": false
+    },
+    "GermlinePipeline.chrX_name_override": {
+        "description": "Name of the X chromosome in the cohort reads count matrix, needed for the ploidy correction. By default derived from reference_genome ('X' for b37, 'chrX' otherwise)",
+        "optional": true
+    },
+    "GermlinePipeline.chrY_name_override": {
+        "description": "Name of the Y chromosome in the cohort reads count matrix, needed for the ploidy correction. By default derived from reference_genome ('Y' for b37, 'chrY' otherwise)",
+        "optional": true
+    },
+    "GermlinePipeline.cloud_provider_override": {
+        "description": "(shared: VariantCalling, CNV, SV, HLA, PGx, SegDup) cloud_provider_override",
+        "optional": true
+    },
+    "GermlinePipeline.cn_model": {
+        "description": "CNV model file from parascopy, see template",
+        "optional": true
+    },
+    "GermlinePipeline.cnmops_mapq_override": {
+        "description": "Reads mapping-quality cutoff for coverage aggregation used in cn.mops, default value is 1",
+        "optional": true
+    },
+    "GermlinePipeline.cnmops_min_cnv_length_override": {
+        "description": "Minimum length for reporting CNV. Default is: 0",
+        "optional": true
+    },
+    "GermlinePipeline.cnmops_min_width_value_override": {
+        "description": "Minimum of consecutive windows with a significant signal to consider for CNV reporting. Default is: 2",
+        "optional": true
+    },
+    "GermlinePipeline.cnmops_parallel_override": {
+        "description": "Number of cpus for cn.mops run. Default value is 4",
+        "optional": true
+    },
+    "GermlinePipeline.cnmops_window_length_override": {
+        "description": "Window length on which the read counts will be aggregated, default value is 1000",
+        "optional": true
+    },
+    "GermlinePipeline.cnv_create_md5_checksum_outputs": {
+        "description": "(CNV) Create md5 checksum for requested output files",
+        "optional": true
+    },
+    "GermlinePipeline.cnv_preemptible_tries_override": {
+        "description": "cnv_preemptible_tries_override",
+        "optional": true
+    },
+    "GermlinePipeline.cnvpytor_window_length_override": {
+        "description": "Window length on which the read counts will be aggregated, default value is [500,2500]",
+        "optional": true
+    },
+    "GermlinePipeline.cohort_reads_count_matrix_override": {
+        "description": "GenomicRanges object of the cohort reads count matrix in rds file format. By default the cohort matching reference_genome is taken from the genome resources.",
+        "optional": true
+    },
+    "GermlinePipeline.config_file_string": {
+        "description": "Gridss config file content",
+        "optional": true
+    },
+    "GermlinePipeline.convert_vcf_format_memory_override": {
+        "description": "memory override for convert_vcf_format task",
+        "optional": true
+    },
+    "GermlinePipeline.create_assembly_memory_override": {
+        "description": "memory override for create_assembly task",
+        "optional": true
+    },
+    "GermlinePipeline.cushion_size": {
+        "description": "Cushion size around CNV breakpoints for split-read analysis and jump alignment analysis",
+        "optional": true
+    },
+    "GermlinePipeline.dbg_min_base_quality": {
+        "description": "Minimal base quality for local assembly of haplotypes",
+        "optional": true
+    },
+    "GermlinePipeline.disable_mod_cnv": {
+        "description": "whether to call moderate cnvs (Fold-Change~1.5 will be tagged as CN2.5 and Fold-Change~0.7 will be tagged as CN1.5). Default is: True",
+        "optional": true
+    },
+    "GermlinePipeline.dv_diploid_sampling_in_haplotypes": {
+        "description": "(VariantCalling) Use diploid sampling strategy for haplotype selection",
+        "optional": true
+    },
+    "GermlinePipeline.dv_dummy_input_for_call_caching": {
+        "description": "dv_dummy_input_for_call_caching",
+        "optional": true
+    },
+    "GermlinePipeline.dv_ensemble_size": {
+        "description": "(VariantCalling) Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
+        "optional": true
+    },
+    "GermlinePipeline.dv_include_reference_in_haplotypes": {
+        "description": "(VariantCalling) Include the reference sequence in the sampled haplotypes",
+        "optional": true
+    },
+    "GermlinePipeline.dv_max_reads_per_partition": {
+        "description": "(VariantCalling) Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": true
+    },
+    "GermlinePipeline.dv_min_base_quality": {
+        "description": "(VariantCalling) Minimal base quality for candidate generation",
+        "optional": true
+    },
+    "GermlinePipeline.dv_min_fraction_single_strand_non_snps": {
+        "description": "(VariantCalling) In active region detection, in case single_strand_filter is set to true, keep only non snps candidates that have at least min_fraction_single_strand_non_snps fraction",
+        "optional": false
+    },
+    "GermlinePipeline.dv_min_mapping_quality": {
+        "description": "(VariantCalling) Minimum mapping quality for reads to appear in pileup images (input to CNN) and to be considered as supporting an alt-allele in candidate generation",
+        "optional": true
+    },
+    "GermlinePipeline.dv_model_onnx": {
+        "description": "(VariantCalling) TensorRT model for calling variants (onnx format)",
+        "optional": true
+    },
+    "GermlinePipeline.dv_model_serialized": {
+        "description": "(VariantCalling) TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+        "optional": true
+    },
+    "GermlinePipeline.dv_num_haplotypes": {
+        "description": "(VariantCalling) Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image.",
+        "optional": true
+    },
+    "GermlinePipeline.dv_num_shards": {
+        "description": "(VariantCalling) Maximal number of intervals the genome is broken into when parallelizing the make_examples step",
+        "optional": false
+    },
+    "GermlinePipeline.dv_preemptible_tries": {
+        "description": "(VariantCalling) Number of preemptible tries",
+        "optional": false
+    },
+    "GermlinePipeline.dv_ref_gbz_for_haplotypes": {
+        "description": "(VariantCalling) Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+        "optional": true
+    },
+    "GermlinePipeline.dv_ref_hapl": {
+        "description": "(VariantCalling) Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+        "optional": true
+    },
+    "GermlinePipeline.dv_run_haplotype_sampling": {
+        "description": "(VariantCalling) Whether to run haplotype sampling to create pangenome haplotypes. Default: false",
+        "optional": true
+    },
+    "GermlinePipeline.dv_scatter_intervals_break": {
+        "description": "(VariantCalling) The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.dv_single_strand_filter": {
+        "description": "(VariantCalling) Whether to filter out non snp candidates that are on a single strand. Reduces the number of candidates and hence the cost. Most useful for somatic calling.",
+        "optional": false
+    },
+    "GermlinePipeline.dv_ug_make_examples_extra_args": {
+        "description": "(VariantCalling) Additional arguments for make-examples tool",
+        "optional": true
+    },
+    "GermlinePipeline.ensemble_reference_rows": {
+        "description": "Number of reference rows for ensemble inference",
+        "optional": true
+    },
+    "GermlinePipeline.exclude_filters": {
+        "description": "gripss paramter: Exclude filters from the output vcf, separated by ;",
+        "optional": true
+    },
+    "GermlinePipeline.filtering_model": {
+        "description": "CNV filtering model, default in template, calls are not filtered if not provided",
+        "optional": true
+    },
+    "GermlinePipeline.filtering_model_decision_threshold": {
+        "description": "Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent",
+        "optional": true
+    },
+    "GermlinePipeline.gene_symbols": {
+        "description": "List of gene symbols to analyze",
+        "optional": true
+    },
+    "GermlinePipeline.germline_link_variants_memory_override": {
+        "description": "memory override for germline_link_variants task",
+        "optional": true
+    },
+    "GermlinePipeline.germline_vcf": {
+        "description": "Germline vcf file in order to generate haplotypes that incorporate germline variants",
+        "optional": true
+    },
+    "GermlinePipeline.giraffe_parameters": {
+        "description": "vg giraffe index files to improve haplotype interpretation using population graphs",
+        "optional": true
+    },
+    "GermlinePipeline.gq_bins": {
+        "description": "GQ bins to use instead of a fixed resolution (overrides gq_resolution)",
+        "optional": true
+    },
+    "GermlinePipeline.gq_resolution_override": {
+        "description": "Override for gq resolution (default: 5)",
+        "optional": true
+    },
+    "GermlinePipeline.graphs_files_tar": {
+        "description": "HLA-LA graphs files tar (required if using HLA-LA)",
+        "optional": true
+    },
+    "GermlinePipeline.gridss_metrics_interval": {
+        "description": "Interval for collecting gridss metrics",
+        "optional": true
+    },
+    "GermlinePipeline.h_indel_allele_frequency_ratio": {
+        "description": "Minimal ratio between the allele frequency in tumor and normal for h-indels for vcf filtering",
+        "optional": true
+    },
+    "GermlinePipeline.h_indel_vaf_to_pass": {
+        "description": "Minimal variant allele frequency for h-indels to not filter out by allele frequency ratio",
+        "optional": true
+    },
+    "GermlinePipeline.haploid": {
+        "description": "Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms.",
+        "optional": true
+    },
+    "GermlinePipeline.hard_qual_filter": {
+        "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
+        "optional": true
+    },
+    "GermlinePipeline.hla_genotyping_tool": {
+        "description": "HLA genotyping tool to use. Options: 'HLA-LA' or 'T1K'",
+        "optional": false
+    },
+    "GermlinePipeline.hla_preemptible_tries_override": {
+        "description": "hla_preemptible_tries_override",
+        "optional": true
+    },
+    "GermlinePipeline.homology_table": {
+        "description": "Segmental duplication table (see parascopy), see template",
+        "optional": true
+    },
+    "GermlinePipeline.homology_table_index": {
+        "description": "Segmental duplication table index (see parascopy), see template",
+        "optional": true
+    },
+    "GermlinePipeline.homopolymer_length": {
+        "description": "Realignment parameter: do realignment on homopolymeres longer than this value",
+        "optional": true
+    },
+    "GermlinePipeline.input_cram_bam_index_list": {
+        "description": "CRAI/BAI index file(s) matching input_cram_bam_list",
+        "optional": false
+    },
+    "GermlinePipeline.input_cram_bam_list": {
+        "description": "Aligned, sorted, duplicate-marked CRAM/BAM file(s) of a single sample",
+        "optional": false
+    },
+    "GermlinePipeline.input_flow_order": {
+        "description": "Flow order. If not provided, it will be extracted from the CRAM header",
+        "optional": true
+    },
+    "GermlinePipeline.input_tumor_crams": {
+        "description": "Input CRAM file for the tumor (in case of matched T/N calling)",
+        "optional": true
+    },
+    "GermlinePipeline.input_tumor_crams_indexes": {
+        "description": "Input CRAM index for the tumor (in case of matched T/N calling)",
+        "optional": true
+    },
+    "GermlinePipeline.input_vcf_file": {
+        "description": "Input VCF file with variants. Use of high quality variants (i.e. PASS). If not provided, Efficient DV will be run",
+        "optional": true
+    },
+    "GermlinePipeline.input_vcf_index_file": {
+        "description": "Input VCF index file",
+        "optional": true
+    },
+    "GermlinePipeline.intervals_string": {
+        "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.keep_duplicates": {
+        "description": "Keep duplicated reads in the images. Do not use in high depth samples (e.g. WES).",
+        "optional": false
+    },
+    "GermlinePipeline.known_hotspot_file": {
+        "description": "gripss paramter: Known locations that are hot spot for SVs (see https://github.com/hartwigmedical/hmftools/tree/master/linx), filtered less stringently",
+        "optional": true
+    },
+    "GermlinePipeline.log_make_examples_progress": {
+        "description": "Cause make_examples to output detailed progress information (for debugging)",
+        "optional": true
+    },
+    "GermlinePipeline.make_gvcf": {
+        "description": "Whether to generate a gvcf. Default: False",
+        "optional": true
+    },
+    "GermlinePipeline.max_num_haps": {
+        "description": "Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report",
+        "optional": true
+    },
+    "GermlinePipeline.max_reads_per_working_area": {
+        "description": "Rematching parameter: Maximal number of reads that are stored in memory when rematching reads to haplotypes (similar to max_reads_per_partition in assembly)",
+        "optional": true
+    },
+    "GermlinePipeline.max_repeat": {
+        "description": "Maximum number of repeat units to include in auxiliary reference sequences",
+        "optional": true
+    },
+    "GermlinePipeline.memory_gb_override": {
+        "description": "Optional memory allocation override in GB (default: 4)",
+        "optional": true
+    },
+    "GermlinePipeline.micro_allele_consensus_ratio": {
+        "description": "Minimum fraction of supporting spanning reads required to report a micro-allele decimal. Only used when report_micro_alleles is true. Range 0.0-1.0.",
+        "optional": true
+    },
+    "GermlinePipeline.micro_allele_min_reads": {
+        "description": "Minimum number of spanning reads supporting the consensus tract length required to report a micro-allele. Guards against low-coverage indel artifacts. Only used when report_micro_alleles is true. Default: 10.",
+        "optional": true
+    },
+    "GermlinePipeline.min_base": {
+        "description": "Assembly parameter: Minimum base quality for using in DeBruijn graph construction. Default value in template",
+        "optional": true
+    },
+    "GermlinePipeline.min_fraction_hmer_indels": {
+        "description": "Minimal fraction of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.min_fraction_non_hmer_indels": {
+        "description": "Minimal fraction of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.min_fraction_snps": {
+        "description": "Minimal fraction of reads, that support a snp, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.min_hmer_plus_one_candidate": {
+        "description": "Minimal hmer length, above which more 1-bp insertion candidates are generated, provided they also meet allele frequency conditions",
+        "optional": true
+    },
+    "GermlinePipeline.min_indel_sc_size_to_include": {
+        "description": "Assembly parameter: Minimum size of an indel and soft-clipping in the read to include the read in the assembly. ;-separated between samples",
+        "optional": true
+    },
+    "GermlinePipeline.min_mapq": {
+        "description": "Assembly parameter: Minimum mapping quality. Default value in template",
+        "optional": true
+    },
+    "GermlinePipeline.min_mismatch_count_to_include": {
+        "description": "Assembly parameter: Minimal number of counts to require to include the read in the assembly. ;-separated between samples",
+        "optional": true
+    },
+    "GermlinePipeline.min_normal_coverage": {
+        "description": "gripss paramter: Minimum coverage in the normal sample to determine somatic status. Default value:8",
+        "optional": true
+    },
+    "GermlinePipeline.min_read_count_hmer_indels": {
+        "description": "Minimal number of reads, that support an h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.min_read_count_non_hmer_indels": {
+        "description": "Minimal number of reads, that support a non-h-mer indel, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.min_read_count_snps": {
+        "description": "Minimal number of reads, that support a snp, required to generate a candidate variant",
+        "optional": true
+    },
+    "GermlinePipeline.min_repeat": {
+        "description": "Minimum number of repeat units to include in auxiliary reference sequences",
+        "optional": true
+    },
+    "GermlinePipeline.min_score_ratio": {
+        "description": "Minimum ratio of alignment score to the theoretical maximum score (read_length * match_score). Alignments below this threshold are filtered out. Range: 0.0-1.0, where 1.0 requires perfect alignment.",
+        "optional": true
+    },
+    "GermlinePipeline.min_variant_quality_exome_hmer_indels": {
+        "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "GermlinePipeline.min_variant_quality_hmer_indels": {
+        "description": "Minimal h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "GermlinePipeline.min_variant_quality_non_hmer_indels": {
+        "description": "Minimal non-h-mer indel quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "GermlinePipeline.min_variant_quality_snps": {
+        "description": "Minimal snp variant quality in order to be labeled as PASS",
+        "optional": true
+    },
+    "GermlinePipeline.monitoring_script_input": {
+        "description": "(shared: VariantCalling, CNV, SV, STR, HLA, PGx, SegDup) Monitoring script override for AWS HealthOmics workflow templates multi-region support",
+        "optional": true
+    },
+    "GermlinePipeline.n_threads": {
+        "description": "Number of threads to use",
+        "optional": true
+    },
+    "GermlinePipeline.no_address_override": {
+        "description": "(shared: VariantCalling, CNV, HLA, PGx) Whether to disable assigning external IP addresses to VMs (relevant for Google)",
+        "optional": true
+    },
+    "GermlinePipeline.normalize_strand_bias": {
+        "description": "Whether to normalize the strand bias in the images. This is useful for WES calling, where target enrichment may introduce strand bias between alleles.",
+        "optional": true
+    },
+    "GermlinePipeline.optimal_coverages": {
+        "description": "Each sample is downsampled to the \"optimal coverage\" (dictated by the coverage of the training set). Downsampling method is determined by cap_at_optimal_coverage.",
+        "optional": false
+    },
+    "GermlinePipeline.optimization_level": {
+        "description": "Optimization level for TensorRT engine in call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.output_call_variants_tfrecords": {
+        "description": "Output tfrecords from call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.output_detailed_csv": {
+        "description": "Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O.",
+        "optional": false
+    },
+    "GermlinePipeline.output_realignment": {
+        "description": "Output haplotypes and re-aligned reads to a bam file. Default: false.",
+        "optional": true
+    },
+    "GermlinePipeline.output_summary_csv": {
+        "description": "Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O.",
+        "optional": true
+    },
+    "GermlinePipeline.override_target_intervals": {
+        "description": "Override default genome-specific target intervals. If not provided, uses genome-specific default intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.p_error": {
+        "description": "Basecalling error for reference confidence model in gvcf",
+        "optional": true
+    },
+    "GermlinePipeline.pangenome_haplotypes": {
+        "description": "Optional pangenome haplotypes cram file",
+        "optional": true
+    },
+    "GermlinePipeline.pangenome_haplotypes_index": {
+        "description": "Optional pangenome haplotypes cram index file",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_diploid_sampling_in_haplotypes": {
+        "description": "(PGx) EfficientDV: use diploid sampling for haplotypes",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_ensemble_size": {
+        "description": "(PGx) EfficientDV: number of augmented passes for ensemble inference (0 disables)",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_include_reference_in_haplotypes": {
+        "description": "(PGx) EfficientDV: include the reference among sampled haplotypes",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_min_base_quality": {
+        "description": "(PGx) EfficientDV: minimum base quality",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_min_fraction_single_strand_non_snps": {
+        "description": "(PGx) EfficientDV: minimum fraction of single-strand support for non-SNP variants",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_model_onnx": {
+        "description": "(PGx) TensorRT model for calling variants (onnx format)",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_num_haplotypes": {
+        "description": "(PGx) EfficientDV: number of haplotypes to sample",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_preemptible_tries": {
+        "description": "pgx_preemptible_tries",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_ref_gbz_for_haplotypes": {
+        "description": "(PGx) EfficientDV: pangenome graph (.gbz) file, required when run_haplotype_sampling is true",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_ref_hapl": {
+        "description": "(PGx) EfficientDV: pangenome haplotypes (.hapl) file, required when run_haplotype_sampling is true",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_run_haplotype_sampling": {
+        "description": "(PGx) EfficientDV: run haplotype sampling to create pangenome haplotypes (enabled by the PE use-case)",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_single_strand_filter": {
+        "description": "(PGx) EfficientDV: enable single-strand filtering (default set by template)",
+        "optional": true
+    },
+    "GermlinePipeline.pgx_ug_make_examples_extra_args": {
+        "description": "(PGx) EfficientDV: extra args passed to make_examples (channels / max-ins-size for PE)",
+        "optional": true
+    },
+    "GermlinePipeline.ploidy_file": {
+        "description": "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called. Genome independent.",
+        "optional": true
+    },
+    "GermlinePipeline.pon_sgl_file": {
+        "description": "gripss paramter: Panel of normals for single end breakend (partially resolved) calls. Note that the default value is in template",
+        "optional": true
+    },
+    "GermlinePipeline.pon_sv_file": {
+        "description": "gripss paramter: panel of normals for breakpoint (fully resolved) calls. Note that the default value is in template",
+        "optional": true
+    },
+    "GermlinePipeline.prefilter_query": {
+        "description": "Expression (in bcftools view format) to filter the variants before annotation",
+        "optional": true
+    },
+    "GermlinePipeline.prioritize_alt_supporting_reads": {
+        "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
+        "optional": true
+    },
+    "GermlinePipeline.prioritize_high_quality_reads": {
+        "description": "When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads",
+        "optional": true
+    },
+    "GermlinePipeline.random_seed": {
+        "description": "Random seed for ensemble inference",
+        "optional": true
+    },
+    "GermlinePipeline.realign_mapq": {
+        "description": "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
+        "optional": true
+    },
+    "GermlinePipeline.recalibrate_vaf": {
+        "description": "Whether to recalculate the variant allele frequency on the PASS variants, improves over the naive VAF calculate of DeepVariant (somatic calling only)",
+        "optional": true
+    },
+    "GermlinePipeline.ref_dbsnp": {
+        "description": "DbSNP vcf for the annotation of known variants",
+        "optional": true
+    },
+    "GermlinePipeline.ref_dbsnp_index": {
+        "description": "DbSNP vcf index",
+        "optional": true
+    },
+    "GermlinePipeline.ref_files_for_tarball": {
+        "description": "List of references for CreateReferenceCache task.",
+        "optional": true
+    },
+    "GermlinePipeline.ref_padding": {
+        "description": "Number of bases to extend around the STR repeat region when building auxiliary references for alignment. Larger values provide more flanking sequence context for accurate alignment.",
+        "optional": true
+    },
+    "GermlinePipeline.reference_genome": {
+        "description": "(shared: VariantCalling, CNV, SV, STR, HLA, PGx, SegDup) Genome selector: hg38, b37, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm39. Default to hg38",
+        "optional": true
+    },
+    "GermlinePipeline.reference_name": {
+        "description": "Can be 38 or 19",
+        "optional": true
+    },
+    "GermlinePipeline.rematching_memory_override": {
+        "description": "memory override for rematching task",
+        "optional": true
+    },
+    "GermlinePipeline.repeat_mask_file": {
+        "description": "gripss paramter: Repeat mask file. Note that the default value is in template",
+        "optional": true
+    },
+    "GermlinePipeline.report_micro_alleles": {
+        "description": "Report micro-alleles (e.g. 15.3) for haploid loci when a partial-repeat insertion is present. REPCN stays the integer floor; the micro-allele decimal appears in the genotype (GT) and a new RCMA VCF/BED field. No-op for diploid loci. Default: off.",
+        "optional": true
+    },
+    "GermlinePipeline.roh_af_default": {
+        "description": "Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table",
+        "optional": true
+    },
+    "GermlinePipeline.roh_blacklist_override": {
+        "description": "BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2)",
+        "optional": true
+    },
+    "GermlinePipeline.run_cnv": {
+        "description": "Run germline CNV calling (cn.MOPS + CNVpytor). Requires bed_graph and ploidy_file",
+        "optional": true
+    },
+    "GermlinePipeline.run_giraffe": {
+        "description": "Whether to run Giraffe haplotype aware alignment or not",
+        "optional": true
+    },
+    "GermlinePipeline.run_hla": {
+        "description": "Run HLA/KIR genotyping",
+        "optional": true
+    },
+    "GermlinePipeline.run_pgx": {
+        "description": "Run pharmacogenomics (PyPGx) analysis",
+        "optional": true
+    },
+    "GermlinePipeline.run_ploidy_estimation": {
+        "description": "Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases.",
+        "optional": true
+    },
+    "GermlinePipeline.run_roh": {
+        "description": "Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given",
+        "optional": true
+    },
+    "GermlinePipeline.run_segdup": {
+        "description": "Run segmental duplication analysis (parascopy/LPA)",
+        "optional": true
+    },
+    "GermlinePipeline.run_str": {
+        "description": "Run short tandem repeat genotyping",
+        "optional": true
+    },
+    "GermlinePipeline.run_sv": {
+        "description": "Run structural variant calling",
+        "optional": true
+    },
+    "GermlinePipeline.run_ua": {
+        "description": "Whether to run UA realignment on the output of the assembly (helps resolving some deletions) or not",
+        "optional": true
+    },
+    "GermlinePipeline.run_variant_calling": {
+        "description": "Run SNV/indel variant calling (EfficientDV). Needs a CRAM with real coverage: EfficientDV aborts when the measured median coverage is 0",
+        "optional": true
+    },
+    "GermlinePipeline.segdup_model_onnx": {
+        "description": "(SegDup) DeepVariant model for variant calling on segmental duplications, see template",
+        "optional": true
+    },
+    "GermlinePipeline.segdup_model_serialized": {
+        "description": "(SegDup) Serialized model for variant calling",
+        "optional": true
+    },
+    "GermlinePipeline.segdup_no_address": {
+        "description": "(SegDup) Start instances with no public IP address",
+        "optional": false
+    },
+    "GermlinePipeline.segdup_preemptible_tries": {
+        "description": "(SegDup) Number of preemptible tries",
+        "optional": true
+    },
+    "GermlinePipeline.segdup_regions": {
+        "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template (BED file)",
+        "optional": true
+    },
+    "GermlinePipeline.sex_chromosomes": {
+        "description": "Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references.",
+        "optional": true
+    },
+    "GermlinePipeline.shuffle_all_samples": {
+        "description": "Whether to shuffle all samples during inference",
+        "optional": true
+    },
+    "GermlinePipeline.skip_figure_generation": {
+        "description": "Skip CNV calls figure generation. Default is: False",
+        "optional": true
+    },
+    "GermlinePipeline.skip_filtering": {
+        "description": "Whether to skip CNV filtering step, default is False",
+        "optional": true
+    },
+    "GermlinePipeline.spanning_flank_bases": {
+        "description": "Minimum number of bases that must align on each side of the STR repeat region for a read to be considered 'spanning' the locus",
+        "optional": true
+    },
+    "GermlinePipeline.str_min_mapping_quality": {
+        "description": "(STR) Minimum mapping quality for reads to be included in analysis",
+        "optional": true
+    },
+    "GermlinePipeline.str_no_address": {
+        "description": "str_no_address",
+        "optional": true
+    },
+    "GermlinePipeline.str_preemptible_tries": {
+        "description": "str_preemptible_tries",
+        "optional": true
+    },
+    "GermlinePipeline.strand_bias_normalization_thresholds": {
+        "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
+        "optional": true
+    },
+    "GermlinePipeline.strong_call_threshold": {
+        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "optional": true
+    },
+    "GermlinePipeline.sv_calls_vcf": {
+        "description": "SV calls in VCF format (MANTA-like, single record per SV call) to be used for annotation of combined CNV calls, default is empty and annotation is not performed.<br> The input tested is the output of structrual_variant_pipeline.wdl",
+        "optional": true
+    },
+    "GermlinePipeline.sv_calls_vcf_index": {
+        "description": "Index file for the SV calls VCF",
+        "optional": true
+    },
+    "GermlinePipeline.sv_create_md5_checksum_outputs": {
+        "description": "(SV) Create md5 checksum for requested output files",
+        "optional": true
+    },
+    "GermlinePipeline.sv_dummy_input_for_call_caching": {
+        "description": "sv_dummy_input_for_call_caching",
+        "optional": true
+    },
+    "GermlinePipeline.sv_max_reads_per_partition": {
+        "description": "(SV) Assembly parameter: Maximal number of reads that are stored in memory when analyzing an active region",
+        "optional": true
+    },
+    "GermlinePipeline.sv_no_address": {
+        "description": "sv_no_address",
+        "optional": true
+    },
+    "GermlinePipeline.sv_num_shards": {
+        "description": "(SV) Relevant for scatter tasks, which are CreateAssembly and gridss.AnnotateVariants",
+        "optional": true
+    },
+    "GermlinePipeline.sv_preemptible_tries_override": {
+        "description": "sv_preemptible_tries_override",
+        "optional": true
+    },
+    "GermlinePipeline.sv_scatter_intervals_break": {
+        "description": "(SV) Maximal resolution for scattering intervals",
+        "optional": true
+    },
+    "GermlinePipeline.symbolic_vcf_format": {
+        "description": "Whether to convert the output vcf to the region format or not, default True",
+        "optional": true
+    },
+    "GermlinePipeline.t1k_index_tar": {
+        "description": "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa). Required if using T1K.",
+        "optional": true
+    },
+    "GermlinePipeline.threads": {
+        "description": "Number of threads for parallel processing",
+        "optional": false
+    },
+    "GermlinePipeline.trim_soft_clips": {
+        "description": "Trim soft-clipped bases from pileup images",
+        "optional": true
+    },
+    "GermlinePipeline.ua_parameters": {
+        "description": "UA parameters: v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
+        "optional": true
+    },
+    "GermlinePipeline.ug_call_variants_extra_mem": {
+        "description": "Extra memory for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.ug_make_examples_cpus_override": {
+        "description": "CPU number override for make_examples step",
+        "optional": true
+    },
+    "GermlinePipeline.ug_make_examples_memory_override": {
+        "description": "Memory override for make_examples step",
+        "optional": true
+    },
+    "GermlinePipeline.ug_post_processing_extra_args": {
+        "description": "Additional arguments for post-processing",
+        "optional": true
+    },
+    "GermlinePipeline.v_gpu_tile_size": {
+        "description": "Virtual GPU tile size for call_variants",
+        "optional": true
+    },
+    "GermlinePipeline.variant_catalog": {
+        "description": "Variant catalog (json). Example: https://github.com/broadinstitute/str-analysis/blob/main/str_analysis/variant_catalogs/variant_catalog_with_offtargets.GRCh38.json",
+        "optional": true
+    },
+    "GermlinePipeline.wgs_calling_interval_list_override": {
+        "description": "Optional override for the interval list defining the region to perform variant calling on. When not provided, resolved per genome from genome_resources (calling_interval_list_without_artefacts)",
+        "optional": true
+    }
+}

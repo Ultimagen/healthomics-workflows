@@ -15,8 +15,8 @@ workflow Globals {
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "ugbio_featuremap_docker": "ultimagenomics/ugbio_featuremap:1.28.0",
         "ugbio_srsnv_docker": "ultimagenomics/ugbio_srsnv:1.29.0",
-        "ugbio_deep_srsnv_docker": "ultimagenomics/ugbio_deep_srsnv:1.5.0",
-        "featuremap_docker": "ultimagenomics/featuremap:1.2.0_d2dbc55"
+        "ugbio_deep_srsnv_docker": "ultimagenomics/ugbio_deep_srsnv:1.6.0",
+        "featuremap_docker": "ultimagenomics/featuremap:1.3.0"
 }
 }
 

@@ -16,7 +16,7 @@
         "optional": false
     },
     "SVPipeline.blacklist_bed": {
-        "description": "Gridss blacklist file",
+        "description": "Gridss blacklist file. When not provided, resolved per genome from genome_resources (sv_blacklist). Provide empty file to disable",
         "optional": true
     },
     "SVPipeline.cloud_provider_override": {
@@ -152,7 +152,7 @@
         "optional": false
     },
     "SVPipeline.reference_genome": {
-        "description": "Genome type selector. Supported values: hg38, b37, hg38_no_alt",
+        "description": "Genome type selector. Supported values: hg38, b37, hg38_no_alt, hg38_nist_v3_with_decoy, mm39",
         "optional": false
     },
     "SVPipeline.reference_name": {
@@ -187,8 +187,8 @@
         "description": "UA parameters: v_aware_alignment_flag and ua_extra_args, recommended value set in the template",
         "optional": false
     },
-    "SVPipeline.wgs_calling_interval_list": {
-        "description": "interval list defining the region to perform variant calling on, recommended value set in the template",
-        "optional": false
+    "SVPipeline.wgs_calling_interval_list_override": {
+        "description": "Optional override for the interval list defining the region to perform variant calling on. When not provided, resolved per genome from genome_resources (calling_interval_list_without_artefacts)",
+        "optional": true
     }
 }

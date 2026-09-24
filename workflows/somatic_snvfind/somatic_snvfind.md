@@ -118,7 +118,7 @@ The SomaticSNVfind workflow performs somatic variant calling, producing an annot
 <p name="SomaticSNVfind.aggregated_parquet">
         <b>SomaticSNVfind.aggregated_parquet</b><br />
         <i>Array[File]</i><br />
-        Array of aggregated parquet files, one per genomic region/shard, primarily intended for debugging and troubleshooting. Each parquet file contains structured data from the somatic featuremap classifier including features, classification scores, and results in a columnar format. These files facilitate debugging by providing detailed intermediate results that can be inspected, analyzed, and visualized more easily than VCF format. Useful for investigating classification behavior, feature distributions, and pipeline issues.
+        Per-shard aggregated parquet files from the somatic featuremap classifier, containing features, scores, and results. Intended for debugging — easier to inspect than VCF format.
 </p>
 
 <hr />

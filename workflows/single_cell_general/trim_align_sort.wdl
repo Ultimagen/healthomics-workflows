@@ -36,7 +36,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.35.1" # !UnusedDeclaration
+        String pipeline_version = "1.36.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File]? ref_fastas_cram
         String base_file_name
@@ -155,7 +155,9 @@ workflow TrimAlignSort {
             "CreateReport.notebook_file_in",
             "CreateReport.top_metrics_file",
             "Demux.mapq_override",
-            "MergeMd5sToJson.output_json"
+            "MergeMd5sToJson.output_json",
+            "SortByNameAndKeepPaired.disk_size",
+            "UGGiraffeAlignment.memory_gb"
         ]}
     }
 
@@ -536,13 +538,32 @@ workflow TrimAlignSort {
 
         if (aligner_override == "giraffe") {
             GiraffeParameters gp = select_first([giraffe_parameters])
+
+            if (gp.is_paired_end) {
+                scatter (input_cram in input_for_alignment_list) {
+                    call UGAlignment.SortByNameAndKeepPaired {
+                        input:
+                            input_bam           = input_cram,
+                            output_bam_basename = basename(input_cram, ".cram") + ".collated",
+                            preemptible_tries   = preemptible_tries,
+                            cache_tarball       = CreateReferenceCache.cache_tarball,
+                            docker              = global.ugbio_core_docker,
+                            monitoring_script   = global.monitoring_script, # !FileCoercion
+                            no_address          = no_address,
+                    }
+                }
+            }
+
+            Array[File] bams_to_align = select_first([SortByNameAndKeepPaired.output_bam, input_for_alignment_list])
+
             call UGAlignment.UGGiraffeAlignment {
                 input:
-                    input_bams          = input_for_alignment_list,
+                    input_bams          = bams_to_align,
                     cache_tarball       = CreateReferenceCache.cache_tarball,
                     output_bam_basename = base_file_name,
                     giraffe_indices     = gp,
                     ref_dict            = references.ref_dict,
+                    is_paired_end       = gp.is_paired_end,
                     extra_args          = gp.extra_args,
                     preemptible_tries   = preemptible_tries,
                     vg_docker           = global.ug_vg_docker,

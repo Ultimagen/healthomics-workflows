@@ -22,17 +22,12 @@ Assign reads to the haplotypes\-Run gridss.IdentifyVariants and gridss.AnnotateV
 <p name="SVPipeline.reference_genome">
         <b>SVPipeline.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome type selector. Supported values: hg38, b37, hg38_no_alt <br />
+         Genome type selector. Supported values: hg38, b37, hg38_no_alt, hg38_nist_v3_with_decoy, mm39 <br />
 </p>
 <p name="SVPipeline.ua_parameters">
         <b>SVPipeline.ua_parameters</b><br />
         <i>UaParameters </i> &mdash;
          UA parameters: v_aware_alignment_flag and ua_extra_args, recommended value set in the template <br />
-</p>
-<p name="SVPipeline.wgs_calling_interval_list">
-        <b>SVPipeline.wgs_calling_interval_list</b><br />
-        <i>File </i> &mdash;
-         interval list defining the region to perform variant calling on, recommended value set in the template <br />
 </p>
 <p name="SVPipeline.min_base">
         <b>SVPipeline.min_base</b><br />
@@ -108,6 +103,11 @@ Assign reads to the haplotypes\-Run gridss.IdentifyVariants and gridss.AnnotateV
         <i>GiraffeParameters? &mdash; Default: None</i><br />
         vg giraffe index files to improve haplotype interpretation using population graphs
 </p>
+<p name="SVPipeline.wgs_calling_interval_list_override">
+        <b>SVPipeline.wgs_calling_interval_list_override</b><br />
+        <i>File? &mdash; Default: None</i><br />
+        Optional override for the interval list defining the region to perform variant calling on. When not provided, resolved per genome from genome_resources (calling_interval_list_without_artefacts)
+</p>
 <p name="SVPipeline.min_indel_sc_size_to_include">
         <b>SVPipeline.min_indel_sc_size_to_include</b><br />
         <i>String? &mdash; Default: None</i><br />
@@ -121,7 +121,7 @@ Assign reads to the haplotypes\-Run gridss.IdentifyVariants and gridss.AnnotateV
 <p name="SVPipeline.blacklist_bed">
         <b>SVPipeline.blacklist_bed</b><br />
         <i>File? &mdash; Default: None</i><br />
-        Gridss blacklist file
+        Gridss blacklist file. When not provided, resolved per genome from genome_resources (sv_blacklist). Provide empty file to disable
 </p>
 <p name="SVPipeline.run_giraffe">
         <b>SVPipeline.run_giraffe</b><br />

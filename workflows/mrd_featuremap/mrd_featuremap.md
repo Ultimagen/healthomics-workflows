@@ -213,6 +213,13 @@ This pipeline describes step #3, the intersection and MRD data analysis, once #1
          Number of CPUs. <br />
 </p>
 
+### Optional parameters
+<p name="MRDFeatureMap.ExtractCoverageOverVcfFiles.no_per_base">
+        <b>MRDFeatureMap.ExtractCoverageOverVcfFiles.no_per_base</b><br />
+        <i>Boolean </i> &mdash;
+         When true, pass --no-per-base to mosdepth. This skips per-base depth output while preserving regions and summary outputs. <br />
+</p>
+
 ### Optional reference files
 <p name="MRDFeatureMap.exclude_regions_bed">
         <b>MRDFeatureMap.exclude_regions_bed</b><br />

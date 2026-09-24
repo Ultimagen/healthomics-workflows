@@ -63,16 +63,8 @@
         "description": "Minimal base quality for local assembly of haplotypes",
         "optional": true
     },
-    "PyPGx.EfficientDV.diploid_sampling_in_haplotypes": {
-        "description": "Use diploid sampling strategy for haplotype selection",
-        "optional": true
-    },
     "PyPGx.EfficientDV.ensemble_reference_rows": {
         "description": "Number of reference rows for ensemble inference",
-        "optional": true
-    },
-    "PyPGx.EfficientDV.ensemble_size": {
-        "description": "Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
         "optional": true
     },
     "PyPGx.EfficientDV.germline_vcf": {
@@ -99,10 +91,6 @@
         "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
         "optional": true
     },
-    "PyPGx.EfficientDV.include_reference_in_haplotypes": {
-        "description": "Include the reference sequence in the sampled haplotypes",
-        "optional": true
-    },
     "PyPGx.EfficientDV.input_flow_order": {
         "description": "Flow order. If not provided, it will be extracted from the CRAM header",
         "optional": true
@@ -117,10 +105,6 @@
     },
     "PyPGx.EfficientDV.max_reads_per_partition": {
         "description": "Maximal number of reads that are stored in memory when analyzing an active region",
-        "optional": true
-    },
-    "PyPGx.EfficientDV.min_base_quality": {
-        "description": "Minimal base quality for candidate generation",
         "optional": true
     },
     "PyPGx.EfficientDV.min_fraction_hmer_indels": {
@@ -157,10 +141,6 @@
     },
     "PyPGx.EfficientDV.no_address_override": {
         "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
-        "optional": true
-    },
-    "PyPGx.EfficientDV.num_haplotypes": {
-        "description": "Number of haplotypes in the pangenome haplotype CRAM. Also determines the haplotype band height in the pileup image.",
         "optional": true
     },
     "PyPGx.EfficientDV.optimization_level": {
@@ -203,20 +183,28 @@
         "description": "DbSNP vcf index",
         "optional": true
     },
-    "PyPGx.EfficientDV.ref_gbz_for_haplotypes": {
-        "description": "Pangenome GBZ index file for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+    "PyPGx.EfficientDV.roh_af_default": {
+        "description": "Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table",
         "optional": true
     },
-    "PyPGx.EfficientDV.ref_hapl": {
-        "description": "Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided)",
+    "PyPGx.EfficientDV.roh_blacklist_override": {
+        "description": "BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2)",
         "optional": true
     },
-    "PyPGx.EfficientDV.run_haplotype_sampling": {
-        "description": "Whether to run haplotype sampling to create pangenome haplotypes. Default: false",
+    "PyPGx.EfficientDV.run_ploidy_estimation": {
+        "description": "Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases.",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.run_roh": {
+        "description": "Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given",
         "optional": true
     },
     "PyPGx.EfficientDV.scatter_intervals_break": {
         "description": "The length of the intervals for parallelization are multiples of scatter_intervals_break. This is also the maximal length of the intervals.",
+        "optional": true
+    },
+    "PyPGx.EfficientDV.sex_chromosomes": {
+        "description": "Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references.",
         "optional": true
     },
     "PyPGx.EfficientDV.show_bg_fields": {
@@ -247,10 +235,6 @@
         "description": "CPU number override for make_examples step",
         "optional": true
     },
-    "PyPGx.EfficientDV.ug_make_examples_extra_args": {
-        "description": "Additional arguments for make-examples tool",
-        "optional": true
-    },
     "PyPGx.EfficientDV.ug_make_examples_memory_override": {
         "description": "Memory override for make_examples step",
         "optional": true
@@ -279,9 +263,21 @@
         "description": "Input (bai/crai) index file",
         "optional": false
     },
+    "PyPGx.diploid_sampling_in_haplotypes": {
+        "description": "EfficientDV: use diploid sampling for haplotypes",
+        "optional": true
+    },
+    "PyPGx.ensemble_size": {
+        "description": "EfficientDV: number of augmented passes for ensemble inference (0 disables)",
+        "optional": true
+    },
     "PyPGx.gene_symbols": {
         "description": "List of gene symbols to analyze",
         "optional": false
+    },
+    "PyPGx.include_reference_in_haplotypes": {
+        "description": "EfficientDV: include the reference among sampled haplotypes",
+        "optional": true
     },
     "PyPGx.input_vcf_file": {
         "description": "Input VCF file with variants. Use of high quality variants (i.e. PASS). If not provided, Efficient DV will be run",
@@ -289,6 +285,14 @@
     },
     "PyPGx.input_vcf_index_file": {
         "description": "Input VCF index file",
+        "optional": true
+    },
+    "PyPGx.min_base_quality": {
+        "description": "EfficientDV: minimum base quality",
+        "optional": true
+    },
+    "PyPGx.min_fraction_single_strand_non_snps": {
+        "description": "EfficientDV: minimum fraction of single-strand support for non-SNP variants",
         "optional": true
     },
     "PyPGx.model_onnx": {
@@ -303,6 +307,10 @@
         "description": "no_address_override",
         "optional": true
     },
+    "PyPGx.num_haplotypes": {
+        "description": "EfficientDV: number of haplotypes to sample",
+        "optional": true
+    },
     "PyPGx.preemptible_tries": {
         "description": "preemptible_tries",
         "optional": true
@@ -311,8 +319,28 @@
         "description": "List of references for CreateReferenceCache task.",
         "optional": false
     },
+    "PyPGx.ref_gbz_for_haplotypes": {
+        "description": "EfficientDV: pangenome graph (.gbz) file, required when run_haplotype_sampling is true",
+        "optional": true
+    },
+    "PyPGx.ref_hapl": {
+        "description": "EfficientDV: pangenome haplotypes (.hapl) file, required when run_haplotype_sampling is true",
+        "optional": true
+    },
     "PyPGx.reference_genome": {
         "description": "Genome type selector. Supported values: hg38, hg38_no_alt, hg38_nist_v3_with_decoy",
         "optional": false
+    },
+    "PyPGx.run_haplotype_sampling": {
+        "description": "EfficientDV: run haplotype sampling to create pangenome haplotypes (enabled by the PE use-case)",
+        "optional": true
+    },
+    "PyPGx.single_strand_filter": {
+        "description": "EfficientDV: enable single-strand filtering (default set by template)",
+        "optional": true
+    },
+    "PyPGx.ug_make_examples_extra_args": {
+        "description": "EfficientDV: extra args passed to make_examples (channels / max-ins-size for PE)",
+        "optional": true
     }
 }

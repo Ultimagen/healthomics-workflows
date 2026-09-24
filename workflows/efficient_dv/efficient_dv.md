@@ -232,6 +232,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>Boolean </i> &mdash;
          Output tfrecords from call_variants <br />
 </p>
+<p name="EfficientDV.run_ploidy_estimation">
+        <b>EfficientDV.run_ploidy_estimation</b><br />
+        <i>Boolean </i> &mdash;
+         Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases. <br />
+</p>
+<p name="EfficientDV.sex_chromosomes">
+        <b>EfficientDV.sex_chromosomes</b><br />
+        <i>Array[String] </i> &mdash;
+         Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references. <br />
+</p>
 <p name="EfficientDV.strong_call_threshold">
         <b>EfficientDV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
@@ -301,6 +311,16 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.ug_post_processing_extra_args</b><br />
         <i>String </i> &mdash;
          Additional arguments for post-processing <br />
+</p>
+<p name="EfficientDV.run_roh">
+        <b>EfficientDV.run_roh</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given <br />
+</p>
+<p name="EfficientDV.roh_af_default">
+        <b>EfficientDV.roh_af_default</b><br />
+        <i>Float </i> &mdash;
+         Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table <br />
 </p>
 <p name="EfficientDV.input_flow_order">
         <b>EfficientDV.input_flow_order</b><br />
@@ -384,6 +404,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>File? </i> &mdash;
          TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br />
 </p>
+<p name="EfficientDV.roh_blacklist_override">
+        <b>EfficientDV.roh_blacklist_override</b><br />
+        <i>File? </i> &mdash;
+         BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2) <br />
+</p>
 <p name="EfficientDV.annotation_intervals">
         <b>EfficientDV.annotation_intervals</b><br />
         <i>Array[File]? </i> &mdash;
@@ -427,6 +452,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.vcf_no_ref_calls_index</b><br />
         <i>File</i><br />
         vcf without references calls index
+</p>
+<p name="EfficientDV.roh_tsv">
+        <b>EfficientDV.roh_tsv</b><br />
+        <i>File?</i><br />
+        Runs of homozygosity, as the regions tsv of bcftools roh
 </p>
 <p name="EfficientDV.call_variants_output_tfrecords">
         <b>EfficientDV.call_variants_output_tfrecords</b><br />
@@ -487,6 +517,11 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <b>EfficientDV.num_candidates_as_int</b><br />
         <i>Int</i><br />
         Number of candidates that call_variants processed (as an integer)
+</p>
+<p name="EfficientDV.ploidy_report">
+        <b>EfficientDV.ploidy_report</b><br />
+        <i>File?</i><br />
+        Human-readable genome ploidy report with sex karyotype, per-chromosome ploidy, and BAF summary when available
 </p>
 
 <hr />

@@ -23,6 +23,12 @@ The following files are publicly available:
     gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
     gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt
     gs://gcp-public-data--broad-references/hg38/v0/wgs_calling_regions.hg38.interval_list
+    or
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.64.alt
+    s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list
 
 The following file is required as input for UA realignment:
     
@@ -37,10 +43,10 @@ or
 
 hg38 interval file can be downloaded from: 
 
-    gs://concordanz/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list
+    gs://concordanz/sv/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list
 or
 
-    s3://ultimagen-workflow-resources-us-east-1/sv/temp/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list
+    s3://ultimagen-workflow-resources-us-east-1/sv/wgs_calling_regions.hg38_no_cytoBandIdeo_acen.interval_list
 
 Assembly is run on a small interval in the genome determined by an input bed file. This can be used to scatter the genome into small intervals, and then parallelize the workflow across these intervals. A convenient tool to generate scattered intervals is picard IntervalListTools. A typical command to scatter intervals provided below. Note that the input to this command is Picard's interval_list format, and not the simple bed format:
 
@@ -61,7 +67,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.3.4
+ultimagenomics/make_examples:3.4.1
 ```
 
 Generate interval bed : 
@@ -150,7 +156,7 @@ samtools index output_basename_assembly_hap_out_sorted.bam
 UA Docker:
 
 ```
-ultimagenomics/alignment:3.0.8
+ultimagenomics/alignment:4.1.4
 ```
 UA realignment command: (realignment is done on a merged bam consisting of a merge of all the BAMs produced in the scattered assembly)
 ```
@@ -436,7 +442,7 @@ Rscript /opt/gridss/link_breakpoints.R \
 Download directory with necessary reference files with : 
 
 ```
-gsutil -m cp -r gs://concordanz/sv/gripss/ .
+aws s3 cp --recursive s3://ultimagen-workflow-resources-us-east-1/sv/gripss/ .
 ```
 
 GRIPSS docker: (run on a merge of the vcfs produced in scatter by AnnotateVariants above)

@@ -23,14 +23,18 @@ The workflow takes three major inputs:
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+or
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
 ```
 The calling regions interval list used in the WGS somatic pipeline excludes centromeres:
 ```
-gs://concordanz/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
+s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list
 ```
 3. A model checkpoint in ONNX format
 ```
-onnxFileName = gs://concordanz/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx
+onnxFileName = s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx
 ```
 This model is intended for whole genome sequencing at a coverage of 40-150x for tumor and 40-100x for normal. For other applications, see the last sections of this document.
 
@@ -191,7 +195,7 @@ Using `--annotate` together with `--bed_annotation_files` adds annotations to th
 
 Using a `##INFO` in the header of the bed file. For example:
 ```
-##INFO=<ID=EXOME,Number=1,Type=String,Description="Genomic Region Annotation: In the exome (gs://concordanz/hg38/annotation_intervals/exome.twist.bed)">
+##INFO=<ID=EXOME,Number=1,Type=String,Description="Genomic Region Annotation: In the exome (s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed)">
 chr1    69090   70008   TRUE
 chr1    450739  451678  TRUE
 ```
@@ -201,7 +205,7 @@ If `##INFO` is not present in the bed file, then a json file with the same name 
 {
  "ID": "EXOME",
  "Type": "String",
- "Description": "Genomic Region Annotation: In the exome (gs://concordanz/hg38/annotation_intervals/exome.twist.bed)"
+ "Description": "Genomic Region Annotation: In the exome (s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed)"
 }
 ```
 
@@ -222,6 +226,7 @@ REFLEN > 220 and vc.isFiltered()
 ```
 
 dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
+or s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
 
 `ug_post_processing` can also be used to improve the VAF estimates of INDELs (enabled by setting `recalibrate_vaf` to `true` in the WDL pipeline). Note: this is not recommended when the callset contains more than 30K indels; the pipeline automatically skips recalibration in that case. When running manually, append the following parameters to `ug_postproc`:
 
@@ -255,7 +260,7 @@ Efficient DV can support somatic calling in more scenarios, with the following m
 Calling somatic variants from a tumor FFPE sample at a coverage of 100x and a normal sample at a coverage of 40-80x. The modifications required to use this application are:
 1. Change the model of call_variants to:
 ```
-gs://concordanz/deepvariant/model/somatic/wgs/ffpe/v1.8/deepvariant-ultima-somatic-wgs-ffpe-model-v1.8.onnx
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wgs/ffpe/v1.8/deepvariant-ultima-somatic-wgs-ffpe-model-v1.8.onnx
 ```
 2. Add the following argument to the make_examples step:
 ```
@@ -297,7 +302,7 @@ Calling from deep whole exome sequencing, at a coverage of 500x for tumor and at
 Also, make sure you read variants only in exomic intervals.
 2. To the call_variants model:
 ```
-gs://concordanz/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx
 ```
 
 3. We recommend the following additional parameters to the [optional filtering steps](#additional-filtering-steps-recommended): 

@@ -1,5 +1,5 @@
 {
-    "GermlineCNVPipeline.base_file_name": "<base_file_name",
+    "GermlineCNVPipeline.base_file_name": "<base_file_name>",
     "GermlineCNVPipeline.input_bam_file": "<input_bam_file>.bam",
     "GermlineCNVPipeline.input_bam_file_index": "<input_bam_file>.bam.bai",
     "GermlineCNVPipeline.bed_graph": [

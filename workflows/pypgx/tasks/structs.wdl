@@ -52,6 +52,7 @@ struct GiraffeParameters {
   File? ref_gbz_for_haplotypes
   File? alignment_reference_fasta_for_haplotypes
   File? alignment_reference_fasta_index_for_haplotypes
+  Boolean is_paired_end
   String? extra_args
 }
 
@@ -333,8 +334,12 @@ struct SingleReadSNVModel {
 struct DeepSRSNVParams {
     Int num_folds                     # k-fold count (typically 3)
     Int tensor_length                 # padded read length (default 300)
-    Int shard_size                    # rows per shard (default 25000)
-    Int num_tensorize_workers         # parallel workers for cram_to_tensors
+    Int tensorize_output_rows         # rows per tensorize output file (.pt); the tensorize/concat output
+                                      # granularity + intra-task parallelism unit (default 10000). Smaller =>
+                                      # better split across the tensorize task CPUs; DNNConcatTensorShards
+                                      # re-imposes global order + re-chunks, and DNNCombineSplits globs all
+                                      # output files, so the count is irrelevant downstream.
+    Int tensorize_workers             # parallel workers for the legacy non-sharded DNNCramToTensors task
     String holdout_chromosomes        # comma-separated (default "chr21")
     Int random_seed                   # reproducibility seed
     # Training
@@ -359,6 +364,16 @@ struct DeepSRSNVParams {
     # Feature channels
     File channel_registry             # Required: channel_registry.json (cloud URI: gs:// or s3://)
     File vocab_config                 # Required: vocab.json (cloud URI: gs:// or s3://)
+    # Shard-parallel tensorization (optional; enables the VCF-direct + Rust sharded path)
+    String? tensorizer                # "rust" (default) or "python" per-read channel builder
+    Int? num_train_tensorize_intervals # genomic intervals the TRAINING pos/neg tensorize scatters over (default
+                                      # from template). Decoupled from the inference tensorize grid (which reuses
+                                      # the snvfind shard BEDs): training is memory-light (bounded by the
+                                      # downsampled selection parquet), so a coarse grid avoids paying the
+                                      # per-task fixed overhead ~N times. Coverage-identical to a fine grid (same
+                                      # interval source), so DNNConcatTensorShards yields a bit-identical cache.
+    Int? tensorize_task_cpus          # cpus per sharded tensorize task (DNNCramToTensorsSharded/Inference; default 2)
+    Int? tensorize_task_memory_gb     # memory (GiB) per sharded tensorize task (default 4 -> omics.c.large)
 }
 
 struct DeepSRSNVModel {

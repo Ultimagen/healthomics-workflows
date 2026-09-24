@@ -34,7 +34,7 @@ import "tasks/globals.wdl" as Globals
 
 workflow MRDFeatureMap {
     input {
-        String pipeline_version = "1.35.1" # !UnusedDeclaration
+        String pipeline_version = "1.36.0" # !UnusedDeclaration
         String base_file_name
         # Outputs from single_read_snv.wdl (cfDNA sample)
         File cfdna_featuremap
@@ -507,7 +507,7 @@ workflow MRDFeatureMap {
       monitoring_script = monitoring_script #!FileCoercion
   }
 
-  call UGMrdTasks.ExtractCoverageOverVcfFiles as ExtractCoverageOverVcfFiles{
+  call UGGeneralTasks.ExtractCoverageOverCramByLoci as ExtractCoverageOverVcfFiles{
     input:
       merged_loci_bed = MergeVcfsIntoBed.merged_loci_bed,
       input_cram_bam = cfdna_cram_bam,

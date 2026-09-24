@@ -13,8 +13,8 @@ task DNNCramToTensors {
     String docker
     Int preemptible_tries
     File monitoring_script
-    Int memory_gb = deep_srsnv_params.num_tensorize_workers * 4 + 8
-    Int cpus = deep_srsnv_params.num_tensorize_workers + 2
+    Int memory_gb = deep_srsnv_params.tensorize_workers * 4 + 8
+    Int cpus = deep_srsnv_params.tensorize_workers + 2
   }
 
   Float input_size = size(input_cram, "GiB") + size(featuremap_parquet, "GiB")
@@ -31,10 +31,140 @@ task DNNCramToTensors {
       --output tensor_cache \
       --reference ~{references.ref_fasta} \
       --tensor-length ~{deep_srsnv_params.tensor_length} \
-      --num-workers ~{deep_srsnv_params.num_tensorize_workers} \
-      --shard-size ~{deep_srsnv_params.shard_size} \
+      --num-workers ~{deep_srsnv_params.tensorize_workers} \
+      --tensorize-output-rows ~{deep_srsnv_params.tensorize_output_rows} \
       --channel-config ~{deep_srsnv_params.channel_registry} \
       --vocab-config ~{deep_srsnv_params.vocab_config}
+
+    tar -chf tensor_cache.tar tensor_cache/
+  >>>
+
+  runtime {
+    preemptible: preemptible_tries
+    docker: docker
+    cpu: cpus
+    memory: "~{memory_gb} GiB"
+    disks: "local-disk ~{disk_size} HDD"
+  }
+
+  output {
+    File tensor_cache_tar = "tensor_cache.tar"
+    File monitoring_log = "monitoring.log"
+  }
+}
+
+# Shard-parallel tensorization: tensorize the reads in a single genomic interval (one snvfind shard),
+# reading from the feature map VCF (VCF-direct) + CRAM with the Rust tensorizer. Designed for small
+# machines (~1-2 CPU / 4-6 GiB) running in parallel; outputs a per-interval tensor cache directory tar.
+task DNNCramToTensorsSharded {
+  input {
+    File input_cram
+    File input_cram_index
+    File featuremap_vcf
+    File featuremap_vcf_index
+    File interval_bed
+    String label  # "positive" | "negative" | "inference"
+    References references
+    DeepSRSNVParams deep_srsnv_params
+    # For training/positive: restrict to reads selected by the (filter+downsample) parquet.
+    File? selection_parquet
+    # For inference: reuse featuremap_to_dataframe's filter via this read-filters JSON.
+    File? inference_filters_json
+    String docker
+    Int preemptible_tries
+    File monitoring_script
+    Int memory_gb = select_first([deep_srsnv_params.tensorize_task_memory_gb, 4])
+    Int cpus = select_first([deep_srsnv_params.tensorize_task_cpus, 2])
+  }
+
+  Float input_size = size(input_cram, "GiB") + size(featuremap_vcf, "GiB")
+  Int disk_size = ceil(input_size + 20)
+  # This task fans out to hundreds of tiny preemptible VMs at once; at the global default of 1 preemptible
+  # retry, mass GCP preemption terminal-fails shards and aborts the whole scatter. Floor at 3 retries (a
+  # non-preemptible final attempt kicks in once preemptible attempts are exhausted). Honor a higher caller value.
+  Int preemptible_effective = if preemptible_tries > 3 then preemptible_tries else 3
+
+  command <<<
+    set -xeuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    cram_to_tensors \
+      --cram ~{input_cram} \
+      --featuremap-vcf ~{featuremap_vcf} \
+      --label ~{label} \
+      --output tensor_cache \
+      --reference ~{references.ref_fasta} \
+      --interval-bed ~{interval_bed} \
+      --tensorizer ~{select_first([deep_srsnv_params.tensorizer, "rust"])} \
+      --tensor-length ~{deep_srsnv_params.tensor_length} \
+      --tensorize-output-rows ~{deep_srsnv_params.tensorize_output_rows} \
+      --num-workers ~{cpus} \
+      --channel-config ~{deep_srsnv_params.channel_registry} \
+      --vocab-config ~{deep_srsnv_params.vocab_config} \
+      ~{if defined(selection_parquet) then "--selection-parquet " + select_first([selection_parquet]) else ""} \
+      ~{if defined(inference_filters_json) then "--inference-filters-json " + select_first([inference_filters_json]) else ""}
+
+    tar -chf tensor_cache_shard.tar tensor_cache/
+  >>>
+
+  runtime {
+    preemptible: preemptible_effective
+    # maxRetries covers NON-preemption transient failures (e.g. GCS localization/read IOExceptions) that
+    # `preemptible` does not; a single flaky shard should not fail the whole scatter.
+    maxRetries: 2
+    docker: docker
+    cpu: cpus
+    memory: "~{memory_gb} GiB"
+    disks: "local-disk ~{disk_size} HDD"
+  }
+
+  output {
+    File tensor_cache_shard_tar = "tensor_cache_shard.tar"
+    File monitoring_log = "monitoring.log"
+  }
+}
+
+# Gather per-interval tensor-cache shard tars into one deterministically-ordered tensor cache tar,
+# so DNNCombineSplits (unchanged) consumes a cache bit-identical to a single non-sharded run.
+task DNNConcatTensorShards {
+  input {
+    Array[File] tensor_cache_shard_tars
+    String label
+    DeepSRSNVParams deep_srsnv_params
+    String docker
+    Int preemptible_tries
+    File monitoring_script
+    # All shard tars are first extracted to disk (disk holds every shard cache); the concat step itself
+    # then streams — appending in interval order with only ~one input + one output shard in MEMORY at a
+    # time — so MEMORY is small and roughly constant while DISK must fit all shards (see disk_size below).
+    Int memory_gb = 8
+    Int cpus = 2
+  }
+
+  Float input_size = size(tensor_cache_shard_tars, "GiB")
+  Int disk_size = ceil(input_size * 4 + 20)
+
+  command <<<
+    set -xeuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    echo "Concatenating ~{label} tensor shards"
+
+    # Extract each per-interval shard cache into its own directory.
+    mkdir -p shards
+    i=0
+    for tar_file in ~{sep=" " tensor_cache_shard_tars}; do
+      dest="shards/shard_dir_${i}"
+      mkdir -p "$dest"
+      tar -xf "$tar_file" -C "$dest"
+      i=$((i+1))
+    done
+
+    # Concatenate with deterministic (CHROM,POS,RN) ordering.
+    concat_tensor_shards \
+      $(for d in shards/shard_dir_*/tensor_cache; do echo "--tensor-cache-dir $d"; done) \
+      --output tensor_cache \
+      --tensorize-output-rows ~{deep_srsnv_params.tensorize_output_rows}
 
     tar -chf tensor_cache.tar tensor_cache/
   >>>
@@ -303,6 +433,99 @@ task DNNVcfToParquet {
   }
 }
 
+task SelectFoldBeds {
+  # Return the snvfind shard BEDs whose chromosome belongs to a given CV fold (fold 0 also owns holdout),
+  # using the same split manifest as cram_to_tensors --fold-idx. Enables shard-parallel inference: the
+  # caller scatters DNNCramToTensorsInference over this fold's BEDs. Tiny/cheap.
+  input {
+    Array[File] shard_beds
+    File training_interval_list
+    Int fold_idx
+    Int num_folds
+    Int random_seed
+    String holdout_chromosomes
+    String docker
+    Int preemptible_tries
+    File monitoring_script
+  }
+
+  command <<<
+    set -xeuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+    # --copy-dir materializes the selected BEDs as fresh files under fold_beds/ (the task then globs those
+    # real, task-produced files). We must NOT output the selected input BEDs' paths directly: on the
+    # Cromwell/GCP backend that makes Cromwell try to delocalize an input's localized path, building a bogus
+    # doubled gs:// URL ("matched no objects") so the downstream tensorize task can't localize its fold_bed
+    # and exits 1. (Omics/miniwdl tolerate the path-list form, which is why this only failed on Cromwell.)
+    mkdir -p fold_beds
+    select_fold_beds \
+      ~{sep=" " prefix("--bed ", shard_beds)} \
+      --training-regions ~{training_interval_list} \
+      --fold-idx ~{fold_idx} \
+      --num-folds ~{num_folds} \
+      --random-seed ~{random_seed} \
+      --holdout-chromosomes ~{holdout_chromosomes} \
+      --copy-dir fold_beds \
+      --output fold_beds.json
+  >>>
+
+  runtime {
+    preemptible: preemptible_tries
+    docker: docker
+    cpu: 1
+    memory: "2 GiB"
+    disks: "local-disk 10 HDD"
+  }
+
+  output {
+    # Glob the COPIED beds (real task-produced files) so Cromwell/GCP delocalizes them correctly.
+    # (Do not read_json the selected input paths — see the --copy-dir note in the command.)
+    Array[File] fold_beds = glob("fold_beds/*.bed")
+    File monitoring_log = "monitoring.log"
+  }
+}
+
+# Launder an optional File that originates from a conditional-scoped sub-workflow output into a
+# REQUIRED task output. Cromwell cannot resolve a reference to an OPTIONAL call output (File?) from a
+# deeper/sibling scope (e.g. inside a scatter) — it fails with "required input lookup failed". A REQUIRED
+# output (File) is auto-exposed as a clean File? across scope boundaries (exactly why FeatureMapPrep's
+# required `featuremap` output works but the optional `inference_filters` did not). So this task ALWAYS
+# writes the output file (empty when the input is absent) and declares it `File out` (required). The
+# caller passes `out` (always a valid File); DNNCramToTensorsInference skips --inference-filters-json when
+# the file is EMPTY, preserving the score-everything semantics that a missing filter previously signalled.
+task PassThroughOptionalFile {
+  input {
+    File? in_file
+    String docker
+    Int preemptible_tries
+    File monitoring_script
+  }
+  Boolean present = defined(in_file)
+  command <<<
+    set -xeuo pipefail
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+    if ~{if present then "true" else "false"}; then
+      cp ~{select_first([in_file, "/dev/null"])} passed_file.out
+    else
+      : > passed_file.out   # always create; EMPTY file means "no inference filters" (score everything)
+    fi
+  >>>
+  runtime {
+    preemptible: preemptible_tries
+    docker: docker
+    cpu: 1
+    memory: "2 GiB"
+    disks: "local-disk 10 HDD"
+  }
+  output {
+    # REQUIRED output (always exists). Empty file == no filters. Required so Cromwell resolves the
+    # reference from inside the nested tensorize scatter.
+    File out = "passed_file.out"
+    File monitoring_log = "monitoring.log"
+  }
+}
+
 task DNNCramToTensorsInference {
   parameter_meta {
     num_folds: {
@@ -314,7 +537,14 @@ task DNNCramToTensorsInference {
   input {
     File input_cram
     File input_cram_index
-    File featuremap_parquet
+    # VCF-direct inference: read the feature map VCF directly (no DNNVcfToParquet), applying the same
+    # inference read-filter by reusing featuremap_to_dataframe's filter code, then restrict to the fold.
+    File featuremap_vcf
+    File featuremap_vcf_index
+    File? inference_filters_json
+    # Optional shard restriction: when set, tensorize only this genomic interval (shard-parallel inference).
+    # The fold filter (--fold-idx) still applies on top, so a bed outside the fold's chromosomes yields nothing.
+    File? interval_bed
     File training_interval_list
     References references
     DeepSRSNVParams deep_srsnv_params
@@ -324,24 +554,31 @@ task DNNCramToTensorsInference {
     String docker
     Int preemptible_tries
     File monitoring_script
-    Int cpus = deep_srsnv_params.num_tensorize_workers + 2
+    Int memory_gb = select_first([deep_srsnv_params.tensorize_task_memory_gb, 4])
+    Int cpus = select_first([deep_srsnv_params.tensorize_task_cpus, 2])
   }
 
-  Float parquet_size = size(featuremap_parquet, "GiB")
-  Int memory_gb = ceil(parquet_size * 4.5 + 30)
-  Float input_size = size(input_cram, "GiB") + parquet_size
-  Int disk_size = ceil(input_size * 3 + 50)
+  Float input_size = size(input_cram, "GiB") + size(featuremap_vcf, "GiB")
+  Int disk_size = ceil(input_size * 2 + 50)
   String holdout = select_first([deep_srsnv_params.holdout_chromosomes, "chr21"])
   Int effective_num_folds = select_first([num_folds, deep_srsnv_params.num_folds])
-  String tensor_cache_tar_name = "tensor_cache.tar"
+  # Fans out to hundreds of tiny preemptible VMs; floor preemptible retries at 3 so mass GCP preemption
+  # doesn't terminal-fail shards and abort the scatter (a non-preemptible final attempt kicks in after).
+  Int preemptible_effective = if preemptible_tries > 3 then preemptible_tries else 3
 
   command <<<
     set -xeuo pipefail
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
+    # Pass --inference-filters-json only when a NON-EMPTY filter file is provided. The upstream
+    # PassThroughOptionalFile always emits a file (empty == "no filters"), so gate on file size (-s)
+    # rather than mere presence; an empty file means score-everything (no restriction).
+    FILTER_ARG=""
+    ~{if defined(inference_filters_json) then "if [ -s " + select_first([inference_filters_json]) + " ]; then FILTER_ARG=\"--inference-filters-json " + select_first([inference_filters_json]) + "\"; fi" else "true"}
+
     cram_to_tensors \
       --cram ~{input_cram} \
-      --parquet ~{featuremap_parquet} \
+      --featuremap-vcf ~{featuremap_vcf} \
       --label inference \
       --fold-idx ~{fold_idx} \
       --training-regions ~{training_interval_list} \
@@ -350,25 +587,24 @@ task DNNCramToTensorsInference {
       --holdout-chromosomes ~{holdout} \
       --reference ~{references.ref_fasta} \
       --output tensor_cache \
+      --tensorizer ~{select_first([deep_srsnv_params.tensorizer, "rust"])} \
       --tensor-length ~{deep_srsnv_params.tensor_length} \
-      --num-workers ~{deep_srsnv_params.num_tensorize_workers} \
-      --shard-size ~{deep_srsnv_params.shard_size} \
+      --tensorize-output-rows ~{deep_srsnv_params.tensorize_output_rows} \
+      --num-workers ~{cpus} \
       --compress \
       --channel-config ~{deep_srsnv_params.channel_registry} \
-      --vocab-config ~{deep_srsnv_params.vocab_config}
+      --vocab-config ~{deep_srsnv_params.vocab_config} \
+      ${FILTER_ARG} \
+      ~{if defined(interval_bed) then "--interval-bed " + select_first([interval_bed]) else ""}
 
     ls -ltr tensor_cache/
-
-    # Singularity binds each input file as a separate argument, so a fold's ~1000 shards overflow
-    # the exec argument limit in DNNFoldInference (index.json excluded: not in its tensor_cache/).
-    if [ -n "${SINGULARITY_CONTAINER:-}${APPTAINER_CONTAINER:-}" ]; then
-      tar -chf ~{tensor_cache_tar_name} --exclude index.json tensor_cache/
-      rm -f tensor_cache/shard_*.pt.gz
-    fi
   >>>
 
   runtime {
-    preemptible: preemptible_tries
+    preemptible: preemptible_effective
+    # maxRetries covers NON-preemption transient failures (e.g. GCS localization/read IOExceptions) that
+    # `preemptible` does not; a single flaky shard should not fail the whole scatter.
+    maxRetries: 2
     docker: docker
     cpu: cpus
     memory: "~{memory_gb} GiB"
@@ -377,7 +613,6 @@ task DNNCramToTensorsInference {
 
   output {
     Array[File] tensor_shards = glob("tensor_cache/shard_*.pt.gz")
-    Array[File] tensor_cache_tar = glob(tensor_cache_tar_name)
     File tensor_cache_index = "tensor_cache/index.json"
     File monitoring_log = "monitoring.log"
   }
@@ -385,9 +620,7 @@ task DNNCramToTensorsInference {
 
 task DNNFoldInference {
   input {
-    Array[File] tensor_shards = []
-    # Set instead of tensor_shards when the producing task archived them (singularity backend).
-    Array[File] tensor_cache_tar = []
+    Array[File] tensor_shards
     File fold_metadata
     File fold_checkpoint
     File fold_onnx_model
@@ -410,8 +643,8 @@ task DNNFoldInference {
     Int cpus = 4
   }
 
-  Float input_size = size(tensor_shards, "GiB") + size(tensor_cache_tar, "GiB")
-  Int disk_size = ceil(input_size + size(tensor_cache_tar, "GiB") + 20)
+  Float input_size = size(tensor_shards, "GiB")
+  Int disk_size = ceil(input_size + 20)
   String out_parquet = "~{base_file_name}.fold_~{fold_idx}.predictions.parquet"
   Int gpu_count = 1
   String gpu_type = select_first([deep_srsnv_params.gpu_type, "nvidia-tesla-t4"])
@@ -429,18 +662,19 @@ task DNNFoldInference {
       sleep 10
     done) >> monitoring.log 2>&1 &
 
-    # Link tensor shards into a single directory for inference.
-    # Use ln -sf to handle potential duplicates from HealthOmics caching.
+    # Link tensor shards into a single directory for inference. Each source shard-tensorize task names
+    # its outputs shard_00000.pt.gz, shard_00001.pt.gz, ... so files from DIFFERENT shard tasks share
+    # basenames; linking by basename (ln -sf "$shard" tensor_cache/) would collide and silently keep only
+    # the last one per name (dropping ~all tensors when many shards are flattened in). Renumber each linked
+    # file to a globally-unique name. Inference scores every tensor independently and the merge joins by
+    # (CHROM,POS,RN), so the on-disk ordering/names do not matter — only that ALL shards are present.
     mkdir -p tensor_cache
-    tar_list=~{write_lines(tensor_cache_tar)}
-    if [ -s "$tar_list" ]; then
-      tar -xf "$(head -n 1 "$tar_list")" -C tensor_cache --strip-components=1
-    else
-      cat ~{write_lines(tensor_shards)} | while read -r shard; do
-        ln -sf "$shard" tensor_cache/
-      done
-    fi
-    echo "Linked $(ls tensor_cache/ | wc -l) shards into tensor_cache/"
+    idx=0
+    while read -r shard; do
+      ln -sf "$shard" "$(printf 'tensor_cache/shard_%08d.pt.gz' "$idx")"
+      idx=$((idx + 1))
+    done < ~{write_lines(tensor_shards)}
+    echo "Linked $(ls tensor_cache/ | wc -l) shards into tensor_cache/ (from $idx input files)"
 
     # Copy model files to working directory so metadata can find them by relative path
     cp ~{fold_checkpoint} .

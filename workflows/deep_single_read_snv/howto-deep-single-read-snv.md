@@ -165,8 +165,8 @@ Naming convention: curly braces denote WDL variable names (e.g. `{input_cram_bam
 |---|---|---|
 | `num_folds` | k-fold count | 3 |
 | `tensor_length` | padded read length (channels × length) | 300 |
-| `shard_size` | rows per tensor shard | 25000 |
-| `num_tensorize_workers` | parallel workers for `cram_to_tensors` (drives memory/CPU of tensorize tasks) | 8 |
+| `tensorize_output_rows` | rows per tensorize output file (.pt) — the tensorize/concat output granularity + intra-task parallelism unit | 10000 |
+| `tensorize_workers` | parallel workers for the legacy non-sharded `DNNCramToTensors` task (drives its memory/CPU) | 8 |
 | `holdout_chromosomes` | comma-separated global test-set chromosomes | `chr21` |
 | `random_seed` | reproducibility seed | 0 |
 | `epochs` | max training epochs | 5 |
@@ -186,6 +186,10 @@ Naming convention: curly braces denote WDL variable names (e.g. `{input_cram_bam
 | `dnn_merge_max_parallel_chunks` | max chunks processed concurrently in `DNNMergeAndAnnotate` (memory tuning; lower it to cap concurrent memory). Optional | 4 |
 | `channel_registry` | channel selection/order config (`channel_registry.json`) | see template |
 | `vocab_config` | token vocabulary config (`vocab.json`) | see template |
+| `tensorizer` | per-read channel builder for the sharded path: `rust` (default) or `python` | `rust` |
+| `num_train_tensorize_intervals` | genomic intervals the **training** pos/neg tensorize scatters over (decoupled from the inference tensorize grid, which reuses the snvfind shard BEDs). Training is memory-light (bounded by the downsampled selection), so a coarse grid avoids the per-task overhead of a fine one; coverage-identical, so the cache is bit-identical regardless of count. | 25 |
+| `tensorize_task_cpus` | CPUs per sharded tensorize task (`DNNCramToTensorsSharded`/`Inference`) | 2 |
+| `tensorize_task_memory_gb` | memory (GiB) per sharded tensorize task | 4 |
 
 Other params:
 - `{featuremap_params}` (`FeatureMapParams`) — `snvfind` parameters (min mapping quality, padding, score limits, tags to copy, bed file, read filters, random-sample generation, etc.). Recommended values are set per use case in the template.
@@ -204,7 +208,7 @@ Other params:
 **Signature-based cost reduction (T/N + `num_folds=1`).** The exclude/include mechanism enables a much cheaper single-fold training scheme without the usual overfitting risk. Provide your **tumor (T)** calls as an `include_in_inference_vcf_list` and your **matched-normal (N)** (or a broader germline/somatic panel) as an `exclude_from_training_vcf_list`, so that the SNVs you actually care about — the signature you want to score — are **excluded from training** and only reached at **inference**. Because the model never trains on the signature loci, scoring them is inherently out-of-sample even with a single fold. This lets you set `deep_srsnv_params.num_folds = 1` (train one model on the rest of the genome, infer on the signature) instead of the default 3-fold cross-validation — roughly a 3× reduction in training cost and an even larger reduction in inference cost — while avoiding the overfitting that a single-fold model would otherwise incur on its own training loci.
 
 ### Scatter, memory and execution
-- `{num_shards_featuremap}` — number of genomic shards for the `snvfind` scatter.
+- `{override_num_shards_featuremap}` — optional override for the genomic shard count of the `snvfind` scatter (and the inference tensorize BEDs it feeds). Unset by default: the count auto-scales from mean coverage (`ceil(mean_coverage*3)`) to keep per-shard tensorize memory bounded. Set it to force a fixed count.
 - `{scatter_interval_list}` — interval list defining the scatter regions (should match `featuremap_params.bed_file`).
 - `{override_memory_gb_CreateFeatureMap}`, `{override_memory_gb_PrepareRawFeatureMap}`, `{override_memory_gb_PrepareRandomSampleFeatureMap}` — memory overrides for those tasks.
 - `{raise_exceptions_in_report}` — fail the pipeline if the QC report raises an error.
@@ -334,7 +338,7 @@ The MRD whole-genome analysis workflow (`MRDFeatureMap`, see the [MRD WG analysi
 ## Pipeline steps (tasks)
 Each task runs a console script inside its docker image (referenced here by its globals variable name — see [Dockers](#dockers)). Only `DNNTrainFold` and `DNNFoldInference` require a GPU; all other tasks are CPU-only.
 
-- **CreateFeatureMap** (`snvfind`, `featuremap_docker`) — generates the raw FeatureMap VCF (all SNV candidates) plus the random-sample VCF and a filter-status funnel. Scattered across `num_shards_featuremap` genomic intervals inside the `FeatureMapPrep` sub-workflow, then concatenated. `FeatureMapPrep` also prepares the positive/negative training parquets (`PrepareFeatureMapForTraining` → `featuremap_to_dataframe`) when training-set prep is enabled.
+- **CreateFeatureMap** (`snvfind`, `featuremap_docker`) — generates the raw FeatureMap VCF (all SNV candidates) plus the random-sample VCF and a filter-status funnel. Scattered across a coverage-scaled number of genomic intervals (or `override_num_shards_featuremap` when set) inside the `FeatureMapPrep` sub-workflow, then concatenated. `FeatureMapPrep` also prepares the positive/negative training parquets (`PrepareFeatureMapForTraining` → `featuremap_to_dataframe`) when training-set prep is enabled.
 - **DNNCramToTensors** (`cram_to_tensors`, `ugbio_deep_srsnv_docker`) — turns CRAM reads + a training parquet into sharded read tensors; run once for the positive label and once for the negative label.
 - **DNNCombineSplits** (`combine_splits`, `ugbio_deep_srsnv_docker`) — combines the positive/negative tensor caches and performs the chromosome-disjoint k-fold split, producing per-fold `train/val/test` tensor directories and a split manifest.
 - **DNNTrainFold** (`deep_srsnv_training`, `ugbio_deep_srsnv_docker`, **GPU**) — trains one fold (optionally warm-started from `pretrained_checkpoint`), exporting the best checkpoint, an ONNX model, a TensorRT engine, a predictions parquet, and per-fold metadata. Scattered over `num_folds`.

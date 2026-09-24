@@ -27,7 +27,7 @@ s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascop
 s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz
 
 # Trained CNV model
-s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_260520/model.tar.gz
+s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_260819/model.tar.gz
 
 # DeepVariant model for segmental duplications
 s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx
@@ -36,6 +36,10 @@ s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
 gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+or
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
 ```
 
 #### Step 1: Pool reads from segmental duplication regions
@@ -44,13 +48,13 @@ Run the following command to remap reads from each segmental duplication region:
 
 ```bash
 # Pull the Docker image
-docker pull ultimagenomics/parascopy:1.2.0_f42c9e4
+docker pull ultimagenomics/parascopy:1.3.2_f55b07e
 
 # Process each region in the segdup_regions BED file
 while IFS= read -r line; do 
     l1=$(echo "$line" | awk '{print $1":"$2+1"-"$3}')
     
-    docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.2.0_f42c9e4 \
+    docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
     parascopy pool -i /data/input.cram \
                    -t /data/hg38.bed.gz \
                    -f /data/Homo_sapiens_assembly38.fasta \
@@ -81,7 +85,7 @@ Extract and use the trained CNV model to call copy numbers:
 tar --no-same-owner --no-same-permissions -xvf model.tar.gz
 
 # Calculate depth coverage
-docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.2.0_f42c9e4 \
+docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
 parascopy depth --input /data/input.cram \
                 --bed-regions /data/hg38.bg.bed.gz \
                 --fasta-ref /data/Homo_sapiens_assembly38.fasta \
@@ -89,7 +93,7 @@ parascopy depth --input /data/input.cram \
                 --clipped-perc 20 --unpaired-perc 120
 
 # Call copy numbers using the trained model
-docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.2.0_f42c9e4 \
+docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
 parascopy "cn-using" model \
           --input /data/input.cram \
           --fasta-ref /data/Homo_sapiens_assembly38.fasta \
@@ -109,7 +113,7 @@ After running DeepVariant to generate precalled variants, run parascopy call:
 
 ```bash
 # Call small variants using copy number results and DeepVariant preprocessing
-docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.2.0_f42c9e4 \
+docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
 parascopy call -p /data/sample.cn \
                -i /data/input.cram \
                --fasta-ref /data/Homo_sapiens_assembly38.fasta \

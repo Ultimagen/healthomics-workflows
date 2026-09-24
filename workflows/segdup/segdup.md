@@ -208,6 +208,16 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <i>Boolean </i> &mdash;
          Output tfrecords from call_variants <br />
 </p>
+<p name="SegDupAnalysis.DV.run_ploidy_estimation">
+        <b>SegDupAnalysis.DV.run_ploidy_estimation</b><br />
+        <i>Boolean </i> &mdash;
+         Run VCF-based ploidy estimation and chrX/Y haploid conversion for germline samples. Default: false; enabled by germline use cases. <br />
+</p>
+<p name="SegDupAnalysis.DV.sex_chromosomes">
+        <b>SegDupAnalysis.DV.sex_chromosomes</b><br />
+        <i>Array[String] </i> &mdash;
+         Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references. <br />
+</p>
 <p name="SegDupAnalysis.DV.strong_call_threshold">
         <b>SegDupAnalysis.DV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
@@ -272,6 +282,16 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.ug_post_processing_extra_args</b><br />
         <i>String </i> &mdash;
          Additional arguments for post-processing <br />
+</p>
+<p name="SegDupAnalysis.DV.run_roh">
+        <b>SegDupAnalysis.DV.run_roh</b><br />
+        <i>Boolean </i> &mdash;
+         Whether to call runs of homozygosity (ROH). Enabled by default in the germline WGS use-cases, off otherwise. Requires a reference genome that has a roh_blacklist resource (the hg38 builds and b37) unless roh_blacklist_override is given <br />
+</p>
+<p name="SegDupAnalysis.DV.roh_af_default">
+        <b>SegDupAnalysis.DV.roh_af_default</b><br />
+        <i>Float </i> &mdash;
+         Alternate allele frequency assumed for every marker by the ROH caller, in place of a population frequency table <br />
 </p>
 <p name="SegDupAnalysis.DV.input_flow_order">
         <b>SegDupAnalysis.DV.input_flow_order</b><br />
@@ -349,6 +369,11 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
         <b>SegDupAnalysis.DV.ref_hapl</b><br />
         <i>File? </i> &mdash;
          Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
+</p>
+<p name="SegDupAnalysis.DV.roh_blacklist_override">
+        <b>SegDupAnalysis.DV.roh_blacklist_override</b><br />
+        <i>File? </i> &mdash;
+         BED of alignment-artefact regions to exclude from the reported runs of homozygosity, overriding the genome default (ENCODE blacklist v2) <br />
 </p>
 <p name="SegDupAnalysis.DV.annotation_intervals">
         <b>SegDupAnalysis.DV.annotation_intervals</b><br />

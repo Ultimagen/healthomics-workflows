@@ -69,11 +69,11 @@ for latest docker version please see : (https://github.com/Ultimagen/healthomics
 
 * For running ML-based filtering - use **ugbio_filtering** docker image.
 	```
-	docker pull ultimagenomics/ugbio_filtering:1.30.0
+	docker pull ultimagenomics/ugbio_filtering:1.31.0
 	```
 	Run docker in interactive mode:
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.30.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.31.0 /bin/bash
 	```	
 
 
