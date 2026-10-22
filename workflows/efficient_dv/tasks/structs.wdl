@@ -52,7 +52,6 @@ struct GiraffeParameters {
   File? ref_gbz_for_haplotypes
   File? alignment_reference_fasta_for_haplotypes
   File? alignment_reference_fasta_index_for_haplotypes
-  Boolean is_paired_end
   String? extra_args
 }
 

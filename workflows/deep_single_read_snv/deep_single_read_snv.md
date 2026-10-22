@@ -102,6 +102,11 @@ Deep Single Read SNV (DeepSRSNV) pipeline. A convolutional neural network on rea
         <i>Int? &mdash; Default: None</i><br />
         Override memory in GB for the PrepareRandomSampleFeatureMap task. If an out of memory error occurs, try increasing this value.
 </p>
+<p name="DeepSingleReadSNV.override_memory_gb_MergeSnvfindStats">
+        <b>DeepSingleReadSNV.override_memory_gb_MergeSnvfindStats</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Override memory in GB for the MergeSnvfindStats task, default: 4 (GiB). Deeply-sequenced samples produce many featuremap shards; if the merge stalls or runs out of memory, increase this value.
+</p>
 
 ### Optional inputs
 <p name="DeepSingleReadSNV.sorter_json_stats_file_list">

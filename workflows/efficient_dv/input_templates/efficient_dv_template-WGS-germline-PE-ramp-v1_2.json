@@ -38,7 +38,7 @@
     "EfficientDV.optimal_coverages": [
         70
     ],
-    "EfficientDV.keep_duplicates": true,
+    "EfficientDV.keep_duplicates": false,
     "EfficientDV.add_ins_size_channel": true,
     "EfficientDV.ug_make_examples_extra_args": "--channels hmer_deletion_quality,hmer_insertion_quality,non_hmer_insertion_quality --max-ins-size 50",
     "EfficientDV.ref_hapl": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/hprc-v1.1-mc-grch38.hapl",

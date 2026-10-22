@@ -76,7 +76,7 @@
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.call_variants_gpu_type_override": {
-        "description": "GPU type for call variants",
+        "description": "Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback.",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.call_variants_gpus": {
@@ -336,7 +336,7 @@
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.call_variants_gpu_type_override": {
-        "description": "GPU type for call variants",
+        "description": "Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback.",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.call_variants_gpus": {
@@ -660,7 +660,7 @@
         "optional": true
     },
     "GermlinePipeline.call_variants_gpu_type_override": {
-        "description": "GPU type for call variants",
+        "description": "Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback.",
         "optional": true
     },
     "GermlinePipeline.call_variants_gpus": {
@@ -839,6 +839,10 @@
         "description": "gripss paramter: Exclude filters from the output vcf, separated by ;",
         "optional": true
     },
+    "GermlinePipeline.extended_mate_recovery_max_ref_span": {
+        "description": "Maximum reference span after extended mate recovery (paired-end only); 0 disables the limit and -1 disables expansion",
+        "optional": true
+    },
     "GermlinePipeline.filtering_model": {
         "description": "CNV filtering model, default in template, calls are not filtered if not provided",
         "optional": true
@@ -903,12 +907,12 @@
         "description": "hla_preemptible_tries_override",
         "optional": true
     },
-    "GermlinePipeline.homology_table": {
-        "description": "Segmental duplication table (see parascopy), see template",
+    "GermlinePipeline.homology_table_index_override": {
+        "description": "Segmental duplication table index (see parascopy), see template",
         "optional": true
     },
-    "GermlinePipeline.homology_table_index": {
-        "description": "Segmental duplication table index (see parascopy), see template",
+    "GermlinePipeline.homology_table_override": {
+        "description": "Segmental duplication table (see parascopy). Defaults to the segdup_homology_table genome resource for reference_genome; override only to use a different table.",
         "optional": true
     },
     "GermlinePipeline.homopolymer_length": {
@@ -945,6 +949,10 @@
     },
     "GermlinePipeline.intervals_string": {
         "description": "Regions for variant calling, in the format chrom:start-end. Multiple regions are separated by semi-colon. Takes precedence over override_target_intervals.",
+        "optional": true
+    },
+    "GermlinePipeline.is_paired_end": {
+        "description": "Input reads are paired-end; enables read-pair scoring in haplotype rematching",
         "optional": true
     },
     "GermlinePipeline.keep_duplicates": {
@@ -1021,6 +1029,10 @@
     },
     "GermlinePipeline.min_normal_coverage": {
         "description": "gripss paramter: Minimum coverage in the normal sample to determine somatic status. Default value:8",
+        "optional": true
+    },
+    "GermlinePipeline.min_pair_span": {
+        "description": "Minimum span (template length) of a discordant read pair for it to count as duplication or deletion evidence. Defaults to 800 in the tool",
         "optional": true
     },
     "GermlinePipeline.min_read_count_hmer_indels": {
@@ -1107,12 +1119,28 @@
         "description": "Basecalling error for reference confidence model in gvcf",
         "optional": true
     },
+    "GermlinePipeline.paired_end": {
+        "description": "Enable paired-end mode: reconcile the two mates of each fragment into a single genotyping value (spanning mate wins; else longer estimate) and recover mate-anchored reads. Use for paired-end data. Default: off (single-end).",
+        "optional": true
+    },
     "GermlinePipeline.pangenome_haplotypes": {
         "description": "Optional pangenome haplotypes cram file",
         "optional": true
     },
     "GermlinePipeline.pangenome_haplotypes_index": {
         "description": "Optional pangenome haplotypes cram index file",
+        "optional": true
+    },
+    "GermlinePipeline.pcr_artefact_pvalue": {
+        "description": "Significance threshold for the artefact filter, 0 < pvalue < 1. Default: 0.01.",
+        "optional": true
+    },
+    "GermlinePipeline.pcr_artefact_rate": {
+        "description": "Per-read PCR-artefact (noise) rate for the artefact filter, 0 < rate < 1. Default: 0.02.",
+        "optional": true
+    },
+    "GermlinePipeline.pcr_artefact_test": {
+        "description": "Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter than the major whose support is noise-like (binomial test), then genotype survivors. Long/expansion alleles kept. Default: on.",
         "optional": true
     },
     "GermlinePipeline.pgx_diploid_sampling_in_haplotypes": {
@@ -1305,10 +1333,6 @@
     },
     "GermlinePipeline.segdup_preemptible_tries": {
         "description": "(SegDup) Number of preemptible tries",
-        "optional": true
-    },
-    "GermlinePipeline.segdup_regions": {
-        "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template (BED file)",
         "optional": true
     },
     "GermlinePipeline.sex_chromosomes": {

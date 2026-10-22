@@ -29,6 +29,7 @@ workflow UAAlignment {
         UaParameters ua_parameters
         References? references
         File? cache_tarball
+        Boolean is_paired_end
         Boolean no_address
         Int preemptible_tries
 
@@ -65,6 +66,7 @@ workflow UAAlignment {
             ref_alt                 = select_first([references]).ref_alt,
             extra_args              = ua_parameters.ua_extra_args,
             use_v_aware_alignment   = ua_parameters.v_aware_alignment_flag,
+            is_paired_end           = is_paired_end,
             no_address              = no_address,
             cache_tarball           = cache_tarball,
             monitoring_script       = monitoring_script,

@@ -32,7 +32,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 
 workflow SomaticCNVCallingControlFREEC{
     input{
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
         String base_file_name
 
         # input bam files need to be supplied even if coverage and pileup are supplied externally.
@@ -736,6 +736,7 @@ workflow SomaticCNVCallingControlFREEC{
         annotated_cnv_calls_bed = CnvVcfToBed.output_cnv_bed,
         annotated_cnv_calls_vcf = ControlFREECCnvsVcf.annotated_cnv_vcf,
         segments_file = runControlFREEC.segments_file,
+        ref_genome_file = references.ref_fasta_index,
         gain_cutoff = CNV_gain_cutoff,
         loss_cutoff = CNV_loss_cutoff,
         high_sensitivity_mode = high_sensitivity_mode,
@@ -810,11 +811,16 @@ python <<CODE
 import pandas as pd
 import os
 import re
-df_files = pd.read_csv("files.txt",header=None)
+df_files = pd.read_csv("files.txt",header=None,dtype=str)
 df_files.columns = ["filename"]
-# df_files["chrom"] = df_files["filename"].apply(lambda x: os.path.basename(x).split(".")[1])
-df_files["chrom"] = df_files["filename"].apply(lambda x: re.search(r"\.\b(chr[\w_]+)\b\.", x).group(1))
-df_chrom_order=pd.read_csv("chroms_order.txt",header=None)
+# Anchor to the known file suffix "<chrom>.<shard>.bedGraph" so dotted
+# tokens elsewhere in the basename (downsample fractions, version tags, a
+# "chr" literal already in the sample name) can't be matched as the chrom.
+df_files["chrom"] = df_files["filename"].apply(lambda x: re.search(r"\.([^.]+)\.\d+\.bedGraph$", os.path.basename(x)).group(1))
+# dtype=str prevents pandas from inferring numeric contig names (e.g. b37's
+# "1","2",...) as int64 while the regex-derived df_files["chrom"] is object,
+# which would make the inner merge below drop every autosome.
+df_chrom_order=pd.read_csv("chroms_order.txt",header=None,dtype=str)
 df_chrom_order.columns = ["chrom"]
 df_sorted_files = df_chrom_order.merge(df_files, how='inner', on='chrom')
 cmd = "cat " + " ".join(df_sorted_files["filename"].tolist()) + " > ~{out_file_name}"
@@ -1143,6 +1149,16 @@ task  ControlFREECCnvsVcf{
         set -xeo pipefail
 
         bash ~{monitoring_script} | tee monitoring.log >&2 &
+        # Detect whether the reference uses a "chr" contig prefix (e.g. hg38) or
+        # not (e.g. hg19/b37). FREEC CNV output uses the input BAM/CRAM contig
+        # naming; we must keep the downstream bed in the reference's convention
+        # so process_cnvs' VCF header (built from --fasta_index_file) matches.
+        if head -1 ~{ref_genome_file} | cut -f1 | grep -q "^chr"; then
+            ref_chr_prefix=1
+        else
+            ref_chr_prefix=0
+        fi
+
         if ~{high_sensitivity_mode}
         then
             #annotate segments to CNVs
@@ -1152,7 +1168,13 @@ task  ControlFREECCnvsVcf{
                 --loss_cutoff ~{loss_cutoff}
         else
             #convert to bedfile
-            sed 's/^/chr/' ~{CNV_calls} | grep -v "neutral" | cut -f1-4 > ~{out_cnvs_file}
+            if [ "$ref_chr_prefix" = "1" ] && ! head -1 ~{CNV_calls} | cut -f1 | grep -q "^chr"; then
+                sed 's/^/chr/' ~{CNV_calls} | grep -v "neutral" | cut -f1-4 > ~{out_cnvs_file}
+            elif [ "$ref_chr_prefix" = "0" ] && head -1 ~{CNV_calls} | cut -f1 | grep -q "^chr"; then
+                sed 's/^chr//' ~{CNV_calls} | grep -v "neutral" | cut -f1-4 > ~{out_cnvs_file}
+            else
+                grep -v "neutral" ~{CNV_calls} | cut -f1-4 > ~{out_cnvs_file}
+            fi
         fi
 
         process_cnvs \
@@ -1186,6 +1208,7 @@ task FilterControlFREECCnvs {
         File annotated_cnv_calls_bed
         File annotated_cnv_calls_vcf
         File segments_file
+        File ref_genome_file
         Float gain_cutoff
         Float loss_cutoff
         File tumor_coverage_cpn
@@ -1212,8 +1235,17 @@ task FilterControlFREECCnvs {
 
         grep -v -E 'FILTER=(UG-CNV-LCR|LEN)' ~{annotated_cnv_calls_bed} > ~{out_filtered_cnv_file}
         bcftools view -f "PASS" ~{annotated_cnv_calls_vcf} | bcftools query -f '%CHROM\t%POS0\t%END\t%CopyNumber\n' > helper.bed
-        awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{normal_coverage_cpn} | sed 's/^/chr/' > normal_coverage.cpn.bed
-        awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{tumor_coverage_cpn} | sed 's/^/chr/' > tumor_coverage.cpn.bed
+
+        # Only prepend "chr" to the coverage bed when the reference itself uses
+        # a "chr" contig prefix (hg38). On hg19/b37 the reference and the cpn
+        # files are both plain-number, so prepending would break plotting.
+        if head -1 ~{ref_genome_file} | cut -f1 | grep -q "^chr"; then
+            awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{normal_coverage_cpn} | sed 's/^/chr/' > normal_coverage.cpn.bed
+            awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{tumor_coverage_cpn} | sed 's/^/chr/' > tumor_coverage.cpn.bed
+        else
+            awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{normal_coverage_cpn} > normal_coverage.cpn.bed
+            awk '{print $1"\t"$2"\t"$2+999"\t"$NF}' ~{tumor_coverage_cpn} > tumor_coverage.cpn.bed
+        fi
 
         if ~{high_sensitivity_mode}
         then

@@ -30,14 +30,13 @@ import "efficient_dv.wdl" as EDV
 
 workflow SegDupAnalysis {
 	input {
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
         String base_file_name
         File input_cram_bam
         File input_crai_bai
         String reference_genome = "hg38"
-        File homology_table
-        File homology_table_index
-        File segdup_regions
+        File? homology_table_override
+        File? homology_table_index_override
         File background_bed
         File cn_model
         Int n_threads
@@ -53,9 +52,9 @@ workflow SegDupAnalysis {
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv suffix(input_cram_bam) in {".bam", ".cram"}
         #@wv suffix(input_crai_bai) in {".bai", ".crai"}
-        #@wv reference_genome in {"hg38","hg38_nist_v3_with_decoy"}
-        #@wv suffix(homology_table) == '.gz'
-        #@wv suffix(homology_table_index) == '.tbi'
+        #@wv reference_genome in {"hg38","hg38_nist_v3_with_decoy","hg38_no_alt"}
+        #@wv defined(homology_table_override) -> suffix(homology_table_override) == '.gz'
+        #@wv defined(homology_table_index_override) -> suffix(homology_table_index_override) == '.tbi'
 	}
     meta {
         description: "Processes segmental duplications in the genome by collapsing all copies on a single copy of the segmental duplication" 
@@ -68,7 +67,6 @@ workflow SegDupAnalysis {
                     "DV.FilterVCF.ref_fasta_idx",
                     "DV.UGMakeExamples.count_candidates_with_dvtools",
                     "DV.single_strand_filter", 
-                    "DV.keep_duplicates", 
                     "DV.add_ins_size_channel",
                     "BedToIntervalList.disk_size"
             ]
@@ -91,16 +89,16 @@ workflow SegDupAnalysis {
             category: "input_required"
         }
         reference_genome: {
-            help: "Genome type selector. The workflow currently supports only hg38.",
+            help: "Genome type selector. The workflow currently supports hg38-like genomes (hg38, hg38_no_alt, hg38_nist_v3_with_decoy)",
             type: "String",
             category: "input_required"
         }
-        homology_table: {
-            help: "Segmental duplication table (see parascopy), see template",
+        homology_table_override: {
+            help: "Segmental duplication table (see parascopy). Defaults to the segdup_homology_table genome resource for reference_genome; override only to use a different table.",
             type: "File",
             category: "input_advanced"
         }
-        homology_table_index: {
+        homology_table_index_override: {
             help: "Segmental duplication table index (see parascopy), see template",
             type: "File",
             category: "input_advanced"
@@ -216,6 +214,21 @@ workflow SegDupAnalysis {
         ref_fasta_index: GenomeResources.resources[reference_genome].ref_fasta_index,
         ref_dict: GenomeResources.resources[reference_genome].ref_dict
     }
+
+    # Parascopy homology table, built on this genome's own reference (see parascopy docs: the table
+    # must match the ALT-contig status of the reference it was built on)
+    File homology_table = select_first([homology_table_override, GenomeResources.resources[reference_genome].segdup_homology_table])
+    File homology_table_index = select_first([homology_table_index_override, GenomeResources.resources[reference_genome].segdup_homology_table_index])
+
+    call CreateSegDupRegions {
+        input:
+            cn_model = cn_model,
+            base_file_name = base_file_name,
+            segdup_docker = global.segdup_docker,
+            preemptible_tries = preemptible_tries,
+            monitoring_script = monitoring_script
+    }
+
     call UGGeneral.ExtractSampleNameFlowOrder as ExtractSampleNameFlowOrder {
         input:
             input_bam         = input_cram_bam,
@@ -233,10 +246,10 @@ workflow SegDupAnalysis {
             input_cram_bam = input_cram_bam,
             input_crai_bai = input_crai_bai,
             references = references,
-            segdup_docker = global.segdup_docker, 
+            segdup_docker = global.segdup_docker,
             homology_table = homology_table,
-            homology_table_index = homology_table_index, 
-            segdup_regions = segdup_regions,
+            homology_table_index = homology_table_index,
+            segdup_regions = CreateSegDupRegions.segdup_regions,
             preemptible_tries = preemptible_tries,
             monitoring_script = monitoring_script
     }
@@ -260,9 +273,9 @@ workflow SegDupAnalysis {
     call UGGeneral.BedToIntervalList {
         input:
             monitoring_script = monitoring_script,
-            input_file = segdup_regions,
+            input_file = CreateSegDupRegions.segdup_regions,
             reference_dict = references.ref_dict,
-            base_file_name = base_file_name, 
+            base_file_name = base_file_name,
             docker = global.broad_gatk_docker,
             preemptible_tries = preemptible_tries,
             no_address = no_address
@@ -286,6 +299,7 @@ workflow SegDupAnalysis {
             min_variant_quality_exome_hmer_indels = 5,
             min_fraction_single_strand_non_snps = 0.15,
             normalize_strand_bias = false,
+            keep_duplicates = false,
             # Call variants args
             model_onnx = model_onnx,
             model_serialized = model_serialized,
@@ -387,6 +401,40 @@ workflow SegDupAnalysis {
         File lpa_json = LpaCaller.lpa_json
     }
 
+}
+
+task CreateSegDupRegions {
+    input {
+        File cn_model
+        String base_file_name
+        String segdup_docker
+        Int preemptible_tries
+        File monitoring_script
+    }
+
+    Int disk_size = ceil(2 * size(cn_model, "GB"))
+
+    command <<<
+        set -eo pipefail
+        set -x
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        tar --no-same-owner --no-same-permissions -xzf ~{cn_model}
+
+        parascopy create-hom-regions ./model -o ~{base_file_name}.segdup_regions.bed
+    >>>
+
+    output {
+        File segdup_regions = "~{base_file_name}.segdup_regions.bed"
+    }
+
+    runtime {
+        docker: segdup_docker
+        memory: "4 GB"
+        preemptible: preemptible_tries
+        cpu: 1
+        disks: "local-disk " + disk_size + " HDD"
+    }
 }
 
 task PoolReads { 

@@ -1,6 +1,6 @@
 # Germline/Somatic Structural Variant (SV) Calling 
 
-SV calling pipeline detects SVs using an in-house assembly tool, GRIDSS tool for SV detection and GRIPSS tool for filtering the output callset. The pipeline supports both germline and somatic modes. 
+SV calling pipeline detects SVs using an in-house assembly tool, GRIDSS tool for SV detection and GRIPSS tool for filtering the output callset. The pipeline supports both germline and somatic modes. Germline calling is supported for both single-end and paired-end data (see [Paired-end germline calling](#paired-end-germline-calling)).
 
 
 ## Workflow Overview
@@ -67,7 +67,7 @@ picard \
 
 Assembly docker:
 ```
-ultimagenomics/make_examples:3.4.1
+ultimagenomics/make_examples:3.5.0
 ```
 
 Generate interval bed : 
@@ -151,6 +151,55 @@ samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_h
 samtools index output_basename_assembly_hap_out_sorted.bam
 ```
 
+<a id="paired-end-germline-calling"></a>
+Germline calling, paired-end data:
+
+For paired-end input, the assembly uses extended mate recovery (pulls in mates of reads that support the SV) together with a set of haplotype-graph options tuned for paired-end data: low-haplotype rescue, assembly over non-unique reference, minimal path cover of all contigs, merging of dangling haplotypes (for large insertions) and contig consensus.
+
+```
+tool \
+	--input input_germline.cram \
+	--cram-index input_germline.cram.crai \
+	--output output_basename_assembly \
+	--ref Homo_sapiens_assembly38.fasta \
+	--bed interval.bed \
+	--min-base 0 \
+	--min-mapq 5 \
+	--median-coverage 1 \
+	--background-median-coverage 1 \
+	--min-feature-length '5' \
+	--min-mismatch-count '5' \
+	--max-num-haps 40 \
+	--max-reads-per-region 1500 \
+	--haps-max-sv-events 1 \
+	--haps-hp-dedup true \
+	--haps-read-witness true \
+	--haps-weight-boost false \
+	--haps-low-haps-rescue true \
+	--haps-chain-graph-add false \
+	--haps-allow-nonunique-ref true \
+	--haps-min-path-cover true \
+	--haps-merge-dangling true \
+	--haps-merge-dangling-min 8 \
+	--haps-contig-consensus true \
+	--haps-contig-consensus-trim-both smaller \
+	--haps-contig-consensus-novel-only existing \
+	--prog \
+	--interval-target-nreads 10000 \
+	--sv \
+	--htslib \
+	--extended-mate-recovery \
+	--extended-mate-recovery-max-ref-span 500 \
+	--realigned-sam
+
+samtools view -bS output_basename_assembly_hap_out.sam > output_basename_assembly_hap_out.bam
+samtools sort output_basename_assembly_hap_out.bam -o output_basename_assembly_hap_out_sorted.bam
+samtools index output_basename_assembly_hap_out_sorted.bam
+```
+
+**Note:** `--extended-mate-recovery-max-ref-span` limits the reference span of an active area after mate recovery; `0` disables the limit and `-1` disables the expansion. 
+The active-area detection can optionally be tuned with `--active-area-padding`, `--active-area-sigma` and `--active-area-filter-size`.
+
 #### Realign with UA to imporves recall for deletions (optional)
 
 UA Docker:
@@ -217,7 +266,7 @@ Here we assign the reads to the best supported haplotype.
 
 Docker: 
 
-    ultimagenomics/rematcher:1.1.2_08f0df1
+    ultimagenomics/rematcher:1.2.0_d0f0b0a
 
 ```
     sv_rematch -b interval.bed \
@@ -249,6 +298,12 @@ memory overfill in the regions of exceptionally high coverage.
 `<input_crams>` - tumor.cram;normal.cram
 - `-l` - `'20;0'`
 - `-s` - `'5;0'`
+
+* Germline SV calling, paired-end data: 
+- `<input_crams>` - germline.cram
+- `-l` - `'5'`
+- `-s` - `'5'`
+- add `-p -I 350,50 -z 3` to enable read-pair scoring (`-p`), with the expected insert size mean,std (`-I`) 
 
 This step will produce a set of TSV files with haplotype that is a best match for each read. 
 To add these results to the assembly BAM as required by the GRIDSS downstream tools, run the following:
@@ -285,6 +340,17 @@ Third, merge read support into the assembly
             assembly.support.name_sorted.bam
 
 Fourth, sort the assembly by coordinate. 
+
+**Paired-end data:** the read-pair scoring needs both mates of a pair, so the TSV files are not pre-merged. 
+Instead, pass all the per-interval TSV files (comma-separated) directly together with the paired-end flags:
+
+    samtools sort -N long_homopolymer_realigned.assembly.bam -o assembly_name_sorted.bam
+    sv_rematch -v -p -I 350,50 -z 3 -M rematched_hap.001.txt,rematched_hap.002.txt,... \
+            assembly_name_sorted.bam \
+            Homo_sapiens_assembly38.fasta \
+            assembly.support.name_sorted.bam
+
+and sort the result by coordinate as above.
 
 
 #### GRIDSS Identify Variants

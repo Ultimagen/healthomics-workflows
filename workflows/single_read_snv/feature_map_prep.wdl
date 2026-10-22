@@ -69,6 +69,7 @@ input {
   Int? override_memory_gb_CreateFeatureMap
   Int? override_memory_gb_PrepareRawFeatureMap
   Int? override_memory_gb_PrepareRandomSampleFeatureMap
+  Int? override_memory_gb_MergeSnvfindStats
 
   # Execution params
   Int preemptible_tries = 1
@@ -238,7 +239,8 @@ input {
         trinuc_freq_output_filename = base_file_name_sub + ".random_sample.trinuc_freq.csv",
         docker = ugbio_featuremap_docker,
         preemptible_tries = preemptible_tries,
-        monitoring_script = monitoring_script
+        monitoring_script = monitoring_script,
+        memory_gb = select_first([override_memory_gb_MergeSnvfindStats, 4])
     }
   }
 

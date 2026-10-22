@@ -42,7 +42,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow SVPipeline {
     input {
         # Workflow args
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
 
         String base_file_name
         Array[File] input_germline_crams = []
@@ -58,10 +58,12 @@ workflow SVPipeline {
         Int max_reads_per_partition
         Int max_reads_per_working_area
         Int? max_num_haps
+        Int? extended_mate_recovery_max_ref_span
         Int realign_mapq
         String? min_indel_sc_size_to_include
         String? min_mismatch_count_to_include
         Int homopolymer_length
+        Boolean is_paired_end = false
         String config_file_string
         File? blacklist_bed
         Boolean is_somatic
@@ -101,6 +103,7 @@ workflow SVPipeline {
         #@wv min_base >= 0
         #@wv min_mapq >= 0
         #@wv max_num_haps >= 0
+        #@wv defined(extended_mate_recovery_max_ref_span) -> extended_mate_recovery_max_ref_span >= -1
         #@wv num_shards > 0
         #@wv realign_mapq >= 0
         #@wv max_reads_per_partition > 0
@@ -235,6 +238,11 @@ workflow SVPipeline {
             help: "Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report",
             category:"required"
         }
+        extended_mate_recovery_max_ref_span: {
+            type: "Int",
+            help: "Maximum reference span after extended mate recovery (paired-end only); 0 disables the limit and -1 disables expansion",
+            category:"optional"
+        }
         realign_mapq: {
             type: "Int",
             help: "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
@@ -244,6 +252,11 @@ workflow SVPipeline {
             type: "Int",
             help: "Realignment parameter: do realignment on homopolymeres longer than this value",
             category:"required"
+        }
+        is_paired_end: {
+            type: "Boolean",
+            help: "Input reads are paired-end; enables read-pair scoring in haplotype rematching",
+            category:"optional"
         }
         max_reads_per_partition: {
             type: "Int",
@@ -523,12 +536,14 @@ workflow SVPipeline {
                 input_tumor_crams = input_tumor_crams,
                 input_tumor_crams_indexes = input_tumor_crams_indexes,
                 output_prefix = base_file_name +"_assembly",
+                is_paired_end = is_paired_end,
                 make_examples_docker = global.ug_make_examples_docker,
                 references = references,
                 interval = interval,
                 min_base = min_base,
                 min_mapq = min_mapq,
                 max_num_haps = max_num_haps,
+                extended_mate_recovery_max_ref_span = extended_mate_recovery_max_ref_span,
                 max_reads_per_partition = max_reads_per_partition,
                 min_sc_indel_size = min_indel_sc_size_to_include,
                 min_mismatch_count = min_mismatch_count_to_include, 
@@ -563,6 +578,7 @@ workflow SVPipeline {
                 ua_docker = global.ua_docker,
                 extra_args = ua_parameters.ua_extra_args,
                 use_v_aware_alignment = ua_parameters.v_aware_alignment_flag,
+                is_paired_end = false,
                 no_address = no_address
         }
 
@@ -615,7 +631,6 @@ workflow SVPipeline {
             monitoring_script = monitoring_script,
             preemptible_tries = preemptibles,
             no_address = no_address
-
     }
 
     # Find for each read the best haplotype that it matches to. 
@@ -631,6 +646,7 @@ workflow SVPipeline {
                 assembly_bam_index = LongHomopolymersAlignment.realigned_assembly_index,
                 base_file_name = base_file_name,
                 is_somatic = is_somatic,
+                is_paired_end = is_paired_end,
                 min_indel_sc_size_to_include = min_indel_sc_size_to_include,
                 min_mismatch_count_to_include = min_mismatch_count_to_include,
                 min_mapq = min_mapq,
@@ -648,14 +664,17 @@ workflow SVPipeline {
     }
 
     # combine the chunks, choosing best scoring assignment for read per chunk and sorting by haplotype
-    call MergeMatchReadsFiles {
-        input:
-            matched_reads_files = MatchReadsToHaplotypes.read_haplotype_assignment,
-            base_file_name = base_file_name,
-            docker = global.ubuntu_docker,
-            monitoring_script = monitoring_script,
-            preemptible_tries = preemptibles,
-            no_address = no_address 
+    # (paired-end mode passes the chunks directly to MergeMatchedReadsIntoAssembly)
+    if (!is_paired_end) {
+        call MergeMatchReadsFiles {
+            input:
+                matched_reads_files = MatchReadsToHaplotypes.read_haplotype_assignment,
+                base_file_name = base_file_name,
+                docker = global.ubuntu_docker,
+                monitoring_script = monitoring_script,
+                preemptible_tries = preemptibles,
+                no_address = no_address 
+        }
     }
 
     # add the information into  the assembly BAM
@@ -663,7 +682,8 @@ workflow SVPipeline {
         input:
             assembly_bam = LongHomopolymersAlignment.realigned_assembly,
             assembly_bam_index = LongHomopolymersAlignment.realigned_assembly_index,
-            matched_reads = MergeMatchReadsFiles.read_haplotype_assignment,
+            matched_reads = if is_paired_end then MatchReadsToHaplotypes.read_haplotype_assignment else [select_first([MergeMatchReadsFiles.read_haplotype_assignment])],
+            is_paired_end = is_paired_end,
             base_file_name = base_file_name,
             reference = references,
             docker = global.rematching_docker,
@@ -713,6 +733,7 @@ workflow SVPipeline {
                         input_cram_index = input_germline_crams_indexes[0],
                         references = references,
                         interval = gridss_metrics_interval,
+                        is_paired_end = is_paired_end,
                         gridss_docker = global.gridss_docker,
                         monitoring_script = monitoring_script,
                         preemptible_tries = preemptibles,
@@ -726,6 +747,7 @@ workflow SVPipeline {
                         input_cram_index = input_tumor_crams_indexes[0],
                         references = references,
                         interval = gridss_metrics_interval,
+                        is_paired_end = is_paired_end,
                         gridss_docker = global.gridss_docker,
                         monitoring_script = monitoring_script,
                         preemptible_tries = preemptibles,
@@ -739,6 +761,7 @@ workflow SVPipeline {
                 input_cram_index = assembly_file_index,
                 references = references,
                 interval = gridss_metrics_interval,
+                is_paired_end = is_paired_end,
                 gridss_docker = global.gridss_docker,
                 monitoring_script = monitoring_script,
                 preemptible_tries = preemptibles,
@@ -920,6 +943,8 @@ task CreateAssembly {
         String? min_sc_indel_size
         String? min_mismatch_count
         Int? max_num_haps
+        Int? extended_mate_recovery_max_ref_span
+        Boolean is_paired_end
         Int max_reads_per_partition
         Int number_of_shards
         String? cloud_provider_override
@@ -934,6 +959,17 @@ task CreateAssembly {
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
     Boolean defined_germline = if(length(input_germline_crams)>0) then true else false
     Int mem = select_first([memory_override,4])
+    # Paired-end: low-haps rescue, non-unique-ref assembly, min path cover of all contigs,
+    # dangling-hap merge for large insertions and contig consensus. Single-end: all off.
+    String sv_assembly_args = if is_paired_end then
+        "--haps-weight-boost false --haps-low-haps-rescue true --haps-chain-graph-add false " +
+        "--haps-allow-nonunique-ref true --haps-min-path-cover true " +
+        "--haps-merge-dangling true --haps-merge-dangling-min 8 " +
+        "--haps-contig-consensus true --haps-contig-consensus-trim-both smaller --haps-contig-consensus-novel-only existing"
+        else
+        "--haps-weight-boost false --haps-low-haps-rescue false --haps-chain-graph-add false " +
+        "--haps-allow-nonunique-ref false --haps-min-path-cover false " +
+        "--haps-merge-dangling false --haps-contig-consensus false"
 
     command <<<
         set -xeo pipefail
@@ -987,8 +1023,12 @@ task CreateAssembly {
             --haps-max-sv-events 1 \
             --haps-hp-dedup true \
             --haps-read-witness true \
+            ~{sv_assembly_args} \
             --prog \
             --sv \
+            --htslib \
+            ~{if is_paired_end then "--extended-mate-recovery" else ""} \
+            ~{if is_paired_end && defined(extended_mate_recovery_max_ref_span) then "--extended-mate-recovery-max-ref-span " + extended_mate_recovery_max_ref_span else ""} \
             --realigned-sam
 
 
@@ -1035,9 +1075,13 @@ task CreateAssembly {
             --haps-max-sv-events 1 \
             --haps-hp-dedup true \
             --haps-read-witness true \
+            ~{sv_assembly_args} \
             --prog \
             --interval-target-nreads 10000 \
             --sv \
+            --htslib \
+            ~{if is_paired_end then "--extended-mate-recovery" else ""} \
+            ~{if is_paired_end && defined(extended_mate_recovery_max_ref_span) then "--extended-mate-recovery-max-ref-span " + extended_mate_recovery_max_ref_span else ""} \
             --realigned-sam 
 
         fi
@@ -1174,6 +1218,7 @@ task MatchReadsToHaplotypes {
         Array[File] germline_reads
         Array[File] germline_reads_indexes
         Boolean is_somatic
+        Boolean is_paired_end
         Int max_reads_per_working_area
         String? min_indel_sc_size_to_include
         String? min_mismatch_count_to_include
@@ -1194,7 +1239,7 @@ task MatchReadsToHaplotypes {
                        size(reference.ref_fasta,"GB") + 10)
     Boolean is_aws = if(defined(cloud_provider_override) && select_first([cloud_provider_override]) == "aws") then true else false
     Boolean defined_germline = if(length(germline_reads)>0) then true else false
-    Int mem = select_first([memory_override,4])
+    Int mem = select_first([memory_override,12])
 
     command <<<
         set -o pipefail
@@ -1220,7 +1265,7 @@ task MatchReadsToHaplotypes {
             echo $input_string
 
             sv_rematch -b interval.bed \
-            -j 2 -t -a -v \
+            -j 2 -t ~{if is_paired_end then "-p -I 350,50 -z 3 " else ""}-a -v \
             -l '~{min_indel_sc_size_to_include}' \
             -s '~{min_mismatch_count_to_include}' \
             -m ~{min_mapq} \
@@ -1256,7 +1301,7 @@ task MatchReadsToHaplotypes {
             fi
 
             sv_rematch -b interval.bed \
-            -j 2 -t -a -v \
+            -j 2 -t ~{if is_paired_end then "-p -I 350,50 -z 3 " else ""}-a -v \
             ~{"-l '" + min_indel_sc_size_to_include + "'"} \
             ~{"-s '" + min_mismatch_count_to_include + "'"} \
             -m ~{min_mapq} \
@@ -1328,7 +1373,8 @@ task MergeMatchReadsFiles {
 
 task MergeMatchedReadsIntoAssembly { 
     input {
-        File matched_reads
+        Array[File] matched_reads
+        Boolean is_paired_end
         File assembly_bam
         File assembly_bam_index
         References reference
@@ -1345,7 +1391,7 @@ task MergeMatchedReadsIntoAssembly {
         bash ~{monitoring_script} | tee monitoring.log >&2 &
 
         samtools sort -N ~{assembly_bam} -o assembly_name_sorted.bam
-        sv_rematch -v -S -M ~{matched_reads} \
+        sv_rematch -v ~{if is_paired_end then "-p -I 350,50 -z 3" else "-S"} -M ~{sep="," matched_reads} \
             assembly_name_sorted.bam \
             ~{reference.ref_fasta} \
             ~{base_file_name}_assembly.support.name_sorted.bam
@@ -1470,6 +1516,7 @@ task CollectGridssMetrics{
         File input_cram_index
         References references
         String? interval
+        Boolean is_paired_end
 
         String gridss_docker
         File monitoring_script
@@ -1527,7 +1574,7 @@ VERBOSITY=INFO \
     }
     output {
         File monitoring_log = "monitoring.log"
-        Array[File] out_metrics = [output_file + ".cigar_metrics", output_file + ".mapq_metrics",output_file + ".coverage.blacklist.bed", output_file + ".tag_metrics", output_file + ".idsv_metrics"]
+        Array[File] out_metrics = if is_paired_end then [output_file + ".cigar_metrics", output_file + ".mapq_metrics",output_file + ".coverage.blacklist.bed", output_file + ".tag_metrics", output_file + ".idsv_metrics", output_file + ".insert_size_metrics"] else [output_file + ".cigar_metrics", output_file + ".mapq_metrics",output_file + ".coverage.blacklist.bed", output_file + ".tag_metrics", output_file + ".idsv_metrics"]
     }
 }
 

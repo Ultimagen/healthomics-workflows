@@ -48,6 +48,8 @@ The Efficient DV analysis pipeline is split into two docker images:
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
 call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
 
+On AWS HealthOmics, call_variants uses an ordered GPU fallback list: it tries `nvidia-l4` first (20 min wait), then `nvidia-tesla-a10g` (20 min wait), then `nvidia-tesla-t4` (8h wait cap before failing with `ALL_PROFILES_INSTANCE_RESERVATION_FAILED`). Which tier was actually used is echoed at the top of the CallVariants task log as `AWS_HEALTHOMICS_RESOURCE_TYPE=<tier>` (also visible via `aws omics get-run-task ... --name CallVariants` as `instanceType`). To force a single tier for debugging or emergency (e.g. driver issue on a specific tier), set the workflow input `call_variants_gpu_type_override` to one of `nvidia-l4`, `nvidia-tesla-a10g`, `nvidia-tesla-t4`.
+
 3. There are some [optional filtering steps](#additional-filtering-steps-recommended) that are implemented in the `ugbio_filtering_docker` docker.
 
 ## Workflow details

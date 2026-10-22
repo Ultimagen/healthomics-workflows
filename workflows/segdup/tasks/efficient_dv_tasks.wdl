@@ -340,7 +340,16 @@ task UGCallVariants{
     Boolean is_somatic
     String docker
     Int call_variants_uncompr_buf_size_gb
-    String gpu_type
+    # AWS HealthOmics GPU fallback list. Must have exactly 3 entries — the WDL
+    # runtime block below is a literal Array (HealthOmics rejects
+    # if/then/else expressions), so callers that want a single-tier
+    # configuration should pass the same tier three times.
+    Array[String] gpu_tier_order = ["nvidia-l4", "nvidia-tesla-a10g", "nvidia-tesla-t4"]
+    # Per-tier capacity wait before falling to the next entry. Applied to entries 0..N-2.
+    Int gpu_wait_timeout_min = 20
+    # Wait cap on the final tier so a region-wide L4+A10G+T4 outage surfaces as
+    # ALL_PROFILES_INSTANCE_RESERVATION_FAILED within one working day instead of hanging.
+    Int gpu_final_tier_wait_timeout_min = 480
     Int num_gpus
     Int num_cpus
     Int num_threads
@@ -372,6 +381,14 @@ task UGCallVariants{
   
   command <<<
     set -eo pipefail
+
+    if [ "~{length(gpu_tier_order)}" != "3" ]; then
+      echo "ERROR: gpu_tier_order must have exactly 3 entries (got ~{length(gpu_tier_order)}); pad by repeating a tier to force single-tier behavior." >&2
+      exit 1
+    fi
+
+    # Diagnostic: HealthOmics sets AWS_HEALTHOMICS_RESOURCE_TYPE to the fallback tier it scheduled us on.
+    echo "AWS_HEALTHOMICS_RESOURCE_TYPE=${AWS_HEALTHOMICS_RESOURCE_TYPE:-}"
 
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
@@ -427,14 +444,15 @@ task UGCallVariants{
 
   >>>
   runtime {
-    memory: "~{mem} GB"
-    cpu: num_cpus
     disks: "local-disk " + disk_size + " LOCAL"
     docker: docker
     gpuType: "nvidia-tesla-t4"
     gpuCount: num_gpus
-    acceleratorType : gpu_type #!UnknownRuntimeKey
-    acceleratorCount : num_gpus #!UnknownRuntimeKey
+    omicsResourceFallbackOrder: [ #!UnknownRuntimeKey
+      {"acceleratorType": gpu_tier_order[0], "acceleratorCount": num_gpus, "cpu": num_cpus, "memory": "~{mem} GB", "omicsResourceWaitTimeoutInMin": gpu_wait_timeout_min},
+      {"acceleratorType": gpu_tier_order[1], "acceleratorCount": num_gpus, "cpu": num_cpus, "memory": "~{mem} GB", "omicsResourceWaitTimeoutInMin": gpu_wait_timeout_min},
+      {"acceleratorType": gpu_tier_order[2], "acceleratorCount": num_gpus, "cpu": num_cpus, "memory": "~{mem} GB", "omicsResourceWaitTimeoutInMin": gpu_final_tier_wait_timeout_min}
+    ]
     noAddress: no_address
   }
 output {

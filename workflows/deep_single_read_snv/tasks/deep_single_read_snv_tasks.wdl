@@ -440,6 +440,7 @@ task SelectFoldBeds {
   input {
     Array[File] shard_beds
     File training_interval_list
+    File inference_interval_list
     Int fold_idx
     Int num_folds
     Int random_seed
@@ -462,6 +463,7 @@ task SelectFoldBeds {
     select_fold_beds \
       ~{sep=" " prefix("--bed ", shard_beds)} \
       --training-regions ~{training_interval_list} \
+      --inference-regions ~{inference_interval_list} \
       --fold-idx ~{fold_idx} \
       --num-folds ~{num_folds} \
       --random-seed ~{random_seed} \
@@ -499,12 +501,12 @@ task PassThroughOptionalFile {
     File? in_file
     String docker
     Int preemptible_tries
-    File monitoring_script
   }
   Boolean present = defined(in_file)
+  # No monitoring_log: the command exits before a backgrounded `tee monitoring.log` would ever open the
+  # file, so declaring it as an output actively fails this (sub-second, no-op) task.
   command <<<
     set -xeuo pipefail
-    bash ~{monitoring_script} | tee monitoring.log >&2 &
     if ~{if present then "true" else "false"}; then
       cp ~{select_first([in_file, "/dev/null"])} passed_file.out
     else
@@ -522,7 +524,6 @@ task PassThroughOptionalFile {
     # REQUIRED output (always exists). Empty file == no filters. Required so Cromwell resolves the
     # reference from inside the nested tensorize scatter.
     File out = "passed_file.out"
-    File monitoring_log = "monitoring.log"
   }
 }
 
@@ -532,6 +533,11 @@ task DNNCramToTensorsInference {
       help: "Override number of folds for region assignment (e.g., from length of fold_metadata array)",
       type: "Int?",
       category: "optional"
+    }
+    inference_interval_list: {
+      help: "Whole-genome interval list (chr1-22+X+Y). Contigs present here but absent from the autosomal fold map (e.g. chrX/chrY) are routed to fold 0 so inference scores them. Does not affect training/eval.",
+      type: "File",
+      category: "required"
     }
   }
   input {
@@ -546,6 +552,8 @@ task DNNCramToTensorsInference {
     # The fold filter (--fold-idx) still applies on top, so a bed outside the fold's chromosomes yields nothing.
     File? interval_bed
     File training_interval_list
+    # Whole-genome list; fold 0 also tensorizes its leftover contigs (chrX/chrY) so inference scores them.
+    File inference_interval_list
     References references
     DeepSRSNVParams deep_srsnv_params
     Int fold_idx
@@ -565,6 +573,7 @@ task DNNCramToTensorsInference {
   # Fans out to hundreds of tiny preemptible VMs; floor preemptible retries at 3 so mass GCP preemption
   # doesn't terminal-fail shards and abort the scatter (a non-preemptible final attempt kicks in after).
   Int preemptible_effective = if preemptible_tries > 3 then preemptible_tries else 3
+  String tensor_cache_tar_name = "tensor_cache.tar"
 
   command <<<
     set -xeuo pipefail
@@ -582,6 +591,7 @@ task DNNCramToTensorsInference {
       --label inference \
       --fold-idx ~{fold_idx} \
       --training-regions ~{training_interval_list} \
+      --inference-regions ~{inference_interval_list} \
       --num-folds ~{effective_num_folds} \
       --random-seed ~{deep_srsnv_params.random_seed} \
       --holdout-chromosomes ~{holdout} \
@@ -598,6 +608,13 @@ task DNNCramToTensorsInference {
       ~{if defined(interval_bed) then "--interval-bed " + select_first([interval_bed]) else ""}
 
     ls -ltr tensor_cache/
+
+    # Singularity binds each input file separately; flattening many shard-producer tasks together
+    # downstream overflows the exec argument limit (index.json excluded: not in its tensor_cache/).
+    if [ -n "${SINGULARITY_CONTAINER:-}${APPTAINER_CONTAINER:-}" ]; then
+      tar -chf ~{tensor_cache_tar_name} --exclude index.json tensor_cache/
+      rm -f tensor_cache/shard_*.pt.gz
+    fi
   >>>
 
   runtime {
@@ -613,6 +630,7 @@ task DNNCramToTensorsInference {
 
   output {
     Array[File] tensor_shards = glob("tensor_cache/shard_*.pt.gz")
+    Array[File] tensor_cache_tar = glob(tensor_cache_tar_name)
     File tensor_cache_index = "tensor_cache/index.json"
     File monitoring_log = "monitoring.log"
   }
@@ -620,7 +638,9 @@ task DNNCramToTensorsInference {
 
 task DNNFoldInference {
   input {
-    Array[File] tensor_shards
+    Array[File] tensor_shards = []
+    # Set instead of tensor_shards when the producing tasks archived their shards (singularity backend).
+    Array[File] tensor_cache_tar = []
     File fold_metadata
     File fold_checkpoint
     File fold_onnx_model
@@ -643,8 +663,9 @@ task DNNFoldInference {
     Int cpus = 4
   }
 
-  Float input_size = size(tensor_shards, "GiB")
-  Int disk_size = ceil(input_size + 20)
+  Float input_size = size(tensor_shards, "GiB") + size(tensor_cache_tar, "GiB")
+  # Extracting the tars needs room for both the archives and their extracted copy at once.
+  Int disk_size = ceil(input_size + size(tensor_cache_tar, "GiB") + 20)
   String out_parquet = "~{base_file_name}.fold_~{fold_idx}.predictions.parquet"
   Int gpu_count = 1
   String gpu_type = select_first([deep_srsnv_params.gpu_type, "nvidia-tesla-t4"])
@@ -670,10 +691,26 @@ task DNNFoldInference {
     # (CHROM,POS,RN), so the on-disk ordering/names do not matter — only that ALL shards are present.
     mkdir -p tensor_cache
     idx=0
-    while read -r shard; do
-      ln -sf "$shard" "$(printf 'tensor_cache/shard_%08d.pt.gz' "$idx")"
-      idx=$((idx + 1))
-    done < ~{write_lines(tensor_shards)}
+    tar_list=~{write_lines(tensor_cache_tar)}
+    # Not `[ -s ]`: Cromwell renders write_lines([]) as a single empty line, not a zero-byte file.
+    if grep -q '[^[:space:]]' "$tar_list"; then
+      # Each tar comes from a different shard-producer task, so basenames still collide across tars.
+      while read -r tar_file; do
+        [ -n "$tar_file" ] || continue
+        extract_dir="$(mktemp -d)"
+        tar -xf "$tar_file" -C "$extract_dir" --strip-components=1
+        for shard in "$extract_dir"/*; do
+          ln -sf "$shard" "$(printf 'tensor_cache/shard_%08d.pt.gz' "$idx")"
+          idx=$((idx + 1))
+        done
+      done < "$tar_list"
+    else
+      while read -r shard; do
+        [ -n "$shard" ] || continue
+        ln -sf "$shard" "$(printf 'tensor_cache/shard_%08d.pt.gz' "$idx")"
+        idx=$((idx + 1))
+      done < ~{write_lines(tensor_shards)}
+    fi
     echo "Linked $(ls tensor_cache/ | wc -l) shards into tensor_cache/ (from $idx input files)"
 
     # Copy model files to working directory so metadata can find them by relative path

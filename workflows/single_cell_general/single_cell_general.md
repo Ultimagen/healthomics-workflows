@@ -116,6 +116,16 @@ Create simulated paired end fastq reads from Ultima single-ended CRAM or BAM.
         <i>String? </i> &mdash;
          Aligner to be used. Options are: ua, ua-meth, star, giraffe. Mandatory if align step is selected. <br />
 </p>
+<p name="SingleCell.TrimAlignSort.is_paired_end">
+        <b>SingleCell.TrimAlignSort.is_paired_end</b><br />
+        <i>Boolean? </i> &mdash;
+         Whether the input reads are paired-end. Mandatory if aligner is ua or giraffe. <br />
+</p>
+<p name="SingleCell.TrimAlignSort.run_name_sort">
+        <b>SingleCell.TrimAlignSort.run_name_sort</b><br />
+        <i>Boolean? </i> &mdash;
+         Whether to run name-sort/pairing preprocessing (SortByNameAndKeepPaired) before Giraffe alignment. If undefined and is_paired_end is true, the sort order is auto-detected from the input headers (GetSortOrder) to decide. Only relevant if aligner is giraffe. <br />
+</p>
 <p name="SingleCell.TrimAlignSort.ua_parameters">
         <b>SingleCell.TrimAlignSort.ua_parameters</b><br />
         <i>UaParameters? </i> &mdash;

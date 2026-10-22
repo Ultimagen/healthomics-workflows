@@ -108,6 +108,11 @@ Assign reads to the haplotypes\-Run gridss.IdentifyVariants and gridss.AnnotateV
         <i>File? &mdash; Default: None</i><br />
         Optional override for the interval list defining the region to perform variant calling on. When not provided, resolved per genome from genome_resources (calling_interval_list_without_artefacts)
 </p>
+<p name="SVPipeline.extended_mate_recovery_max_ref_span">
+        <b>SVPipeline.extended_mate_recovery_max_ref_span</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Maximum reference span after extended mate recovery (paired-end only); 0 disables the limit and -1 disables expansion
+</p>
 <p name="SVPipeline.min_indel_sc_size_to_include">
         <b>SVPipeline.min_indel_sc_size_to_include</b><br />
         <i>String? &mdash; Default: None</i><br />
@@ -117,6 +122,11 @@ Assign reads to the haplotypes\-Run gridss.IdentifyVariants and gridss.AnnotateV
         <b>SVPipeline.min_mismatch_count_to_include</b><br />
         <i>String? &mdash; Default: None</i><br />
         Assembly parameter: Minimal number of counts to require to include the read in the assembly. ;-separated between samples
+</p>
+<p name="SVPipeline.is_paired_end">
+        <b>SVPipeline.is_paired_end</b><br />
+        <i>Boolean &mdash; Default: false</i><br />
+        Input reads are paired-end; enables read-pair scoring in haplotype rematching
 </p>
 <p name="SVPipeline.blacklist_bed">
         <b>SVPipeline.blacklist_bed</b><br />

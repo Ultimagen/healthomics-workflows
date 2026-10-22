@@ -9,6 +9,7 @@ struct GlobalVariables {
   String monitoring_script
   String giraffe_docker
   String ugbio_core_docker
+  String ugbio_cnv_docker
   String ugbio_filtering_docker
   String pypgx_docker
 }
@@ -18,12 +19,13 @@ workflow Globals {
         "ubuntu_docker": "ubuntu:focal",
         "broad_gatk_docker": "broadinstitute/gatk:4.6.0.0",
         "ug_call_variants_docker": "ultimagenomics/call_variants:4.1.2",
-        "ug_make_examples_docker": "ultimagenomics/make_examples:3.4.1",
+        "ug_make_examples_docker": "ultimagenomics/make_examples:3.5.0",
         "bcftools_docker": "staphb/bcftools:1.19",
         "monitoring_script": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh",
         "giraffe_docker": "ultimagenomics/giraffe:1.74.0-r1",
-        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.31.0",
-        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.31.0",
+        "ugbio_core_docker": "ultimagenomics/ugbio_core:1.33.0",
+        "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.33.0",
+        "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.33.1",
         "pypgx_docker": "ultimagenomics/ugbio_pypgx:0.27.0-r2"
 }
 }

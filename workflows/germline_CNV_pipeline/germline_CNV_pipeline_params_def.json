@@ -107,6 +107,10 @@
         "description": "Input sample BAI/CRAI index file",
         "optional": false
     },
+    "GermlineCNVPipeline.min_pair_span": {
+        "description": "Minimum span (template length) of a discordant read pair for it to count as duplication or deletion evidence. Defaults to 800 in the tool",
+        "optional": true
+    },
     "GermlineCNVPipeline.monitoring_script_input": {
         "description": "monitoring_script_input",
         "optional": true
@@ -124,7 +128,7 @@
         "optional": true
     },
     "GermlineCNVPipeline.reference_genome": {
-        "description": "Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
+        "description": "Genome type selector. Supported values are hg38, b37, hg38_nist_v3_with_decoy and hg38_no_alt. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
         "optional": false
     },
     "GermlineCNVPipeline.skip_figure_generation": {

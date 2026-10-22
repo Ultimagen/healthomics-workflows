@@ -191,20 +191,20 @@ Each workflow has different hardware requirements.
 
 The table below lists recommended resources for each workflow, based on the EC2 AWS instance type used for testing.
 
-| Workflow Name (Subdirectory)   |   CPU(s) |   Memory (GiB) | GPU Type / #    | EC2 Instance Type   |
-|:-------------------------------|---------:|---------------:|:----------------|:--------------------|
-| controlFREEC_pipeline          |        4 |              8 | -               | c5.xlarge           |
-| deep_single_read_snv           |       32 |            128 | NVIDIA A10G / 1 | g5.8xlarge          |
-| efficient_dv                   |       16 |             64 | NVIDIA A10G / 1 | g5.4xlarge          |
-| germline_CNV_pipeline          |       36 |             72 | -               | c5.9xlarge          |
-| hla_genotyping                 |       16 |             64 | -               | m5.4xlarge          |
-| mrd_featuremap                 |        4 |              8 | -               | c5.xlarge           |
-| pypgx                          |        4 |             16 | NVIDIA A10G / 1 | g5.xlarge           |
-| segdup                         |        4 |             16 | NVIDIA A10G / 1 | g5.xlarge           |
-| single_cell_general            |       36 |             72 | -               | c5.9xlarge          |
-| single_read_snv                |       32 |            128 | NVIDIA T4 / 1   | g4dn.8xlarge        |
-| structural_variant_pipeline    |       48 |             96 | -               | c5.12xlarge         |
-| trim_align_sort                |       36 |             72 | -               | c5.9xlarge          |
+| Workflow Name (Subdirectory)   |   CPU(s) |   Memory (GiB) | GPU Type / #    | EC2 Instance Type   | Supported Backends   |
+|:-------------------------------|---------:|---------------:|:----------------|:--------------------|:---------------------|
+| controlFREEC_pipeline          |        4 |              8 | -               | c5.xlarge           | docker, singularity  |
+| deep_single_read_snv           |       32 |            128 | NVIDIA A10G / 1 | g5.8xlarge          | singularity          |
+| efficient_dv                   |       16 |             64 | NVIDIA A10G / 1 | g5.4xlarge          | docker, singularity  |
+| germline_CNV_pipeline          |       36 |             72 | -               | c5.9xlarge          | docker, singularity  |
+| hla_genotyping                 |       16 |             64 | -               | m5.4xlarge          | docker, singularity  |
+| mrd_featuremap                 |        4 |              8 | -               | c5.xlarge           | docker, singularity  |
+| pypgx                          |       32 |            128 | NVIDIA A10G / 1 | g5.8xlarge          | docker, singularity  |
+| segdup                         |        4 |             16 | NVIDIA A10G / 1 | g5.xlarge           | docker, singularity  |
+| single_cell_general            |       36 |             72 | -               | c5.9xlarge          | docker, singularity  |
+| single_read_snv                |       32 |            128 | NVIDIA T4 / 1   | g4dn.8xlarge        | docker, singularity  |
+| structural_variant_pipeline    |       48 |             96 | -               | c5.12xlarge         | docker, singularity  |
+| trim_align_sort                |       36 |             72 | -               | c5.9xlarge          | docker, singularity  |
 
 ## Running Workflows
 1. Identify workflow and edit input

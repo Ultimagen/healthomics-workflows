@@ -32,6 +32,7 @@
     "EfficientDV.background_cram_index_files": [
         "<normal_bam_file>.cram.crai"
     ],
+    "EfficientDV.ug_make_examples_extra_args": "--interval-max-nreads=500000",
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/wes/deepvariant-ultima-somatic-wes-model-v0.1.ckpt-120000.onnx",
     "EfficientDV.keep_duplicates": false,
     "EfficientDV.add_ins_size_channel": false,

@@ -1516,3 +1516,49 @@ task ConvertMetricsCsvToJson {
         File aggregated_metrics_json = "~{base_file_name}.aggregated_metrics.json"
     }
 }
+
+task GetSortOrder {
+    input {
+        Array[File] input_files  # sam/bam/cram files
+        References references
+        String docker
+        File monitoring_script
+        Int preemptible_tries
+        Boolean no_address
+    }
+    Int disk_size = ceil(1.1*size(input_files, "GB") + size(references.ref_fasta, "GB") + 5)
+    command <<<
+        set -xeo pipefail
+        bash ~{monitoring_script} | tee monitoring.log >&2 &
+
+        for f in ~{sep=" " input_files}; do
+            order=$(samtools view -H -T ~{references.ref_fasta} "$f" | \
+                awk '$1=="@HD"{for (i=1;i<=NF;i++){if ($i ~ /^SO:/) {print substr($i,4)}}}' | head -1)
+            # No @HD SO tag means the sort order is not specified in the header
+            if [ -z "$order" ]; then
+                order="unknown"
+            fi
+            echo "$order" >> sort_orders.txt
+        done
+
+        # If not all input files agree on the sort order, report "mixed"
+        if [ "$(sort -u sort_orders.txt | wc -l)" -eq 1 ]; then
+            head -1 sort_orders.txt > sort_order.txt
+        else
+            echo "mixed" > sort_order.txt
+        fi
+    >>>
+    runtime {
+        cpu: 1
+        memory: "2 GB"
+        disks: "local-disk " + disk_size + " HDD"
+        docker: docker
+        preemptible: preemptible_tries
+        noAddress: no_address
+        maxRetries: 1
+    }
+    output {
+        String sort_order = read_string("sort_order.txt")
+        File monitoring_log = "monitoring.log"
+    }
+}

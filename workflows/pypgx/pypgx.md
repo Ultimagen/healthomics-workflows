@@ -258,7 +258,7 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.EfficientDV.call_variants_gpu_type_override">
         <b>PyPGx.EfficientDV.call_variants_gpu_type_override</b><br />
         <i>String? </i> &mdash;
-         GPU type for call variants <br />
+         Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback. <br />
 </p>
 <p name="PyPGx.EfficientDV.call_variants_gpus">
         <b>PyPGx.EfficientDV.call_variants_gpus</b><br />

@@ -59,6 +59,22 @@
         "description": "Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O.",
         "optional": true
     },
+    "STRGenotyper.paired_end": {
+        "description": "Enable paired-end mode: reconcile the two mates of each fragment into a single genotyping value (spanning mate wins; else longer estimate) and recover mate-anchored reads. Use for paired-end data. Default: off (single-end).",
+        "optional": true
+    },
+    "STRGenotyper.pcr_artefact_pvalue": {
+        "description": "Significance threshold for the artefact filter, 0 < pvalue < 1. Default: 0.01.",
+        "optional": true
+    },
+    "STRGenotyper.pcr_artefact_rate": {
+        "description": "Per-read PCR-artefact (noise) rate for the artefact filter, 0 < rate < 1. Default: 0.02.",
+        "optional": true
+    },
+    "STRGenotyper.pcr_artefact_test": {
+        "description": "Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter than the major whose support is noise-like (binomial test), then genotype survivors. Long/expansion alleles kept. Default: on.",
+        "optional": true
+    },
     "STRGenotyper.preemptible_tries": {
         "description": "preemptible_tries",
         "optional": true

@@ -6,13 +6,13 @@
         "s3://<sample>.1_bedGraph.gz"
     ],
     "GermlineCNVPipeline.reference_genome": "hg38",
-    "GermlineCNVPipeline.filtering_model": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.7.4.pkl",
     "GermlineCNVPipeline.skip_filtering": false,
     "GermlineCNVPipeline.skip_figure_generation": false,
-    "GermlineCNVPipeline.filtering_model_decision_threshold": 31,
-    "GermlineCNVPipeline.ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v3.0/solaris2_60samples_cohort_v3.0.plus_female.ploidy",
+    "GermlineCNVPipeline.ploidy_file": "s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/pe_v1.0/solaris_max_pe_66samples_cohort_v1.0.plus_female.ploidy",
     "GermlineCNVPipeline.cushion_size": 1500,
     "GermlineCNVPipeline.create_md5_checksum_outputs": false,
+    "GermlineCNVPipeline.filtering_model": "s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.7.4.pkl",
+    "GermlineCNVPipeline.filtering_model_decision_threshold": 31,
     "GermlineCNVPipeline.cloud_provider_override": "aws",
     "GermlineCNVPipeline.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

@@ -45,9 +45,9 @@ The Efficient DV analysis pipeline is split into two docker images:
 
 1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.4.1
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.5.0
 or
-ultimagenomics/make_examples:3.4.1
+ultimagenomics/make_examples:3.5.0
 ```
 2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
 ```
@@ -59,6 +59,8 @@ ultimagenomics/call_variants:4.1.2
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
 
 call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
+
+On AWS HealthOmics, call_variants uses an ordered GPU fallback list: it tries `nvidia-l4` first (20 min wait), then `nvidia-tesla-a10g` (20 min wait), then `nvidia-tesla-t4` (8h wait cap before failing with `ALL_PROFILES_INSTANCE_RESERVATION_FAILED`). Which tier was actually used is echoed at the top of the CallVariants task log as `AWS_HEALTHOMICS_RESOURCE_TYPE=<tier>` (also visible via `aws omics get-run-task ... --name CallVariants` as `instanceType`). To force a single tier for debugging or emergency (e.g. driver issue on a specific tier), set the workflow input `call_variants_gpu_type_override` to one of `nvidia-l4`, `nvidia-tesla-a10g`, `nvidia-tesla-t4`.
 
 
 ## Workflow details
@@ -74,7 +76,6 @@ estimate_ploidy \
   --vcf input.vcf.gz \
   --sample-id sample_name \
   --sex-chromosomes chrX chrY X Y \
-  --het-sample-count 5000 \
   --output-dir .
 ```
 

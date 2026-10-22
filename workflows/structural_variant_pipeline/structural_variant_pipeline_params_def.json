@@ -47,6 +47,10 @@
         "description": "gripss paramter: Exclude filters from the output vcf, separated by ;",
         "optional": true
     },
+    "SVPipeline.extended_mate_recovery_max_ref_span": {
+        "description": "Maximum reference span after extended mate recovery (paired-end only); 0 disables the limit and -1 disables expansion",
+        "optional": true
+    },
     "SVPipeline.germline_link_variants_memory_override": {
         "description": "memory override for germline_link_variants task",
         "optional": true
@@ -77,6 +81,10 @@
     },
     "SVPipeline.input_tumor_crams_indexes": {
         "description": "Input CRAM index for the tumor (in case of matched T/N calling)",
+        "optional": true
+    },
+    "SVPipeline.is_paired_end": {
+        "description": "Input reads are paired-end; enables read-pair scoring in haplotype rematching",
         "optional": true
     },
     "SVPipeline.is_somatic": {

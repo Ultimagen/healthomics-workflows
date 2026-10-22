@@ -45,6 +45,11 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <i>String? &mdash; Default: None</i><br />
         gripss paramter: Exclude filters from the output vcf, separated by ;
 </p>
+<p name="GermlinePipeline.extended_mate_recovery_max_ref_span">
+        <b>GermlinePipeline.extended_mate_recovery_max_ref_span</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Maximum reference span after extended mate recovery (paired-end only); 0 disables the limit and -1 disables expansion
+</p>
 <p name="GermlinePipeline.giraffe_parameters">
         <b>GermlinePipeline.giraffe_parameters</b><br />
         <i>GiraffeParameters? &mdash; Default: None</i><br />
@@ -69,6 +74,11 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <b>GermlinePipeline.input_tumor_crams_indexes</b><br />
         <i>Array[File] &mdash; Default: []</i><br />
         Input CRAM index for the tumor (in case of matched T/N calling)
+</p>
+<p name="GermlinePipeline.is_paired_end">
+        <b>GermlinePipeline.is_paired_end</b><br />
+        <i>Boolean &mdash; Default: false</i><br />
+        Input reads are paired-end; enables read-pair scoring in haplotype rematching
 </p>
 <p name="GermlinePipeline.known_hotspot_file">
         <b>GermlinePipeline.known_hotspot_file</b><br />
@@ -272,6 +282,26 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <i>Boolean </i> &mdash;
          Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O. <br />
 </p>
+<p name="GermlinePipeline.paired_end">
+        <b>GermlinePipeline.paired_end</b><br />
+        <i>Boolean </i> &mdash;
+         Enable paired-end mode: reconcile the two mates of each fragment into a single genotyping value (spanning mate wins; else longer estimate) and recover mate-anchored reads. Use for paired-end data. Default: off (single-end). <br />
+</p>
+<p name="GermlinePipeline.pcr_artefact_pvalue">
+        <b>GermlinePipeline.pcr_artefact_pvalue</b><br />
+        <i>Float </i> &mdash;
+         Significance threshold for the artefact filter, 0 < pvalue < 1. Default: 0.01. <br />
+</p>
+<p name="GermlinePipeline.pcr_artefact_rate">
+        <b>GermlinePipeline.pcr_artefact_rate</b><br />
+        <i>Float </i> &mdash;
+         Per-read PCR-artefact (noise) rate for the artefact filter, 0 < rate < 1. Default: 0.02. <br />
+</p>
+<p name="GermlinePipeline.pcr_artefact_test">
+        <b>GermlinePipeline.pcr_artefact_test</b><br />
+        <i>Boolean </i> &mdash;
+         Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter than the major whose support is noise-like (binomial test), then genotype survivors. Long/expansion alleles kept. Default: on. <br />
+</p>
 <p name="GermlinePipeline.ref_padding">
         <b>GermlinePipeline.ref_padding</b><br />
         <i>Int </i> &mdash;
@@ -442,7 +472,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.call_variants_gpu_type_override">
         <b>GermlinePipeline.call_variants_gpu_type_override</b><br />
         <i>String? </i> &mdash;
-         GPU type for call variants <br />
+         Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback. <br />
 </p>
 <p name="GermlinePipeline.call_variants_gpus">
         <b>GermlinePipeline.call_variants_gpus</b><br />
@@ -729,6 +759,11 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <i>Int? </i> &mdash;
          Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent <br />
 </p>
+<p name="GermlinePipeline.min_pair_span">
+        <b>GermlinePipeline.min_pair_span</b><br />
+        <i>Int? </i> &mdash;
+         Minimum span (template length) of a discordant read pair for it to count as duplication or deletion evidence. Defaults to 800 in the tool <br />
+</p>
 <p name="GermlinePipeline.skip_figure_generation">
         <b>GermlinePipeline.skip_figure_generation</b><br />
         <i>Boolean? </i> &mdash;
@@ -982,7 +1017,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.PGx.EfficientDV.call_variants_gpu_type_override">
         <b>GermlinePipeline.PGx.EfficientDV.call_variants_gpu_type_override</b><br />
         <i>String? </i> &mdash;
-         GPU type for call variants <br />
+         Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback. <br />
 </p>
 <p name="GermlinePipeline.PGx.EfficientDV.call_variants_gpus">
         <b>GermlinePipeline.PGx.EfficientDV.call_variants_gpus</b><br />
@@ -1282,7 +1317,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.SegDup.DV.call_variants_gpu_type_override">
         <b>GermlinePipeline.SegDup.DV.call_variants_gpu_type_override</b><br />
         <i>String? </i> &mdash;
-         GPU type for call variants <br />
+         Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback. <br />
 </p>
 <p name="GermlinePipeline.SegDup.DV.call_variants_gpus">
         <b>GermlinePipeline.SegDup.DV.call_variants_gpus</b><br />

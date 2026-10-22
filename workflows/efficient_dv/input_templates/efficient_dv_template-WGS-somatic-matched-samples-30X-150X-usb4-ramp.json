@@ -1,0 +1,66 @@
+{
+    "EfficientDV.base_file_name": "<base_file_name>",
+    "EfficientDV.cram_files": [
+        "<cram_file>.cram"
+    ],
+    "EfficientDV.cram_index_files": [
+        "<cram_file>.cram.crai"
+    ],
+    "EfficientDV.num_shards": 100,
+    "EfficientDV.make_gvcf": false,
+    "EfficientDV.recalibrate_vaf": true,
+    "EfficientDV.is_somatic": true,
+    "EfficientDV.run_roh": false,
+    "EfficientDV.single_strand_filter": true,
+    "EfficientDV.min_fraction_single_strand_non_snps": 0.15,
+    "EfficientDV.reference_genome": "hg38",
+    "EfficientDV.preemptible_tries": 2,
+    "EfficientDV.cap_at_optimal_coverage": false,
+    "EfficientDV.normalize_strand_bias": false,
+    "EfficientDV.ensemble_size": 0,
+    "EfficientDV.strong_call_threshold": 1.1,
+    "EfficientDV.sex_chromosomes": [
+        "chrX",
+        "chrY",
+        "X",
+        "Y"
+    ],
+    "EfficientDV.run_ploidy_estimation": false,
+    "EfficientDV.background_cram_files": [
+        "<normal_cram_file>.cram"
+    ],
+    "EfficientDV.background_cram_index_files": [
+        "<normal_cram_file>.cram.crai"
+    ],
+    "EfficientDV.ug_make_examples_extra_args": "--interval-max-nreads=500000",
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx",
+    "EfficientDV.keep_duplicates": true,
+    "EfficientDV.add_ins_size_channel": true,
+    "EfficientDV.min_fraction_hmer_indels": 0.03,
+    "EfficientDV.min_fraction_non_hmer_indels": 0.03,
+    "EfficientDV.min_fraction_snps": 0.03,
+    "EfficientDV.min_variant_quality_hmer_indels": 20,
+    "EfficientDV.min_variant_quality_exome_hmer_indels": 20,
+    "EfficientDV.min_variant_quality_non_hmer_indels": 20,
+    "EfficientDV.min_variant_quality_snps": 14,
+    "EfficientDV.allele_frequency_ratio": 10,
+    "EfficientDV.override_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_centromeres.interval_list",
+    "EfficientDV.optimal_coverages": [
+        150,
+        150
+    ],
+    "EfficientDV.ug_make_examples_memory_override": 4,
+    "EfficientDV.call_variants_uncompr_buf_size_gb": 2,
+    "EfficientDV.ug_call_variants_extra_mem": 16,
+    "EfficientDV.annotation_intervals": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/LCR-hs38.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/mappability.0.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/hmers_7_and_higher.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/UG-High-Confidence-Regions/v3.1/ug_hcr.bed",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
+    ],
+    "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
+    "EfficientDV.v_gpu_tile_size": 2,
+    "EfficientDV.cloud_provider_override": "aws",
+    "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
+}

@@ -5,7 +5,7 @@ Segmental duplication analysis pipeline uses parascopy tool to analyze copy numb
 ## Workflow Overview
 
 The pipeline takes as input a CRAM/BAM file and outputs remapped reads, CNV calls, and small variants specific to segmental duplication regions.
-The steps of the pipeline are as follows: pool reads from segmental duplication regions, call copy number variations, and call small variants using DeepVariant preprocessing.
+The steps of the pipeline are as follows: generate segmental duplication regions from the CNV model, pool reads from these regions, call copy number variations, and call small variants using DeepVariant preprocessing.
 
 ## Requirements
 
@@ -20,14 +20,11 @@ The steps of the pipeline are as follows: pool reads from segmental duplication 
 s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz
 s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz.tbi
 
-# Segmental duplication regions
-s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_260520/hom.regions.bed
-
 # Background regions for CNV calling
 s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/background_regions/hg38.bg.bed.gz
 
-# Trained CNV model
-s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_260819/model.tar.gz
+# Trained CNV model (segdup_regions are generated from this)
+s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/parascopy_model_261011/model.tar.gz
 
 # DeepVariant model for segmental duplications
 s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx
@@ -42,19 +39,32 @@ s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fast
 s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
 ```
 
+#### Step 0: Generate segmental duplication regions from CNV model
+
+The workflow automatically generates segmental duplication regions from the trained CNV model:
+
+```bash
+# Extract the CNV model
+tar --no-same-owner --no-same-permissions -xzf model.tar.gz
+
+# Generate segmental duplication regions BED file
+docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.4.0_afc280c \
+parascopy create-hom-regions /data/model -o /data/hom.regions.bed
+```
+
 #### Step 1: Pool reads from segmental duplication regions
 
 Run the following command to remap reads from each segmental duplication region:
 
 ```bash
 # Pull the Docker image
-docker pull ultimagenomics/parascopy:1.3.2_f55b07e
+docker pull ultimagenomics/parascopy:1.4.0_afc280c
 
 # Process each region in the segdup_regions BED file
 while IFS= read -r line; do 
     l1=$(echo "$line" | awk '{print $1":"$2+1"-"$3}')
     
-    docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
+    docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.4.0_afc280c \
     parascopy pool -i /data/input.cram \
                    -t /data/hg38.bed.gz \
                    -f /data/Homo_sapiens_assembly38.fasta \
@@ -85,7 +95,7 @@ Extract and use the trained CNV model to call copy numbers:
 tar --no-same-owner --no-same-permissions -xvf model.tar.gz
 
 # Calculate depth coverage
-docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
+docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.4.0_afc280c \
 parascopy depth --input /data/input.cram \
                 --bed-regions /data/hg38.bg.bed.gz \
                 --fasta-ref /data/Homo_sapiens_assembly38.fasta \
@@ -93,7 +103,7 @@ parascopy depth --input /data/input.cram \
                 --clipped-perc 20 --unpaired-perc 120
 
 # Call copy numbers using the trained model
-docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
+docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.4.0_afc280c \
 parascopy "cn-using" model \
           --input /data/input.cram \
           --fasta-ref /data/Homo_sapiens_assembly38.fasta \
@@ -113,7 +123,7 @@ After running DeepVariant to generate precalled variants, run parascopy call:
 
 ```bash
 # Call small variants using copy number results and DeepVariant preprocessing
-docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.3.2_f55b07e \
+docker run --rm -v $(pwd):/data ultimagenomics/parascopy:1.4.0_afc280c \
 parascopy call -p /data/sample.cn \
                -i /data/input.cram \
                --fasta-ref /data/Homo_sapiens_assembly38.fasta \

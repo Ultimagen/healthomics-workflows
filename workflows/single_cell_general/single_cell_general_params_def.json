@@ -19,6 +19,14 @@
         "description": "Graph reference bundle for the Giraffe aligner + extra parameters for vg giraffe. Mandatory if aligner is giraffe.",
         "optional": true
     },
+    "SingleCell.TrimAlignSort.is_paired_end": {
+        "description": "Whether the input reads are paired-end. Mandatory if aligner is ua or giraffe.",
+        "optional": true
+    },
+    "SingleCell.TrimAlignSort.run_name_sort": {
+        "description": "Whether to run name-sort/pairing preprocessing (SortByNameAndKeepPaired) before Giraffe alignment. If undefined and is_paired_end is true, the sort order is auto-detected from the input headers (GetSortOrder) to decide. Only relevant if aligner is giraffe.",
+        "optional": true
+    },
     "SingleCell.TrimAlignSort.star_align_extra_args": {
         "description": "Extra arguments for the STAR aligner.",
         "optional": true

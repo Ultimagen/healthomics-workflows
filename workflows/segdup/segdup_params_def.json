@@ -52,7 +52,7 @@
         "optional": true
     },
     "SegDupAnalysis.DV.call_variants_gpu_type_override": {
-        "description": "GPU type for call variants",
+        "description": "Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback.",
         "optional": true
     },
     "SegDupAnalysis.DV.call_variants_gpus": {
@@ -311,13 +311,13 @@
         "description": "CNV model file from parascopy, see template",
         "optional": false
     },
-    "SegDupAnalysis.homology_table": {
-        "description": "Segmental duplication table (see parascopy), see template",
-        "optional": false
-    },
-    "SegDupAnalysis.homology_table_index": {
+    "SegDupAnalysis.homology_table_index_override": {
         "description": "Segmental duplication table index (see parascopy), see template",
-        "optional": false
+        "optional": true
+    },
+    "SegDupAnalysis.homology_table_override": {
+        "description": "Segmental duplication table (see parascopy). Defaults to the segdup_homology_table genome resource for reference_genome; override only to use a different table.",
+        "optional": true
     },
     "SegDupAnalysis.input_crai_bai": {
         "description": "Input CRAM/BAM index file",
@@ -352,11 +352,7 @@
         "optional": true
     },
     "SegDupAnalysis.reference_genome": {
-        "description": "Genome type selector. The workflow currently supports only hg38.",
-        "optional": false
-    },
-    "SegDupAnalysis.segdup_regions": {
-        "description": "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template (BED file)",
+        "description": "Genome type selector. The workflow currently supports hg38-like genomes (hg38, hg38_no_alt, hg38_nist_v3_with_decoy)",
         "optional": false
     }
 }

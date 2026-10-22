@@ -24,7 +24,7 @@ version 1.0
 #   python -m python_libs.wdl_pipeline_gen check
 # which fails if this file and the spec have drifted apart.
 #
-# generated-from: pipelines.yaml@b5c6e8fb0aa8
+# generated-from: pipelines.yaml@9ff599e34a09
 # ------------------------------------------------------------------------------
 
 # DESCRIPTION
@@ -40,7 +40,7 @@ import "segdup.wdl" as SegDupSubWF
 
 workflow GermlinePipeline {
   input {
-    String pipeline_version = "1.36.0" # !UnusedDeclaration
+    String pipeline_version = "1.37.0" # !UnusedDeclaration
 
     # ---- GermlinePipeline inputs ----
     Array[File] input_cram_bam_list
@@ -163,6 +163,7 @@ workflow GermlinePipeline {
     Boolean? disable_mod_cnv
     File? filtering_model
     Int? filtering_model_decision_threshold
+    Int? min_pair_span
     File? ploidy_file
     Boolean? skip_figure_generation
     Boolean? skip_filtering
@@ -177,12 +178,14 @@ workflow GermlinePipeline {
     Int? convert_vcf_format_memory_override
     Int? create_assembly_memory_override
     String? exclude_filters
+    Int? extended_mate_recovery_max_ref_span
     Int? germline_link_variants_memory_override
     GiraffeParameters? giraffe_parameters
     String? gridss_metrics_interval
     Int? homopolymer_length
     Array[File] input_tumor_crams = []
     Array[File] input_tumor_crams_indexes = []
+    Boolean is_paired_end = false
     File? known_hotspot_file
     Int? max_num_haps
     Int? max_reads_per_working_area
@@ -221,9 +224,13 @@ workflow GermlinePipeline {
     Float min_score_ratio = 0.85
     Boolean output_detailed_csv = true
     Boolean output_summary_csv = true
+    Boolean paired_end = false
+    Float pcr_artefact_pvalue = 0.01
+    Float pcr_artefact_rate = 0.02
+    Boolean pcr_artefact_test = true
     Int ref_padding = 500
     Boolean report_micro_alleles = false
-    Int spanning_flank_bases = 10
+    Int spanning_flank_bases = 5
     Int str_min_mapping_quality = 1
     Boolean str_no_address = true
     Int str_preemptible_tries = 1
@@ -258,14 +265,13 @@ workflow GermlinePipeline {
     # ---- SegDup (SegDupAnalysis, wdls/segdup.wdl) ----
     File? background_bed
     File? cn_model
-    File? homology_table
-    File? homology_table_index
+    File? homology_table_index_override
+    File? homology_table_override
     Int? n_threads
     File? segdup_model_onnx
     File? segdup_model_serialized
     Boolean segdup_no_address = true
     Int segdup_preemptible_tries = 3
-    File? segdup_regions
 
     # winval validations
     #@wv run_variant_calling -> defined(make_gvcf)
@@ -293,9 +299,6 @@ workflow GermlinePipeline {
     #@wv run_str -> defined(variant_catalog)
     #@wv run_pgx -> defined(gene_symbols)
     #@wv run_pgx -> defined(ref_files_for_tarball)
-    #@wv run_segdup -> defined(homology_table)
-    #@wv run_segdup -> defined(homology_table_index)
-    #@wv run_segdup -> defined(segdup_regions)
     #@wv run_segdup -> defined(background_bed)
     #@wv run_segdup -> defined(cn_model)
     #@wv run_segdup -> defined(n_threads)
@@ -432,7 +435,7 @@ workflow GermlinePipeline {
       category: "param_optional"
     }
     call_variants_gpu_type_override: {
-      help: "GPU type for call variants",
+      help: "Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback.",
       type: "String",
       category: "param_optional"
     }
@@ -896,6 +899,11 @@ workflow GermlinePipeline {
       type: "Int",
       category: "param_optional"
     }
+    min_pair_span: {
+      help: "Minimum span (template length) of a discordant read pair for it to count as duplication or deletion evidence. Defaults to 800 in the tool",
+      type: "Int",
+      category: "param_optional"
+    }
     ploidy_file: {
       help: "X chromosome ploidy of the cohort and the additional sample. Each sample is represented on a number on a separate row. Ploidy of the default cohort can be found in the template. The last row corresponds to the sample being called. Genome independent.",
       type: "File",
@@ -956,6 +964,11 @@ workflow GermlinePipeline {
       type: "String",
       category: "optional"
     }
+    extended_mate_recovery_max_ref_span: {
+      help: "Maximum reference span after extended mate recovery (paired-end only); 0 disables the limit and -1 disables expansion",
+      type: "Int",
+      category: "optional"
+    }
     germline_link_variants_memory_override: {
       help: "memory override for germline_link_variants task",
       type: "Int",
@@ -984,6 +997,11 @@ workflow GermlinePipeline {
     input_tumor_crams_indexes: {
       help: "Input CRAM index for the tumor (in case of matched T/N calling)",
       type: "Array[File]",
+      category: "optional"
+    }
+    is_paired_end: {
+      help: "Input reads are paired-end; enables read-pair scoring in haplotype rematching",
+      type: "Boolean",
       category: "optional"
     }
     known_hotspot_file: {
@@ -1166,6 +1184,26 @@ workflow GermlinePipeline {
       type: "Boolean",
       category: "input_optional"
     }
+    paired_end: {
+      help: "Enable paired-end mode: reconcile the two mates of each fragment into a single genotyping value (spanning mate wins; else longer estimate) and recover mate-anchored reads. Use for paired-end data. Default: off (single-end).",
+      type: "Boolean",
+      category: "input_optional"
+    }
+    pcr_artefact_pvalue: {
+      help: "Significance threshold for the artefact filter, 0 < pvalue < 1. Default: 0.01.",
+      type: "Float",
+      category: "input_optional"
+    }
+    pcr_artefact_rate: {
+      help: "Per-read PCR-artefact (noise) rate for the artefact filter, 0 < rate < 1. Default: 0.02.",
+      type: "Float",
+      category: "input_optional"
+    }
+    pcr_artefact_test: {
+      help: "Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter than the major whose support is noise-like (binomial test), then genotype survivors. Long/expansion alleles kept. Default: on.",
+      type: "Boolean",
+      category: "input_optional"
+    }
     ref_padding: {
       help: "Number of bases to extend around the STR repeat region when building auxiliary references for alignment. Larger values provide more flanking sequence context for accurate alignment.",
       type: "Int",
@@ -1321,13 +1359,13 @@ workflow GermlinePipeline {
       type: "File",
       category: "input_advanced"
     }
-    homology_table: {
-      help: "Segmental duplication table (see parascopy), see template",
+    homology_table_index_override: {
+      help: "Segmental duplication table index (see parascopy), see template",
       type: "File",
       category: "input_advanced"
     }
-    homology_table_index: {
-      help: "Segmental duplication table index (see parascopy), see template",
+    homology_table_override: {
+      help: "Segmental duplication table (see parascopy). Defaults to the segdup_homology_table genome resource for reference_genome; override only to use a different table.",
       type: "File",
       category: "input_advanced"
     }
@@ -1355,11 +1393,6 @@ workflow GermlinePipeline {
       help: "(SegDup) Number of preemptible tries",
       type: "Int",
       category: "input_optional"
-    }
-    segdup_regions: {
-      help: "Segmental duplication regions. All reads will be remapped to `segdup_regions` and the calling will happen only on these regions, see template (BED file)",
-      type: "File",
-      category: "input_advanced"
     }
     dv_nvidia_smi_log: {
       help: "Nvidia System Management (nvidia-smi) log (only when run_variant_calling)",
@@ -1880,6 +1913,7 @@ workflow GermlinePipeline {
         chrY_name_override = chrY_name_override,
         cnvpytor_window_length_override = cnvpytor_window_length_override,
         cushion_size = select_first([cushion_size]),
+        min_pair_span = min_pair_span,
         sv_calls_vcf = sv_calls_vcf,
         sv_calls_vcf_index = sv_calls_vcf_index,
         skip_figure_generation = skip_figure_generation,
@@ -1908,10 +1942,12 @@ workflow GermlinePipeline {
         max_reads_per_partition = select_first([sv_max_reads_per_partition]),
         max_reads_per_working_area = select_first([max_reads_per_working_area]),
         max_num_haps = max_num_haps,
+        extended_mate_recovery_max_ref_span = extended_mate_recovery_max_ref_span,
         realign_mapq = select_first([realign_mapq]),
         min_indel_sc_size_to_include = min_indel_sc_size_to_include,
         min_mismatch_count_to_include = min_mismatch_count_to_include,
         homopolymer_length = select_first([homopolymer_length]),
+        is_paired_end = is_paired_end,
         config_file_string = select_first([config_file_string]),
         blacklist_bed = blacklist_bed,
         reference_name = select_first([reference_name]),
@@ -1961,6 +1997,10 @@ workflow GermlinePipeline {
         output_detailed_csv = output_detailed_csv,
         output_summary_csv = output_summary_csv,
         haploid = haploid,
+        paired_end = paired_end,
+        pcr_artefact_test = pcr_artefact_test,
+        pcr_artefact_rate = pcr_artefact_rate,
+        pcr_artefact_pvalue = pcr_artefact_pvalue,
         report_micro_alleles = report_micro_alleles,
         micro_allele_consensus_ratio = micro_allele_consensus_ratio,
         micro_allele_min_reads = micro_allele_min_reads,
@@ -2025,9 +2065,8 @@ workflow GermlinePipeline {
         reference_genome = reference_genome,
         monitoring_script_input = monitoring_script_input,
         cloud_provider_override = cloud_provider_override,
-        homology_table = select_first([homology_table]),
-        homology_table_index = select_first([homology_table_index]),
-        segdup_regions = select_first([segdup_regions]),
+        homology_table_override = homology_table_override,
+        homology_table_index_override = homology_table_index_override,
         background_bed = select_first([background_bed]),
         cn_model = select_first([cn_model]),
         n_threads = select_first([n_threads]),

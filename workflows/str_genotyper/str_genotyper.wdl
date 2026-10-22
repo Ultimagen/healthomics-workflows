@@ -31,7 +31,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow STRGenotyper {
     input {
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
         # Required inputs
         String base_file_name
         File cram_file
@@ -46,7 +46,7 @@ workflow STRGenotyper {
         Int min_repeat = 1
         Int max_repeat = 100
         Float min_score_ratio = 0.85
-        Int spanning_flank_bases = 10
+        Int spanning_flank_bases = 5
         Int min_mapping_quality = 1
         
         # Resource configuration
@@ -59,7 +59,19 @@ workflow STRGenotyper {
         
         # Genotype calling options
         Boolean haploid = false
-        Boolean report_micro_alleles = false
+
+        # Paired-end mode: reconcile R1/R2 mates of a fragment into one genotyping
+        # value and recover mate-anchored reads. Use for paired-end data.
+        Boolean paired_end = false
+
+        # Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter
+        # than the major allele whose support is indistinguishable from noise, then
+        # genotype among survivors. On by default (helps single- and paired-end);
+        # set false to pass --no-pcr-artefact-test.
+        Boolean pcr_artefact_test = true
+        Float pcr_artefact_rate = 0.02
+        Float pcr_artefact_pvalue = 0.01
+Boolean report_micro_alleles = false
         Float micro_allele_consensus_ratio = 0.8
         Int micro_allele_min_reads = 10
 
@@ -168,6 +180,26 @@ workflow STRGenotyper {
             type: "Boolean",
             category: "input_optional"
         }
+        paired_end: {
+            help: "Enable paired-end mode: reconcile the two mates of each fragment into a single genotyping value (spanning mate wins; else longer estimate) and recover mate-anchored reads. Use for paired-end data. Default: off (single-end).",
+            type: "Boolean",
+            category: "input_optional"
+        }
+        pcr_artefact_test: {
+            help: "Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter than the major whose support is noise-like (binomial test), then genotype survivors. Long/expansion alleles kept. Default: on.",
+            type: "Boolean",
+            category: "input_optional"
+        }
+        pcr_artefact_rate: {
+            help: "Per-read PCR-artefact (noise) rate for the artefact filter, 0 < rate < 1. Default: 0.02.",
+            type: "Float",
+            category: "input_optional"
+        }
+        pcr_artefact_pvalue: {
+            help: "Significance threshold for the artefact filter, 0 < pvalue < 1. Default: 0.01.",
+            type: "Float",
+            category: "input_optional"
+        }
         report_micro_alleles: {
             help: "Report micro-alleles (e.g. 15.3) for haploid loci when a partial-repeat insertion is present. REPCN stays the integer floor; the micro-allele decimal appears in the genotype (GT) and a new RCMA VCF/BED field. No-op for diploid loci. Default: off.",
             type: "Boolean",
@@ -255,6 +287,10 @@ workflow STRGenotyper {
             output_detailed_csv = output_detailed_csv,
             output_summary_csv = output_summary_csv,
             haploid = haploid,
+            paired_end = paired_end,
+            pcr_artefact_test = pcr_artefact_test,
+            pcr_artefact_rate = pcr_artefact_rate,
+            pcr_artefact_pvalue = pcr_artefact_pvalue,
             report_micro_alleles = report_micro_alleles,
             micro_allele_consensus_ratio = micro_allele_consensus_ratio,
             micro_allele_min_reads = micro_allele_min_reads,
@@ -294,6 +330,10 @@ task GenotypeSTR {
         Boolean output_detailed_csv
         Boolean output_summary_csv
         Boolean haploid
+        Boolean paired_end
+        Boolean pcr_artefact_test
+        Float pcr_artefact_rate
+        Float pcr_artefact_pvalue
         Boolean report_micro_alleles
         Float micro_allele_consensus_ratio
         Int micro_allele_min_reads
@@ -335,6 +375,8 @@ task GenotypeSTR {
             ~{if output_detailed_csv then "" else "--skip-detailed-csv"} \
             ~{if output_summary_csv then "" else "--skip-summary-csv"} \
             ~{if haploid then "--haploid" else ""} \
+            ~{if paired_end then "--paired-end" else ""} \
+            ~{if pcr_artefact_test then "--pcr-artefact-test --pcr-artefact-rate " + pcr_artefact_rate + " --pcr-artefact-pvalue " + pcr_artefact_pvalue else "--no-pcr-artefact-test"} \
             ~{if report_micro_alleles then "--report-micro-alleles --micro-allele-consensus-ratio " + micro_allele_consensus_ratio + " --micro-allele-min-reads " + micro_allele_min_reads else ""}
     >>>
     

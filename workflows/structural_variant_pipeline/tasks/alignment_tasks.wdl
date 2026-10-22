@@ -487,6 +487,7 @@ task AlignWithUA {
         Boolean use_v_aware_alignment
         File? v_aware_vcf
         String? extra_args
+        Boolean is_paired_end
         File monitoring_script
         Int disk_size = ceil(size(ua_index, "GB") + 3*size(input_bams, "GB") + 20 + size(v_aware_vcf,"GB") + 2*size(cache_tarball, "GB"))
         Int preemptible_tries
@@ -513,7 +514,7 @@ task AlignWithUA {
     # for compatibility with the old image where ua was in /ua/ua and not in PATH
     export PATH=$PATH:/ua
 
-    samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{sep=" " input_bams} | \
+    samtools merge -@ ~{cpu} -c -O SAM /dev/stdout ~{true="-n" false="" is_paired_end} ~{sep=" " input_bams} | \
     ua \
         --index ~{ua_index} \
         --align true \
@@ -1219,10 +1220,11 @@ task SortByNameAndKeepPaired {
         File input_bam
         String output_bam_basename
         File? cache_tarball
-        Int disk_size = ceil(4*size(input_bam, "GB") + size(cache_tarball, "GB") + 20)
+        # SSD is requested in batches of 375 GB
+        Int disk_size = ceil( (6.5*size(input_bam, "GB") + size(cache_tarball, "GB") + 20)/375) * 375
         String docker
         File monitoring_script
-        Int preemptible_tries
+        Int preemptible_tries = 0
         Boolean no_address
     }
     Boolean defined_cache_tarball = defined(cache_tarball)
@@ -1233,18 +1235,18 @@ task SortByNameAndKeepPaired {
         if [[ ~{defined_cache_tarball} == true ]]; then
             echo "Unzipping cache tarball"
             ~{"tar -zxf "+cache_tarball}
-        
-            export REF_CACHE=cache/%2s/%2s/ 
-            export REF_PATH='.' 
+
+            export REF_CACHE=cache/%2s/%2s/
+            export REF_PATH='.'
         fi
 
-        samtools sort -n -O BAM -@ 6 ~{input_bam} \
-          | samtools view -bh -@ 4 -e "flag.paired" -o ~{output_bam_basename}.bam -
+        samtools sort -n -O BAM -l 0 -@ 12 ~{input_bam} \
+          | samtools view -bh -@ 12 -e "flag.paired" -o ~{output_bam_basename}.bam -
     >>>
     runtime {
-        cpu: "8"
-        memory: "16 GB"
-        disks: "local-disk " + ceil(disk_size) + " HDD"
+        cpu: 16
+        memory: "32 GB"
+        disks: "local-disk " + ceil(disk_size) + " SSD"
         docker: docker
         preemptible: preemptible_tries
         noAddress: no_address
@@ -1262,19 +1264,20 @@ task UGGiraffeAlignment {
         String output_bam_basename
         GiraffeParameters giraffe_indices
         File ref_dict
-        String? extra_args
         Boolean is_paired_end
         File monitoring_script
-        Int preemptible_tries
+        Int preemptible_tries = 0
         Boolean no_address
         String vg_docker
         Int cpu = 48
         Int memory_gb = 96
     }
-    Int disk_size = ceil(3*size(input_bams, "GB") + 20 +
-                            3*size(cache_tarball, "GB") + size(giraffe_indices.ref_gbz, "GB") +
-                            size(giraffe_indices.ref_min, "GB") + size(giraffe_indices.ref_dist, "GB") +
-                            size(giraffe_indices.ref_zipcodes, "GB") +  size(giraffe_indices.ref_paths, "GB"))
+    # SSD is requested in batches of 375 GB
+    Int disk_size = ceil( (3*size(input_bams, "GB") + 20 +
+                           3*size(cache_tarball, "GB") + size(giraffe_indices.ref_gbz, "GB") +
+                           size(giraffe_indices.ref_min, "GB") + size(giraffe_indices.ref_dist, "GB") +
+                           size(giraffe_indices.ref_zipcodes, "GB") +  size(giraffe_indices.ref_paths, "GB")
+                           )/375) * 375
 
     Int preemptible_tries_final = if (size(input_bams, "GB") < 250) then preemptible_tries else 0
     Boolean defined_cache_tarball = defined(cache_tarball)
@@ -1306,7 +1309,7 @@ task UGGiraffeAlignment {
         --ref-dict ~{ref_dict} \
         --parameter-preset default \
         --progress \
-        ~{extra_args} \
+        ~{giraffe_indices.extra_args} \
     | samtools view -@ 4 -o ~{output_bam_basename}.bam -
     >>>
 
@@ -1314,7 +1317,7 @@ task UGGiraffeAlignment {
         preemptible: preemptible_tries_final
         memory: "~{memory_gb} GiB"
         cpu: "~{cpu}"
-        disks: "local-disk " + disk_size + " HDD"
+        disks: "local-disk " + disk_size + " SSD"
         docker: vg_docker
         noAddress: no_address
         maxRetries: 1

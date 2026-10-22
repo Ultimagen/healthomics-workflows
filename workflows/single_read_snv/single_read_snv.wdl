@@ -43,7 +43,7 @@ input {
   Array[File] input_cram_bam_index_list
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.36.0"
+  String pipeline_version = "1.37.0"
 
   # Genome resources
   String reference_genome = "hg38"
@@ -80,6 +80,7 @@ input {
   Int? override_memory_gb_CreateFeatureMap
   Int? override_memory_gb_PrepareRawFeatureMap
   Int? override_memory_gb_PrepareRandomSampleFeatureMap
+  Int? override_memory_gb_MergeSnvfindStats
   Int? override_memory_gb_TrainModel
   Int? preemptible_tries
   Boolean? no_address_override
@@ -301,6 +302,11 @@ parameter_meta {
         help: "Override memory in GB for the PrepareRandomSampleFeatureMap task, default: 16 (GiB). If an out of memory error occurs in the PrepareRandomSampleFeatureMap task, try increasing this value, e.g. double it.",
         category: "optional"
     }
+    override_memory_gb_MergeSnvfindStats: {
+        type: "Int",
+        help: "Override memory in GB for the MergeSnvfindStats task, default: 4 (GiB). Deeply-sequenced samples produce many featuremap shards; if the merge stalls or runs out of memory, try increasing this value, e.g. double it.",
+        category: "optional"
+    }
     override_memory_gb_TrainModel: {
         type: "Int",
         help: "Override memory in GB for the TrainModel task, default: 32 (GiB). If an out of memory error occurs in the TrainModel task, try increasing this value, e.g. double it.",
@@ -520,6 +526,7 @@ parameter_meta {
         override_memory_gb_CreateFeatureMap = override_memory_gb_CreateFeatureMap,
         override_memory_gb_PrepareRawFeatureMap = override_memory_gb_PrepareRawFeatureMap,
         override_memory_gb_PrepareRandomSampleFeatureMap = override_memory_gb_PrepareRandomSampleFeatureMap,
+        override_memory_gb_MergeSnvfindStats = override_memory_gb_MergeSnvfindStats,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script,
         num_shards = num_shards_featuremap,
@@ -633,6 +640,7 @@ parameter_meta {
         model_files = pre_trained_model_files_array,
         run_training_prep = false,
         override_memory_gb_CreateFeatureMap = override_memory_gb_CreateFeatureMap,
+        override_memory_gb_MergeSnvfindStats = override_memory_gb_MergeSnvfindStats,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script,
         featuremap_docker = global.featuremap_docker,

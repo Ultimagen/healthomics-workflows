@@ -71,6 +71,26 @@ Alignment-based STR genotype caller using Smith-Waterman alignment
         <i>Boolean </i> &mdash;
          Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms. <br />
 </p>
+<p name="STRGenotyper.paired_end">
+        <b>STRGenotyper.paired_end</b><br />
+        <i>Boolean </i> &mdash;
+         Enable paired-end mode: reconcile the two mates of each fragment into a single genotyping value (spanning mate wins; else longer estimate) and recover mate-anchored reads. Use for paired-end data. Default: off (single-end). <br />
+</p>
+<p name="STRGenotyper.pcr_artefact_test">
+        <b>STRGenotyper.pcr_artefact_test</b><br />
+        <i>Boolean </i> &mdash;
+         Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter than the major whose support is noise-like (binomial test), then genotype survivors. Long/expansion alleles kept. Default: on. <br />
+</p>
+<p name="STRGenotyper.pcr_artefact_rate">
+        <b>STRGenotyper.pcr_artefact_rate</b><br />
+        <i>Float </i> &mdash;
+         Per-read PCR-artefact (noise) rate for the artefact filter, 0 < rate < 1. Default: 0.02. <br />
+</p>
+<p name="STRGenotyper.pcr_artefact_pvalue">
+        <b>STRGenotyper.pcr_artefact_pvalue</b><br />
+        <i>Float </i> &mdash;
+         Significance threshold for the artefact filter, 0 < pvalue < 1. Default: 0.01. <br />
+</p>
 <p name="STRGenotyper.report_micro_alleles">
         <b>STRGenotyper.report_micro_alleles</b><br />
         <i>Boolean </i> &mdash;

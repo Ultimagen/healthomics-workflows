@@ -22,6 +22,7 @@ version 1.0
 
 
 # CHANGELOG in reverse chronological order
+# 1.37.0 Added hg38_no_alt to the supported reference_genome values
 # 1.35.0 UG-CNV-LCR is no longer used
 #        The intervals and the chromosome list are taken from the cohort reads count matrix, ref_seq_names was removed
 #        The reference is selected with reference_genome (hg38, b37, hg38_nist_v3_with_decoy) instead of a References object
@@ -41,7 +42,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow GermlineCNVPipeline {
 
     input {
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
 
         String base_file_name
         File input_bam_file
@@ -69,7 +70,10 @@ workflow GermlineCNVPipeline {
         Array[Int]? cnvpytor_window_length_override
         
         Int cushion_size
-        
+
+        # breakpoint read evidence params
+        Int? min_pair_span
+
         File? sv_calls_vcf
         File? sv_calls_vcf_index
 
@@ -81,7 +85,7 @@ workflow GermlineCNVPipeline {
         Boolean create_md5_checksum_outputs = false
 
         # winval validations
-        #@wv reference_genome in {"hg38", "b37", "hg38_nist_v3_with_decoy"}
+        #@wv reference_genome in {"hg38", "b37", "hg38_nist_v3_with_decoy", "hg38_no_alt"}
         #@wv not(" " in base_file_name or "#" in base_file_name or ',' in base_file_name)
         #@wv prefix(input_bam_file_index) == input_bam_file
         #@wv suffix(input_bam_file) in {".bam", ".cram"}
@@ -129,7 +133,7 @@ workflow GermlineCNVPipeline {
             category: "input_required"
         }
         reference_genome: {
-            help: "Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
+            help: "Genome type selector. Supported values are hg38, b37, hg38_nist_v3_with_decoy and hg38_no_alt. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
             type: "String",
             category: "ref_required"
         }
@@ -261,6 +265,11 @@ workflow GermlineCNVPipeline {
             help: "Cushion size around CNV breakpoints for split-read analysis and jump alignment analysis",
             type: "Int",
             category: "param_required"
+        }
+        min_pair_span: {
+            help: "Minimum span (template length) of a discordant read pair for it to count as duplication or deletion evidence. Defaults to 800 in the tool",
+            type: "Int",
+            category: "param_optional"
         }
         sv_calls_vcf: {
             help: "SV calls in VCF format (MANTA-like, single record per SV call) to be used for annotation of combined CNV calls, default is empty and annotation is not performed.<br> The input tested is the output of structrual_variant_pipeline.wdl",
@@ -444,6 +453,7 @@ workflow GermlineCNVPipeline {
             input_bam_file = input_bam_file,
             input_bam_file_index = input_bam_file_index,
             cushion_size = cushion_size,
+            min_pair_span = min_pair_span,
             reference_genome = reference.ref_fasta,
             reference_genome_index = reference.ref_fasta_index,
             skip_filtering = skip_filtering,

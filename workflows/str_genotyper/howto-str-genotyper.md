@@ -41,7 +41,7 @@ The STR Genotyper workflow performs Short Tandem Repeat (STR) genotyping on whol
 ### Docker Image
 
 ```
-337532070941.dkr.ecr.us-east-1.amazonaws.com/str_genotyper:1.1.0_da93d4a
+337532070941.dkr.ecr.us-east-1.amazonaws.com/str_genotyper:1.2.0
 ```
 
 ### Hardware Requirements
@@ -128,15 +128,24 @@ The STR genotyper is available as a WDL workflow (`str_genotyper.wdl`). Create a
     "STRGenotyper.min_repeat": 1,
     "STRGenotyper.max_repeat": 100,
     "STRGenotyper.min_score_ratio": 0.85,
-    "STRGenotyper.spanning_flank_bases": 10,
+    "STRGenotyper.spanning_flank_bases": 5,
     "STRGenotyper.min_mapping_quality": 1,
     "STRGenotyper.threads": 2,
     "STRGenotyper.haploid": false,
+    "STRGenotyper.paired_end": false,
+    "STRGenotyper.pcr_artefact_test": true,
+    "STRGenotyper.pcr_artefact_rate": 0.02,
+    "STRGenotyper.pcr_artefact_pvalue": 0.01,
     "STRGenotyper.report_micro_alleles": false,
     "STRGenotyper.micro_allele_consensus_ratio": 0.8,
     "STRGenotyper.micro_allele_min_reads": 10
 }
 ```
+
+For **paired-end** data set `"STRGenotyper.paired_end": true` (or use the `PE`
+use case): the two mates of a fragment are reconciled into one genotyping value.
+The per-allele **PCR-artefact filter** (`pcr_artefact_test`) is on by default for
+diploid calling and removes spurious short alleles; set it to `false` to disable.
 
 ### Running via Command Line
 
@@ -168,12 +177,16 @@ python -m alignment_str_len_caller.main \
 | min_repeat | 1 | Minimum number of repeat units to include in auxiliary reference sequences |
 | max_repeat | 100 | Maximum number of repeat units to include in auxiliary reference sequences |
 | min_score_ratio | 0.85 | Minimum ratio of alignment score to theoretical maximum (0.0-1.0). Lower values allow more alignments; 1.0 requires perfect alignment |
-| spanning_flank_bases | 10 | Minimum number of bases that must align on each side of the STR repeat region for a read to be considered "spanning" |
+| spanning_flank_bases | 5 | Minimum number of bases that must align on each side of the STR repeat region for a read to be considered "spanning" |
 | min_mapping_quality | 1 | Minimum mapping quality for reads to be included in analysis |
 | threads | 2 | Number of threads for parallel processing |
 | output_detailed_csv | true | Whether to output detailed per-read CSV file. Set to false for large catalogs to reduce I/O |
 | output_summary_csv | true | Whether to output summary per-locus CSV file. Set to false for large catalogs to reduce I/O |
 | haploid | false | Enable haploid mode: report single allele instead of diploid pairs. Use for X/Y chromosomes in males or haploid organisms |
+| paired_end | false | Enable paired-end mode: reconcile the two mates of each fragment into one genotyping value (spanning mate wins) and recover mate-anchored reads. Use for paired-end data |
+| pcr_artefact_test | true | Per-allele PCR-artefact filter (diploid): drop candidate alleles shorter than the major allele whose support is noise-like, then genotype survivors. Long/expansion alleles are never pruned. No-op for haploid loci |
+| pcr_artefact_rate | 0.02 | Per-read PCR-artefact (noise) rate for the artefact filter, 0 < rate < 1. Only used when `pcr_artefact_test` is true |
+| pcr_artefact_pvalue | 0.01 | Significance threshold for the artefact filter, 0 < pvalue < 1. Only used when `pcr_artefact_test` is true |
 | report_micro_alleles | false | Report micro-alleles (e.g. `15.3`) for haploid loci when a partial-repeat insertion is present. `REPCN` stays the integer floor; the decimal appears in `GT` and a new `RCMA` field. No-op for diploid loci. See [Micro-Alleles](#micro-alleles-haploid-loci) |
 | micro_allele_consensus_ratio | 0.8 | Minimum fraction of supporting spanning reads required to report a micro-allele decimal. Only used when `report_micro_alleles` is true |
 | micro_allele_min_reads | 10 | Minimum number of spanning reads supporting the consensus tract length required to report a micro-allele. Guards against low-coverage indel artifacts. Only used when `report_micro_alleles` is true |

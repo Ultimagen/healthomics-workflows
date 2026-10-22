@@ -35,7 +35,7 @@ import "haplotype_sampling.wdl" as HSampling
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.36.0" # !UnusedDeclaration
+    String pipeline_version = "1.37.0" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -206,7 +206,9 @@ workflow EfficientDV {
               "MergeRealignedCrams.cache_tarball",
               "Glob.glob",
               "QCReport.disk_size",
-              "UGMakeExamples.count_candidates_with_dvtools"
+              "UGMakeExamples.count_candidates_with_dvtools",
+              "CallVariants.gpu_wait_timeout_min",
+              "CallVariants.gpu_final_tier_wait_timeout_min"
           ]}
   }
 
@@ -591,7 +593,7 @@ workflow EfficientDV {
       category: "param_advanced"
     }
     call_variants_gpu_type_override: {
-      help: "GPU type for call variants",
+      help: "Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback.",
       category: "param_optional"
     }
     call_variants_gpus: {
@@ -729,7 +731,14 @@ workflow EfficientDV {
   Float ug_make_examples_memory = select_first([ug_make_examples_memory_override, 4])
   Int ug_make_examples_cpus = select_first([ug_make_examples_cpus_override, 2])
   Boolean no_address = select_first([no_address_override, true])
-  String call_variants_gpu_type = select_first([call_variants_gpu_type_override, "nvidia-t4-a10g-l4"])
+
+  # UGCallVariants HealthOmics GPU cascade: L4 (20 min) -> A10G (20 min) -> T4 (no timeout).
+  # Override pins one tier; the task requires a 3-entry list, so we repeat it (~3 retries on that tier).
+  String single_gpu_tier = select_first([call_variants_gpu_type_override, ""])
+  Array[String] call_variants_gpu_tier_order =
+      if defined(call_variants_gpu_type_override)
+      then [single_gpu_tier, single_gpu_tier, single_gpu_tier]
+      else ["nvidia-l4", "nvidia-tesla-a10g", "nvidia-tesla-t4"]
 
   call Globals.Globals as Glob
   GlobalVariables global = Glob.global_dockers
@@ -939,7 +948,7 @@ workflow EfficientDV {
       is_somatic = is_somatic,
       docker = global.ug_call_variants_docker,
       call_variants_uncompr_buf_size_gb = call_variants_uncompr_buf_size_gb,
-      gpu_type = call_variants_gpu_type,
+      gpu_tier_order = call_variants_gpu_tier_order,
       num_gpus = call_variants_gpus,
       num_cpus = call_variants_cpus,
       num_threads = call_variants_threads,
@@ -1055,7 +1064,7 @@ workflow EfficientDV {
         sample_id = ExtractSampleNameFlowOrder.sample_name,
         sex_chromosomes = sex_chromosomes,
         ploidy_exclude_regions_bed = ploidy_exclude_regions,
-        docker = global.ugbio_core_docker,
+        docker = global.ugbio_cnv_docker,
         preemptibles = 1,
         monitoring_script = monitoring_script
     }

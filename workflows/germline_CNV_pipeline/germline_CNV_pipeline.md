@@ -46,7 +46,7 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
 <p name="GermlineCNVPipeline.reference_genome">
         <b>GermlineCNVPipeline.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly <br />
+         Genome type selector. Supported values are hg38, b37, hg38_nist_v3_with_decoy and hg38_no_alt. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly <br />
 </p>
 
 ### Optional inputs
@@ -106,6 +106,11 @@ Runs: <br>1. single sample germline CNV calling workflow based on [cn.mops](http
         <b>GermlineCNVPipeline.filtering_model_decision_threshold</b><br />
         <i>Int? </i> &mdash;
          Decision threshold for the filtering model, default is set in template. Lower- less stringent, Higher- more stringent <br />
+</p>
+<p name="GermlineCNVPipeline.min_pair_span">
+        <b>GermlineCNVPipeline.min_pair_span</b><br />
+        <i>Int? </i> &mdash;
+         Minimum span (template length) of a discordant read pair for it to count as duplication or deletion evidence. Defaults to 800 in the tool <br />
 </p>
 <p name="GermlineCNVPipeline.skip_figure_generation">
         <b>GermlineCNVPipeline.skip_figure_generation</b><br />

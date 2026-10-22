@@ -99,6 +99,10 @@
         "description": "Override memory in GB for the CreateFeatureMap task. If an out of memory error occurs, try increasing this value.",
         "optional": true
     },
+    "DeepSingleReadSNV.override_memory_gb_MergeSnvfindStats": {
+        "description": "Override memory in GB for the MergeSnvfindStats task, default: 4 (GiB). Deeply-sequenced samples produce many featuremap shards; if the merge stalls or runs out of memory, increase this value.",
+        "optional": true
+    },
     "DeepSingleReadSNV.override_memory_gb_PrepareRandomSampleFeatureMap": {
         "description": "Override memory in GB for the PrepareRandomSampleFeatureMap task. If an out of memory error occurs, try increasing this value.",
         "optional": true

@@ -506,6 +506,7 @@ task MergeSnvfindStats {
     String docker
     Int preemptible_tries
     File monitoring_script
+    Int memory_gb = 4
   }
 
   command <<<
@@ -523,7 +524,7 @@ task MergeSnvfindStats {
     preemptible: preemptible_tries
     docker: docker
     cpu: 2
-    memory: "4 GiB"
+    memory: "~{memory_gb} GiB"
     disks: "local-disk 10 HDD"
   }
 

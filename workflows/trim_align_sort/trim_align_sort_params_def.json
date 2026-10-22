@@ -27,6 +27,10 @@
         "description": "List of input cram or bam files to be processed.",
         "optional": false
     },
+    "TrimAlignSort.is_paired_end": {
+        "description": "Whether the input reads are paired-end. Mandatory if aligner is ua or giraffe.",
+        "optional": true
+    },
     "TrimAlignSort.monitoring_script_input": {
         "description": "monitoring_script_input",
         "optional": true
@@ -45,6 +49,10 @@
     },
     "TrimAlignSort.reference_genome": {
         "description": "Reference genome selector (hg38, b37, b37_ancient_dna, hg38_taps, hg38_nist_v3, hg38_nist_v3_with_decoy, hg38_no_alt, mm10, mm10_methyl, mm39, hg38_rna_seq). Defaults to hg38",
+        "optional": true
+    },
+    "TrimAlignSort.run_name_sort": {
+        "description": "Whether to run name-sort/pairing preprocessing (SortByNameAndKeepPaired) before Giraffe alignment. If undefined and is_paired_end is true, the sort order is auto-detected from the input headers (GetSortOrder) to decide. Only relevant if aligner is giraffe.",
         "optional": true
     },
     "TrimAlignSort.sorter_params": {

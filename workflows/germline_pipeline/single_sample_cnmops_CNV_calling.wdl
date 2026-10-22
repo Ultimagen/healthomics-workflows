@@ -22,6 +22,7 @@ version 1.0
 # 4. Filtering sample's CNV calls
 
 # CHANGELOG in reverse chronological order
+# 1.37.0 Added hg38_no_alt to the supported reference_genome values
 # 1.35.0 Removed UG-CNV-LCR  annotation - no longer needed
 #        The intervals and the chromosome list are taken from the cohort reads count matrix, ref_seq_names was removed
 #        The reference is selected with reference_genome (hg38, b37, hg38_nist_v3_with_decoy) instead of a fasta+fai pair
@@ -40,7 +41,7 @@ import "tasks/genome_resources.wdl" as GenomeResourcesLib
 workflow SingleSampleCnmopsCNVCalling {
 
     input {
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
 
         String base_file_name
         String? sample_name
@@ -79,7 +80,7 @@ workflow SingleSampleCnmopsCNVCalling {
         #@wv defined(input_bam_file) -> (prefix(input_bam_file_index) == input_bam_file)
         #@wv defined(input_bam_file) -> (suffix(input_bam_file) in {".bam", ".cram"})
 
-        #@wv reference_genome in {"hg38", "b37", "hg38_nist_v3_with_decoy"}
+        #@wv reference_genome in {"hg38", "b37", "hg38_nist_v3_with_decoy", "hg38_no_alt"}
 
         #@wv defined(bed_graph) -> not(defined(input_sample_reads_count))
         #@wv defined(input_sample_reads_count) -> not(defined(bed_graph))
@@ -123,7 +124,7 @@ workflow SingleSampleCnmopsCNVCalling {
             category: "input_optional"
        }
         reference_genome: {
-            help: "Genome type selector. Supported values are hg38, b37 and hg38_nist_v3_with_decoy. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
+            help: "Genome type selector. Supported values are hg38, b37, hg38_nist_v3_with_decoy and hg38_no_alt. The reference files and the cn.mops cohort reads count matrix are taken from the genome resources accordingly",
             type: "String",
             category: "ref_required"
          }

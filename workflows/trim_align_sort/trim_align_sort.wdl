@@ -36,7 +36,7 @@ import "tasks/qc_tasks.wdl" as QCTasks
 
 workflow TrimAlignSort {
     input {
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
         Array[File] input_cram_bam_list
         Array[File]? ref_fastas_cram
         String base_file_name
@@ -50,6 +50,8 @@ workflow TrimAlignSort {
 
         # alignment parameters
         String? aligner # ua, ua-meth, star, giraffe
+        Boolean? is_paired_end
+        Boolean? run_name_sort
         UaParameters? ua_parameters
         UaMethParameters? ua_meth_parameters
         GiraffeParameters? giraffe_parameters
@@ -99,6 +101,7 @@ workflow TrimAlignSort {
         #@wv 'align' in steps and steps['align'] and aligner == "ua-meth" and defined(ua_meth_parameters) and 'index_c2t' in ua_meth_parameters -> suffix(ua_meth_parameters['index_c2t']) == '.c2t'
         ## Giraffe
         #@wv 'align' in steps and steps['align'] and aligner == "giraffe" -> defined(giraffe_parameters)
+        #@wv 'align' in steps and steps['align'] and aligner in {"ua", "giraffe"} -> defined(is_paired_end)
         ## STAR
         #@wv 'align' in steps and steps['align'] and aligner == "star" -> defined(star_genome) or defined(star_genome_generate_params)
         #@wv 'align' in steps and steps['align'] and aligner == "star" and defined(star_genome) -> suffix(star_genome) == '.zip'
@@ -195,6 +198,16 @@ workflow TrimAlignSort {
         aligner: {
             help: "Aligner to be used. Options are: ua, ua-meth, star, giraffe. Mandatory if align step is selected.",
             type: "String",
+            category: "input_optional"
+        }
+        is_paired_end: {
+            help: "Whether the input reads are paired-end. Mandatory if aligner is ua or giraffe.",
+            type: "Boolean",
+            category: "input_optional"
+        }
+        run_name_sort: {
+            help: "Whether to run name-sort/pairing preprocessing (SortByNameAndKeepPaired) before Giraffe alignment. If undefined and is_paired_end is true, the sort order is auto-detected from the input headers (GetSortOrder) to decide. Only relevant if aligner is giraffe.",
+            type: "Boolean",
             category: "input_optional"
         }
         ua_parameters: {
@@ -500,16 +513,53 @@ workflow TrimAlignSort {
     if (align) {
         Array[File] input_for_alignment_list = select_first([trimmer_output_ucram_list, input_cram_bam_list])
         String aligner_override  = select_first([aligner])
+        Boolean is_paired_end_resolved = select_first([is_paired_end, false])
+
+        if (!defined(run_name_sort) && is_paired_end_resolved) {
+            call UGGeneralTasks.GetSortOrder {
+                input:
+                    input_files       = input_for_alignment_list,
+                    references        = references,
+                    preemptible_tries = preemptible_tries,
+                    docker            = global.ugbio_core_docker,
+                    monitoring_script = global.monitoring_script, # !FileCoercion
+                    no_address        = no_address,
+            }
+        }
+
+        # Name-sort only ever runs for paired-end input. Within that, run_name_sort (if explicitly
+        # set) takes precedence; otherwise fall back to the GetSortOrder-detected order, sorting
+        # only when the input isn't already queryname-sorted.
+        Boolean detected_needs_name_sort = select_first([GetSortOrder.sort_order, "queryname"]) != "queryname"
+        Boolean run_name_sort_resolved = is_paired_end_resolved && select_first([run_name_sort, detected_needs_name_sort])
+
+        if (run_name_sort_resolved) {
+            scatter (input_cram in input_for_alignment_list) {
+                call UGAlignment.SortByNameAndKeepPaired {
+                    input:
+                        input_bam           = input_cram,
+                        output_bam_basename = basename(input_cram, ".cram") + ".collated",
+                        preemptible_tries   = preemptible_tries,
+                        cache_tarball       = CreateReferenceCache.cache_tarball,
+                        docker              = global.ugbio_core_docker,
+                        monitoring_script   = global.monitoring_script, # !FileCoercion
+                        no_address          = no_address,
+                }
+            }
+        }
+
+        Array[File] bams_to_align = select_first([SortByNameAndKeepPaired.output_bam, input_for_alignment_list])
 
         if (aligner_override == "ua" ){
             call UaAlignWorkflow.UAAlignment {
                 input:
-                    input_files             = input_for_alignment_list,
+                    input_files             = bams_to_align,
                     base_file_name          = base_file_name,
                     ua_index_input          = genome_ua_index,
                     cache_tarball           = CreateReferenceCache.cache_tarball,
                     ua_parameters           = select_first([ua_parameters]),
                     references              = references,
+                    is_paired_end           = is_paired_end_resolved,
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,
                     monitoring_script_input = monitoring_script_input,
@@ -523,7 +573,7 @@ workflow TrimAlignSort {
 
             call UaMethAlignWorkflow.UAMethAlignment {
                 input:
-                    input_files                 = input_for_alignment_list,
+                    input_files                 = bams_to_align,
                     base_file_name              = base_file_name,
                     ua_meth_index_c2t_input     = ua_meth_c2t_file,
                     ua_meth_index_g2a_input     = ua_meth_g2a_file,
@@ -539,23 +589,6 @@ workflow TrimAlignSort {
         if (aligner_override == "giraffe") {
             GiraffeParameters gp = select_first([giraffe_parameters])
 
-            if (gp.is_paired_end) {
-                scatter (input_cram in input_for_alignment_list) {
-                    call UGAlignment.SortByNameAndKeepPaired {
-                        input:
-                            input_bam           = input_cram,
-                            output_bam_basename = basename(input_cram, ".cram") + ".collated",
-                            preemptible_tries   = preemptible_tries,
-                            cache_tarball       = CreateReferenceCache.cache_tarball,
-                            docker              = global.ugbio_core_docker,
-                            monitoring_script   = global.monitoring_script, # !FileCoercion
-                            no_address          = no_address,
-                    }
-                }
-            }
-
-            Array[File] bams_to_align = select_first([SortByNameAndKeepPaired.output_bam, input_for_alignment_list])
-
             call UGAlignment.UGGiraffeAlignment {
                 input:
                     input_bams          = bams_to_align,
@@ -563,8 +596,7 @@ workflow TrimAlignSort {
                     output_bam_basename = base_file_name,
                     giraffe_indices     = gp,
                     ref_dict            = references.ref_dict,
-                    is_paired_end       = gp.is_paired_end,
-                    extra_args          = gp.extra_args,
+                    is_paired_end       = is_paired_end_resolved,
                     preemptible_tries   = preemptible_tries,
                     vg_docker           = global.ug_vg_docker,
                     monitoring_script   = monitoring_script,
@@ -580,7 +612,7 @@ workflow TrimAlignSort {
                     genome_generate_params  = star_genome_generate_params,
                     star_align_extra_args   = star_align_extra_args,
                     star_align_gtf_override = star_align_gtf_override,
-                    input_bams_or_fastqs    = input_for_alignment_list,
+                    input_bams_or_fastqs    = bams_to_align,
                     base_file_name          = base_file_name + ".star.aln",
                     preemptible_tries       = preemptible_tries,
                     no_address              = no_address,

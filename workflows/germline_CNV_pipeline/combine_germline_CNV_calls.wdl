@@ -29,7 +29,7 @@ import "tasks/cnv_calling_tasks.wdl" as CnvTasks
 workflow CombineGermlineCNVCalls {
 
     input {
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
 
         String base_file_name
 
@@ -43,6 +43,9 @@ workflow CombineGermlineCNVCalls {
 
         Int cushion_size
         Int? min_sv_length_to_integrate
+
+        # breakpoint read evidence parameters
+        Int? min_pair_span
 
         # jalign parameters
         File input_bam_file
@@ -140,6 +143,11 @@ workflow CombineGermlineCNVCalls {
         }
         min_sv_length_to_integrate: {
             help: "Minimum CNV length to consider for SV/CNV call combination",
+            type: "Int",
+            category: "param_optional"
+        }
+        min_pair_span: {
+            help: "Minimum span (template length) of a discordant read pair for it to count as duplication or deletion evidence. Defaults to 800 in the tool",
             type: "Int",
             category: "param_optional"
         }
@@ -262,6 +270,7 @@ workflow CombineGermlineCNVCalls {
             reference_genome = reference_genome,
             reference_genome_index = reference_genome_index,
             cushion_size = cushion_size,
+            min_pair_span = min_pair_span,
             docker = global.ugbio_cnv_docker,
             monitoring_script = monitoring_script,
             no_address = no_address,
@@ -318,6 +327,12 @@ workflow CombineGermlineCNVCalls {
         "JALIGN_DEL_SUPPORT_STRONG",
         "DUP_READS_MEDIAN_INSERT_SIZE",
         "DEL_READS_MEDIAN_INSERT_SIZE",
+        "CNV_DUP_PAIRS",
+        "CNV_DEL_PAIRS",
+        "CNV_DUP_PAIRS_FRAC",
+        "CNV_DEL_PAIRS_FRAC",
+        "DUP_PAIRS_MEDIAN_SPAN",
+        "DEL_PAIRS_MEDIAN_SPAN",
         "SVTYPE",
         "SVLEN",
         "CIPOS"
@@ -480,6 +495,7 @@ task AnnotateWithSplitReadsInfo {
         File reference_genome
         File reference_genome_index
         Int cushion_size
+        Int? min_pair_span
         String docker
         File monitoring_script
         Boolean no_address
@@ -495,6 +511,7 @@ task AnnotateWithSplitReadsInfo {
             --vcf-file ~{input_cnv_vcf} \
             --reference-fasta ~{reference_genome} \
             --cushion ~{cushion_size} \
+            ~{"--min-pair-span " + min_pair_span} \
             --output-file ~{base_file_name}.split.annotated.vcf.gz \
             --output-bam ~{base_file_name}.split.annotated.bam
         

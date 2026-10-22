@@ -12,6 +12,8 @@ struct GenomeResources {
   File ref_fasta
   File ref_fasta_index
   File roh_blacklist
+  File segdup_homology_table
+  File segdup_homology_table_index
 }
 
 workflow GenomeResourcesWorkflow {
@@ -25,7 +27,9 @@ workflow GenomeResourcesWorkflow {
         "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict",
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta.fai",
-        "roh_blacklist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38-blacklist.v2.bed"
+        "roh_blacklist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38-blacklist.v2.bed",
+        "segdup_homology_table": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz",
+        "segdup_homology_table_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz.tbi"
 },
       "hg38_nist_v3_with_decoy": {
         "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3_hs38d1/wgs_calling_regions.hg38.interval_list",
@@ -35,7 +39,21 @@ workflow GenomeResourcesWorkflow {
         "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3_hs38d1/GRCh38_GIABv3_hs38d1.dict",
         "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3_hs38d1/GRCh38_GIABv3_hs38d1.fasta",
         "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/v3_hs38d1/GRCh38_GIABv3_hs38d1.fasta.fai",
-        "roh_blacklist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38-blacklist.v2.bed"
+        "roh_blacklist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38-blacklist.v2.bed",
+        "segdup_homology_table": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz",
+        "segdup_homology_table_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/segmental_duplications/hg38.bed.gz.tbi"
+},
+      "hg38_no_alt": {
+        "efficient_dv_target_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38_no_alt/wgs_calling_regions.hg38_no_alt.interval_list",
+        "exome_intervals": "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/exome.twist.bed",
+        "par_regions": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/par_regions.hg38.bed",
+        "ploidy_exclude_regions": "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/ploidy/chrY_low_confidence_regions.hg38.bed",
+        "ref_dict": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38_no_alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.dict",
+        "ref_fasta": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38_no_alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna",
+        "ref_fasta_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38_no_alt/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.fai",
+        "roh_blacklist": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38-blacklist.v2.bed",
+        "segdup_homology_table": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38_no_alt/segmental_duplications/hg38_no_alt.bed.gz",
+        "segdup_homology_table_index": "s3://ultimagen-workflow-resources-us-east-1/hg38/hg38_no_alt/segmental_duplications/hg38_no_alt.bed.gz.tbi"
 }
     }
   }

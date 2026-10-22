@@ -29,7 +29,7 @@ import "tasks/alignment_tasks.wdl" as UGAlignment
 
 workflow PyPGx {
     input {
-        String pipeline_version = "1.36.0" # !UnusedDeclaration
+        String pipeline_version = "1.37.0" # !UnusedDeclaration
         String base_file_name
         File cram_file
         File cram_index_file
@@ -303,7 +303,7 @@ workflow PyPGx {
             is_somatic = false,
             min_mapping_quality = 0, # Set to 0 so variants will be called also in regions of high homology such as CYP2D6
             prioritize_high_quality_reads = false, # Disable so mapq=0 reads are not deprioritized in homologous regions
-            keep_duplicates = true,
+            keep_duplicates = false,
             override_target_intervals = ExtractGeneIntervals.interval_list,
             model_onnx = select_first([model_onnx]),
             min_variant_quality_hmer_indels = 5,

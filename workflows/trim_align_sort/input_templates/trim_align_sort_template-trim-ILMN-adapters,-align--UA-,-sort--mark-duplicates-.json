@@ -23,6 +23,7 @@
         ]
     },
     "TrimAlignSort.aligner": "ua",
+    "TrimAlignSort.is_paired_end": false,
     "TrimAlignSort.ua_parameters": {
         "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
         "v_aware_alignment_flag": false

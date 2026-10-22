@@ -100,7 +100,6 @@ task EstimatePloidyFromVcf {
             --vcf ~{input_vcf} \
             --sample-id ~{sample_id} \
             --sex-chromosomes ~{sep=' ' sex_chromosomes} \
-            --het-sample-count 5000 \
             ~{"--exclude-regions-bed " + ploidy_exclude_regions_bed} \
             --output-dir .
 

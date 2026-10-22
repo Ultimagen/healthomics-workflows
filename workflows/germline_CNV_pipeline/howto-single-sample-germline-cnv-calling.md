@@ -36,17 +36,18 @@ The following required files are publicly available:
 
 The cohort reads count matrix for the default `hg38` genome is:
 
-    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v3.0/solaris2_60samples_cohort_v3.0.hg38.ReadsCount.rds
+    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/pe_v1.0/solaris_max_pe_66samples_cohort_v1.0.hg38.ReadsCount.rds
 
 The ploidy files are genome independent - the same files are used for every reference genome,
 since all cohorts were built with the same sample order:
 
-    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v3.0/solaris2_60samples_cohort_v3.0.plus_female.ploidy
-    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/v3.0/solaris2_60samples_cohort_v3.0.plus_male.ploidy
+    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/pe_v1.0/solaris_max_pe_66samples_cohort_v1.0.plus_female.ploidy
+    s3://ultimagen-workflow-resources-us-east-1/hg38/germline_CNV_cohort/pe_v1.0/solaris_max_pe_66samples_cohort_v1.0.plus_male.ploidy
 	
-ML filtering model can be found here: 
+ML filtering models can be found here (single-end data: decision threshold 31; paired-end data: decision threshold 30): 
     
     s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_v1.7.4.pkl
+    s3://ultimagen-workflow-resources-us-east-1/filtering_models/cnv_filtering_model_pe_v1.0.1.pkl
 
 ## Generating Germline CNV calls for a single sample
 
@@ -58,22 +59,22 @@ Finally, we apply simple ML model to filter candidates according to the length, 
 * for running cnmops, cnvpytor, and post processing use ugbio_cnv docker: <br>
 	Pull **ugbio_cnv** docker image :
 	```
-	docker pull ultimagenomics/ugbio_cnv:1.30.0
+	docker pull ultimagenomics/ugbio_cnv:1.33.0
 	```
 	Run docker in interactive mode:
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.30.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_cnv:1.33.0 /bin/bash
 	```
 for latest docker version please see : (https://github.com/Ultimagen/healthomics-workflows/blob/main/workflows/germline_CNV_pipeline/tasks/globals.wdl)
 
 
 * For running ML-based filtering - use **ugbio_filtering** docker image.
 	```
-	docker pull ultimagenomics/ugbio_filtering:1.31.0
+	docker pull ultimagenomics/ugbio_filtering:1.33.1
 	```
 	Run docker in interactive mode:
 	```
-	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.31.0 /bin/bash
+	docker run -it -v /data:/data ultimagenomics/ugbio_filtering:1.33.1 /bin/bash
 	```	
 
 
@@ -123,7 +124,7 @@ Rscript --vanilla /home/ugbio/src/cnv/cnmops/convert_bedGraph_to_Granges.R \
 #### cn.mops: Add sample coverage profile to the cohort
 ```
 Rscript --vanilla /home/ugbio/src/cnv/cnmops/merge_reads_count_sample_to_cohort.R \
-	-cohort_rc solaris2_60samples_cohort_v3.0.hg38.ReadsCount.rds \
+	-cohort_rc solaris_max_pe_66samples_cohort_v1.0.hg38.ReadsCount.rds \
 	-sample_rc {sample_name}.ReadCounts.rds \
 	--save_hdf
 ```
@@ -178,6 +179,20 @@ process_cnvs \
 
 This produces the result: `{sample_name}.cnvs.annotate.vcf.gz`
 
+#### cn.mops: Add CIPOS annotations
+
+Because cn.mops calls CNVs over fixed-size windows, the exact breakpoint of each call is only resolved up to the window (bin) size. This step adds CIPOS (Confidence Interval around POSition) annotations recording that breakpoint uncertainty; the window size must match the cn.mops bin size (1000 by default, or the rebinned value if you changed the bin size above). Use `ugbio_cnv` docker.
+
+```
+add_cipos_to_vcf \
+    --input_vcf {sample_name}.cnvs.annotate.vcf.gz \
+    --window_size 1000 \
+    --output_vcf {sample_name}.1000.cipos.vcf.gz
+bcftools index -t {sample_name}.1000.cipos.vcf.gz
+```
+
+The resulting `{sample_name}.1000.cipos.vcf.gz` is the cn.mops callset used as `{cnmops_vcf}` in the combine step below.
+
 ### Run cnvpytor
 To improve robustness of the results it is recommended to run CNVPytor with two window sizes: 500 and 2500 bases. 
 
@@ -211,10 +226,19 @@ chromosomes: `cut -f1 intervals.bed | uniq `
     bcftools index -tf {sample_name}.<window_size>.CNV.vcf.gz
 ```
 
-The callsets from the two window sizes are combined using `ugbio_cnv` docker. 
+For each window size, add CIPOS (Confidence Interval around POSition) annotations that record the breakpoint uncertainty introduced by that window size (so `--window_size` must match the window size used for the CNVpytor run above). Use `ugbio_cnv` docker.
+```
+    add_cipos_to_vcf \
+        --input_vcf {sample_name}.<window_size>.CNV.vcf.gz \
+        --window_size <window_size> \
+        --output_vcf {sample_name}.<window_size>.cipos.vcf.gz
+    bcftools index -t {sample_name}.<window_size>.cipos.vcf.gz
+```
+
+The CIPOS-annotated callsets from the two window sizes are combined using `ugbio_cnv` docker. 
 ```
         combine_cnmops_cnvpytor_cnv_calls concat \
-            --cnvpytor_vcf vcf1 vcf2 \
+            --cnvpytor_vcf {sample_name}.500.cipos.vcf.gz {sample_name}.2500.cipos.vcf.gz \
             --output_vcf {sample_name}.cnvpytor.cnv_calls.vcf.gz \
             --fasta_index Homo_sapiens_assembly38.fasta.fai \
             --make_ids_unique
@@ -243,7 +267,7 @@ The following annotations are applied:
 		--ref_fasta Homo_sapiens_assembly38.fasta
 
 	
-    # Add annotations of the split read support 
+    # Add annotations of the split read and discordant read pair support (pairs spanning at least --min-pair-span, default 800 bp)
     analyze_cnv_breakpoint_reads \
         --bam-file {input_cram_bam_file} \
         --vcf-file {sample_name}.combined.vcf.gz \
@@ -326,6 +350,12 @@ The following annotations list should be provided for the current model:
         "JALIGN_DEL_SUPPORT_STRONG",
         "DUP_READS_MEDIAN_INSERT_SIZE",
         "DEL_READS_MEDIAN_INSERT_SIZE",
+        "CNV_DUP_PAIRS",
+        "CNV_DEL_PAIRS",
+        "CNV_DUP_PAIRS_FRAC",
+        "CNV_DEL_PAIRS_FRAC",
+        "DUP_PAIRS_MEDIAN_SPAN",
+        "DEL_PAIRS_MEDIAN_SPAN",
         "SVTYPE",
         "SVLEN",
         "CIPOS"
@@ -338,7 +368,7 @@ They should be provided in the following form:
 	filter_variants_pipeline --input_file {sample_name}.refined.vcf.gz \
 			--model_file {input_model} \
             {custom_annotations}
-			--decision_threshold 31
+			--decision_threshold {decision_threshold}  # 31 for single-end, 30 for paired-end
 			--overwrite_qual_tag
 			--output_file {sample_name}.filtered.vcf.gz
 
@@ -412,6 +442,7 @@ Final deduplicated CNV callset where overlapping/redundant calls have been merge
 - `pytorQ0`, `pytorP1-P3`, `pytorRD`: CNVpytor quality metrics
 - `GAP_PERCENTAGE`: Fraction of N bases in the CNV region
 - `CNV_DUP_READS`, `CNV_DEL_READS`: Originally aligned split reads supporting duplication/deletion
+- `CNV_DUP_PAIRS`, `CNV_DEL_PAIRS`: Discordant read pairs supporting duplication (everted pairs) / deletion (pairs spanning the deleted segment); `CNV_DUP_PAIRS_FRAC`, `CNV_DEL_PAIRS_FRAC` are their fractions of the fragments analyzed, and `DUP_PAIRS_MEDIAN_SPAN`, `DEL_PAIRS_MEDIAN_SPAN` their median span. Always present; 0 on single-end data
 - `JALIGN_DUP_SUPPORT`, `JALIGN_DEL_SUPPORT`: Reads realigning across breakpoint consistent with duplication / deletion pattern
 - `JALIGN_DUP_SUPPORT_STRONG`, `JALIGN_DEL_SUPPORT_STRONG`: Reads realigning across breakpoint consistent with duplication / deletion pattern
 - `QUAL`: ML-based quality score, PHRED scale (0-100), above 30 is usually good

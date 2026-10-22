@@ -8,7 +8,7 @@
     "STRGenotyper.min_repeat": 1,
     "STRGenotyper.max_repeat": 100,
     "STRGenotyper.min_score_ratio": 0.85,
-    "STRGenotyper.spanning_flank_bases": 10,
+    "STRGenotyper.spanning_flank_bases": 5,
     "STRGenotyper.min_mapping_quality": 1,
     "STRGenotyper.threads": 2,
     "STRGenotyper.output_detailed_csv": true,
@@ -17,5 +17,6 @@
     "STRGenotyper.report_micro_alleles": false,
     "STRGenotyper.micro_allele_consensus_ratio": 0.8,
     "STRGenotyper.micro_allele_min_reads": 10,
+    "STRGenotyper.paired_end": false,
     "STRGenotyper.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }

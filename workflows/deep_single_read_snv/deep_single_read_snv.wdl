@@ -43,7 +43,7 @@ input {
   File input_cram_bam_index
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.36.0"
+  String pipeline_version = "1.37.0"
 
   # Genome resources
   String reference_genome = "hg38"
@@ -87,6 +87,7 @@ input {
   Int? override_memory_gb_CreateFeatureMap
   Int? override_memory_gb_PrepareRawFeatureMap
   Int? override_memory_gb_PrepareRandomSampleFeatureMap
+  Int? override_memory_gb_MergeSnvfindStats
   Int? preemptible_tries
   Boolean? no_address_override
   String? cloud_provider_override
@@ -293,6 +294,11 @@ parameter_meta {
     override_memory_gb_PrepareRandomSampleFeatureMap: {
         type: "Int",
         help: "Override memory in GB for the PrepareRandomSampleFeatureMap task. If an out of memory error occurs, try increasing this value.",
+        category: "optional"
+    }
+    override_memory_gb_MergeSnvfindStats: {
+        type: "Int",
+        help: "Override memory in GB for the MergeSnvfindStats task, default: 4 (GiB). Deeply-sequenced samples produce many featuremap shards; if the merge stalls or runs out of memory, increase this value.",
         category: "optional"
     }
     raise_exceptions_in_report: {
@@ -522,6 +528,7 @@ parameter_meta {
         override_memory_gb_CreateFeatureMap = override_memory_gb_CreateFeatureMap,
         override_memory_gb_PrepareRawFeatureMap = override_memory_gb_PrepareRawFeatureMap,
         override_memory_gb_PrepareRandomSampleFeatureMap = override_memory_gb_PrepareRandomSampleFeatureMap,
+        override_memory_gb_MergeSnvfindStats = override_memory_gb_MergeSnvfindStats,
         run_training_prep = need_training_prep,
         preemptible_tries = preemptibles,
         monitoring_script = monitoring_script,
@@ -734,8 +741,7 @@ parameter_meta {
       input:
         in_file = FeatureMapPrep.inference_filters,
         docker = global.ugbio_deep_srsnv_docker,
-        preemptible_tries = preemptibles,
-        monitoring_script = monitoring_script
+        preemptible_tries = preemptibles
     }
 
     # Pre-compute inference tensors, VCF-direct (no DNNVcfToParquet) and SHARD-PARALLEL: for each CV fold,
@@ -796,6 +802,7 @@ parameter_meta {
         input:
           shard_beds = inference_beds,
           training_interval_list = training_interval_list,
+          inference_interval_list = scatter_interval_list,
           fold_idx = tensor_fold_idx,
           num_folds = num_folds_prep,
           random_seed = deep_srsnv_params.random_seed,
@@ -816,6 +823,7 @@ parameter_meta {
             inference_filters_json = InferenceFilters.out,
             interval_bed = fold_bed,
             training_interval_list = training_interval_list,
+            inference_interval_list = scatter_interval_list,
             references = references,
             deep_srsnv_params = deep_srsnv_params,
             fold_idx = tensor_fold_idx,
@@ -830,6 +838,9 @@ parameter_meta {
       # Collect this fold's per-shard tensor-shard globs into one flat Array[File]. DNNFoldInference scores
       # each tensor independently, so no reordering/concat is needed — a flatten is sufficient and correct.
       Array[File] fold_inference_tensor_shards = flatten(DNNCramToTensorsInferenceShard.tensor_shards)
+      # Non-empty instead of the above under singularity, where each shard task archives its own
+      # shards (per-file binds break there once this many producer tasks are flattened together).
+      Array[File] fold_inference_tensor_cache_tars = flatten(DNNCramToTensorsInferenceShard.tensor_cache_tar)
     }
   }
 
@@ -851,6 +862,7 @@ parameter_meta {
     # Tensors from the data-prep block above become optional outside their conditional scope. Each fold's
     # shards were tensorized shard-parallel and flattened into one Array[File] per fold.
     Array[Array[File]] inference_tensor_shards = select_first([fold_inference_tensor_shards])
+    Array[Array[File]] inference_tensor_cache_tars = select_first([fold_inference_tensor_cache_tars])
 
     # Per-fold GPU inference. onnx/engine fall back to the metadata file when the (optional)
     # model arrays are absent (non-trt backend), mirroring the inference-only reference workflow.
@@ -863,6 +875,7 @@ parameter_meta {
       call DeepSRSNVTasks.DNNFoldInference {
         input:
           tensor_shards = inference_tensor_shards[infer_fold_idx],
+          tensor_cache_tar = inference_tensor_cache_tars[infer_fold_idx],
           fold_metadata = fold_metadata_used[infer_fold_idx],
           fold_checkpoint = fold_checkpoints_used[infer_fold_idx],
           # inference_only REQUIRES ONNX (the engine is rebuilt from it); select_first fails loudly

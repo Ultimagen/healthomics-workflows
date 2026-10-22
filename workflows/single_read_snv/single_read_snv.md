@@ -100,6 +100,11 @@ The following input templates are available for different kinds of input data:
         <i>Int? &mdash; Default: None</i><br />
         Override memory in GB for the PrepareRandomSampleFeatureMap task, default: 16 (GiB). If an out of memory error occurs in the PrepareRandomSampleFeatureMap task, try increasing this value, e.g. double it.
 </p>
+<p name="SingleReadSNV.override_memory_gb_MergeSnvfindStats">
+        <b>SingleReadSNV.override_memory_gb_MergeSnvfindStats</b><br />
+        <i>Int? &mdash; Default: None</i><br />
+        Override memory in GB for the MergeSnvfindStats task, default: 4 (GiB). Deeply-sequenced samples produce many featuremap shards; if the merge stalls or runs out of memory, try increasing this value, e.g. double it.
+</p>
 <p name="SingleReadSNV.override_memory_gb_TrainModel">
         <b>SingleReadSNV.override_memory_gb_TrainModel</b><br />
         <i>Int? &mdash; Default: None</i><br />

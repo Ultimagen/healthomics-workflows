@@ -22,7 +22,7 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.reference_genome">
         <b>SegDupAnalysis.reference_genome</b><br />
         <i>String </i> &mdash;
-         Genome type selector. The workflow currently supports only hg38. <br />
+         Genome type selector. The workflow currently supports hg38-like genomes (hg38, hg38_no_alt, hg38_nist_v3_with_decoy) <br />
 </p>
 <p name="SegDupAnalysis.n_threads">
         <b>SegDupAnalysis.n_threads</b><br />
@@ -301,7 +301,7 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.call_variants_gpu_type_override">
         <b>SegDupAnalysis.DV.call_variants_gpu_type_override</b><br />
         <i>String? </i> &mdash;
-         GPU type for call variants <br />
+         Pin AWS HealthOmics UGCallVariants to a single GPU tier (e.g. 'nvidia-tesla-t4', 'nvidia-tesla-a10g', 'nvidia-l4') instead of the L4->A10G->T4 fallback cascade; the pinned tier is retried up to 3 times for capacity. Leave unset for automatic fallback. <br />
 </p>
 <p name="SegDupAnalysis.DV.call_variants_gpus">
         <b>SegDupAnalysis.DV.call_variants_gpus</b><br />
