@@ -16,7 +16,6 @@ struct GlobalVariables {
   String segdup_docker
   String ugbio_core_docker
   String ugbio_cnv_docker
-  String hla_la_docker
   String t1k_docker
   String ugbio_filtering_docker
   String pypgx_docker
@@ -40,7 +39,6 @@ workflow Globals {
         "segdup_docker": "ultimagenomics/parascopy:1.4.0_afc280c",
         "ugbio_core_docker": "ultimagenomics/ugbio_core:1.33.0",
         "ugbio_cnv_docker": "ultimagenomics/ugbio_cnv:1.33.0",
-        "hla_la_docker": "ultimagenomics/hla_la:f02c77c",
         "t1k_docker": "ultimagenomics/ugbio_t1k:1.30.0",
         "ugbio_filtering_docker": "ultimagenomics/ugbio_filtering:1.33.1",
         "pypgx_docker": "ultimagenomics/ugbio_pypgx:0.27.0-r2",

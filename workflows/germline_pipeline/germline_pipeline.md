@@ -9,10 +9,10 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <i>Int? </i> &mdash;
          Assembly parameter: Maximum number of haplotypes showing an evidence of SV to report <br />
 </p>
-<p name="GermlinePipeline.hla_genotyping_tool">
-        <b>GermlinePipeline.hla_genotyping_tool</b><br />
-        <i>String </i> &mdash;
-         HLA genotyping tool to use. Options: 'HLA-LA' or 'T1K' <br />
+<p name="GermlinePipeline.t1k_index_tar">
+        <b>GermlinePipeline.t1k_index_tar</b><br />
+        <i>File? </i> &mdash;
+         T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa) <br />
 </p>
 
 ### Required inputs
@@ -169,16 +169,6 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <b>GermlinePipeline.wgs_calling_interval_list_override</b><br />
         <i>File? &mdash; Default: None</i><br />
         Optional override for the interval list defining the region to perform variant calling on. When not provided, resolved per genome from genome_resources (calling_interval_list_without_artefacts)
-</p>
-<p name="GermlinePipeline.graphs_files_tar">
-        <b>GermlinePipeline.graphs_files_tar</b><br />
-        <i>File? &mdash; Default: None</i><br />
-        HLA-LA graphs files tar (required if using HLA-LA)
-</p>
-<p name="GermlinePipeline.t1k_index_tar">
-        <b>GermlinePipeline.t1k_index_tar</b><br />
-        <i>File? &mdash; Default: None</i><br />
-        T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa). Required if using T1K.
 </p>
 
 ### Optional inputs

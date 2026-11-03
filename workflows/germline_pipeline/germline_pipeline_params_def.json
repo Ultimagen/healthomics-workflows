@@ -875,10 +875,6 @@
         "description": "Override for gq resolution (default: 5)",
         "optional": true
     },
-    "GermlinePipeline.graphs_files_tar": {
-        "description": "HLA-LA graphs files tar (required if using HLA-LA)",
-        "optional": true
-    },
     "GermlinePipeline.gridss_metrics_interval": {
         "description": "Interval for collecting gridss metrics",
         "optional": true
@@ -898,10 +894,6 @@
     "GermlinePipeline.hard_qual_filter": {
         "description": "Any variant with QUAL < hard_qual_filter will be discarded from the VCF file",
         "optional": true
-    },
-    "GermlinePipeline.hla_genotyping_tool": {
-        "description": "HLA genotyping tool to use. Options: 'HLA-LA' or 'T1K'",
-        "optional": false
     },
     "GermlinePipeline.hla_preemptible_tries_override": {
         "description": "hla_preemptible_tries_override",
@@ -1416,7 +1408,7 @@
         "optional": true
     },
     "GermlinePipeline.t1k_index_tar": {
-        "description": "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa). Required if using T1K.",
+        "description": "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa)",
         "optional": true
     },
     "GermlinePipeline.threads": {

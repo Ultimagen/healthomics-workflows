@@ -40,7 +40,7 @@ import "segdup.wdl" as SegDupSubWF
 
 workflow GermlinePipeline {
   input {
-    String pipeline_version = "1.37.0" # !UnusedDeclaration
+    String pipeline_version = "1.37.1" # !UnusedDeclaration
 
     # ---- GermlinePipeline inputs ----
     Array[File] input_cram_bam_list
@@ -238,8 +238,6 @@ workflow GermlinePipeline {
     File? variant_catalog
 
     # ---- HLA (HLAGenotyping, wdls/hla_genotyping.wdl) ----
-    File? graphs_files_tar
-    String hla_genotyping_tool = "T1K"
     Int? hla_preemptible_tries_override
     File? t1k_index_tar
 
@@ -1244,25 +1242,15 @@ workflow GermlinePipeline {
       type: "File",
       category: "input_optional"
     }
-    graphs_files_tar: {
-      help: "HLA-LA graphs files tar (required if using HLA-LA)",
-      type: "File",
-      category: "optional"
-    }
-    hla_genotyping_tool: {
-      help: "HLA genotyping tool to use. Options: 'HLA-LA' or 'T1K'",
-      type: "String",
-      category: "required"
-    }
     hla_preemptible_tries_override: {
       help: "(HLA) preemptible_tries_override (forwarded to HLA.preemptible_tries_override)",
       type: "Int",
       category: "input_optional"
     }
     t1k_index_tar: {
-      help: "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa). Required if using T1K.",
+      help: "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa)",
       type: "File",
-      category: "optional"
+      category: "required"
     }
     gene_symbols: {
       help: "List of gene symbols to analyze",
@@ -2019,8 +2007,6 @@ workflow GermlinePipeline {
         monitoring_script_input = monitoring_script_input,
         cloud_provider_override = cloud_provider_override,
         no_address_override = no_address_override,
-        graphs_files_tar = graphs_files_tar,
-        hla_genotyping_tool = hla_genotyping_tool,
         t1k_index_tar = t1k_index_tar,
         preemptible_tries_override = hla_preemptible_tries_override
     }

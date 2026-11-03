@@ -59,9 +59,7 @@
         "ref_paths": "s3://ultimagen-workflow-resources-us-east-1/hg38/hprc-pangenomes/GRCh38h0h.path_list.txt",
         "prefix_to_strip": "GRCh38#0#"
     },
-    "GermlinePipeline.graphs_files_tar": "s3://ultimagen-workflow-resources-us-east-1/hla/PRG_MHC_GRCh38_withIMGT_indexed.260627.tar.gz",
     "GermlinePipeline.haploid": false,
-    "GermlinePipeline.hla_genotyping_tool": "T1K",
     "GermlinePipeline.homopolymer_length": 10,
     "GermlinePipeline.keep_duplicates": true,
     "GermlinePipeline.make_gvcf": true,

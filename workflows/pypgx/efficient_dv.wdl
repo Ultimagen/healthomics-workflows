@@ -35,7 +35,7 @@ import "haplotype_sampling.wdl" as HSampling
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.37.0" # !UnusedDeclaration
+    String pipeline_version = "1.37.1" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs

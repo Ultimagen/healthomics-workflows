@@ -15,26 +15,22 @@ version 1.0
 #   limitations under the License.
 # DESCRIPTION
 #   HLA Genotyping workflow
-#   This workflow is used to run HLA genotyping on a given CRAM or BAM file (by T1K or HLA-LA). 
-#   T1K is the recommended tool
+#   This workflow is used to run HLA and KIR genotyping on a given CRAM or BAM file using T1K.
 
 
 import 'tasks/structs.wdl'
 import 'tasks/globals.wdl' as Globals
-import "tasks/general_tasks.wdl" as UGGeneralTasks
 import "tasks/alignment_tasks.wdl" as UGAlignment
 import "tasks/genome_resources.wdl" as GenomeResourcesLib
 
 workflow HLAGenotyping {
 input{
-    String pipeline_version = "1.37.0" # !UnusedDeclaration
+    String pipeline_version = "1.37.1" # !UnusedDeclaration
     String base_file_name
 
     File input_cram_bam
     File input_cram_bam_index
-    File? graphs_files_tar
 
-    String hla_genotyping_tool = "T1K"  # Options: "HLA-LA", "T1K"
     File? t1k_index_tar
 
     # Genome type selector
@@ -51,9 +47,7 @@ input{
     #@wv suffix(input_cram_bam_index) in {".bai", ".crai"}
     #@wv prefix(input_cram_bam_index) == input_cram_bam
     #@wv reference_genome in {"hg38", "hg38_nist_v3_with_decoy"}
-    #@wv hla_genotyping_tool in {"HLA-LA", "T1K"}
-    #@wv hla_genotyping_tool == "HLA-LA" -> defined(graphs_files_tar)
-    #@wv hla_genotyping_tool == "T1K" -> defined(t1k_index_tar)
+    #@wv defined(t1k_index_tar)
     }
     meta {
         description: "HLA Genotyping"
@@ -87,20 +81,10 @@ input{
             help: "Input CRAM or BAM index file for annalysing HLA genotyping",
             category: "required"
         }
-        graphs_files_tar: {
-            type: "File",
-            help: "HLA-LA graphs files tar (required if using HLA-LA)",
-            category: "optional"
-        }
-        hla_genotyping_tool: {
-            type: "String",
-            help: "HLA genotyping tool to use. Options: 'HLA-LA' or 'T1K'",
-            category: "required"
-        }
         t1k_index_tar: {
             type: "File",
-            help: "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa). Required if using T1K.",
-            category: "optional"
+            help: "T1K index tar.gz containing hlaidx/ and kiridx/ directories with all index files (_seq.fa and _coord.fa)",
+            category: "required"
         }
         reference_genome: {
             type: "String",
@@ -153,118 +137,37 @@ input{
             dummy_input_for_call_caching = ""
     }
 
-    call UGGeneralTasks.ExtractSampleNameFlowOrder as ExtractSampleName {
-            input:
-                input_bam = input_cram_bam,
-                monitoring_script = monitoring_script,
-                preemptible_tries = preemptibles,
-                docker = global.broad_gatk_docker,
-                references = references,
-                no_address = no_address,
-                cloud_provider_override = cloud_provider_override
+    call T1KHLAGenotyping {
+        input:
+            base_file_name = base_file_name,
+            input_cram = input_cram_bam,
+            reference = references,
+            input_cram_index = input_cram_bam_index,
+            t1k_index_tar = select_first([t1k_index_tar]),
+            cache_tarball = CreateReferenceCache.cache_tarball,
+            docker = global.t1k_docker,
+            preemptible_tries = preemptibles,
+            monitoring_script = monitoring_script,
+            no_address = no_address
     }
 
-    # HLA-LA path
-    if (hla_genotyping_tool == "HLA-LA") {
-        call HLALAGenotyping {
-            input:
-                base_file_name = base_file_name,
-                input_cram = input_cram_bam,
-                reference = references,
-                input_cram_index = input_cram_bam_index,
-                sample_name = ExtractSampleName.sample_name,
-                docker = global.hla_la_docker,
-                graphs_files_tar = select_first([graphs_files_tar]),
-                preemptible_tries = preemptibles,
-                monitoring_script = monitoring_script,
-                no_address = no_address
-        }
-    }
-
-    # T1K path
-    if (hla_genotyping_tool == "T1K") {
-        call T1KHLAGenotyping {
-            input:
-                base_file_name = base_file_name,
-                input_cram = input_cram_bam,
-                reference = references,
-                input_cram_index = input_cram_bam_index,
-                t1k_index_tar = select_first([t1k_index_tar]),
-                cache_tarball = CreateReferenceCache.cache_tarball,
-                docker = global.t1k_docker,
-                preemptible_tries = preemptibles,
-                monitoring_script = monitoring_script,
-                no_address = no_address
-        }
-
-        call T1KKIRGenotyping {
-                input:
-                    base_file_name = base_file_name,
-                    input_cram = input_cram_bam,
-                    reference = references,
-                    input_cram_index = input_cram_bam_index,
-                    t1k_index_tar = select_first([t1k_index_tar]),
-                    cache_tarball = CreateReferenceCache.cache_tarball,
-                    docker = global.t1k_docker,
-                    preemptible_tries = preemptibles,
-                    monitoring_script = monitoring_script,
-                    no_address = no_address
-        }
+    call T1KKIRGenotyping {
+        input:
+            base_file_name = base_file_name,
+            input_cram = input_cram_bam,
+            reference = references,
+            input_cram_index = input_cram_bam_index,
+            t1k_index_tar = select_first([t1k_index_tar]),
+            cache_tarball = CreateReferenceCache.cache_tarball,
+            docker = global.t1k_docker,
+            preemptible_tries = preemptibles,
+            monitoring_script = monitoring_script,
+            no_address = no_address
     }
 
     output {
-        File output_hla = select_first([HLALAGenotyping.output_hla, T1KHLAGenotyping.output_hla])
+        File output_hla = T1KHLAGenotyping.output_hla
         File? output_kir = T1KKIRGenotyping.output_kir
-    }
-}
-
-task HLALAGenotyping {
-    input {
-        String base_file_name
-        File monitoring_script
-        File input_cram
-        File input_cram_index
-        File graphs_files_tar
-        References reference
-        String sample_name
-        Int preemptible_tries
-        String docker
-        Boolean no_address
-    }
-    Int disk_size = ceil(size(input_cram,"GB") + 10*size(graphs_files_tar,"GB") + size(reference.ref_fasta,"GB")) + 40
-    command {
-        set -e
-        bash ~{monitoring_script} | tee monitoring.log >&2 &
-        # Extract the base directory and create necessary directories
-        base_dir=$(echo ~{graphs_files_tar} | cut -d'/' -f2)
-
-        mkdir -p graphs
-        tar -xzvf ~{graphs_files_tar} -C graphs
-
-        mkdir -p working
-
-        /usr/local/bin/HLA-LA/src/HLA-LA.pl \
-        --BAM ~{input_cram} \
-        --workingDir working/ \
-        --customGraphDir graphs/ \
-        --graph PRG_MHC_GRCh38_withIMGT \
-        --sampleID ~{sample_name} \
-        --maxThreads 7 \
-        --samtools_T ~{reference.ref_fasta} \
-        --longReads ultimagen
-
-        mv working/~{sample_name}/hla/R1_bestguess_G.txt R1_bestguess_G_~{base_file_name}.txt
-    }
-    runtime {
-        preemptible: preemptible_tries
-        memory: "64 GiB"
-        disks: "local-disk " + disk_size + " HDD"
-        docker: docker
-        noAddress: no_address
-    }
-    output {
-        File monitoring_log = "monitoring.log"
-        File output_hla = "R1_bestguess_G_~{base_file_name}.txt"
     }
 }
 

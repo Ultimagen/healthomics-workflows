@@ -1,0 +1,33 @@
+{
+    "TrimAlignSort.input_cram_bam_list": [
+        "<input_bam_or_cram_1>.cram",
+        "<input_bam_or_cram_2>.cram"
+    ],
+    "TrimAlignSort.base_file_name": "<base_file_name>",
+    "TrimAlignSort.reference_genome": "hg38",
+    "TrimAlignSort.preemptible_tries": 0,
+    "TrimAlignSort.no_address": true,
+    "TrimAlignSort.cpu": 32,
+    "TrimAlignSort.create_md5_checksum_outputs": false,
+    "TrimAlignSort.steps": {
+        "trim": false,
+        "align": true,
+        "sort": true
+    },
+    "TrimAlignSort.aligner": "ua",
+    "TrimAlignSort.is_paired_end": true,
+    "TrimAlignSort.ua_parameters": {
+        "ua_extra_args": "--seed-score-ratio 0.5 --vector --soft-clipping",
+        "v_aware_alignment_flag": false
+    },
+    "TrimAlignSort.sorter_params": {
+        "mark_duplicates": true,
+        "aligned": true,
+        "mark_duplicates_ends_read_uncertainty": 0
+    },
+    "TrimAlignSort.ref_fastas_cram": [
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg38/v3/GRCh38_GIABv3.fasta",
+        "s3://ultimagen-workflow-resources-us-east-1/hg19/v0/Homo_sapiens_assembly19.fasta"
+    ]
+}
