@@ -35,7 +35,7 @@ import "haplotype_sampling.wdl" as HSampling
 workflow EfficientDV {
   input {
     # Workflow args
-    String pipeline_version = "1.37.1" # !UnusedDeclaration
+    String pipeline_version = "1.37.3" # !UnusedDeclaration
     String base_file_name
 
     # Mandatory inputs
@@ -103,20 +103,21 @@ workflow EfficientDV {
     Array[File] background_cram_files = []
     Array[File] background_cram_index_files = []
 
-    # Call variants args
-    File model_onnx
+    # call_variants inference args
+    File? model_onnx
     File? model_serialized
+    #@wv defined(model_onnx) or defined(model_serialized)
+    Boolean? model_is_gpu_ensemble
+    #@wv defined(model_is_gpu_ensemble) and model_is_gpu_ensemble and ensemble_size >= 2 -> defined(model_onnx)
     Int? optimization_level
     Boolean output_call_variants_tfrecords = false
     Boolean run_ploidy_estimation = false
     Array[String] sex_chromosomes = ["chrX", "chrY", "X", "Y"]
     
-    # Ensemble inference args
+    # call_variants second-pass inference args
     Float strong_call_threshold = 0.995
-    Int ensemble_size = 0 # Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble
+    Int ensemble_size = 0 # Values <= 1 disable the second pass; values >= 2 set GPU ensemble k or local subpasses
     Int ensemble_reference_rows = 5
-    Int random_seed = 42
-    Boolean shuffle_all_samples = false
 
     # PostProcessing args
     Int min_variant_quality_hmer_indels = 5
@@ -152,7 +153,6 @@ workflow EfficientDV {
     Int call_variants_cpus = 8
     Int call_variants_threads = 8
     Int call_variants_uncompr_buf_size_gb = 1
-    Int v_gpu_tile_size = 4
     Boolean? no_address_override
 
     # Used for running on other clouds (aws)
@@ -464,20 +464,24 @@ workflow EfficientDV {
         category: "param_optional"
     }
     model_onnx: {
-      help: "TensorRT model for calling variants (onnx format)",
-      category: "ref_required"
+      help: "ONNX model used to build a TensorRT inference engine. Required unless model_serialized is supplied.",
+      category: "ref_optional"
     }
     model_serialized: {
-      help: "TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+      help: "Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx.",
       category: "ref_optional"
+    }
+    model_is_gpu_ensemble: {
+      help: "Use a dynamic ensemble_k ONNX model for both passes: call_variants freezes first-pass k to 1 and second-pass k to ensemble_size. Leave false for ordinary models to retain local second-pass subpasses.",
+      category: "param_advanced"
     }
     optimization_level: {
       type: "Int",
-      help: "Optimization level for TensorRT engine in call_variants",
+      help: "TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs.",
       category: "param_optional"
     }
     output_call_variants_tfrecords: {
-      help: "Output tfrecords from call_variants",
+      help: "Output TFRecords produced by call_variants",
       category: "param_optional"
     }
     run_ploidy_estimation: {
@@ -581,15 +585,11 @@ workflow EfficientDV {
       category: "input_optional"
     }
     call_variants_uncompr_buf_size_gb: {
-      help: "Memory buffer allocated for each uncompression thread in calll_variants",
-      category: "param_optional"
-    }
-    v_gpu_tile_size: {
-      help: "Virtual GPU tile size for call_variants",
+      help: "Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants.",
       category: "param_optional"
     }
     ug_call_variants_extra_mem: {
-      help: "Extra memory for call_variants",
+      help: "Additional task memory in GB for call_variants",
       category: "param_advanced"
     }
     call_variants_gpu_type_override: {
@@ -686,12 +686,12 @@ workflow EfficientDV {
       category: "output"
     }
     num_candidates: {
-      help: "Number of candidates that call_variants processed",
+      help: "First-pass candidate count reported by call_variants",
       type: "File",
       category: "output"
     }
     num_candidates_as_int: {
-      help: "Number of candidates that call_variants processed (as an integer)",
+      help: "First-pass candidate count reported by call_variants (as an integer)",
       type: "Int",
       category: "output"
     }
@@ -703,27 +703,17 @@ workflow EfficientDV {
 
     strong_call_threshold: {
       type: "Float",
-      help: "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+      help: "call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result.",
       category: "param_optional"
     }
     ensemble_size: {
       type: "Int",
-      help: "Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
+      help: "Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it.",
       category: "param_optional"
     }
     ensemble_reference_rows: {
       type: "Int", 
-      help: "Number of reference rows for ensemble inference",
-      category: "param_optional"
-    }
-    random_seed: {
-      type: "Int",
-      help: "Random seed for ensemble inference",
-      category: "param_optional"
-    }
-    shuffle_all_samples: {
-      type: "Boolean",
-      help: "Whether to shuffle all samples during inference",
+      help: "Reference rows per band, passed to call_variants as --second-pass-reference-lines",
       category: "param_optional"
     }
   }
@@ -945,7 +935,7 @@ workflow EfficientDV {
       examples = examples_array,
       model_onnx = model_onnx,
       model_serialized = model_serialized,
-      is_somatic = is_somatic,
+      model_is_gpu_ensemble = select_first([model_is_gpu_ensemble, false]),
       docker = global.ug_call_variants_docker,
       call_variants_uncompr_buf_size_gb = call_variants_uncompr_buf_size_gb,
       gpu_tier_order = call_variants_gpu_tier_order,
@@ -955,16 +945,14 @@ workflow EfficientDV {
       monitoring_script = monitoring_script,
       call_variants_extra_mem = ug_call_variants_extra_mem,
       optimization_level = optimization_level,
+      is_somatic = is_somatic,
       no_address = no_address,
-      v_gpu_tile_size = v_gpu_tile_size,
       ensemble_size = ensemble_size,
       strong_call_threshold = strong_call_threshold,
       reference_rows = ensemble_reference_rows,
-      random_seed = random_seed,
       sample_heights = if defined(pangenome_haplotypes_to_use) then [main_band_height, hap_band_total_height]
                        else if length(background_cram_files) > 0 then [main_band_height, main_band_height]
-                       else [main_band_height],
-      shuffle_all_samples = shuffle_all_samples
+                       else [main_band_height]
   }
 
   if (make_gvcf){

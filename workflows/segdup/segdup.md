@@ -201,12 +201,12 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.optimization_level">
         <b>SegDupAnalysis.DV.optimization_level</b><br />
         <i>Int? </i> &mdash;
-         Optimization level for TensorRT engine in call_variants <br />
+         TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs. <br />
 </p>
 <p name="SegDupAnalysis.DV.output_call_variants_tfrecords">
         <b>SegDupAnalysis.DV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
-         Output tfrecords from call_variants <br />
+         Output TFRecords produced by call_variants <br />
 </p>
 <p name="SegDupAnalysis.DV.run_ploidy_estimation">
         <b>SegDupAnalysis.DV.run_ploidy_estimation</b><br />
@@ -221,27 +221,17 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.strong_call_threshold">
         <b>SegDupAnalysis.DV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
+         call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result. <br />
 </p>
 <p name="SegDupAnalysis.DV.ensemble_size">
         <b>SegDupAnalysis.DV.ensemble_size</b><br />
         <i>Int </i> &mdash;
-         Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
+         Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it. <br />
 </p>
 <p name="SegDupAnalysis.DV.ensemble_reference_rows">
         <b>SegDupAnalysis.DV.ensemble_reference_rows</b><br />
         <i>Int </i> &mdash;
-         Number of reference rows for ensemble inference <br />
-</p>
-<p name="SegDupAnalysis.DV.random_seed">
-        <b>SegDupAnalysis.DV.random_seed</b><br />
-        <i>Int </i> &mdash;
-         Random seed for ensemble inference <br />
-</p>
-<p name="SegDupAnalysis.DV.shuffle_all_samples">
-        <b>SegDupAnalysis.DV.shuffle_all_samples</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to shuffle all samples during inference <br />
+         Reference rows per band, passed to call_variants as --second-pass-reference-lines <br />
 </p>
 <p name="SegDupAnalysis.DV.min_variant_quality_hmer_indels">
         <b>SegDupAnalysis.DV.min_variant_quality_hmer_indels</b><br />
@@ -321,12 +311,7 @@ Processes segmental duplications in the genome by collapsing all copies on a sin
 <p name="SegDupAnalysis.DV.call_variants_uncompr_buf_size_gb">
         <b>SegDupAnalysis.DV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
-         Memory buffer allocated for each uncompression thread in calll_variants <br />
-</p>
-<p name="SegDupAnalysis.DV.v_gpu_tile_size">
-        <b>SegDupAnalysis.DV.v_gpu_tile_size</b><br />
-        <i>Int </i> &mdash;
-         Virtual GPU tile size for call_variants <br />
+         Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants. <br />
 </p>
 <p name="SegDupAnalysis.DV.HaplotypeSampling.kmer_length">
         <b>SegDupAnalysis.DV.HaplotypeSampling.kmer_length</b><br />

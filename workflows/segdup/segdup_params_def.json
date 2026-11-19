@@ -64,7 +64,7 @@
         "optional": true
     },
     "SegDupAnalysis.DV.call_variants_uncompr_buf_size_gb": {
-        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "description": "Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants.",
         "optional": true
     },
     "SegDupAnalysis.DV.dbg_min_base_quality": {
@@ -76,11 +76,11 @@
         "optional": true
     },
     "SegDupAnalysis.DV.ensemble_reference_rows": {
-        "description": "Number of reference rows for ensemble inference",
+        "description": "Reference rows per band, passed to call_variants as --second-pass-reference-lines",
         "optional": true
     },
     "SegDupAnalysis.DV.ensemble_size": {
-        "description": "Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
+        "description": "Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it.",
         "optional": true
     },
     "SegDupAnalysis.DV.germline_vcf": {
@@ -163,6 +163,10 @@
         "description": "Minimal snp variant quality in order to be labeled as PASS",
         "optional": true
     },
+    "SegDupAnalysis.DV.model_is_gpu_ensemble": {
+        "description": "Use a dynamic ensemble_k ONNX model for both passes: call_variants freezes first-pass k to 1 and second-pass k to ensemble_size. Leave false for ordinary models to retain local second-pass subpasses.",
+        "optional": true
+    },
     "SegDupAnalysis.DV.no_address_override": {
         "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
         "optional": true
@@ -172,11 +176,11 @@
         "optional": true
     },
     "SegDupAnalysis.DV.optimization_level": {
-        "description": "Optimization level for TensorRT engine in call_variants",
+        "description": "TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs.",
         "optional": true
     },
     "SegDupAnalysis.DV.output_call_variants_tfrecords": {
-        "description": "Output tfrecords from call_variants",
+        "description": "Output TFRecords produced by call_variants",
         "optional": true
     },
     "SegDupAnalysis.DV.output_realignment": {
@@ -201,10 +205,6 @@
     },
     "SegDupAnalysis.DV.prioritize_high_quality_reads": {
         "description": "When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads",
-        "optional": true
-    },
-    "SegDupAnalysis.DV.random_seed": {
-        "description": "Random seed for ensemble inference",
         "optional": true
     },
     "SegDupAnalysis.DV.ref_dbsnp": {
@@ -255,16 +255,12 @@
         "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
         "optional": true
     },
-    "SegDupAnalysis.DV.shuffle_all_samples": {
-        "description": "Whether to shuffle all samples during inference",
-        "optional": true
-    },
     "SegDupAnalysis.DV.strand_bias_normalization_thresholds": {
         "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
         "optional": true
     },
     "SegDupAnalysis.DV.strong_call_threshold": {
-        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "description": "call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result.",
         "optional": true
     },
     "SegDupAnalysis.DV.trim_soft_clips": {
@@ -272,7 +268,7 @@
         "optional": true
     },
     "SegDupAnalysis.DV.ug_call_variants_extra_mem": {
-        "description": "Extra memory for call_variants",
+        "description": "Additional task memory in GB for call_variants",
         "optional": true
     },
     "SegDupAnalysis.DV.ug_make_examples_cpus_override": {
@@ -289,10 +285,6 @@
     },
     "SegDupAnalysis.DV.ug_post_processing_extra_args": {
         "description": "Additional arguments for post-processing",
-        "optional": true
-    },
-    "SegDupAnalysis.DV.v_gpu_tile_size": {
-        "description": "Virtual GPU tile size for call_variants",
         "optional": true
     },
     "SegDupAnalysis.background_bed": {

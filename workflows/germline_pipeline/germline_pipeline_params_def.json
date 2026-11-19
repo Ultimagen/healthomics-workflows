@@ -88,7 +88,7 @@
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.call_variants_uncompr_buf_size_gb": {
-        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "description": "Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants.",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.dbg_min_base_quality": {
@@ -96,7 +96,7 @@
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.ensemble_reference_rows": {
-        "description": "Number of reference rows for ensemble inference",
+        "description": "Reference rows per band, passed to call_variants as --second-pass-reference-lines",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.germline_vcf": {
@@ -167,8 +167,12 @@
         "description": "Minimal number of reads, that support a snp, required to  generate a candidate variant",
         "optional": true
     },
+    "GermlinePipeline.PGx.EfficientDV.model_is_gpu_ensemble": {
+        "description": "Use a dynamic ensemble_k ONNX model for both passes: call_variants freezes first-pass k to 1 and second-pass k to ensemble_size. Leave false for ordinary models to retain local second-pass subpasses.",
+        "optional": true
+    },
     "GermlinePipeline.PGx.EfficientDV.model_serialized": {
-        "description": "TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+        "description": "Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx.",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.no_address_override": {
@@ -176,11 +180,11 @@
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.optimization_level": {
-        "description": "Optimization level for TensorRT engine in call_variants",
+        "description": "TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs.",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.output_call_variants_tfrecords": {
-        "description": "Output tfrecords from call_variants",
+        "description": "Output TFRecords produced by call_variants",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.output_realignment": {
@@ -201,10 +205,6 @@
     },
     "GermlinePipeline.PGx.EfficientDV.prioritize_alt_supporting_reads": {
         "description": "Generate an image with all available alt-supporting reads, and only then add non-supporting reads",
-        "optional": true
-    },
-    "GermlinePipeline.PGx.EfficientDV.random_seed": {
-        "description": "Random seed for ensemble inference",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.ref_dbsnp": {
@@ -243,16 +243,12 @@
         "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
         "optional": true
     },
-    "GermlinePipeline.PGx.EfficientDV.shuffle_all_samples": {
-        "description": "Whether to shuffle all samples during inference",
-        "optional": true
-    },
     "GermlinePipeline.PGx.EfficientDV.strand_bias_normalization_thresholds": {
         "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.strong_call_threshold": {
-        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "description": "call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result.",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.trim_soft_clips": {
@@ -260,7 +256,7 @@
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.ug_call_variants_extra_mem": {
-        "description": "Extra memory for call_variants",
+        "description": "Additional task memory in GB for call_variants",
         "optional": true
     },
     "GermlinePipeline.PGx.EfficientDV.ug_make_examples_cpus_override": {
@@ -273,10 +269,6 @@
     },
     "GermlinePipeline.PGx.EfficientDV.ug_post_processing_extra_args": {
         "description": "Additional arguments for post-processing",
-        "optional": true
-    },
-    "GermlinePipeline.PGx.EfficientDV.v_gpu_tile_size": {
-        "description": "Virtual GPU tile size for call_variants",
         "optional": true
     },
     "GermlinePipeline.SV.ScatterIntervalList.convert_to_bed": {
@@ -348,7 +340,7 @@
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.call_variants_uncompr_buf_size_gb": {
-        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "description": "Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants.",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.dbg_min_base_quality": {
@@ -360,11 +352,11 @@
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.ensemble_reference_rows": {
-        "description": "Number of reference rows for ensemble inference",
+        "description": "Reference rows per band, passed to call_variants as --second-pass-reference-lines",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.ensemble_size": {
-        "description": "Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
+        "description": "Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it.",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.germline_vcf": {
@@ -447,6 +439,10 @@
         "description": "Minimal snp variant quality in order to be labeled as PASS",
         "optional": true
     },
+    "GermlinePipeline.SegDup.DV.model_is_gpu_ensemble": {
+        "description": "Use a dynamic ensemble_k ONNX model for both passes: call_variants freezes first-pass k to 1 and second-pass k to ensemble_size. Leave false for ordinary models to retain local second-pass subpasses.",
+        "optional": true
+    },
     "GermlinePipeline.SegDup.DV.no_address_override": {
         "description": "Whether to disable assigning external IP addresses to VMs (relevant for Google)",
         "optional": true
@@ -456,11 +452,11 @@
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.optimization_level": {
-        "description": "Optimization level for TensorRT engine in call_variants",
+        "description": "TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs.",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.output_call_variants_tfrecords": {
-        "description": "Output tfrecords from call_variants",
+        "description": "Output TFRecords produced by call_variants",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.output_realignment": {
@@ -485,10 +481,6 @@
     },
     "GermlinePipeline.SegDup.DV.prioritize_high_quality_reads": {
         "description": "When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads",
-        "optional": true
-    },
-    "GermlinePipeline.SegDup.DV.random_seed": {
-        "description": "Random seed for ensemble inference",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.ref_dbsnp": {
@@ -539,16 +531,12 @@
         "description": "Show background fields in the output vcf. Default: false. Mostly relevant for somatic calling.",
         "optional": true
     },
-    "GermlinePipeline.SegDup.DV.shuffle_all_samples": {
-        "description": "Whether to shuffle all samples during inference",
-        "optional": true
-    },
     "GermlinePipeline.SegDup.DV.strand_bias_normalization_thresholds": {
         "description": "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.strong_call_threshold": {
-        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "description": "call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result.",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.trim_soft_clips": {
@@ -556,7 +544,7 @@
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.ug_call_variants_extra_mem": {
-        "description": "Extra memory for call_variants",
+        "description": "Additional task memory in GB for call_variants",
         "optional": true
     },
     "GermlinePipeline.SegDup.DV.ug_make_examples_cpus_override": {
@@ -573,10 +561,6 @@
     },
     "GermlinePipeline.SegDup.DV.ug_post_processing_extra_args": {
         "description": "Additional arguments for post-processing",
-        "optional": true
-    },
-    "GermlinePipeline.SegDup.DV.v_gpu_tile_size": {
-        "description": "Virtual GPU tile size for call_variants",
         "optional": true
     },
     "GermlinePipeline.VariantCalling.HaplotypeSampling.kmer_length": {
@@ -672,7 +656,7 @@
         "optional": true
     },
     "GermlinePipeline.call_variants_uncompr_buf_size_gb": {
-        "description": "Memory buffer allocated for each uncompression thread in calll_variants",
+        "description": "Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants.",
         "optional": true
     },
     "GermlinePipeline.cap_at_optimal_coverage": {
@@ -764,7 +748,7 @@
         "optional": true
     },
     "GermlinePipeline.dv_ensemble_size": {
-        "description": "(VariantCalling) Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
+        "description": "(VariantCalling) Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it.",
         "optional": true
     },
     "GermlinePipeline.dv_include_reference_in_haplotypes": {
@@ -788,11 +772,11 @@
         "optional": true
     },
     "GermlinePipeline.dv_model_onnx": {
-        "description": "(VariantCalling) TensorRT model for calling variants (onnx format)",
+        "description": "(VariantCalling) ONNX model used to build a TensorRT inference engine. Required unless model_serialized is supplied.",
         "optional": true
     },
     "GermlinePipeline.dv_model_serialized": {
-        "description": "(VariantCalling) TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+        "description": "(VariantCalling) Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx.",
         "optional": true
     },
     "GermlinePipeline.dv_num_haplotypes": {
@@ -832,7 +816,7 @@
         "optional": true
     },
     "GermlinePipeline.ensemble_reference_rows": {
-        "description": "Number of reference rows for ensemble inference",
+        "description": "Reference rows per band, passed to call_variants as --second-pass-reference-lines",
         "optional": true
     },
     "GermlinePipeline.exclude_filters": {
@@ -1063,6 +1047,10 @@
         "description": "Minimal snp variant quality in order to be labeled as PASS",
         "optional": true
     },
+    "GermlinePipeline.model_is_gpu_ensemble": {
+        "description": "Use a dynamic ensemble_k ONNX model for both passes: call_variants freezes first-pass k to 1 and second-pass k to ensemble_size. Leave false for ordinary models to retain local second-pass subpasses.",
+        "optional": true
+    },
     "GermlinePipeline.monitoring_script_input": {
         "description": "(shared: VariantCalling, CNV, SV, STR, HLA, PGx, SegDup) Monitoring script override for AWS HealthOmics workflow templates multi-region support",
         "optional": true
@@ -1084,11 +1072,11 @@
         "optional": false
     },
     "GermlinePipeline.optimization_level": {
-        "description": "Optimization level for TensorRT engine in call_variants",
+        "description": "TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs.",
         "optional": true
     },
     "GermlinePipeline.output_call_variants_tfrecords": {
-        "description": "Output tfrecords from call_variants",
+        "description": "Output TFRecords produced by call_variants",
         "optional": true
     },
     "GermlinePipeline.output_detailed_csv": {
@@ -1211,10 +1199,6 @@
         "description": "When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads",
         "optional": true
     },
-    "GermlinePipeline.random_seed": {
-        "description": "Random seed for ensemble inference",
-        "optional": true
-    },
     "GermlinePipeline.realign_mapq": {
         "description": "Realignment parameter: Below this value we skip realignment on the supplementary alignment",
         "optional": true
@@ -1331,10 +1315,6 @@
         "description": "Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references.",
         "optional": true
     },
-    "GermlinePipeline.shuffle_all_samples": {
-        "description": "Whether to shuffle all samples during inference",
-        "optional": true
-    },
     "GermlinePipeline.skip_figure_generation": {
         "description": "Skip CNV calls figure generation. Default is: False",
         "optional": true
@@ -1364,7 +1344,7 @@
         "optional": true
     },
     "GermlinePipeline.strong_call_threshold": {
-        "description": "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+        "description": "call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result.",
         "optional": true
     },
     "GermlinePipeline.sv_calls_vcf": {
@@ -1424,7 +1404,7 @@
         "optional": true
     },
     "GermlinePipeline.ug_call_variants_extra_mem": {
-        "description": "Extra memory for call_variants",
+        "description": "Additional task memory in GB for call_variants",
         "optional": true
     },
     "GermlinePipeline.ug_make_examples_cpus_override": {
@@ -1437,10 +1417,6 @@
     },
     "GermlinePipeline.ug_post_processing_extra_args": {
         "description": "Additional arguments for post-processing",
-        "optional": true
-    },
-    "GermlinePipeline.v_gpu_tile_size": {
-        "description": "Virtual GPU tile size for call_variants",
         "optional": true
     },
     "GermlinePipeline.variant_catalog": {

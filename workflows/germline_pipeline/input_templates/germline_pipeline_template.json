@@ -19,7 +19,7 @@
     "GermlinePipeline.cushion_size": 1500,
     "GermlinePipeline.dv_ensemble_size": 5,
     "GermlinePipeline.dv_min_fraction_single_strand_non_snps": 0.15,
-    "GermlinePipeline.dv_model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx",
+    "GermlinePipeline.dv_model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.gpu-ens.onnx",
     "GermlinePipeline.dv_num_shards": 50,
     "GermlinePipeline.dv_preemptible_tries": 2,
     "GermlinePipeline.dv_single_strand_filter": true,
@@ -78,6 +78,7 @@
     "GermlinePipeline.min_variant_quality_hmer_indels": 5,
     "GermlinePipeline.min_variant_quality_non_hmer_indels": 0,
     "GermlinePipeline.min_variant_quality_snps": 0,
+    "GermlinePipeline.model_is_gpu_ensemble": true,
     "GermlinePipeline.n_threads": 20,
     "GermlinePipeline.normalize_strand_bias": false,
     "GermlinePipeline.optimal_coverages": [
@@ -112,7 +113,6 @@
         "X",
         "Y"
     ],
-    "GermlinePipeline.shuffle_all_samples": false,
     "GermlinePipeline.skip_figure_generation": false,
     "GermlinePipeline.skip_filtering": false,
     "GermlinePipeline.spanning_flank_bases": 5,

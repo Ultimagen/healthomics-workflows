@@ -24,7 +24,7 @@ version 1.0
 #   python -m python_libs.wdl_pipeline_gen check
 # which fails if this file and the spec have drifted apart.
 #
-# generated-from: pipelines.yaml@9ff599e34a09
+# generated-from: pipelines.yaml@6afbd36737ba
 # ------------------------------------------------------------------------------
 
 # DESCRIPTION
@@ -40,7 +40,7 @@ import "segdup.wdl" as SegDupSubWF
 
 workflow GermlinePipeline {
   input {
-    String pipeline_version = "1.37.1" # !UnusedDeclaration
+    String pipeline_version = "1.37.3" # !UnusedDeclaration
 
     # ---- GermlinePipeline inputs ----
     Array[File] input_cram_bam_list
@@ -116,6 +116,7 @@ workflow GermlinePipeline {
     Int min_variant_quality_hmer_indels = 5
     Int min_variant_quality_non_hmer_indels = 0
     Int min_variant_quality_snps = 0
+    Boolean? model_is_gpu_ensemble
     Boolean? normalize_strand_bias
     Array[Int] optimal_coverages = [50]
     Int? optimization_level
@@ -127,7 +128,6 @@ workflow GermlinePipeline {
     File? pangenome_haplotypes_index
     Boolean prioritize_alt_supporting_reads = false
     Boolean prioritize_high_quality_reads = true
-    Int random_seed = 42
     Boolean? recalibrate_vaf
     File? ref_dbsnp
     File? ref_dbsnp_index
@@ -136,7 +136,6 @@ workflow GermlinePipeline {
     Boolean run_ploidy_estimation = false
     Boolean run_roh = false
     Array[String] sex_chromosomes = ["chrX", "chrY", "X", "Y"]
-    Boolean shuffle_all_samples = false
     Array[Float]? strand_bias_normalization_thresholds
     Float strong_call_threshold = 0.995
     Boolean trim_soft_clips = true
@@ -144,7 +143,6 @@ workflow GermlinePipeline {
     Int? ug_make_examples_cpus_override
     Float? ug_make_examples_memory_override
     String ug_post_processing_extra_args = ""
-    Int v_gpu_tile_size = 4
 
     # ---- CNV (GermlineCNVPipeline, wdls/germline_CNV_pipeline.wdl) ----
     Array[File]? bed_graph
@@ -275,7 +273,6 @@ workflow GermlinePipeline {
     #@wv run_variant_calling -> defined(make_gvcf)
     #@wv run_variant_calling -> defined(recalibrate_vaf)
     #@wv run_variant_calling -> defined(normalize_strand_bias)
-    #@wv run_variant_calling -> defined(dv_model_onnx)
     #@wv run_cnv -> defined(skip_filtering)
     #@wv run_cnv -> defined(bed_graph)
     #@wv run_cnv -> defined(ploidy_file)
@@ -301,6 +298,7 @@ workflow GermlinePipeline {
     #@wv run_segdup -> defined(cn_model)
     #@wv run_segdup -> defined(n_threads)
     #@wv run_segdup -> defined(segdup_model_onnx)
+    #@wv run_variant_calling -> (defined(dv_model_onnx) or defined(dv_model_serialized))
     #@wv not(" " in base_file_name or "#" in base_file_name or "," in base_file_name)
     #@wv len(input_cram_bam_list) == len(input_cram_bam_index_list)
     #@wv len(input_cram_bam_list) > 0
@@ -448,7 +446,7 @@ workflow GermlinePipeline {
       category: "param_optional"
     }
     call_variants_uncompr_buf_size_gb: {
-      help: "Memory buffer allocated for each uncompression thread in calll_variants",
+      help: "Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants.",
       type: "Int",
       category: "param_optional"
     }
@@ -473,7 +471,7 @@ workflow GermlinePipeline {
       category: "input_optional"
     }
     dv_ensemble_size: {
-      help: "(VariantCalling) Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble.",
+      help: "(VariantCalling) Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it.",
       type: "Int",
       category: "param_optional"
     }
@@ -503,12 +501,12 @@ workflow GermlinePipeline {
       category: "param_optional"
     }
     dv_model_onnx: {
-      help: "(VariantCalling) TensorRT model for calling variants (onnx format)",
+      help: "(VariantCalling) ONNX model used to build a TensorRT inference engine. Required unless model_serialized is supplied.",
       type: "File",
       category: "ref_optional"
     }
     dv_model_serialized: {
-      help: "(VariantCalling) TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided)",
+      help: "(VariantCalling) Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx.",
       type: "File",
       category: "ref_optional"
     }
@@ -558,7 +556,7 @@ workflow GermlinePipeline {
       category: "param_optional"
     }
     ensemble_reference_rows: {
-      help: "Number of reference rows for ensemble inference",
+      help: "Reference rows per band, passed to call_variants as --second-pass-reference-lines",
       type: "Int",
       category: "param_optional"
     }
@@ -672,6 +670,11 @@ workflow GermlinePipeline {
       type: "Int",
       category: "param_optional"
     }
+    model_is_gpu_ensemble: {
+      help: "Use a dynamic ensemble_k ONNX model for both passes: call_variants freezes first-pass k to 1 and second-pass k to ensemble_size. Leave false for ordinary models to retain local second-pass subpasses.",
+      type: "Boolean",
+      category: "param_advanced"
+    }
     normalize_strand_bias: {
       help: "Whether to normalize the strand bias in the images. This is useful for WES calling, where target enrichment may introduce strand bias between alleles.",
       type: "Boolean",
@@ -683,12 +686,12 @@ workflow GermlinePipeline {
       category: "param_advanced"
     }
     optimization_level: {
-      help: "Optimization level for TensorRT engine in call_variants",
+      help: "TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs.",
       type: "Int",
       category: "param_optional"
     }
     output_call_variants_tfrecords: {
-      help: "Output tfrecords from call_variants",
+      help: "Output TFRecords produced by call_variants",
       type: "Boolean",
       category: "param_optional"
     }
@@ -725,11 +728,6 @@ workflow GermlinePipeline {
     prioritize_high_quality_reads: {
       help: "When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads",
       type: "Boolean",
-      category: "param_optional"
-    }
-    random_seed: {
-      help: "Random seed for ensemble inference",
-      type: "Int",
       category: "param_optional"
     }
     recalibrate_vaf: {
@@ -772,18 +770,13 @@ workflow GermlinePipeline {
       type: "Array[String]",
       category: "param_optional"
     }
-    shuffle_all_samples: {
-      help: "Whether to shuffle all samples during inference",
-      type: "Boolean",
-      category: "param_optional"
-    }
     strand_bias_normalization_thresholds: {
       help: "Thresholds for strand bias normalization. The first value is the lowest strand bias (further from 1:1) to normalize, the second value is the highest strand bias (closest to 1:1) to normalize",
       type: "Array[Float]",
       category: "param_advanced"
     }
     strong_call_threshold: {
-      help: "Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is.",
+      help: "call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result.",
       type: "Float",
       category: "param_optional"
     }
@@ -793,7 +786,7 @@ workflow GermlinePipeline {
       category: "param_optional"
     }
     ug_call_variants_extra_mem: {
-      help: "Extra memory for call_variants",
+      help: "Additional task memory in GB for call_variants",
       type: "Int",
       category: "param_advanced"
     }
@@ -810,11 +803,6 @@ workflow GermlinePipeline {
     ug_post_processing_extra_args: {
       help: "Additional arguments for post-processing",
       type: "String",
-      category: "param_optional"
-    }
-    v_gpu_tile_size: {
-      help: "Virtual GPU tile size for call_variants",
-      type: "Int",
       category: "param_optional"
     }
     bed_graph: {
@@ -1463,12 +1451,12 @@ workflow GermlinePipeline {
       category: "output"
     }
     dv_num_candidates: {
-      help: "Number of candidates that call_variants processed (only when run_variant_calling)",
+      help: "First-pass candidate count reported by call_variants (only when run_variant_calling)",
       type: "Array[File]",
       category: "output"
     }
     dv_num_candidates_as_int: {
-      help: "Number of candidates that call_variants processed (as an integer) (only when run_variant_calling)",
+      help: "First-pass candidate count reported by call_variants (as an integer) (only when run_variant_calling)",
       type: "Int",
       category: "output"
     }
@@ -1834,8 +1822,9 @@ workflow GermlinePipeline {
         diploid_sampling_in_haplotypes = dv_diploid_sampling_in_haplotypes,
         background_cram_files = background_cram_files,
         background_cram_index_files = background_cram_index_files,
-        model_onnx = select_first([dv_model_onnx]),
+        model_onnx = dv_model_onnx,
         model_serialized = dv_model_serialized,
+        model_is_gpu_ensemble = model_is_gpu_ensemble,
         optimization_level = optimization_level,
         output_call_variants_tfrecords = output_call_variants_tfrecords,
         run_ploidy_estimation = run_ploidy_estimation,
@@ -1843,8 +1832,6 @@ workflow GermlinePipeline {
         strong_call_threshold = strong_call_threshold,
         ensemble_size = dv_ensemble_size,
         ensemble_reference_rows = ensemble_reference_rows,
-        random_seed = random_seed,
-        shuffle_all_samples = shuffle_all_samples,
         min_variant_quality_hmer_indels = min_variant_quality_hmer_indels,
         min_variant_quality_non_hmer_indels = min_variant_quality_non_hmer_indels,
         min_variant_quality_snps = min_variant_quality_snps,
@@ -1870,8 +1857,7 @@ workflow GermlinePipeline {
         call_variants_gpus = call_variants_gpus,
         call_variants_cpus = call_variants_cpus,
         call_variants_threads = call_variants_threads,
-        call_variants_uncompr_buf_size_gb = call_variants_uncompr_buf_size_gb,
-        v_gpu_tile_size = v_gpu_tile_size
+        call_variants_uncompr_buf_size_gb = call_variants_uncompr_buf_size_gb
     }
   }
 

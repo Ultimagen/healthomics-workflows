@@ -43,7 +43,7 @@ input {
   File input_cram_bam_index
   Array[File]? sorter_json_stats_file_list
   String base_file_name
-  String pipeline_version = "1.37.1"
+  String pipeline_version = "1.37.3"
 
   # Genome resources
   String reference_genome = "hg38"

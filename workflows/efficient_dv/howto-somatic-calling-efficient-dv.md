@@ -34,23 +34,30 @@ s3://ultimagen-workflow-resources-us-east-1/hg38/wgs_calling_regions.hg38_no_cen
 ```
 3. A model checkpoint in ONNX format
 ```
-onnxFileName = s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx
 ```
 This model is intended for whole genome sequencing at a coverage of 40-150x for tumor and 40-100x for normal. For other applications, see the last sections of this document.
 
 ### Dockers and hardware requirements
-The dockers used in the pipeline are updated from time to time, matching versions referenced in workflows/efficient_dv/tasks/globals.wdl in this repository.
-
 The Efficient DV analysis pipeline is split into two docker images:
 
-1. `ug_make_examples_docker` docker - contains binaries for the make_examples and post_process steps.
-2. `ug_call_variants_docker` docker - contains binaries for the call_variants step. 
+1. `make_examples` docker - contains binaries for the make_examples and post_process steps. Can be found in:
+```
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.5.0
+or
+ultimagenomics/make_examples:3.5.0
+```
+2. `call_variants` docker - contains the binaries for the call_variants step. Can be found in:
+```
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ncv:5.0.0
+or
+ultimagenomics/ncv:5.0.0
+```
+
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
-call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
+call_variants runs on a machine with a single NVIDIA GPU (e.g. T4, A10G or L4) and 8 CPUs, which are used for reading the input tfrecord files. It requires 24 GB of memory.
 
-On AWS HealthOmics, call_variants uses an ordered GPU fallback list: it tries `nvidia-l4` first (20 min wait), then `nvidia-tesla-a10g` (20 min wait), then `nvidia-tesla-t4` (8h wait cap before failing with `ALL_PROFILES_INSTANCE_RESERVATION_FAILED`). Which tier was actually used is echoed at the top of the CallVariants task log as `AWS_HEALTHOMICS_RESOURCE_TYPE=<tier>` (also visible via `aws omics get-run-task ... --name CallVariants` as `instanceType`). To force a single tier for debugging or emergency (e.g. driver issue on a specific tier), set the workflow input `call_variants_gpu_type_override` to one of `nvidia-l4`, `nvidia-tesla-a10g`, `nvidia-tesla-t4`.
-
-3. There are some [optional filtering steps](#additional-filtering-steps-recommended) that are implemented in the `ugbio_filtering_docker` docker.
+3. There are some [optional filtering steps](#additional-filtering-steps-recommended) that are implemented in the `ugbio_filtering` docker.
 
 ## Workflow details
 
@@ -119,8 +126,6 @@ The argument `optimal-coverages` (and the related argument `cap-at-optimal-cover
 
 The `single-strand-filter` reduces the number of candidates, therby reducing compute costs, at a negligible effect on recall.
 
-**Note:** When running the WDL pipeline, `--median-coverage` and `--background-median-coverage` are automatically calculated from the input CRAMs and do not need to be provided manually.
-
 #### Running somatic-on-germline
 In somatic variant calling, complex somatic variants near germline variants can pose challenges during read alignment and variant calling. To address this, it can be beneficial to "correct" the reference genome by incorporating germline variants during the read-alignment step of `make_examples`. This simplifies the generated image and improves the accuracy of likelihood calculations during `call_variants`.
 
@@ -130,55 +135,25 @@ It’s important to note that using `--region-haplotypes-vcf` influences only th
 
 ### Running call_variants
 
-The call_variants step combines the tfrecords from all make_examples jobs. The arguments to the call_variants step are provided as an `.ini`-formatted file. A typical file will look like:
-```
-[RT classification]
-onnxFileName = model/somatic/fresh_frozen/matched_normal/v1.3.1/deepvariant-ultima-somatic-wgs-model-v1.3.1-04-06.onnx
-useSerializedModel = 1
-trtWorkspaceSizeMB = 2000
-numInferThreadsPerGpu = 2
-useGPUs = 1
-gpuid = 0
+The call_variants step combines the tfrecords from all make_examples jobs. List the tfrecord files, one per line, in a text file, and run from within the call_variants docker:
+```bash
+printf '%s\n' 001.tfrecord.gz 002.tfrecord.gz ... > examples.txt
 
-[debug]
-logFileFolder = .
-
-[general]
-tfrecord = 1
-compressed = 1
-outputInOneFile = 0
-numUncomprThreads = 8
-uncomprBufSizeGB = 1
-outputFileName = call_variants
-numConversionThreads = 2
-numExampleFiles = 40
-
-exampleFile1 = input_dir/001.tfrecord.gz
-exampleFile2 = input_dir/002.tfrecord.gz
-exampleFile3 = input_dir/003.tfrecord.gz
-...
+call_variants \
+  --model model.onnx \
+  -T @examples.txt \
+  -n 8 \
+  --fp16
 ```
 
-The last part of the `ini` file is a list with the paths to all tfrecord files, and the first `numExampleFiles` files are used.
-If `useSerializedModel` is set to 1, then the programs searches for a onnx-serialized file, with the same name as the onnx file and .serialized suffix. If the file is not found, it generates it. The serialized file can be re-used across different runs on the same platform (TRT version, GPU type etc.). The number of GPUs and the number of tfrecord.gz uncompression threads (runs on CPU) can be modified using the `useGPUs` and `numUncomprThreads` arguments, respectively.
-
-Once the `ini` file is ready, call_variants can be invoked from within the docker using:
-```
-call_variants --param params.ini --fp16
-```
-
-#### Using a serialized engine file in call_variants
-
-TensorRT uses models stored in ONNX format. To reduce runtime overhead, it can use use a serialized TensorRT engine file (sometimes called a plan file).
-A serialized engine is optimized for a specific hardware and software configuration (e.g., GPU model, CUDA/cuDNN versions, TensorRT version). If you try to load it on a different configuration, it will fail with an error. When no serialized engine is available, call_variants will first build (serialize) the engine from the ONNX model and then run inference. The resulting serialized file can be saved and reused in subsequent runs on the same configuration.
-
+`model.onnx` is the somatic model listed above. `-n` sets the number of threads used for reading the input files. call_variants writes its output, `*_cvo.gz` files, to the current directory (use `-o <folder>` to change it). These files are the input to post_process.
 
 ### Running post_process:
 
-post_process uses the output of call_variants, `call_variants.tfrecord.gz`, and generates a vcf file. A typical post_process command from within the docker will look like (same docker as make_examples):
+post_process uses the output of call_variants (the `*_cvo.gz` files), and generates a vcf file. A typical post_process command from within the docker will look like (same docker as make_examples):
 ```
 ug_postproc \
-  --infile call_variants.1.gz,call_variants.2.gz,... \
+  --infile shard001_cvo.gz,shard002_cvo.gz,... \
   --ref Homo_sapiens_assembly38.fasta \
   --outfile output_prefix.vcf.gz \
   --consider_strand_bias \
@@ -230,7 +205,7 @@ REFLEN > 220 and vc.isFiltered()
 dbSNP data can be downloaded from: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
 or s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf
 
-`ug_post_processing` can also be used to improve the VAF estimates of INDELs (enabled by setting `recalibrate_vaf` to `true` in the WDL pipeline). Note: this is not recommended when the callset contains more than 30K indels; the pipeline automatically skips recalibration in that case. When running manually, append the following parameters to `ug_postproc`:
+`ug_postproc` can also be used to improve the VAF estimates of INDELs. Note: this is not recommended when the callset contains more than 30K indels. To enable it, append the following parameters to `ug_postproc`:
 
 ```
 --fix_allele_coverage 
@@ -241,14 +216,14 @@ or s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.d
 
 ### Allele-frequency ratio filtering
 
-The pipeline applies a filter on the allele-frequency ratio between tumor and normal. This is a safe measure to hard-filter variants with significant appearance in the normal sample. This filter is mandatory for somatic calling in the WDL pipeline (controlled by the `allele_frequency_ratio` parameter, which must be defined when `is_somatic` is `true`).
+The pipeline applies a filter on the allele-frequency ratio between tumor and normal. This is a safe measure to hard-filter variants with significant appearance in the normal sample..
 
 Specifically, the filter removes any SNV or Non-homopolymer indel variants where the ratio of allele frequency between the tumor and the normal variant is below the threshold (default: 10).
 
-When running manually outside the WDL pipeline:
+To apply the filter, run:
 
 ```
-  # Run in ugbio_filtering_docker
+  # Run in the ugbio_filtering docker
   filter_low_af_ratio_to_background --af_ratio_threshold 10 \
                                     --new_filter "LowAFRatioToBackground"  \
                                     <input_vcf> <output_vcf>

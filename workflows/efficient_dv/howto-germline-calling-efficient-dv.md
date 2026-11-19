@@ -27,14 +27,17 @@ s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.fast
 s3://ultimagen-workflow-resources-us-east-1/hg38/v0/Homo_sapiens_assembly38.dict
 s3://ultimagen-workflow-resources-us-east-1/hg38/v0/wgs_calling_regions.hg38.interval_list
 ```
-3. A model checkpoint in ONNX format:
+3. A model in ONNX format. For WGS data use:
 ```
-gs://concordanz/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
-```
-
+gs://concordanz/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.gpu-ens.onnx
 or
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.gpu-ens.onnx
 ```
-s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
+For paired-end (PE) WGS data use:
+```
+gs://concordanz/deepvariant/model/germline/wgs/pe/v1.2/ultimagen-germline-wgs-pe-v1.2.gpu-ens.onnx
+or
+s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/pe/v1.2/ultimagen-germline-wgs-pe-v1.2.gpu-ens.onnx
 ```
 
 **NOTE:** the exact model may differ between use-cases, we recommend consulting with the parameters templates provided to find the exact model
@@ -49,19 +52,16 @@ us-central1-docker.pkg.dev/ganymede-331016/ultimagen/make_examples:3.5.0
 or
 ultimagenomics/make_examples:3.5.0
 ```
-2. `call_variants` docker - contains binaries for the call_variants step. Can be found in:
+2. `call_variants` docker - contains the binaries for the call_variants step. Can be found in:
 ```
-us-central1-docker.pkg.dev/ganymede-331016/ultimagen/call_variants:4.1.2
+us-central1-docker.pkg.dev/ganymede-331016/ultimagen/ncv:5.0.0
 or
-ultimagenomics/call_variants:4.1.2
+ultimagenomics/ncv:5.0.0
 ```
 
 The make_examples and post_process steps are run on a single CPU. make_examples requires up to 2 GB of memory for each thread. post_process requires 8 GB of memory and runs on a single thread.
 
-call_variants runs on a machine which contains a single GPU, such as nvidia-p100, or nvidia-v100. It also uses multiple CPUs for multi-threaded decompression of input tfrecord files. The required memory is 8 GB plus 1 GB for each decompression thread.
-
-On AWS HealthOmics, call_variants uses an ordered GPU fallback list: it tries `nvidia-l4` first (20 min wait), then `nvidia-tesla-a10g` (20 min wait), then `nvidia-tesla-t4` (8h wait cap before failing with `ALL_PROFILES_INSTANCE_RESERVATION_FAILED`). Which tier was actually used is echoed at the top of the CallVariants task log as `AWS_HEALTHOMICS_RESOURCE_TYPE=<tier>` (also visible via `aws omics get-run-task ... --name CallVariants` as `instanceType`). To force a single tier for debugging or emergency (e.g. driver issue on a specific tier), set the workflow input `call_variants_gpu_type_override` to one of `nvidia-l4`, `nvidia-tesla-a10g`, `nvidia-tesla-t4`.
-
+call_variants runs on a machine with a single NVIDIA GPU (e.g. T4, A10G or L4) and 8 CPUs, which are used for reading the input tfrecord files. It requires 24 GB of memory.
 
 ## Workflow details
 
@@ -69,7 +69,7 @@ The workflow is composed of three steps, as described above: make_examples, call
 
 ### Ploidy estimation
 
-When `EfficientDV.run_ploidy_estimation=true`, the workflow estimates sample sex/ploidy from the filtered VCF after variant calling. The `estimate_ploidy` command uses PASS biallelic SNP depth and B-allele fractions to estimate per-chromosome ploidy and a sex karyotype:
+Optionally, sample sex/ploidy can be estimated from the filtered VCF after variant calling. The `estimate_ploidy` command uses PASS biallelic SNP depth and B-allele fractions to estimate per-chromosome ploidy and a sex karyotype:
 
 ```bash
 estimate_ploidy \
@@ -79,7 +79,7 @@ estimate_ploidy \
   --output-dir .
 ```
 
-The workflow then checks the reported karyotype. For XY samples, it runs `convert_haploid_regions` on the VCF to convert non-PAR chrX/Y genotypes to haploid while preserving pseudoautosomal-region calls as diploid:
+The karyotype is reported in `sample_name.ploidy_report.txt`. For XY samples, run `convert_haploid_regions` on the VCF to convert non-PAR chrX/Y genotypes to haploid while preserving pseudoautosomal-region calls as diploid:
 
 ```bash
 convert_haploid_regions \
@@ -88,11 +88,24 @@ convert_haploid_regions \
   --output_vcf sample_name.haploid_chrXY.vcf.gz
 ```
 
-The output VCF is indexed with `bcftools index -t` and is used as the downstream VCF for XY samples. For XX or undetermined karyotypes, the workflow retains the original VCF. `ploidy_report` is the only additional ploidy-specific workflow output; the derived karyotype and intermediate haploid VCF are used internally.
+Index the output VCF with `bcftools index -t` and use it as the final VCF for XY samples. For XX or undetermined karyotypes, keep the original VCF.
 
-For CRAM-only `EstimatePloidy` runs, coverage is collected with `mosdepth` over the genome-specific `efficient_dv_target_intervals` selected from `genome_resources.yaml`; the workflow consumes the generated `<sample>.mosdepth.summary.txt` file for karyotyping.
+The PAR regions for hg38 are available in:
+```
+gs://concordanz/hg38/v0/par_regions.hg38.bed
+or
+s3://ultimagen-workflow-resources-us-east-1/hg38/v0/par_regions.hg38.bed
+```
 
-PAR intervals used for chrX/Y haploid conversion are also selected from `genome_resources.yaml` using `EfficientDV.reference_genome`, so users should not provide PAR BED files in input JSONs.
+Ploidy can also be estimated from the CRAM alone, without a VCF, using a `mosdepth` coverage summary:
+```bash
+mosdepth --fasta Homo_sapiens_assembly38.fasta --no-per-base --fast-mode sample_name input_reads.cram
+estimate_ploidy \
+  --mosdepth-summary sample_name.mosdepth.summary.txt \
+  --sample-id sample_name \
+  --sex-chromosomes chrX chrY X Y \
+  --output-dir .
+```
 
 ### Running make_examples
 
@@ -153,90 +166,31 @@ The program will output a sam file with the re-aligned reads unless the argument
 
 ### Running call_variants
 
-The call_variants step combines the tfrecords from all make_examples jobs. The arguments to the call_variants step are provided as an `.ini`-formatted file. A typical file will look like:
-```
-[RT classification]
-onnxFileName = model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx
-builderOptimizationLevel = 1
-useSerializedModel = 1
-trtWorkspaceSizeMB = 2000
-numInferThreadsPerGpu = 2
-useGPUs = 1
-vGPUTileSize = 4
-gpuid = 0
+call_variants combines the tfrecords from all make_examples jobs. List the tfrecord files, one per line, in a text file (do not include the `gvcf.tfrecord.gz` files), and run from within the call_variants docker:
 
-[debug]
-logFileFolder = .
+```bash
+printf '%s\n' 001.tfrecord.gz 002.tfrecord.gz ... > examples.txt
 
-[ensemble]
-ensembleSize = 5
-randomSeed = 42
-referenceRows = 5
-sampleHeights = 100
-shuffleAllSamples = false
-criteria = max_prob_threshold
-threshold = 0.995
-replaceAlways = true
-enableSelectiveLogging = false
-
-[general]
-tfrecord = 1
-compressed = 1
-outputInOneFile = 0
-numUncomprThreads = 8
-uncomprBufSizeGB = 1
-outputFileName = call_variants
-numConversionThreads = 2
-numExampleFiles = 40
-
-exampleFile1 = input_dir/001.tfrecord.gz
-exampleFile2 = input_dir/002.tfrecord.gz
-exampleFile3 = input_dir/003.tfrecord.gz
-...
+call_variants \
+  --model model.onnx \
+  -T @examples.txt \
+  -n 8 \
+  --fp16 \
+  --second-pass-threshold 0.995 \
+  --second-pass-model-ensemble-k 5 \
+  --second-pass-always-replace
 ```
 
-The last part of the `ini` file is a list with the paths to all tfrecord files, and the first `numExampleFiles` files are used.
-If `useSerializedModel` is set to 1, then the program searches for an onnx-serialized file with the same name as the onnx file and a `.serialized` suffix. If the file is not found, it generates it. The serialized file can be re-used across different runs on the same platform (TRT version, GPU type etc.). The number of GPUs and the number of tfrecord.gz uncompression threads (runs on CPU) can be modified using the `useGPUs` and `numUncomprThreads` arguments, respectively.
+`-n` sets the number of threads used for reading the input files. call_variants writes its output, `*_cvo.gz` files, to the current directory (use `-o <folder>` to change it). These files are the input to post_process.
 
-`builderOptimizationLevel` controls the TensorRT engine-build optimization level (0–5). Higher values produce a faster inference engine at the cost of a longer build time. The workflow uses `1` for germline calling.
-
-`vGPUTileSize` is a virtual GPU tiling factor (default `1`) used by the ensemble inference scheduler. It multiplies the internal GPU slot count so that multiple inference threads can be interleaved; the physical GPU device is then selected as `gpuid / vGPUTileSize`.
-
-Once the `ini` file is ready, call_variants can be invoked from within the docker using:
-```
-call_variants --param params.ini --fp16
-```
-
-#### Ensemble inference
-
-The `[ensemble]` section controls selective ensemble inference, which improves variant calling accuracy by reprocessing uncertain candidates with multiple augmented passes.
-
-When `ensembleSize` is `0` or `1`, ensemble is fully disabled: each input image is inferred exactly once and no augmentation is applied. When `ensembleSize` is set to `2` or higher, a two-stage strategy is applied:
-1. **Base pass** — every image is inferred once.
-2. **Selective repass** — images whose top predicted-class probability is below `threshold` ("weak candidates") are reprocessed `ensembleSize` times, each time with a different random row-shuffle augmentation. The results are averaged to produce the final output.
-
-Images above `threshold` are "strong calls" and are not reprocessed, so the runtime overhead is proportional to the fraction of weak candidates rather than the full dataset.
-
-Key parameters:
-- `ensembleSize`: number of augmented inference passes for weak candidates. `0` or `1` disables ensemble entirely (no augmentation is applied); set to e.g. `5` to enable.
-- `threshold` (workflow parameter `strong_call_threshold`, default `0.995`): the max-class probability below which a candidate is considered weak and reprocessed.
-- `randomSeed` (workflow parameter `random_seed`, default `42`): random seed for the row-shuffle augmentation, ensuring reproducible results.
-- `referenceRows` (workflow parameter `ensemble_reference_rows`, default `5`): number of reference rows at the top of the image that are not shuffled.
-- `sampleHeights`: image height in rows per input sample. Use `100` for standard germline calling (single input CRAM). For pangenome haplotype calling the second value is the haplotype band height, derived from `num_haplotypes` (e.g. `100,100` for 32 haplotypes, `100,21` for 8 haplotypes). The workflow computes this automatically; manual runs should match the model's expected geometry.
-- `criteria`: selection criterion for identifying weak candidates. Always `max_prob_threshold` in the workflow.
-- `shuffleAllSamples` (workflow parameter `shuffle_all_samples`, default `false`): when `true`, row shuffling is applied to all samples in the image; when `false`, only the primary sample is shuffled.
-
-#### Using a serialized engine file in call_variants
-
-TensorRT uses models stored in ONNX format. To reduce runtime overhead, it can use use a serialized TensorRT engine file (sometimes called a plan file).
-A serialized engine is optimized for a specific hardware and software configuration (e.g., GPU model, CUDA/cuDNN versions, TensorRT version). If you try to load it on a different configuration, it will fail with an error. When no serialized engine is available, call_variants will first build (serialize) the engine from the ONNX model and then run inference. The resulting serialized file can be saved and reused in subsequent runs on the same configuration.
+All candidates are first called by the model. Candidates whose score is below `--second-pass-threshold` are called again by an ensemble of 5 (`--second-pass-model-ensemble-k 5`), and the ensemble result replaces the first-pass result (`--second-pass-always-replace`). To call with a single pass only, omit the `--second-pass-*` arguments.
 
 ### Running post_process:
 
-post_process uses the output of call_variants, `call_variants.tfrecord.gz`, and generates a vcf file. A typical post_process command from within the docker will look like (same docker as make_examples):
+post_process uses the `*_cvo.gz` output files of call_variants and generates a VCF file. A typical post_process command from within the docker will look like (same docker as make_examples):
 ```
 ug_postproc \
-  --infile call_variants.1.gz,call_variants.2.gz,... \
+  --infile shard001_cvo.gz,shard002_cvo.gz \
   --ref Homo_sapiens_assembly38.fasta \
   --outfile output_prefix.vcf.gz \
   --consider_strand_bias \
@@ -324,7 +278,7 @@ tool \
   --exp-pangenome-haps haplotypes.cram
 ```
 
-#### Running `call_variants` with Haplotype Data
+#### Running call_variants with Haplotype Data
 
 Variant calling with haplotype data requires a specific model:
 
@@ -416,15 +370,14 @@ tool \
   --single-strand-filter
 ```
 
-**call_variants** uses a different model:
+**call_variants** uses a different model, with a single pass:
 
-```
-[RT classification]
-onnxFileName = model/germline/segdup_1.0/model_dyn_1500.onnx
-...
-
-[ensemble]
-ensembleSize = 0
+```bash
+call_variants \
+  --model model_dyn_1500.onnx \
+  -T @examples.txt \
+  -n 8 \
+  --fp16
 ```
 
 The model is available in:
@@ -445,4 +398,4 @@ s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.
 The models described above apply to Solaris 2.0 data. For processing WGS Solaris 1.0 data we recommend the following changes to the workflow:
 
 1. Use the following model: `s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v1.9/ultima-usb4-amp_pcrfree-germline-model-v1.9.ckpt-420000.batch1500.onnx`
-2. Set `ensembleSize` parameter to 0 or omit `[ensemble]` section from the configuration file.
+2. Run call_variants with a single pass (omit all `--second-pass-*` arguments).

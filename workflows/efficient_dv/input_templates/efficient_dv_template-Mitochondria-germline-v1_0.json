@@ -26,7 +26,6 @@
         "Y"
     ],
     "EfficientDV.run_ploidy_estimation": false,
-    "EfficientDV.shuffle_all_samples": false,
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/segdup_1.0/model_dyn_1500.onnx",
     "EfficientDV.min_fraction_hmer_indels": 0.05,
     "EfficientDV.min_fraction_non_hmer_indels": 0.05,

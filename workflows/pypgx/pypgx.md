@@ -178,12 +178,12 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.EfficientDV.optimization_level">
         <b>PyPGx.EfficientDV.optimization_level</b><br />
         <i>Int? </i> &mdash;
-         Optimization level for TensorRT engine in call_variants <br />
+         TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs. <br />
 </p>
 <p name="PyPGx.EfficientDV.output_call_variants_tfrecords">
         <b>PyPGx.EfficientDV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
-         Output tfrecords from call_variants <br />
+         Output TFRecords produced by call_variants <br />
 </p>
 <p name="PyPGx.EfficientDV.run_ploidy_estimation">
         <b>PyPGx.EfficientDV.run_ploidy_estimation</b><br />
@@ -198,22 +198,12 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.EfficientDV.strong_call_threshold">
         <b>PyPGx.EfficientDV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
+         call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result. <br />
 </p>
 <p name="PyPGx.EfficientDV.ensemble_reference_rows">
         <b>PyPGx.EfficientDV.ensemble_reference_rows</b><br />
         <i>Int </i> &mdash;
-         Number of reference rows for ensemble inference <br />
-</p>
-<p name="PyPGx.EfficientDV.random_seed">
-        <b>PyPGx.EfficientDV.random_seed</b><br />
-        <i>Int </i> &mdash;
-         Random seed for ensemble inference <br />
-</p>
-<p name="PyPGx.EfficientDV.shuffle_all_samples">
-        <b>PyPGx.EfficientDV.shuffle_all_samples</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to shuffle all samples during inference <br />
+         Reference rows per band, passed to call_variants as --second-pass-reference-lines <br />
 </p>
 <p name="PyPGx.EfficientDV.hard_qual_filter">
         <b>PyPGx.EfficientDV.hard_qual_filter</b><br />
@@ -278,12 +268,7 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.EfficientDV.call_variants_uncompr_buf_size_gb">
         <b>PyPGx.EfficientDV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
-         Memory buffer allocated for each uncompression thread in calll_variants <br />
-</p>
-<p name="PyPGx.EfficientDV.v_gpu_tile_size">
-        <b>PyPGx.EfficientDV.v_gpu_tile_size</b><br />
-        <i>Int </i> &mdash;
-         Virtual GPU tile size for call_variants <br />
+         Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants. <br />
 </p>
 <p name="PyPGx.EfficientDV.HaplotypeSampling.kmer_length">
         <b>PyPGx.EfficientDV.HaplotypeSampling.kmer_length</b><br />
@@ -320,7 +305,7 @@ Runs pharmacogenomics analysis on several genes.
 <p name="PyPGx.EfficientDV.model_serialized">
         <b>PyPGx.EfficientDV.model_serialized</b><br />
         <i>File? </i> &mdash;
-         TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br />
+         Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx. <br />
 </p>
 <p name="PyPGx.EfficientDV.roh_blacklist_override">
         <b>PyPGx.EfficientDV.roh_blacklist_override</b><br />

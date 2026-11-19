@@ -32,13 +32,6 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
          Enable somatic calling mode, which enables somatic-specific post-processing options <br />
 </p>
 
-### Required references
-<p name="EfficientDV.model_onnx">
-        <b>EfficientDV.model_onnx</b><br />
-        <i>File </i> &mdash;
-         TensorRT model for calling variants (onnx format) <br />
-</p>
-
 ### Optional inputs
 <p name="EfficientDV.reference_genome">
         <b>EfficientDV.reference_genome</b><br />
@@ -225,12 +218,12 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.optimization_level">
         <b>EfficientDV.optimization_level</b><br />
         <i>Int? </i> &mdash;
-         Optimization level for TensorRT engine in call_variants <br />
+         TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs. <br />
 </p>
 <p name="EfficientDV.output_call_variants_tfrecords">
         <b>EfficientDV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
-         Output tfrecords from call_variants <br />
+         Output TFRecords produced by call_variants <br />
 </p>
 <p name="EfficientDV.run_ploidy_estimation">
         <b>EfficientDV.run_ploidy_estimation</b><br />
@@ -245,27 +238,17 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.strong_call_threshold">
         <b>EfficientDV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
+         call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result. <br />
 </p>
 <p name="EfficientDV.ensemble_size">
         <b>EfficientDV.ensemble_size</b><br />
         <i>Int </i> &mdash;
-         Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
+         Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it. <br />
 </p>
 <p name="EfficientDV.ensemble_reference_rows">
         <b>EfficientDV.ensemble_reference_rows</b><br />
         <i>Int </i> &mdash;
-         Number of reference rows for ensemble inference <br />
-</p>
-<p name="EfficientDV.random_seed">
-        <b>EfficientDV.random_seed</b><br />
-        <i>Int </i> &mdash;
-         Random seed for ensemble inference <br />
-</p>
-<p name="EfficientDV.shuffle_all_samples">
-        <b>EfficientDV.shuffle_all_samples</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to shuffle all samples during inference <br />
+         Reference rows per band, passed to call_variants as --second-pass-reference-lines <br />
 </p>
 <p name="EfficientDV.min_variant_quality_hmer_indels">
         <b>EfficientDV.min_variant_quality_hmer_indels</b><br />
@@ -350,12 +333,7 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.call_variants_uncompr_buf_size_gb">
         <b>EfficientDV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
-         Memory buffer allocated for each uncompression thread in calll_variants <br />
-</p>
-<p name="EfficientDV.v_gpu_tile_size">
-        <b>EfficientDV.v_gpu_tile_size</b><br />
-        <i>Int </i> &mdash;
-         Virtual GPU tile size for call_variants <br />
+         Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants. <br />
 </p>
 <p name="EfficientDV.HaplotypeSampling.kmer_length">
         <b>EfficientDV.HaplotypeSampling.kmer_length</b><br />
@@ -399,10 +377,15 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
         <i>File? </i> &mdash;
          Pre-computed haplotype index file (.hapl) for haplotype sampling (required if run_haplotype_sampling is true and pangenome_haplotypes is not provided) <br />
 </p>
+<p name="EfficientDV.model_onnx">
+        <b>EfficientDV.model_onnx</b><br />
+        <i>File? </i> &mdash;
+         ONNX model used to build a TensorRT inference engine. Required unless model_serialized is supplied. <br />
+</p>
 <p name="EfficientDV.model_serialized">
         <b>EfficientDV.model_serialized</b><br />
         <i>File? </i> &mdash;
-         TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br />
+         Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx. <br />
 </p>
 <p name="EfficientDV.roh_blacklist_override">
         <b>EfficientDV.roh_blacklist_override</b><br />
@@ -511,12 +494,12 @@ Performs variant calling on an input cram, using a re-write of (DeepVariant)[htt
 <p name="EfficientDV.num_candidates">
         <b>EfficientDV.num_candidates</b><br />
         <i>Array[File]</i><br />
-        Number of candidates that call_variants processed
+        First-pass candidate count reported by call_variants
 </p>
 <p name="EfficientDV.num_candidates_as_int">
         <b>EfficientDV.num_candidates_as_int</b><br />
         <i>Int</i><br />
-        Number of candidates that call_variants processed (as an integer)
+        First-pass candidate count reported by call_variants (as an integer)
 </p>
 <p name="EfficientDV.ploidy_report">
         <b>EfficientDV.ploidy_report</b><br />

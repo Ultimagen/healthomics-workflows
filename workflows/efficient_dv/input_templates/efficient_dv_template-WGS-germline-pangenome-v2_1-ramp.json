@@ -27,7 +27,6 @@
     ],
     "EfficientDV.run_ploidy_estimation": true,
     "EfficientDV.run_haplotype_sampling": true,
-    "EfficientDV.shuffle_all_samples": false,
     "EfficientDV.min_mapping_quality": 1,
     "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.1/ultimagen-germline-wgs-solaris2-pan-hprc-v1.0-regnet-v2.1.onnx",
     "EfficientDV.min_variant_quality_hmer_indels": 5,

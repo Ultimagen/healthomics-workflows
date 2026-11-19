@@ -26,8 +26,8 @@
         "Y"
     ],
     "EfficientDV.run_ploidy_estimation": true,
-    "EfficientDV.shuffle_all_samples": false,
-    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.onnx",
+    "EfficientDV.model_onnx": "s3://ultimagen-workflow-resources-us-east-1/deepvariant/model/germline/wgs/v2.0/ultimagen-germline-wgs-solaris2-hg38-regnet-v2.0.gpu-ens.onnx",
+    "EfficientDV.model_is_gpu_ensemble": true,
     "EfficientDV.min_variant_quality_hmer_indels": 5,
     "EfficientDV.min_variant_quality_exome_hmer_indels": 7,
     "EfficientDV.min_variant_quality_non_hmer_indels": 0,

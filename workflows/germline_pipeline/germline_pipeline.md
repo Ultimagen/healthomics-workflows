@@ -477,7 +477,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.call_variants_uncompr_buf_size_gb">
         <b>GermlinePipeline.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
-         Memory buffer allocated for each uncompression thread in calll_variants <br />
+         Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants. <br />
 </p>
 <p name="GermlinePipeline.dbg_min_base_quality">
         <b>GermlinePipeline.dbg_min_base_quality</b><br />
@@ -492,7 +492,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.dv_ensemble_size">
         <b>GermlinePipeline.dv_ensemble_size</b><br />
         <i>Int </i> &mdash;
-         (VariantCalling) Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
+         (VariantCalling) Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it. <br />
 </p>
 <p name="GermlinePipeline.dv_include_reference_in_haplotypes">
         <b>GermlinePipeline.dv_include_reference_in_haplotypes</b><br />
@@ -537,7 +537,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.ensemble_reference_rows">
         <b>GermlinePipeline.ensemble_reference_rows</b><br />
         <i>Int </i> &mdash;
-         Number of reference rows for ensemble inference <br />
+         Reference rows per band, passed to call_variants as --second-pass-reference-lines <br />
 </p>
 <p name="GermlinePipeline.germline_vcf">
         <b>GermlinePipeline.germline_vcf</b><br />
@@ -647,12 +647,12 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.optimization_level">
         <b>GermlinePipeline.optimization_level</b><br />
         <i>Int? </i> &mdash;
-         Optimization level for TensorRT engine in call_variants <br />
+         TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs. <br />
 </p>
 <p name="GermlinePipeline.output_call_variants_tfrecords">
         <b>GermlinePipeline.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
-         Output tfrecords from call_variants <br />
+         Output TFRecords produced by call_variants <br />
 </p>
 <p name="GermlinePipeline.output_realignment">
         <b>GermlinePipeline.output_realignment</b><br />
@@ -689,11 +689,6 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <i>Boolean </i> &mdash;
          When min-mapq=0, add mapq=0 reads last, only filling remaining image capacity after high-mapq reads <br />
 </p>
-<p name="GermlinePipeline.random_seed">
-        <b>GermlinePipeline.random_seed</b><br />
-        <i>Int </i> &mdash;
-         Random seed for ensemble inference <br />
-</p>
 <p name="GermlinePipeline.roh_af_default">
         <b>GermlinePipeline.roh_af_default</b><br />
         <i>Float </i> &mdash;
@@ -714,15 +709,10 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <i>Array[String] </i> &mdash;
          Sex chromosome names to exclude from autosomal ploidy baseline. Defaults support chr-prefixed and non-prefixed human references. <br />
 </p>
-<p name="GermlinePipeline.shuffle_all_samples">
-        <b>GermlinePipeline.shuffle_all_samples</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to shuffle all samples during inference <br />
-</p>
 <p name="GermlinePipeline.strong_call_threshold">
         <b>GermlinePipeline.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
+         call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result. <br />
 </p>
 <p name="GermlinePipeline.trim_soft_clips">
         <b>GermlinePipeline.trim_soft_clips</b><br />
@@ -733,11 +723,6 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
         <b>GermlinePipeline.ug_post_processing_extra_args</b><br />
         <i>String </i> &mdash;
          Additional arguments for post-processing <br />
-</p>
-<p name="GermlinePipeline.v_gpu_tile_size">
-        <b>GermlinePipeline.v_gpu_tile_size</b><br />
-        <i>Int </i> &mdash;
-         Virtual GPU tile size for call_variants <br />
 </p>
 <p name="GermlinePipeline.cushion_size">
         <b>GermlinePipeline.cushion_size</b><br />
@@ -927,12 +912,12 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.PGx.EfficientDV.optimization_level">
         <b>GermlinePipeline.PGx.EfficientDV.optimization_level</b><br />
         <i>Int? </i> &mdash;
-         Optimization level for TensorRT engine in call_variants <br />
+         TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs. <br />
 </p>
 <p name="GermlinePipeline.PGx.EfficientDV.output_call_variants_tfrecords">
         <b>GermlinePipeline.PGx.EfficientDV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
-         Output tfrecords from call_variants <br />
+         Output TFRecords produced by call_variants <br />
 </p>
 <p name="GermlinePipeline.PGx.EfficientDV.run_ploidy_estimation">
         <b>GermlinePipeline.PGx.EfficientDV.run_ploidy_estimation</b><br />
@@ -947,22 +932,12 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.PGx.EfficientDV.strong_call_threshold">
         <b>GermlinePipeline.PGx.EfficientDV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
+         call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result. <br />
 </p>
 <p name="GermlinePipeline.PGx.EfficientDV.ensemble_reference_rows">
         <b>GermlinePipeline.PGx.EfficientDV.ensemble_reference_rows</b><br />
         <i>Int </i> &mdash;
-         Number of reference rows for ensemble inference <br />
-</p>
-<p name="GermlinePipeline.PGx.EfficientDV.random_seed">
-        <b>GermlinePipeline.PGx.EfficientDV.random_seed</b><br />
-        <i>Int </i> &mdash;
-         Random seed for ensemble inference <br />
-</p>
-<p name="GermlinePipeline.PGx.EfficientDV.shuffle_all_samples">
-        <b>GermlinePipeline.PGx.EfficientDV.shuffle_all_samples</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to shuffle all samples during inference <br />
+         Reference rows per band, passed to call_variants as --second-pass-reference-lines <br />
 </p>
 <p name="GermlinePipeline.PGx.EfficientDV.hard_qual_filter">
         <b>GermlinePipeline.PGx.EfficientDV.hard_qual_filter</b><br />
@@ -1027,12 +1002,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.PGx.EfficientDV.call_variants_uncompr_buf_size_gb">
         <b>GermlinePipeline.PGx.EfficientDV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
-         Memory buffer allocated for each uncompression thread in calll_variants <br />
-</p>
-<p name="GermlinePipeline.PGx.EfficientDV.v_gpu_tile_size">
-        <b>GermlinePipeline.PGx.EfficientDV.v_gpu_tile_size</b><br />
-        <i>Int </i> &mdash;
-         Virtual GPU tile size for call_variants <br />
+         Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants. <br />
 </p>
 <p name="GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.kmer_length">
         <b>GermlinePipeline.PGx.EfficientDV.HaplotypeSampling.kmer_length</b><br />
@@ -1207,12 +1177,12 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.SegDup.DV.optimization_level">
         <b>GermlinePipeline.SegDup.DV.optimization_level</b><br />
         <i>Int? </i> &mdash;
-         Optimization level for TensorRT engine in call_variants <br />
+         TensorRT builder optimization level (0-5) used by call_variants when building the engine. Defaults to 1 for germline and 5 for somatic runs. <br />
 </p>
 <p name="GermlinePipeline.SegDup.DV.output_call_variants_tfrecords">
         <b>GermlinePipeline.SegDup.DV.output_call_variants_tfrecords</b><br />
         <i>Boolean </i> &mdash;
-         Output tfrecords from call_variants <br />
+         Output TFRecords produced by call_variants <br />
 </p>
 <p name="GermlinePipeline.SegDup.DV.run_ploidy_estimation">
         <b>GermlinePipeline.SegDup.DV.run_ploidy_estimation</b><br />
@@ -1227,27 +1197,17 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.SegDup.DV.strong_call_threshold">
         <b>GermlinePipeline.SegDup.DV.strong_call_threshold</b><br />
         <i>Float </i> &mdash;
-         Probability threshold for selective ensemble inference. When ensemble_size >= 2, examples with max probability below this threshold are re-evaluated using ensemble inference; examples above it are accepted as-is. <br />
+         call_variants second-pass threshold. When ensemble_size >= 2, inputs with scores below this threshold are re-evaluated; higher-scoring inputs keep their first-pass result. <br />
 </p>
 <p name="GermlinePipeline.SegDup.DV.ensemble_size">
         <b>GermlinePipeline.SegDup.DV.ensemble_size</b><br />
         <i>Int </i> &mdash;
-         Number of augmented passes for ensemble inference. Values <= 1 disable ensemble entirely (no augmentation is applied); values >= 2 enable selective ensemble. <br />
+         Second-pass GPU ensemble k when model_is_gpu_ensemble is true, otherwise number of local subpasses. Values <= 1 disable second-pass inference; values >= 2 enable it. <br />
 </p>
 <p name="GermlinePipeline.SegDup.DV.ensemble_reference_rows">
         <b>GermlinePipeline.SegDup.DV.ensemble_reference_rows</b><br />
         <i>Int </i> &mdash;
-         Number of reference rows for ensemble inference <br />
-</p>
-<p name="GermlinePipeline.SegDup.DV.random_seed">
-        <b>GermlinePipeline.SegDup.DV.random_seed</b><br />
-        <i>Int </i> &mdash;
-         Random seed for ensemble inference <br />
-</p>
-<p name="GermlinePipeline.SegDup.DV.shuffle_all_samples">
-        <b>GermlinePipeline.SegDup.DV.shuffle_all_samples</b><br />
-        <i>Boolean </i> &mdash;
-         Whether to shuffle all samples during inference <br />
+         Reference rows per band, passed to call_variants as --second-pass-reference-lines <br />
 </p>
 <p name="GermlinePipeline.SegDup.DV.min_variant_quality_hmer_indels">
         <b>GermlinePipeline.SegDup.DV.min_variant_quality_hmer_indels</b><br />
@@ -1327,12 +1287,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.SegDup.DV.call_variants_uncompr_buf_size_gb">
         <b>GermlinePipeline.SegDup.DV.call_variants_uncompr_buf_size_gb</b><br />
         <i>Int </i> &mdash;
-         Memory buffer allocated for each uncompression thread in calll_variants <br />
-</p>
-<p name="GermlinePipeline.SegDup.DV.v_gpu_tile_size">
-        <b>GermlinePipeline.SegDup.DV.v_gpu_tile_size</b><br />
-        <i>Int </i> &mdash;
-         Virtual GPU tile size for call_variants <br />
+         Memory-sizing factor in GB per inference thread. It is retained for task memory allocation and is not passed to call_variants. <br />
 </p>
 <p name="GermlinePipeline.SegDup.DV.HaplotypeSampling.kmer_length">
         <b>GermlinePipeline.SegDup.DV.HaplotypeSampling.kmer_length</b><br />
@@ -1374,12 +1329,12 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.dv_model_onnx">
         <b>GermlinePipeline.dv_model_onnx</b><br />
         <i>File? </i> &mdash;
-         (VariantCalling) TensorRT model for calling variants (onnx format) <br />
+         (VariantCalling) ONNX model used to build a TensorRT inference engine. Required unless model_serialized is supplied. <br />
 </p>
 <p name="GermlinePipeline.dv_model_serialized">
         <b>GermlinePipeline.dv_model_serialized</b><br />
         <i>File? </i> &mdash;
-         (VariantCalling) TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br />
+         (VariantCalling) Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx. <br />
 </p>
 <p name="GermlinePipeline.dv_ref_gbz_for_haplotypes">
         <b>GermlinePipeline.dv_ref_gbz_for_haplotypes</b><br />
@@ -1409,7 +1364,7 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.PGx.EfficientDV.model_serialized">
         <b>GermlinePipeline.PGx.EfficientDV.model_serialized</b><br />
         <i>File? </i> &mdash;
-         TensorRT model for calling variants, serialized for a specific platform (it is regenerated if not provided) <br />
+         Prebuilt TensorRT first-pass engine matching the model, GPU and TensorRT version. Takes precedence over model_onnx for the first pass; GPU ensemble second-pass inference still requires model_onnx. <br />
 </p>
 <p name="GermlinePipeline.PGx.EfficientDV.roh_blacklist_override">
         <b>GermlinePipeline.PGx.EfficientDV.roh_blacklist_override</b><br />
@@ -1603,12 +1558,12 @@ Runs the Ultima Genomics germline analysis on a single aligned sample: SNV/indel
 <p name="GermlinePipeline.dv_num_candidates">
         <b>GermlinePipeline.dv_num_candidates</b><br />
         <i>Array[File]?</i><br />
-        Number of candidates that call_variants processed (only when run_variant_calling)
+        First-pass candidate count reported by call_variants (only when run_variant_calling)
 </p>
 <p name="GermlinePipeline.dv_num_candidates_as_int">
         <b>GermlinePipeline.dv_num_candidates_as_int</b><br />
         <i>Int?</i><br />
-        Number of candidates that call_variants processed (as an integer) (only when run_variant_calling)
+        First-pass candidate count reported by call_variants (as an integer) (only when run_variant_calling)
 </p>
 <p name="GermlinePipeline.dv_ploidy_report">
         <b>GermlinePipeline.dv_ploidy_report</b><br />

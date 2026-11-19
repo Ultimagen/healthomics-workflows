@@ -335,9 +335,9 @@ task UGMakeExamples{
 task UGCallVariants{
   input{
     Array[File] examples
-    File model_onnx
+    File? model_onnx
     File? model_serialized
-    Boolean is_somatic
+    Boolean model_is_gpu_ensemble = false
     String docker
     Int call_variants_uncompr_buf_size_gb
     # AWS HealthOmics GPU fallback list. Must have exactly 3 entries — the WDL
@@ -356,31 +356,37 @@ task UGCallVariants{
     File monitoring_script
     Int? call_variants_extra_mem
     Int? optimization_level
+    Boolean is_somatic
     Boolean no_address = true
-    Int v_gpu_tile_size = 4
-    
-    # Ensemble parameters (ensemble_size <= 1 disables ensemble entirely — no augmentation is applied; >= 2 enables selective ensemble)
+
+    # Ensemble parameters
     Int ensemble_size = 0
-    Int random_seed = 42
     Int reference_rows = 5
     Float strong_call_threshold = 0.995
     
     # Multi-sample parameters
     Array[Int] sample_heights  # Height of each sample (e.g., [100,100] or [100])
-    Boolean shuffle_all_samples = false
   }
 
-  Int disk_size = ceil(1.05*size(examples, 'GB') + size(model_onnx, 'GB') + 20)
-  Int num_examples = length(examples)
+  File inference_model = select_first([model_serialized, model_onnx])
+  String model_file_name = if defined(model_serialized) then "input.trt" else "input.onnx"
+  Boolean gpu_second_pass = model_is_gpu_ensemble && ensemble_size >= 2
+  Int disk_size = ceil(1.05*size(examples, 'GB') + size(inference_model, 'GB') + (if gpu_second_pass && defined(model_serialized) then size(model_onnx, 'GB') else 0) + 20)
   Int extra_mem = select_first([call_variants_extra_mem, 16])
-  Int builder_optimization_level  = select_first([optimization_level, if is_somatic then 5 else 1])
   Int mem = num_threads * call_variants_uncompr_buf_size_gb + extra_mem
-  String onnx_base_name = basename(model_onnx)
-
-  String ensemble_criteria = "max_prob_threshold"
+  Int builder_optimization_level = select_first([optimization_level, if is_somatic then 5 else 1])
+  String second_pass_bands = if length(sample_heights) == 1 then "0/" + sample_heights[0] + "/" + reference_rows else "0/" + sample_heights[0] + "/" + reference_rows + ",1/" + sample_heights[1] + "/" + reference_rows
+  String second_pass_model = if defined(model_serialized) then "model/input.onnx" else "use-first-pass-model"
+  String second_pass_ensemble_args = if gpu_second_pass then "--second-pass-model " + second_pass_model + " --second-pass-model-ensemble-k " + ensemble_size + " --second-pass-input-mode normalized_minus1_1" else "--second-pass-subpasses " + ensemble_size + " --second-pass-shuffle --second-pass-reference-lines " + reference_rows + " --second-pass-bands " + second_pass_bands
+  String second_pass_args = if ensemble_size >= 2 then "--second-pass-threshold " + strong_call_threshold + " " + second_pass_ensemble_args + " --second-pass-always-replace" else ""
   
   command <<<
     set -eo pipefail
+
+    if ~{gpu_second_pass} && ! ~{defined(model_onnx)}; then
+      echo "ERROR: GPU ensemble second-pass inference requires model_onnx, even when model_serialized is supplied." >&2
+      exit 1
+    fi
 
     if [ "~{length(gpu_tier_order)}" != "3" ]; then
       echo "ERROR: gpu_tier_order must have exactly 3 entries (got ~{length(gpu_tier_order)}); pad by repeating a tier to force single-tier behavior." >&2
@@ -392,53 +398,40 @@ task UGCallVariants{
 
     bash ~{monitoring_script} | tee monitoring.log >&2 &
 
-    nvidia-smi --query-gpu=timestamp,name,driver_version,temperature.gpu,utilization.gpu,utilization.memory,memory.used --format=csv -l 60 -f  ./nvidia-smi.log & #todo change from old
+    nvidia-smi --query-gpu=timestamp,name,driver_version,temperature.gpu,utilization.gpu,utilization.memory,memory.used,memory.total,memory.free --format=csv -l 10 2>&1 | tee ./nvidia-smi.log >&2 &
 
-    cp ~{model_onnx} ~{onnx_base_name}
-    # Rename the serialized model to fit the onnx file (allow various versions of serialized model files with different file names)        
-    if [ "~{defined(model_serialized)}" == "true" ] && [ "~{model_serialized}" != "~{model_onnx}.serialized" ]
-    then
-      echo 'Renaming serialized model to fit onnx file'
-      cp ~{model_serialized} ~{onnx_base_name}.serialized
+    mkdir -p model
+    cp "~{inference_model}" "model/~{model_file_name}"
+    if ~{gpu_second_pass && defined(model_serialized)}; then
+      cp "~{model_onnx}" model/input.onnx
     fi
 
-    printf "%b\n" "[RT classification]" \
-      "onnxFileName = ~{onnx_base_name}" \
-      "builderOptimizationLevel = ~{builder_optimization_level}" \
-      "useSerializedModel = 1" \
-      "trtWorkspaceSizeMB = 2000" \
-      "numInferTreadsPerGpu = 2" \
-      "useGPUs = ~{num_gpus}" \
-      "vGPUTileSize = ~{v_gpu_tile_size}" \
-      "gpuid = 0\n" \
-      "[debug]" \
-      "logFileFolder = .\n" \
-      "[ensemble]" \
-      "ensembleSize = ~{ensemble_size}" \
-      "randomSeed = ~{random_seed}" \
-      "referenceRows = ~{reference_rows}" \
-      "sampleHeights = ~{sep=',' sample_heights}" \
-      "shuffleAllSamples = ~{true='true' false='false' shuffle_all_samples}" \
-      "criteria = ~{ensemble_criteria}" \
-      "threshold = ~{strong_call_threshold}" \
-      "replaceAlways = true" \
-      "enableSelectiveLogging = false\n" \
-      "[general]" \
-      "tfrecord = 1" \
-      "compressed = 1" \
-      "outputInOneFile = 0" \
-      "numUncomprThreads = ~{num_threads}" \
-      "uncomprBufSizeGB = ~{call_variants_uncompr_buf_size_gb}" \
-      "outputFileName = call_variants" \
-      "numConversionThreads = 2" \
-      "numExampleFiles = ~{num_examples}\n" > params.ini
+    cp ~{write_lines(examples)} examples.txt
 
-    awk '{print "exampleFile" NR " = "$0}' ~{write_lines(examples)} >> params.ini
+    export NCV_TRT_BUILDER_OPTIMIZATION_LEVEL=~{builder_optimization_level}
+    export NCV_TRT_WORKSPACE_BYTES=2147483648
+    export NCV_BATCHES_PER_BUFFER=2
 
-    call_variants --param params.ini --fp16
+    ulimit -c 0
+    call_variants \
+      ~{if defined(model_serialized) then "--serialized-engine" else "--model"} "model/~{model_file_name}" \
+      ~{if defined(model_serialized) then "" else "--first-pass-input-mode normalized_minus1_1"} \
+      -T @examples.txt \
+      -o . \
+      -n ~{num_threads} \
+      --gpus ~{num_gpus} \
+      --fp16 \
+      --tfrecord-graph-capture \
+      --tfrecord-graph-warmup 5 \
+      ~{second_pass_args} \
+      2>&1 | tee call_variants.log
 
-    num_candidates_val=$(grep -oP 'num_candidates: \K\d+' call_variants*.log) \
-      || { echo "ERROR: 'num_candidates:' line not found in call_variants log -- check call_variants version compatibility" >&2; exit 1; }
+    num_candidates_val=$(grep -E 'Final processing summary:.*candidates=[0-9]+' call_variants.log | sed -E 's/.*candidates=([0-9]+).*/\1/') \
+      || { echo "ERROR: 'candidates=<integer>' field not found in call_variants final summary" >&2; exit 1; }
+    if [ "$(printf '%s\n' "$num_candidates_val" | grep -c .)" -ne 1 ]; then
+      echo "ERROR: expected exactly one 'candidates=<integer>' field in call_variants final summary" >&2
+      exit 1
+    fi
     echo "$num_candidates_val" > "num_candidates_${num_candidates_val}"
     echo "$num_candidates_val" > nc.txt
 
@@ -458,12 +451,82 @@ task UGCallVariants{
 output {
     File monitoring_log = "monitoring.log"
     File nvidia_smi_log = "nvidia-smi.log"
-    File params = "params.ini"
-    Array[File] log = glob('call_variants*.log')
-    Array[File] output_records = glob('call_variants*.gz')
+    File log = "call_variants.log"
+    Array[File] output_records = glob('*_cvo.gz')
     Array[File] num_candidates = glob("num_candidates_*")
     Int num_candidates_as_int = read_int("nc.txt")
-    File output_model_serialized = "~{onnx_base_name}.serialized"
+  }
+}
+
+
+task UGSerializeONNX {
+  input {
+    File model_onnx
+    String base_file_name
+    String docker
+    File monitoring_script
+    String gpu_type = "nvidia-tesla-t4"
+    Int num_gpus
+    Int num_cpus
+    Int num_threads
+    Int call_variants_uncompr_buf_size_gb
+    Int? call_variants_extra_mem
+    Int? optimization_level
+    Boolean no_address = true
+  }
+
+  Int disk_size = ceil(size(model_onnx, 'GB') + 20)
+  Int mem = num_threads * call_variants_uncompr_buf_size_gb + select_first([call_variants_extra_mem, 16])
+  Int builder_optimization_level = select_first([optimization_level, 1])
+
+  command <<<
+    set -eo pipefail
+
+    bash ~{monitoring_script} | tee monitoring.log >&2 &
+    nvidia-smi --query-gpu=timestamp,name,driver_version,temperature.gpu,utilization.gpu,utilization.memory,memory.used,memory.total,memory.free --format=csv -l 10 2>&1 | tee ./nvidia-smi.log >&2 &
+
+    mkdir model
+    cp "~{model_onnx}" model/input.onnx
+    export NCV_TRT_BUILDER_OPTIMIZATION_LEVEL=~{builder_optimization_level}
+    export NCV_TRT_WORKSPACE_BYTES=2147483648
+
+    call_variants \
+      --model model/input.onnx \
+      --first-pass-input-mode normalized_minus1_1 \
+      --serialize-only \
+      --fp16 \
+      --gpus ~{num_gpus} \
+      2>&1 | tee call_variants.log
+
+    shopt -s nullglob
+    set -- model/*.trt
+    if [[ "$#" -ne 1 ]]; then
+      echo "ERROR: expected exactly one serialized TensorRT engine" >&2
+      exit 1
+    fi
+    if [[ ! -s "$1" ]]; then
+      echo "ERROR: serialized TensorRT engine is empty" >&2
+      exit 1
+    fi
+    mv "$1" "~{base_file_name}.trt"
+  >>>
+
+  runtime {
+    memory: "~{mem} GB"
+    cpu: num_cpus
+    disks: "local-disk " + disk_size + " LOCAL"
+    docker: docker
+    gpuType: "nvidia-tesla-t4"
+    gpuCount: num_gpus
+    acceleratorType: gpu_type #!UnknownRuntimeKey
+    acceleratorCount: num_gpus #!UnknownRuntimeKey
+    noAddress: no_address
+  }
+
+  output {
+    File nvidia_smi_log = "nvidia-smi.log"
+    File output_model_serialized = "~{base_file_name}.trt"
+    File log = "call_variants.log"
   }
 }
 

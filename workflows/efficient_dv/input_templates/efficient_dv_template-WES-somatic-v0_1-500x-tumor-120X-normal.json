@@ -68,7 +68,6 @@
         "s3://ultimagen-workflow-resources-us-east-1/hg38/annotation_intervals/gnomad.common.indel.annotation.sort.bed"
     ],
     "EfficientDV.ug_post_processing_extra_args": "--ignore_multi_allelic_cvos",
-    "EfficientDV.v_gpu_tile_size": 2,
     "EfficientDV.cloud_provider_override": "aws",
     "EfficientDV.monitoring_script_input": "s3://ultimagen-workflow-resources-us-east-1/monitor_1.0.sh"
 }
